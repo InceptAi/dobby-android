@@ -64,6 +64,10 @@ public class MainActivity extends AppCompatActivity
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 String text = queryEditText.getText().toString();
+                Log.i(TAG, "Action ID: " + actionId);
+                if (event != null) {
+                    Log.i(TAG, "key event: " + event.toString());
+                }
                 if (actionId == EditorInfo.IME_NULL && event.getAction() == KeyEvent.ACTION_DOWN) {
                     Log.i(TAG, "ENTER 1");
                     processTextQuery(text);
@@ -73,7 +77,6 @@ public class MainActivity extends AppCompatActivity
                     Log.i(TAG, "ENTER 2");
                     processTextQuery(text);
                 }
-                Log.i(TAG, "Action ID: " + actionId);
                 queryEditText.getText().clear();
                 return false;
             }
@@ -99,6 +102,9 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void processTextQuery(String text) {
+        if (text.length() < 2) {
+            return;
+        }
         addUserChat(text);
         chatManager.sendQuery(text);
     }
