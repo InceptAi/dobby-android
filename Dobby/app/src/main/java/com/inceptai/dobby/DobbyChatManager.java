@@ -37,7 +37,7 @@ public class DobbyChatManager implements ApiAiClient.ResultListener {
 
     @Override
     public void onResult(Result result) {
-        responseCallback.showResponse(result.getAction());
+        responseCallback.showResponse(result.getFulfillment().getSpeech());
         Log.i(TAG, "Got response Action: " + result.toString());
     }
 

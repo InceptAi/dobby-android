@@ -3,6 +3,7 @@
 android:orientation="horizontal" android:layout_width="wrap_content"
 android:background="@drawable/rounded_shape"
 android:id="@+id/dobbyChatLayout"
+    android:padding="5dp"
 android:layout_height="wrap_content">
 
 

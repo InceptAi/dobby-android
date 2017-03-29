@@ -3,6 +3,7 @@
     android:orientation="horizontal" android:layout_width="match_parent"
     android:layout_gravity="end"
     android:gravity="end"
+    android:padding="5dp"
     android:id="@+id/user_chat_layout"
     android:layout_height="wrap_content">
 
