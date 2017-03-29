@@ -1,7 +1,6 @@
-package com.inceptai.dobby.com.inceptai.dobby.apiai;
+package com.inceptai.dobby.apiai;
 
 import android.content.Context;
-import android.util.DebugUtils;
 import android.util.Log;
 
 import com.inceptai.dobby.DobbyThreadpool;
@@ -45,7 +44,7 @@ public class ApiAiClient implements AIListener {
      * Connects to a server using a client access token.
      */
     public void connect() {
-        aiConfiguration = new AIConfiguration("CLIENT_ACCESS_TOKEN",
+        aiConfiguration = new AIConfiguration(CLIENT_ACCESS_TOKEN,
                 AIConfiguration.SupportedLanguages.English,
                 AIConfiguration.RecognitionEngine.System);
         aiService = AIService.getService(context, aiConfiguration);
@@ -61,6 +60,7 @@ public class ApiAiClient implements AIListener {
                 final AIRequest aiRequest = new AIRequest();
                 aiRequest.setQuery(query);
                 try {
+                    Log.i(TAG, "Submitting query: " + query);
                     final AIResponse response = aiDataService.request(aiRequest);
                     listener.onResult(response.getResult());
                 } catch (AIServiceException exception ) {

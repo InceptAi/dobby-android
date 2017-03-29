@@ -2,10 +2,8 @@ package com.inceptai.dobby;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.zip.InflaterInputStream;
 
 /**
  * Manages a threadpool for background execution.
@@ -27,7 +25,6 @@ public class DobbyThreadpool {
     private final BlockingQueue<Runnable> workQueue;
 
     private ThreadPoolExecutor dobbyThreadPool;
-
 
     DobbyThreadpool() {
 

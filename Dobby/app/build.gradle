@@ -17,6 +17,11 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    // This is needed to remove a DuplicateFileException that comes from adding api ai dependencies.
+    packagingOptions {
+        exclude 'META-INF/LICENSE'
+    }
 }
 
 dependencies {
@@ -33,7 +38,7 @@ dependencies {
     // API.AI Gradle dependencies.
     compile 'ai.api:libai:1.4.8'
     compile 'ai.api:sdk:2.0.5@aar'
-// api.ai SDK dependencies
+//  api.ai SDK dependencies
 //  compile 'com.android.support:appcompat-v7:23.2.1'
     compile 'com.google.code.gson:gson:2.3.1'
     compile 'commons-io:commons-io:2.4'
