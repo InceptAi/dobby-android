@@ -24,8 +24,15 @@
         android:layout_marginLeft="8dp"
         app:layout_constraintLeft_toLeftOf="parent">
 
+        <android.support.v7.widget.RecyclerView
+            android:layout_width="match_parent"
+            android:id="@+id/chatRv"
+            android:layout_height="wrap_content">
+
+        </android.support.v7.widget.RecyclerView>
+
         <ImageView
-            android:id="@+id/imageView"
+            android:id="@+id/plusButtonIv"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
@@ -34,7 +41,7 @@
 
 
         <EditText
-            android:id="@+id/btmEditText"
+            android:id="@+id/queryEditText"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
@@ -46,9 +53,10 @@
             android:paddingLeft="2dp"
             android:paddingStart="2dp" />
 
-        <android.support.v7.widget.AppCompatImageView
+        <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:id="@+id/micButtonIv"
             android:layout_gravity="bottom"
             android:paddingBottom="-5dp"
             android:src="@drawable/ic_action_mic" />

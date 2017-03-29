@@ -1,20 +1,39 @@
 package com.inceptai.dobby;
 
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.inputmethod.EditorInfo;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.TextView;
+
+import static com.inceptai.dobby.DobbyApplication.TAG;
+
+import com.inceptai.dobby.com.inceptai.dobby.apiai.ApiAiClient;
+
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
+
+    private ApiAiClient apiAiClient;
+    private DobbyApplication dobbyApplication;
+    private ImageView micButtonIv;
+    private EditText queryEditText;
+    private RecyclerView chatRv;
+    private ChatRecyclerViewAdapter recyclerViewAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,6 +50,37 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+        queryEditText = (EditText) findViewById(R.id.queryEditText);
+        queryEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                String text = queryEditText.getText().toString();
+                Log.i(TAG, "Text = " + text);
+                if (actionId == EditorInfo.IME_NULL && event.getAction() == KeyEvent.ACTION_DOWN) {
+                    Log.i(TAG, "ENTER 1");
+                }
+                if (actionId == EditorInfo.IME_ACTION_DONE ||
+                        actionId == EditorInfo.IME_ACTION_GO ||
+                        actionId == EditorInfo.IME_ACTION_NEXT) {
+                    Log.i(TAG, "ENTER 2");
+                }
+                queryEditText.getText().clear();
+                return false;
+            }
+        });
+
+        micButtonIv = (ImageView) findViewById(R.id.micButtonIv);
+        micButtonIv.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+            }
+        });
+
+        dobbyApplication = (DobbyApplication) getApplication();
+        apiAiClient = new ApiAiClient(this, dobbyApplication.getThreadpool());
+        chatRv = (RecyclerView) findViewById(R.id.chatRv);
+        recyclerViewAdapter = new ChatRecyclerViewAdapter();
     }
 
     @Override
