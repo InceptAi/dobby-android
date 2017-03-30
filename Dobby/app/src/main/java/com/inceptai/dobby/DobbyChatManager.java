@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.inceptai.dobby.apiai.ApiAiClient;
+import com.inceptai.dobby.speedtest.SpeedTestTask;
 
 import ai.api.model.Result;
 
@@ -22,6 +23,7 @@ public class DobbyChatManager implements ApiAiClient.ResultListener {
     private DobbyThreadpool threadpool;
     private ApiAiClient apiAiClient;
     private ResponseCallback responseCallback;
+    private SpeedTestTask speedTestTask;
 
 
     public interface ResponseCallback {
@@ -32,8 +34,10 @@ public class DobbyChatManager implements ApiAiClient.ResultListener {
         this.context = context;
         this.threadpool = threadpool;
         this.responseCallback = callback;
+        //Why is this not this.apiAiClient
         apiAiClient = new ApiAiClient(context, threadpool);
         apiAiClient.connect();
+        this.speedTestTask = new SpeedTestTask();
     }
 
     @Override
@@ -44,6 +48,16 @@ public class DobbyChatManager implements ApiAiClient.ResultListener {
         }
         responseCallback.showResponse(response);
         Log.i(TAG, "Got response Action: " + result.toString());
+        if (result.toString().contains("test")) {
+            Log.i(TAG, "Performing Speed Test");
+            threadpool.submit(new Runnable() {
+                @Override
+                public void run() {
+                    speedTestSocket.startDownload("2.testdebit.info", "/fichiers/1Mo.dat");
+                }
+            });
+            speedTestTask.doInBackground();
+        }
     }
 
     public void startMic() {
