@@ -41,6 +41,7 @@ public class MainActivity extends AppCompatActivity
     private RecyclerView chatRv;
     private ChatRecyclerViewAdapter recyclerViewAdapter;
     private DobbyChatManager chatManager;
+    private NetworkLayer networkLayer;
     private Handler handler;
 
     @Override
@@ -84,6 +85,7 @@ public class MainActivity extends AppCompatActivity
 
         dobbyApplication = (DobbyApplication) getApplication();
         chatManager = new DobbyChatManager(this, dobbyApplication.getThreadpool(), this);
+        networkLayer = dobbyApplication.getNetworkLayer();
         handler = new Handler(this);
 
         micButtonIv = (ImageView) findViewById(R.id.micButtonIv);
@@ -147,8 +149,9 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_camera) {
-            // Handle the camera action
+        if (id == R.id.nav_wifi_scan) {
+            networkLayer.runWifiAnalysis();
+            Toast.makeText(this, "Running wifi analysis.", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_gallery) {
 
         } else if (id == R.id.nav_slideshow) {

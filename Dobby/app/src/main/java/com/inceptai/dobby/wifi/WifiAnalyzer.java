@@ -51,7 +51,7 @@ public class WifiAnalyzer {
         return null;
     }
 
-    private boolean startWifiScan() {
+    public boolean   startWifiScan() {
         if (wifiReceiverState != WIFI_RECEIVER_REGISTERED) {
             registerScanReceiver();
         }
