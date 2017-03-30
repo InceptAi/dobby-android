@@ -38,5 +38,13 @@ public class NetworkLayer implements  WifiAnalyzer.ResultsCallback{
         for (ScanResult result : scanResults) {
             Log.i(TAG, "Wifi scan results:" + result.toString());
         }
+
+        // Thread switch logic.
+        threadpool.submit(new Runnable() {
+            @Override
+            public void run() {
+                // Post scan results to caller if needed.
+            }
+        });
     }
 }
