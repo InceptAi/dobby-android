@@ -45,4 +45,6 @@ dependencies {
 
     //Speed test dependencies
     compile 'fr.bmartel:jspeedtest:1.25'
+    // Since we are on Android, we need to use guava version 20 for JDK 1.6 / 1.7
+    compile 'com.google.guava:guava:20.0'
 }
