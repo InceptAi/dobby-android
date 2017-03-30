@@ -29,12 +29,22 @@ public class WifiAnalyzer {
     private WifiReceiver wifiReceiver = new WifiReceiver();
     private int wifiReceiverState = WIFI_RECEIVER_UNREGISTERED;
     private WifiManager wifiManager;
+    private ResultsCallback resultsCallback;
 
-    private WifiAnalyzer(Context context, WifiManager wifiManager) {
+    /**
+     * Callback interface for results. More methods to follow.
+     */
+    public interface ResultsCallback {
+        void onWifiScan(List<ScanResult> scanResults);
+    }
+
+    private WifiAnalyzer(Context context, WifiManager wifiManager,
+                         @Nullable ResultsCallback resultsCallback) {
         Preconditions.checkNotNull(context);
         Preconditions.checkNotNull(wifiManager);
         this.context = context.getApplicationContext();
         this.wifiManager = wifiManager;
+        this.resultsCallback = resultsCallback;
     }
 
     /**
@@ -43,15 +53,15 @@ public class WifiAnalyzer {
      * @return Instance of WifiAnalyzer or null on error.
      */
     @Nullable
-    public static WifiAnalyzer create(Context context) {
+    public static WifiAnalyzer create(Context context, ResultsCallback resultsCallback) {
         WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
         if (wifiManager != null) {
-            return new WifiAnalyzer(context.getApplicationContext(), wifiManager);
+            return new WifiAnalyzer(context.getApplicationContext(), wifiManager, resultsCallback);
         }
         return null;
     }
 
-    public boolean   startWifiScan() {
+    public boolean startWifiScan() {
         if (wifiReceiverState != WIFI_RECEIVER_REGISTERED) {
             registerScanReceiver();
         }
@@ -80,6 +90,10 @@ public class WifiAnalyzer {
                 sb.append("\\n");
             }
             Log.i(TAG, "Wifi scan result: " + sb.toString());
+            if (resultsCallback != null) {
+                resultsCallback.onWifiScan(wifiList);
+            }
+
         }
     }
 }

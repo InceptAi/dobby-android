@@ -1,15 +1,21 @@
 package com.inceptai.dobby;
 
 import android.content.Context;
+import android.net.wifi.ScanResult;
+import android.util.Log;
 
 import com.inceptai.dobby.wifi.WifiAnalyzer;
+
+import java.util.List;
+
+import static com.inceptai.dobby.DobbyApplication.TAG;
 
 /**
  * This class abstracts out the implementation details of all things 'network' related. The UI and
  * local bots would interact with this class to run tests, diagnostics etc. Also
  */
 
-public class NetworkLayer {
+public class NetworkLayer implements  WifiAnalyzer.ResultsCallback{
     private Context context;
     private DobbyThreadpool threadpool;
     private WifiAnalyzer wifiAnalyzer;
@@ -20,10 +26,17 @@ public class NetworkLayer {
     }
 
     void initialize() {
-        wifiAnalyzer = WifiAnalyzer.create(context);
+        wifiAnalyzer = WifiAnalyzer.create(context, this);
     }
 
     void runWifiAnalysis() {
         wifiAnalyzer.startWifiScan();
+    }
+
+    @Override
+    public void onWifiScan(List<ScanResult> scanResults) {
+        for (ScanResult result : scanResults) {
+            Log.i(TAG, "Wifi scan results:" + result.toString());
+        }
     }
 }
