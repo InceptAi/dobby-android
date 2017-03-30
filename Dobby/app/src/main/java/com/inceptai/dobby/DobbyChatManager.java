@@ -16,6 +16,7 @@ import static com.inceptai.dobby.DobbyApplication.TAG;
  */
 
 public class DobbyChatManager implements ApiAiClient.ResultListener {
+    private static final String CANNED_RESPONSE = "We are working on it.";
 
     private Context context;
     private DobbyThreadpool threadpool;
@@ -37,7 +38,11 @@ public class DobbyChatManager implements ApiAiClient.ResultListener {
 
     @Override
     public void onResult(Result result) {
-        responseCallback.showResponse(result.getFulfillment().getSpeech());
+        String response = result.getFulfillment().getSpeech();
+        if (response == null || response.isEmpty()) {
+            response = CANNED_RESPONSE;
+        }
+        responseCallback.showResponse(response);
         Log.i(TAG, "Got response Action: " + result.toString());
     }
 
