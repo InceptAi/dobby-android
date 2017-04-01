@@ -37,6 +37,7 @@ public class SpeedTestConfig {
         }
     }
 
+
     //Client config
     private class ClientConfig {
         public final String ip;
