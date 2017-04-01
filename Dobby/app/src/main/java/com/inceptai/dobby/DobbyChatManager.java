@@ -4,6 +4,8 @@ import android.content.Context;
 import android.util.Log;
 
 import com.inceptai.dobby.apiai.ApiAiClient;
+import com.inceptai.dobby.speedtest.ParseSpeedTestConfig;
+import com.inceptai.dobby.speedtest.SpeedTestConfig;
 import com.inceptai.dobby.speedtest.SpeedTestTask;
 
 import ai.api.model.Result;
@@ -49,7 +51,9 @@ public class DobbyChatManager implements ApiAiClient.ResultListener {
         responseCallback.showResponse(response);
         Log.i(TAG, "Got response Action: " + result.toString());
         if (result.toString().contains("test")) {
-            Log.i(TAG, "Performing Speed Test");
+            Log.i(TAG, "Fetching config");
+            SpeedTestConfig config = ParseSpeedTestConfig.getConfig();
+            /*
             threadpool.submit(new Runnable() {
                 @Override
                 public void run() {
@@ -57,6 +61,7 @@ public class DobbyChatManager implements ApiAiClient.ResultListener {
                 }
             });
             speedTestTask.doInBackground();
+            */
         }
     }
 
