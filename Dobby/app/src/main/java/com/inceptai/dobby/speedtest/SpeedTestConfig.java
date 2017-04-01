@@ -41,7 +41,7 @@ public class SpeedTestConfig {
 
 
     //Client config
-    private class ClientConfig {
+    public class ClientConfig {
         public final String ip;
         public final String isp;
         public final double lat;
@@ -56,7 +56,7 @@ public class SpeedTestConfig {
     }
 
     //Server config
-    private class ServerConfig {
+    public class ServerConfig {
         public final int threadCount;
         public final int[] ignoreIds;
 
@@ -67,7 +67,7 @@ public class SpeedTestConfig {
     }
 
     //Download config
-    private class DownloadConfig {
+    public class DownloadConfig {
         public final int testLength;
         public final int threadsPerUrl;
 
@@ -78,7 +78,7 @@ public class SpeedTestConfig {
     }
 
     //Upload config
-    private class UploadConfig {
+    public class UploadConfig {
         public final int testLength;
         public final int threads;
         public final int maxChunkCount;

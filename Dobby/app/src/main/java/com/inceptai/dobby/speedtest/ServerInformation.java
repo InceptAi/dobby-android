@@ -33,7 +33,7 @@ public class ServerInformation {
     }
 
 
-    private class ServerDetails {
+    public class ServerDetails {
         public int serverId;
         public double lat;
         public double lon;
@@ -50,7 +50,7 @@ public class ServerInformation {
             this.url = url;
             this.host = host;
             this.country = country;
-            this.distance = -1;
+            this.distance = 0;
         }
     }
     // Parses the contents of an client config. If it encounters a ip, summary, or link tag, hands them off
