@@ -1,5 +1,8 @@
 package com.inceptai.dobby.utils;
 
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -124,4 +127,56 @@ public class Utils {
         }
         return result;
     }
+
+    /**
+     * converts string to int with default value if unsuccessful
+     * @param defaultValue
+     * @param inputString
+     * @return
+     */
+    public static int parseIntWithDefault(int defaultValue, String inputString) {
+        int valueToReturn = defaultValue;
+        if (inputString != null) {
+            valueToReturn = Integer.parseInt(inputString);
+        }
+        return valueToReturn;
+    }
+
+    /**
+     * converts string to double with default value if unsuccessful
+     * @param defaultValue
+     * @param inputString
+     * @return
+     */
+    public static double parseDoubleWithDefault(double defaultValue, String inputString) {
+        double valueToReturn = defaultValue;
+        if (inputString != null) {
+            valueToReturn = Double.parseDouble(inputString);
+        }
+        return valueToReturn;
+    }
+
+    /**
+     * Skips one xml tag -- handles tags with nested tags
+     * @param parser
+     * @throws XmlPullParserException
+     * @throws IOException
+     */
+    public static void skip(XmlPullParser parser) throws XmlPullParserException, IOException {
+        if (parser.getEventType() != XmlPullParser.START_TAG) {
+            throw new IllegalStateException();
+        }
+        int depth = 1;
+        while (depth != 0) {
+            switch (parser.next()) {
+                case XmlPullParser.END_TAG:
+                    depth--;
+                    break;
+                case XmlPullParser.START_TAG:
+                    depth++;
+                    break;
+            }
+        }
+    }
+
 }

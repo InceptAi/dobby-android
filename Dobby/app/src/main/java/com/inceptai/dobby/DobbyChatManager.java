@@ -4,7 +4,9 @@ import android.content.Context;
 import android.util.Log;
 
 import com.inceptai.dobby.apiai.ApiAiClient;
+import com.inceptai.dobby.speedtest.ParseServerInformation;
 import com.inceptai.dobby.speedtest.ParseSpeedTestConfig;
+import com.inceptai.dobby.speedtest.ServerInformation;
 import com.inceptai.dobby.speedtest.SpeedTestConfig;
 import com.inceptai.dobby.speedtest.SpeedTestTask;
 
@@ -53,6 +55,7 @@ public class DobbyChatManager implements ApiAiClient.ResultListener {
         if (result.toString().contains("test")) {
             Log.i(TAG, "Fetching config");
             SpeedTestConfig config = ParseSpeedTestConfig.getConfig("https");
+            ServerInformation info = ParseServerInformation.getServerInfo();
             /*
             threadpool.submit(new Runnable() {
                 @Override

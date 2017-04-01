@@ -2,6 +2,8 @@ package com.inceptai.dobby.speedtest;
 
 import android.util.Xml;
 
+import com.inceptai.dobby.utils.Utils;
+
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -117,7 +119,7 @@ public class SpeedTestConfig {
                 uploadConfig = readUploadConfig(parser);
                 parser.nextTag();
             } else {
-                skip(parser);
+                Utils.skip(parser);
             }
             if (clientConfig != null && serverConfig != null && downloadConfig != null && uploadConfig != null) {
                 break;
@@ -126,13 +128,7 @@ public class SpeedTestConfig {
         return new SpeedTestConfig(clientConfig, serverConfig, downloadConfig, uploadConfig);
     }
 
-    private int parseIntForConfig(int defaultValue, String inputString) {
-        int valueToReturn = defaultValue;
-        if (inputString != null) {
-            valueToReturn = Integer.parseInt(inputString);
-        }
-        return valueToReturn;
-    }
+
     //<link rel="alternate" href="http://stackoverflow.com/questions/9439999/where-is-my-data-file" />
 
     // Processes link tags in the feed.
@@ -140,16 +136,11 @@ public class SpeedTestConfig {
         ClientConfig config = null;
         parser.require(XmlPullParser.START_TAG, ns, "client");
         String ip = parser.getAttributeValue(null, "ip");
-        String lat_str = parser.getAttributeValue(null, "lat");
-        String lon_str = parser.getAttributeValue(null, "lon");
+        String latString = parser.getAttributeValue(null, "lat");
+        String lonString = parser.getAttributeValue(null, "lon");
         String isp = parser.getAttributeValue(null, "isp");
-        double lat = 0, lon = 0;
-        if (lat_str != null) {
-            lat = Double.parseDouble(lat_str);
-        }
-        if (lon_str != null) {
-            lon = Double.parseDouble(lon_str);
-        }
+        double lat = Utils.parseDoubleWithDefault(0, latString);
+        double lon = Utils.parseDoubleWithDefault(0, lonString);
         return new ClientConfig(ip, isp, lat, lon);
     }
 
@@ -158,7 +149,7 @@ public class SpeedTestConfig {
     private ServerConfig readServerConfig(XmlPullParser parser) throws IOException, XmlPullParserException {
         ServerConfig config = null;
         parser.require(XmlPullParser.START_TAG, ns, "server-config");
-        int threadCount = parseIntForConfig(-1, parser.getAttributeValue(null, "threadcount"));
+        int threadCount = Utils.parseIntWithDefault(-1, parser.getAttributeValue(null, "threadcount"));
         String ignoreIdsString = parser.getAttributeValue(null, "ignoreids");
         int ignoreIds[] = new int[0];
         if (ignoreIdsString != null) {
@@ -166,7 +157,7 @@ public class SpeedTestConfig {
             ignoreIds = new int[IdsSplitString.length];
             for(int index=0; index < IdsSplitString.length; index++)
             {
-                ignoreIds[index] = parseIntForConfig(0, IdsSplitString[index]);
+                ignoreIds[index] = Utils.parseIntWithDefault(0, IdsSplitString[index]);
             }
         }
         return new ServerConfig(threadCount, ignoreIds);
@@ -176,8 +167,8 @@ public class SpeedTestConfig {
     private DownloadConfig readDownloadConfig(XmlPullParser parser) throws IOException, XmlPullParserException {
         DownloadConfig config = null;
         parser.require(XmlPullParser.START_TAG, ns, "download");
-        int testLength = parseIntForConfig(-1, parser.getAttributeValue(null, "testlength"));
-        int threadsPerUrl = parseIntForConfig(-1, parser.getAttributeValue(null, "threadsperurl"));
+        int testLength = Utils.parseIntWithDefault(-1, parser.getAttributeValue(null, "testlength"));
+        int threadsPerUrl = Utils.parseIntWithDefault(-1, parser.getAttributeValue(null, "threadsperurl"));
         return new DownloadConfig(testLength, threadsPerUrl);
     }
 
@@ -185,28 +176,11 @@ public class SpeedTestConfig {
     private UploadConfig readUploadConfig(XmlPullParser parser) throws IOException, XmlPullParserException {
         UploadConfig config = null;
         parser.require(XmlPullParser.START_TAG, ns, "upload");
-        int testLength = parseIntForConfig(-1, parser.getAttributeValue(null, "testlength"));
-        int threads = parseIntForConfig(-1, parser.getAttributeValue(null, "threads"));
-        int maxChunkCount = parseIntForConfig(-1, parser.getAttributeValue(null, "maxchunkcount"));
-        int ratio = parseIntForConfig(-1, parser.getAttributeValue(null, "ratio"));
+        int testLength = Utils.parseIntWithDefault(-1, parser.getAttributeValue(null, "testlength"));
+        int threads = Utils.parseIntWithDefault(-1, parser.getAttributeValue(null, "threads"));
+        int maxChunkCount = Utils.parseIntWithDefault(-1, parser.getAttributeValue(null, "maxchunkcount"));
+        int ratio = Utils.parseIntWithDefault(-1, parser.getAttributeValue(null, "ratio"));
         return new UploadConfig(testLength, threads, maxChunkCount, ratio);
-    }
-
-    private void skip(XmlPullParser parser) throws XmlPullParserException, IOException {
-        if (parser.getEventType() != XmlPullParser.START_TAG) {
-            throw new IllegalStateException();
-        }
-        int depth = 1;
-        while (depth != 0) {
-            switch (parser.next()) {
-                case XmlPullParser.END_TAG:
-                    depth--;
-                    break;
-                case XmlPullParser.START_TAG:
-                    depth++;
-                    break;
-            }
-        }
     }
 
     public SpeedTestConfig parseSpeedTestConfig(InputStream in) {
