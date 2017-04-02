@@ -16,7 +16,7 @@ import fr.bmartel.speedtest.model.SpeedTestError;
  * Created by vivek on 4/1/17.
  */
 
-public class DownloadAnalyzer {
+public class DownloadManager {
     private final int reportInterval = 1000; //in milliseconds
     private final int[] DOWNLOAD_SIZES = {4000}; //TODO: Add more sizes as per speedtest-cli
 
@@ -42,10 +42,10 @@ public class DownloadAnalyzer {
         void onRepeatDownloadFinish(int totalTestTime, double speedInBitsPerSec);
     }
 
-    public DownloadAnalyzer(SpeedTestConfig.DownloadConfig config,
-                            ServerInformation.ServerDetails serverDetails,
-                            @Nullable ResultsCallback resultsCallback,
-                            @Nullable DownloadTestListener listener) {
+    public DownloadManager(SpeedTestConfig.DownloadConfig config,
+                           ServerInformation.ServerDetails serverDetails,
+                           @Nullable ResultsCallback resultsCallback,
+                           @Nullable DownloadTestListener listener) {
         this.downloadConfig = config;
         this.serverDetails = serverDetails;
         this.fileListToDownload = new ArrayList<String>();

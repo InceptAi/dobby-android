@@ -16,7 +16,7 @@ import fr.bmartel.speedtest.model.SpeedTestError;
  * Created by vivek on 4/2/17.
  */
 
-public class UploadAnalyzer {
+public class UploadManager {
     private final String DEFAULT_UPLOAD_URI = new String("/speedtest/upload.php");
     private final int reportInterval = 1000; //in milliseconds
     private final int[] ALL_UPLOAD_SIZES = {32768, 65536, 131072, 262144, 524288, 1048576, 7340032}; //TODO: Add more sizes as per speedtest-cli
@@ -43,10 +43,10 @@ public class UploadAnalyzer {
         void onRepeatUploadFinish(int totalTestTime, double speedInBitsPerSec);
     }
 
-    public UploadAnalyzer(SpeedTestConfig.UploadConfig config,
-                            ServerInformation.ServerDetails serverDetails,
-                            @Nullable ResultsCallback resultsCallback,
-                            @Nullable UploadTestListener listener) {
+    public UploadManager(SpeedTestConfig.UploadConfig config,
+                         ServerInformation.ServerDetails serverDetails,
+                         @Nullable ResultsCallback resultsCallback,
+                         @Nullable UploadTestListener listener) {
         this.uploadConfig = config;
         this.serverDetails = serverDetails;
         this.filesSizesToBeUploaded = new int[this.uploadConfig.maxChunkCount];

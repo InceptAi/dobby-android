@@ -5,13 +5,13 @@ import android.util.Log;
 
 import com.inceptai.dobby.apiai.ApiAiClient;
 import com.inceptai.dobby.speedtest.BestServerSelector;
-import com.inceptai.dobby.speedtest.DownloadAnalyzer;
+import com.inceptai.dobby.speedtest.DownloadManager;
 import com.inceptai.dobby.speedtest.ParseServerInformation;
 import com.inceptai.dobby.speedtest.ParseSpeedTestConfig;
 import com.inceptai.dobby.speedtest.ServerInformation;
 import com.inceptai.dobby.speedtest.SpeedTestConfig;
 import com.inceptai.dobby.speedtest.SpeedTestTask;
-import com.inceptai.dobby.speedtest.UploadAnalyzer;
+import com.inceptai.dobby.speedtest.UploadManager;
 
 import ai.api.model.Result;
 
@@ -61,10 +61,10 @@ public class DobbyChatManager implements ApiAiClient.ResultListener {
             SpeedTestConfig config = ParseSpeedTestConfig.getConfig("https");
             ServerInformation info = ParseServerInformation.getServerInfo();
             ServerInformation.ServerDetails bestServer = BestServerSelector.getBestServerId(BestServerSelector.getClosestServers(config, info));
-            DownloadAnalyzer downloadAnalyzer = new DownloadAnalyzer(config.downloadConfig, bestServer, null, null);
-            downloadAnalyzer.downloadTestWithOneThread();
-            UploadAnalyzer uploadAnalyzer = new UploadAnalyzer(config.uploadConfig, bestServer, null, null);
-            uploadAnalyzer.uploadTestWithOneThread();
+            DownloadManager downloadManager = new DownloadManager(config.downloadConfig, bestServer, null, null);
+            downloadManager.downloadTestWithOneThread();
+            UploadManager uploadManager = new UploadManager(config.uploadConfig, bestServer, null, null);
+            uploadManager.uploadTestWithOneThread();
             /*
             threadpool.submit(new Runnable() {
                 @Override
