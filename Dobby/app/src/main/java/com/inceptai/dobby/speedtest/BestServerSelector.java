@@ -52,7 +52,7 @@ public class BestServerSelector {
         double bestLatency = 60000;
         ServerInformation.ServerDetails bestServer = null;
         for (ServerInformation.ServerDetails detailInfo: closeServerList) {
-            String latencyUrl = detailInfo.url.toString() + "/latency.txt";
+            String latencyUrl = detailInfo.url + "/latency.txt";
             //Get url/latency.txt 3 time and average
             double[] latency = {60000, 60000, 60000};
             for (int i=0; i < MAX_LATENCY_TRY; i++) {

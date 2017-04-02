@@ -5,6 +5,7 @@ import android.util.Log;
 
 import com.inceptai.dobby.apiai.ApiAiClient;
 import com.inceptai.dobby.speedtest.BestServerSelector;
+import com.inceptai.dobby.speedtest.DownloadAnalyzer;
 import com.inceptai.dobby.speedtest.ParseServerInformation;
 import com.inceptai.dobby.speedtest.ParseSpeedTestConfig;
 import com.inceptai.dobby.speedtest.ServerInformation;
@@ -59,6 +60,9 @@ public class DobbyChatManager implements ApiAiClient.ResultListener {
             SpeedTestConfig config = ParseSpeedTestConfig.getConfig("https");
             ServerInformation info = ParseServerInformation.getServerInfo();
             ServerInformation.ServerDetails bestServer = BestServerSelector.getBestServerId(BestServerSelector.getClosestServers(config, info));
+            DownloadAnalyzer downloadAnalyzer = new DownloadAnalyzer(config.downloadConfig, bestServer, null, null);
+            //Perform the test
+            downloadAnalyzer.downloadTestWithOneThread();
 
             /*
             threadpool.submit(new Runnable() {

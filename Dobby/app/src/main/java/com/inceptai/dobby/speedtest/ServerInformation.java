@@ -9,7 +9,6 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,14 +36,14 @@ public class ServerInformation {
         public int serverId;
         public double lat;
         public double lon;
-        public URL url;
+        public String url;
         public String host;
         public String country;
         public double distance;
         public double latency;
 
         public ServerDetails(int serverId, double lat, double lon,
-                             URL url, String host, String country) {
+                             String url, String host, String country) {
             this.serverId = serverId;
             this.lat = lat;
             this.lon = lon;
@@ -91,8 +90,7 @@ public class ServerInformation {
         int serverId = Utils.parseIntWithDefault(0, serverIdString);
         double lat = Utils.parseDoubleWithDefault(0, latString);
         double lon = Utils.parseDoubleWithDefault(0, lonString);
-        URL url = new URL(urlString);
-        return new ServerDetails(serverId, lat, lon, url, host, country);
+        return new ServerDetails(serverId, lat, lon, urlString, host, country);
     }
 
     public ServerInformation parseServerInformation(InputStream in) {
