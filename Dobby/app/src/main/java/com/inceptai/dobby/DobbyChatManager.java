@@ -55,9 +55,11 @@ public class DobbyChatManager implements ApiAiClient.ResultListener {
         Log.i(TAG, "Got response Action: " + result.toString());
         if (result.toString().contains("test")) {
             Log.i(TAG, "Fetching config");
+            //Vivek--testing best server code.
             SpeedTestConfig config = ParseSpeedTestConfig.getConfig("https");
             ServerInformation info = ParseServerInformation.getServerInfo();
             ServerInformation.ServerDetails bestServer = BestServerSelector.getBestServerId(BestServerSelector.getClosestServers(config, info));
+
             /*
             threadpool.submit(new Runnable() {
                 @Override
