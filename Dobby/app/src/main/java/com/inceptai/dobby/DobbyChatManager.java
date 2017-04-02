@@ -11,6 +11,7 @@ import com.inceptai.dobby.speedtest.ParseSpeedTestConfig;
 import com.inceptai.dobby.speedtest.ServerInformation;
 import com.inceptai.dobby.speedtest.SpeedTestConfig;
 import com.inceptai.dobby.speedtest.SpeedTestTask;
+import com.inceptai.dobby.speedtest.UploadAnalyzer;
 
 import ai.api.model.Result;
 
@@ -61,9 +62,9 @@ public class DobbyChatManager implements ApiAiClient.ResultListener {
             ServerInformation info = ParseServerInformation.getServerInfo();
             ServerInformation.ServerDetails bestServer = BestServerSelector.getBestServerId(BestServerSelector.getClosestServers(config, info));
             DownloadAnalyzer downloadAnalyzer = new DownloadAnalyzer(config.downloadConfig, bestServer, null, null);
-            //Perform the test
             downloadAnalyzer.downloadTestWithOneThread();
-
+            UploadAnalyzer uploadAnalyzer = new UploadAnalyzer(config.uploadConfig, bestServer, null, null);
+            uploadAnalyzer.uploadTestWithOneThread();
             /*
             threadpool.submit(new Runnable() {
                 @Override

@@ -81,7 +81,7 @@ public class DownloadAnalyzer {
     public void enqueueDownloadUrls() {
         for (int size: DOWNLOAD_SIZES) {
             for (int threadCountIndex = 0; threadCountIndex < downloadConfig.threadsPerUrl; threadCountIndex++) {
-                String fileToDownload = "random" + size + "x" + size + ".jpg";
+                String fileToDownload = "/speedtest/random" + size + "x" + size + ".jpg";
                 this.fileListToDownload.add(fileToDownload);
             }
         }
@@ -94,11 +94,11 @@ public class DownloadAnalyzer {
         }
     }
 
-    public void startRepeatDownloadWithFixedLength(SpeedTestSocket speedTestSocket, String serverUrl,
+    public void startRepeatDownloadWithFixedLength(SpeedTestSocket speedTestSocket, String serverUrlPrefix,
                                                    String fileName, int fixedDownloadLength,
                                                    int reportInterval, DownloadTestListener listener) {
         speedTestSocket.addSpeedTestListener(listener);
-        speedTestSocket.startDownloadRepeat(serverUrl, fileName,
+        speedTestSocket.startDownloadRepeat(serverUrlPrefix, fileName,
                 fixedDownloadLength, reportInterval,  listener);
         //speedTestSocket.startDownload("sf-speedtest.race.com", "/speedtest/random4000x4000.jpg");
         //speedTestSocket.startDownload(serverUrl, fileName);
@@ -108,11 +108,10 @@ public class DownloadAnalyzer {
     public void downloadTestWithOneThread() {
         final int size = 4000; // in bytes
         final int reportInterval = 1000; //in milliseconds
-        //final int testLengthOneThread = 4 * downloadConfig.testLength * 1000; //in milliseconds
-        final int testLengthOneThread = 4 * downloadConfig.testLength * 1000 * 10; //in milliseconds
+        final int testLengthOneThread = 4 * downloadConfig.testLength * 1000; //in milliseconds
         String fileToDownload = "/speedtest/random" + size + "x" + size + ".jpg";
-        SpeedTestSocket speedTestSocket = new SpeedTestSocket();
-        startRepeatDownloadWithFixedLength(speedTestSocket, this.serverUrlPrefix,
+        //SpeedTestSocket speedTestSocket = new SpeedTestSocket();
+        startRepeatDownloadWithFixedLength(this.speedTestSocketList.get(0), this.serverUrlPrefix,
                 fileToDownload, testLengthOneThread, //converting to ms
                 this.reportInterval, this.downloadTestListener);
     }
