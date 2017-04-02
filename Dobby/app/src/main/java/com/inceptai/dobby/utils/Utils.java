@@ -216,4 +216,15 @@ public class Utils {
         return (rad * 180.0 / Math.PI);
     }
 
+    //math utilities
+    public static double computeAverage(double in[]) throws IllegalArgumentException {
+        if (in.length == 0) {
+            throw new IllegalArgumentException("Array length is 0");
+        }
+        double sum = 0;
+        for (int i = 0; i < in.length; i++) {
+            sum += in[i];
+        }
+        return sum/(double)(in.length);
+    }
 }
