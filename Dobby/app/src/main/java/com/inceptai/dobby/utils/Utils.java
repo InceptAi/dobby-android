@@ -1,13 +1,17 @@
 package com.inceptai.dobby.utils;
 
+import android.util.Log;
+
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import static com.inceptai.dobby.DobbyApplication.TAG;
 
 /**
  * Created by vivek on 4/1/17.
@@ -226,5 +230,30 @@ public class Utils {
             sum += in[i];
         }
         return sum/(double)(in.length);
+    }
+
+    /**
+     * Run linux system command
+     * @param command
+     */
+    public static String runSystemCommand(String command) {
+        StringBuilder outputStringBuilder = new StringBuilder();
+        try {
+            Process p = Runtime.getRuntime().exec(command);
+            BufferedReader inputStream = new BufferedReader(
+                    new InputStreamReader(p.getInputStream()));
+
+            String s = "";
+            // reading output stream of the command
+            while ((s = inputStream.readLine()) != null) {
+                outputStringBuilder.append(s);
+                Log.i(TAG, "ping response: " + s);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            return outputStringBuilder.toString();
+        }
     }
 }

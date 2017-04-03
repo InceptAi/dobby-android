@@ -39,17 +39,22 @@ public class ServerInformation {
         public String url;
         public String host;
         public String country;
+        public String name;
+        public String sponsor;
         public double distance;
         public double latency;
 
         public ServerDetails(int serverId, double lat, double lon,
-                             String url, String host, String country) {
+                             String url, String host, String country,
+                             String name, String sponsor) {
             this.serverId = serverId;
             this.lat = lat;
             this.lon = lon;
             this.url = url;
             this.host = host;
             this.country = country;
+            this.name = name;
+            this.sponsor = sponsor;
             this.distance = Double.MAX_VALUE;
             this.latency = Double.MAX_VALUE;
         }
@@ -87,10 +92,12 @@ public class ServerInformation {
         String lonString = parser.getAttributeValue(null, "lon");
         String country = parser.getAttributeValue(null, "country");
         String host = parser.getAttributeValue(null, "host");
+        String name = parser.getAttributeValue(null, "name");
+        String sponsor = parser.getAttributeValue(null, "sponsor");
         int serverId = Utils.parseIntWithDefault(0, serverIdString);
         double lat = Utils.parseDoubleWithDefault(0, latString);
         double lon = Utils.parseDoubleWithDefault(0, lonString);
-        return new ServerDetails(serverId, lat, lon, urlString, host, country);
+        return new ServerDetails(serverId, lat, lon, urlString, host, country, name, sponsor);
     }
 
     public ServerInformation parseServerInformation(InputStream in) {

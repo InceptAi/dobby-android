@@ -8,6 +8,7 @@ import com.inceptai.dobby.speedtest.BestServerSelector;
 import com.inceptai.dobby.speedtest.DownloadManager;
 import com.inceptai.dobby.speedtest.ParseServerInformation;
 import com.inceptai.dobby.speedtest.ParseSpeedTestConfig;
+import com.inceptai.dobby.speedtest.PingManager;
 import com.inceptai.dobby.speedtest.ServerInformation;
 import com.inceptai.dobby.speedtest.SpeedTestConfig;
 import com.inceptai.dobby.speedtest.SpeedTestTask;
@@ -56,8 +57,9 @@ public class DobbyChatManager implements ApiAiClient.ResultListener {
         responseCallback.showResponse(response);
         Log.i(TAG, "Got response Action: " + result.toString());
         if (result.toString().contains("test")) {
-            Log.i(TAG, "Fetching config");
             //Vivek--testing best server code.
+            PingManager pingManager = new PingManager();
+            PingManager.PingStats routerPingStats = pingManager.pingAndReturnStats("192.168.1.1");
             SpeedTestConfig config = ParseSpeedTestConfig.getConfig("https");
             ServerInformation info = ParseServerInformation.getServerInfo();
             ServerInformation.ServerDetails bestServer = BestServerSelector.getBestServerId(BestServerSelector.getClosestServers(config, info));

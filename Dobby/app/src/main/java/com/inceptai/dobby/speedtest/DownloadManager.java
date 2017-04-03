@@ -17,7 +17,7 @@ import fr.bmartel.speedtest.model.SpeedTestError;
  */
 
 public class DownloadManager {
-    private final int reportInterval = 1000; //in milliseconds
+    private final int REPORT_INTERVAL = 1000; //in milliseconds
     private final int[] DOWNLOAD_SIZES = {4000}; //TODO: Add more sizes as per speedtest-cli
 
     private SpeedTestConfig.DownloadConfig downloadConfig;
@@ -113,7 +113,7 @@ public class DownloadManager {
         //SpeedTestSocket speedTestSocket = new SpeedTestSocket();
         startRepeatDownloadWithFixedLength(this.speedTestSocketList.get(0), this.serverUrlPrefix,
                 fileToDownload, testLengthOneThread, //converting to ms
-                this.reportInterval, this.downloadTestListener);
+                this.REPORT_INTERVAL, this.downloadTestListener);
     }
 
     public void startDownload() {
@@ -179,7 +179,7 @@ public class DownloadManager {
             // called to notify download progress
             //Log.v("speedtest", "[DL PROGRESS] rate in bit/s   : " + report.getTransferRateBit());
             if (resultsCallback != null) {
-                resultsCallback.onDownloadRepeatIntervalReport(reportInterval, report.getTransferRateBit().doubleValue());
+                resultsCallback.onDownloadRepeatIntervalReport(REPORT_INTERVAL, report.getTransferRateBit().doubleValue());
             }
         }
 

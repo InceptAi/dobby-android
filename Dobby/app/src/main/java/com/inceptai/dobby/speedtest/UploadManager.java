@@ -18,7 +18,7 @@ import fr.bmartel.speedtest.model.SpeedTestError;
 
 public class UploadManager {
     private final String DEFAULT_UPLOAD_URI = new String("/speedtest/upload.php");
-    private final int reportInterval = 1000; //in milliseconds
+    private final int REPORT_INTERVAL = 1000; //in milliseconds
     private final int[] ALL_UPLOAD_SIZES = {32768, 65536, 131072, 262144, 524288, 1048576, 7340032}; //TODO: Add more sizes as per speedtest-cli
 
     private SpeedTestConfig.UploadConfig uploadConfig;
@@ -112,7 +112,6 @@ public class UploadManager {
                                                  String uploadFileUri, int fixedDownloadLength, int reportInterval,
                                                  int fileSize, UploadTestListener listener) {
         speedTestSocket.addSpeedTestListener(listener);
-        //speedTestSocket.startUpload(serverUrlPrefix, "/speedtest/upload.php", 1000000);
         speedTestSocket.startUploadRepeat(serverUrlPrefix, uploadFileUri,
                 fixedDownloadLength, reportInterval, fileSize, listener);
     }
@@ -120,11 +119,10 @@ public class UploadManager {
 
     public void uploadTestWithOneThread() {
         final int uploadFileSize = 100000; // ~10Mbyte, in bytes
-        final int reportInterval = 1000; //in milliseconds
-        final int testLengthOneThread = 4 * uploadConfig.testLength * 1000; //in milliseconds
+        final int testLengthOneThread = uploadConfig.testLength * 1000; //in milliseconds
         startRepeatUploadWithFixedLength(this.speedTestSocketList.get(0), this.serverUrlPrefix,
                 this.uploadUri, testLengthOneThread, //converting to ms
-                this.reportInterval, uploadFileSize, this.uploadTestListener);
+                this.REPORT_INTERVAL, uploadFileSize, this.uploadTestListener);
     }
 
     public void startUpload() {
@@ -189,7 +187,7 @@ public class UploadManager {
         @Override
         public void onReport(final SpeedTestReport report) {
             if (resultsCallback != null) {
-                resultsCallback.onUploadRepeatIntervalReport(reportInterval, report.getTransferRateBit().doubleValue());
+                resultsCallback.onUploadRepeatIntervalReport(REPORT_INTERVAL, report.getTransferRateBit().doubleValue());
             }
         }
 
