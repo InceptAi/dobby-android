@@ -16,7 +16,7 @@ import static com.inceptai.dobby.DobbyApplication.TAG;
  * Created by vivek on 4/2/17.
  */
 
-public class PingManager {
+public class PingAnalyzer {
     private static int defaultTimeOut = 3;
     private static int defaultNumberOfPings = 3;
     private static int defaultPacketSize = 1200;
