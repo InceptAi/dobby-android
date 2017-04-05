@@ -50,31 +50,31 @@ public class PingAnalyzer {
 
     public class PingStats {
         String ipAddress;
-        double minLatency;
-        double maxLatency;
-        double avgLatency;
-        double deviation;
-        double lossRate;
+        double minLatencyMs;
+        double maxLatencyMs;
+        double avgLatencyMs;
+        double deviationMs;
+        double lossRatePercent;
 
 
-        public PingStats(String ipAddress,double minLatency,
-                         double maxLatency, double avgLatency,
-                         double deviation, double lossRate) {
+        public PingStats(String ipAddress, double minLatencyMs,
+                         double maxLatencyMs, double avgLatencyMs,
+                         double deviationMs, double lossRatePercent) {
             this.ipAddress = ipAddress;
-            this.minLatency = minLatency;
-            this.avgLatency = avgLatency;
-            this.maxLatency = maxLatency;
-            this.deviation = deviation;
-            this.lossRate = lossRate;
+            this.minLatencyMs = minLatencyMs;
+            this.avgLatencyMs = avgLatencyMs;
+            this.maxLatencyMs = maxLatencyMs;
+            this.deviationMs = deviationMs;
+            this.lossRatePercent = lossRatePercent;
         }
 
         public PingStats(String ipAddress) {
             this.ipAddress = ipAddress;
-            this.minLatency = -1;
-            this.maxLatency = -1;
-            this.avgLatency = -1;
-            this.deviation = -1;
-            this.lossRate = -1;
+            this.minLatencyMs = -1;
+            this.maxLatencyMs = -1;
+            this.avgLatencyMs = -1;
+            this.deviationMs = -1;
+            this.lossRatePercent = -1;
         }
 
         public String toJson() {
@@ -126,7 +126,7 @@ public class PingAnalyzer {
             if (pktsMatcher.find()) {
                 String[] matchingStrings = pktsMatcher.group(0).split(" ");
                 if (matchingStrings.length >= 3) {
-                    pingStatsToReturn.lossRate = Utils.parseDoubleWithDefault(-1, matchingStrings[0].split("%")[0]);
+                    pingStatsToReturn.lossRatePercent = Utils.parseDoubleWithDefault(-1, matchingStrings[0].split("%")[0]);
                 }
             }
 
@@ -137,10 +137,10 @@ public class PingAnalyzer {
                 if (matchingStrings.length >= 3) {
                     String[] latencies = matchingStrings[2].split("/");
                     if (latencies.length >= 4) {
-                        pingStatsToReturn.minLatency = Utils.parseDoubleWithDefault(-1.0, latencies[0]);
-                        pingStatsToReturn.avgLatency = Utils.parseDoubleWithDefault(-1.0, latencies[1]);
-                        pingStatsToReturn.maxLatency = Utils.parseDoubleWithDefault(-1.0, latencies[2]);
-                        pingStatsToReturn.deviation = Utils.parseDoubleWithDefault(-1.0, latencies[3]);
+                        pingStatsToReturn.minLatencyMs = Utils.parseDoubleWithDefault(-1.0, latencies[0]);
+                        pingStatsToReturn.avgLatencyMs = Utils.parseDoubleWithDefault(-1.0, latencies[1]);
+                        pingStatsToReturn.maxLatencyMs = Utils.parseDoubleWithDefault(-1.0, latencies[2]);
+                        pingStatsToReturn.deviationMs = Utils.parseDoubleWithDefault(-1.0, latencies[3]);
                     }
                 }
             }
