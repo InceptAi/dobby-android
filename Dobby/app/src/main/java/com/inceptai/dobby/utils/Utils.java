@@ -236,7 +236,7 @@ public class Utils {
      * Run linux system command
      * @param command
      */
-    public static String runSystemCommand(String command) {
+    public static String runSystemCommand(String command) throws Exception {
         StringBuilder outputStringBuilder = new StringBuilder();
         try {
             Process p = Runtime.getRuntime().exec(command);
@@ -252,6 +252,7 @@ public class Utils {
 
         } catch (Exception e) {
             e.printStackTrace();
+            throw e;
         } finally {
             return outputStringBuilder.toString();
         }

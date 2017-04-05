@@ -3,12 +3,11 @@ package com.inceptai.dobby.speedtest;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.google.gson.Gson;
 import com.inceptai.dobby.utils.Utils;
 
-import java.security.InvalidParameterException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
 import static com.inceptai.dobby.DobbyApplication.TAG;
 import static com.inceptai.dobby.utils.Utils.runSystemCommand;
@@ -29,6 +28,7 @@ public class PingAnalyzer {
      */
     public interface ResultsCallback {
         void onPingResults(PingStats stats);
+        void onPingError(String error);
     }
 
 
@@ -74,16 +74,22 @@ public class PingAnalyzer {
             this.deviation = -1;
             this.lossRate = -1;
         }
+
+        public String toJson() {
+            Gson gson = new Gson();
+            String json = gson.toJson(this);
+            return json;
+        }
     }
-    public String pingIP(String ipAddress) {
+    public String pingIP(String ipAddress) throws Exception {
         return pingIP(ipAddress, defaultTimeOut, defaultNumberOfPings);
     }
 
-    public String pingIP(String ipAddress, int timeOut, int numberOfPings) {
+    public String pingIP(String ipAddress, int timeOut, int numberOfPings) throws Exception {
         return runSystemCommand("ping -t " + timeOut + " -c " + numberOfPings + " " + ipAddress);
     }
 
-    public String pingWirelessRouter() {
+    public String pingWirelessRouter() throws Exception {
         return runSystemCommand("ping -t " + defaultTimeOut + " -c " + defaultNumberOfPings + " 192.168.1.1");
     }
 
@@ -102,16 +108,13 @@ public class PingAnalyzer {
             3 packets transmitted, 3 packets received, 0.0% packet loss
             round-trip min/avg/max/stddev = 1.847/2.557/3.634/0.774 ms
         */
-        //String line = "round-trip min/avg/max/stddev = 1.847/2.557/3.634/0.774 ms";
         PingStats pingStatsToReturn = new PingStats(ipAddress);
         String patternForLatency = "min/avg/max/[a-z]+ = \\d+(\\.\\d+)?/\\d+(\\.\\d+)?/\\d+(\\.\\d+)?/\\d+(\\.\\d+)?";
         String patternForPktLoss = "\\d+(\\.\\d+)?% packet loss";
 
-        String pingOutput = pingIP(ipAddress, timeOut, numberOfPings);
-
-
         //Get pkts stats
         try {
+            String pingOutput = pingIP(ipAddress, timeOut, numberOfPings);
             Pattern pktsPattern = Pattern.compile(patternForPktLoss);
             Matcher pktsMatcher = pktsPattern.matcher(pingOutput);
             if (pktsMatcher.find()) {
@@ -135,8 +138,11 @@ public class PingAnalyzer {
                     }
                 }
             }
-        } catch (IndexOutOfBoundsException|InvalidParameterException|PatternSyntaxException e) {
+        } catch (Exception e) {
             Log.i(TAG, "Exception while parsing ping output: " + e);
+            if (resultsCallback != null) {
+                resultsCallback.onPingError("Exception while parsing ping output: " + e);
+            }
         }
         if (resultsCallback != null) {
             resultsCallback.onPingResults(pingStatsToReturn);

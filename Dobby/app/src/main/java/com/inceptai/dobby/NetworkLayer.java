@@ -8,6 +8,7 @@ import android.util.Log;
 import com.inceptai.dobby.speedtest.BandwidthAnalyzer;
 import com.inceptai.dobby.speedtest.BandwithTestCodes.BandwidthTestErrorCodes;
 import com.inceptai.dobby.speedtest.BandwithTestCodes.BandwidthTestMode;
+import com.inceptai.dobby.speedtest.PingAnalyzer;
 import com.inceptai.dobby.speedtest.ServerInformation;
 import com.inceptai.dobby.speedtest.SpeedTestConfig;
 import com.inceptai.dobby.wifi.WifiAnalyzer;
@@ -23,11 +24,12 @@ import static com.inceptai.dobby.DobbyApplication.TAG;
  * local bots would interact with this class to run tests, diagnostics etc. Also
  */
 
-public class NetworkLayer implements  WifiAnalyzer.ResultsCallback, BandwidthAnalyzer.ResultsCallback {
+public class NetworkLayer implements  WifiAnalyzer.ResultsCallback, BandwidthAnalyzer.ResultsCallback, PingAnalyzer.ResultsCallback {
     private Context context;
     private DobbyThreadpool threadpool;
     private WifiAnalyzer wifiAnalyzer;
     private BandwidthAnalyzer bandwidthAnalyzer;
+    private PingAnalyzer pingAnalyzer;
 
     /*
     PingAnalyzer pingAnalyzer = new PingAnalyzer(null);
@@ -42,6 +44,7 @@ public class NetworkLayer implements  WifiAnalyzer.ResultsCallback, BandwidthAna
     void initialize() {
         wifiAnalyzer = WifiAnalyzer.create(context, this);
         bandwidthAnalyzer = BandwidthAnalyzer.create(this);
+        pingAnalyzer = PingAnalyzer.create(this);
     }
 
     void runWifiAnalysis() {
@@ -107,6 +110,18 @@ public class NetworkLayer implements  WifiAnalyzer.ResultsCallback, BandwidthAna
 
     @Override
     public void onRepeatTestFinished(@BandwidthTestMode int testMode, SpeedTestReport report) {
+
+    }
+
+    //Ping analyzer callbacks
+
+    @Override
+    public void onPingResults(PingAnalyzer.PingStats stats) {
+
+    }
+
+    @Override
+    public void onPingError(String error) {
 
     }
 }

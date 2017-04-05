@@ -4,12 +4,8 @@ import android.content.Context;
 import android.util.Log;
 
 import com.inceptai.dobby.apiai.ApiAiClient;
-import com.inceptai.dobby.speedtest.BandwidthAnalyzer;
-import com.inceptai.dobby.speedtest.BandwithTestCodes;
+import com.inceptai.dobby.speedtest.PingAnalyzer;
 import com.inceptai.dobby.speedtest.SpeedTestTask;
-
-import java.util.LinkedList;
-import java.util.List;
 
 import ai.api.model.Result;
 
@@ -55,10 +51,11 @@ public class DobbyChatManager implements ApiAiClient.ResultListener {
         Log.i(TAG, "Got response Action: " + result.toString());
         if (result.toString().contains("test")) {
             //Vivek--testing best server code.
-            //PingAnalyzer pingAnalyzer = new PingAnalyzer(null);
-            //PingAnalyzer.PingStats routerPingStats = pingAnalyzer.pingAndReturnStats("192.168.1.1");
-            BandwidthAnalyzer bandwidthAnalyzer = BandwidthAnalyzer.create(null);
-            bandwidthAnalyzer.startBandwidthTest(BandwithTestCodes.BandwidthTestMode.DOWNLOAD_AND_UPLOAD);
+            PingAnalyzer pingAnalyzer = new PingAnalyzer(null);
+            PingAnalyzer.PingStats routerPingStats = pingAnalyzer.pingAndReturnStats("192.168.1.1");
+            Log.v(TAG, routerPingStats.toJson());
+            //BandwidthAnalyzer bandwidthAnalyzer = BandwidthAnalyzer.create(null);
+            //bandwidthAnalyzer.startBandwidthTest(BandwithTestCodes.BandwidthTestMode.DOWNLOAD_AND_UPLOAD);
             /*
             SpeedTestConfig config = ParseSpeedTestConfig.getConfig("https");
             ServerInformation info = ParseServerInformation.getServerInfo();
