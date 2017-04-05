@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.util.Log;
 
+import com.google.common.net.InetAddresses;
+
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -14,6 +16,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+
 import static com.inceptai.dobby.DobbyApplication.TAG;
 
 /**
@@ -21,11 +24,11 @@ import static com.inceptai.dobby.DobbyApplication.TAG;
  */
 
 public class Utils {
+    private static final String EMPTY_STRING = "";
     private static final int READ_TIMEOUT_MS = 10000;
     private static final int CONNECTION_TIMEOUT_MS = 15000;
 
     private Utils() {}
-
     /**
      * Given a string url, connects and returns an input stream
      * @param urlString string to fetch
@@ -242,7 +245,7 @@ public class Utils {
      * Run linux system command
      * @param command
      */
-    public static String runSystemCommand(String command) {
+    public static String runSystemCommand(String command) throws Exception {
         StringBuilder outputStringBuilder = new StringBuilder();
         try {
             Process p = Runtime.getRuntime().exec(command);
@@ -258,9 +261,23 @@ public class Utils {
 
         } catch (Exception e) {
             e.printStackTrace();
+            throw e;
         } finally {
             return outputStringBuilder.toString();
         }
+    }
+
+    //Int to IP
+    public static String intToIp(int ipAddress) {
+        String returnValue = ((ipAddress & 0xFF) + "." +
+                ((ipAddress >>>= 8) & 0xFF) + "." +
+                ((ipAddress >>>= 8) & 0xFF) + "." +
+                ((ipAddress >>>= 8) & 0xFF));
+        boolean isValid = InetAddresses.isInetAddress(returnValue);
+        if (!isValid) {
+            return EMPTY_STRING;
+        }
+        return returnValue;
     }
 
     public static AlertDialog buildSimpleDialog(Context context, String title, String message) {

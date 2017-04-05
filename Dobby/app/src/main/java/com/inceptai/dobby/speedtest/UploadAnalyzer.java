@@ -16,7 +16,7 @@ import fr.bmartel.speedtest.model.SpeedTestError;
  * Created by vivek on 4/2/17.
  */
 
-public class UploadManager {
+public class UploadAnalyzer {
     private final String DEFAULT_UPLOAD_URI = new String("/speedtest/upload.php");
     private final int REPORT_INTERVAL = 1000; //in milliseconds
     private final int[] ALL_UPLOAD_SIZES = {32768, 65536, 131072, 262144, 524288, 1048576, 7340032}; //TODO: Add more sizes as per speedtest-cli
@@ -36,28 +36,44 @@ public class UploadManager {
      * Callback interface for results. More methods to follow.
      */
     public interface ResultsCallback {
-        void onUploadFinished(double speedInBitsPerSec);
-        void onUploadProgress(double percent, double speedInBitsPerSec);
+        void onUploadFinished(SpeedTestReport report);
+        void onUploadProgress(float percent, SpeedTestReport report);
         void onUploadError(SpeedTestError speedTestError, String errorMessage);
-        void onUploadRepeatIntervalReport(int reportInterval, double speedInBitsPerSec);
-        void onRepeatUploadFinish(int totalTestTime, double speedInBitsPerSec);
+        void onUploadRepeatIntervalReport(SpeedTestReport report);
+        void onRepeatUploadFinish(SpeedTestReport report);
     }
 
-    public UploadManager(SpeedTestConfig.UploadConfig config,
-                         ServerInformation.ServerDetails serverDetails,
-                         @Nullable ResultsCallback resultsCallback,
-                         @Nullable UploadTestListener listener) {
+    public UploadAnalyzer(SpeedTestConfig.UploadConfig config,
+                          ServerInformation.ServerDetails serverDetails,
+                          @Nullable ResultsCallback resultsCallback) {
         this.uploadConfig = config;
         this.serverDetails = serverDetails;
         this.filesSizesToBeUploaded = new int[this.uploadConfig.maxChunkCount];
         this.speedTestSocketList = new ArrayList<SpeedTestSocket>();
         this.serverUrlPrefix = getServerUrlForUploadTest(serverDetails.url);
         this.resultsCallback = resultsCallback;
-        this.uploadTestListener = new UploadTestListener();
         this.uploadUri = getUriForFileUpload(serverDetails.url);
         enqueueUploadUrls();
         initializeSpeedTestTasks();
+        this.uploadTestListener = new UploadTestListener();
         registerUploadListener(this.uploadTestListener);
+    }
+
+    /**
+     * Factory constructor to create an instance
+     * @param config Download config
+     * @param serverDetails Best server info
+     * @param resultsCallback callback for download results
+     * @return
+     */
+    @Nullable
+    public static UploadAnalyzer create(SpeedTestConfig.UploadConfig config,
+                                          ServerInformation.ServerDetails serverDetails,
+                                          ResultsCallback resultsCallback) {
+        if (serverDetails.serverId > 0) {
+            return new UploadAnalyzer(config, serverDetails, resultsCallback);
+        }
+        return null;
     }
 
 
@@ -161,7 +177,7 @@ public class UploadManager {
             // called when download is finished
             Log.v("speedtest", "[UL FINISHED] rate in bit/s   : " + report.getTransferRateBit());
             if (resultsCallback != null) {
-                resultsCallback.onUploadFinished(report.getTransferRateBit().doubleValue());
+                resultsCallback.onUploadFinished(report);
             }
         }
 
@@ -171,7 +187,7 @@ public class UploadManager {
             //Log.v("speedtest", "[UL PROGRESS] progress : " + percent + "%");
             //Log.v("speedtest", "[UL PROGRESS] rate in bit/s   : " + report.getTransferRateBit());
             if (resultsCallback != null) {
-                resultsCallback.onUploadProgress((double)percent, report.getTransferRateBit().doubleValue());
+                resultsCallback.onUploadProgress(percent, report);
             }
         }
 
@@ -187,7 +203,7 @@ public class UploadManager {
         @Override
         public void onReport(final SpeedTestReport report) {
             if (resultsCallback != null) {
-                resultsCallback.onUploadRepeatIntervalReport(REPORT_INTERVAL, report.getTransferRateBit().doubleValue());
+                resultsCallback.onUploadRepeatIntervalReport(report);
             }
         }
 
@@ -197,8 +213,7 @@ public class UploadManager {
             // called to notify upload progress
             Log.v("speedtest", "[UL PROGRESS] rate in bit/s   : " + report.getTransferRateBit());
             if (resultsCallback != null) {
-                resultsCallback.onRepeatUploadFinish(4 * uploadConfig.testLength * 1000,
-                        report.getTransferRateBit().doubleValue());
+                resultsCallback.onRepeatUploadFinish(report);
             }
         }
 

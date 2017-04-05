@@ -1,5 +1,7 @@
 package com.inceptai.dobby.speedtest;
 
+import android.support.annotation.Nullable;
+
 import com.inceptai.dobby.utils.Utils;
 
 import java.io.IOException;
@@ -10,35 +12,63 @@ import java.io.InputStream;
  */
 
 public class ParseSpeedTestConfig {
+    private final String defaultConfigUrl = "www.speedtest.net/speedtest-config.php";
+
     public final SpeedTestConfig speedTestConfig;
 
-    public ParseSpeedTestConfig(String urlString) {
+    //Results callback
+    private ResultsCallback resultsCallback;
+
+    /**
+     * Callback interface for results. More methods to follow.
+     */
+    public interface ResultsCallback {
+        void onConfigFetch(SpeedTestConfig config);
+        void onConfigFetchError(String error);
+    }
+
+    public ParseSpeedTestConfig(String urlString, @Nullable ResultsCallback resultsCallback) {
         this.speedTestConfig = getConfigFromUrlString(urlString);
+        this.resultsCallback = resultsCallback;
     }
 
-    public static SpeedTestConfig getConfig(String mode) {
-        final String httpConfigUrl = "https://www.speedtest.net/speedtest-config.php";
-        final String httpsConfigUrl = "http://www.speedtest.net/speedtest-config.php";
-        if (mode.contains("https")) {
-            return getConfigFromUrlString(httpsConfigUrl);
+
+    public ParseSpeedTestConfig(@Nullable ResultsCallback resultsCallback) {
+        this.speedTestConfig = getConfigFromUrlString(defaultConfigUrl);
+        this.resultsCallback = resultsCallback;
+    }
+
+
+    public SpeedTestConfig getConfig(@Nullable  String mode) {
+        String configUrl = null;
+        if (mode == null || mode == "http") {
+            configUrl = "http://" + defaultConfigUrl;
         } else {
-            return getConfigFromUrlString(httpConfigUrl);
+            configUrl = "https://" + defaultConfigUrl;
         }
+        return getConfigFromUrlString(configUrl);
     }
 
 
-    public static SpeedTestConfig getConfigFromUrlString (String urlString) {
+    public SpeedTestConfig getConfigFromUrlString (String urlString) {
         SpeedTestConfig config = null;
         try {
             config = downloadAndParseConfig(urlString);
+            if (resultsCallback != null) {
+                this.resultsCallback.onConfigFetch(config);
+            }
         } catch (IOException e) {
-            System.out.println("Exception thrown  :" + e);
+            String outputErrorMessage = "Exception thrown  :" + e;
+            System.out.println(outputErrorMessage);
+            if (this.resultsCallback != null) {
+                this.resultsCallback.onConfigFetchError(outputErrorMessage);
+            }
         } finally {
             return config;
         }
     }
 
-    public static SpeedTestConfig downloadAndParseConfig(String urlString) throws IOException {
+    public SpeedTestConfig downloadAndParseConfig(String urlString) throws IOException {
         InputStream stream = null;
         SpeedTestConfig configToReturn = null;
         try {

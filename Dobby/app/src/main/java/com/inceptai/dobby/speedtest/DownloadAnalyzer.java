@@ -16,7 +16,7 @@ import fr.bmartel.speedtest.model.SpeedTestError;
  * Created by vivek on 4/1/17.
  */
 
-public class DownloadManager {
+public class DownloadAnalyzer {
     private final int REPORT_INTERVAL = 1000; //in milliseconds
     private final int[] DOWNLOAD_SIZES = {4000}; //TODO: Add more sizes as per speedtest-cli
 
@@ -35,17 +35,16 @@ public class DownloadManager {
      * Callback interface for results. More methods to follow.
      */
     public interface ResultsCallback {
-        void onDownloadFinished(double speedInBitsPerSec);
-        void onDownloadProgress(double percent, double speedInBitsPerSec);
+        void onDownloadFinished(SpeedTestReport report);
+        void onDownloadProgress(float percent, SpeedTestReport report);
         void onDownloadError(SpeedTestError speedTestError, String errorMessage);
-        void onDownloadRepeatIntervalReport(int reportInterval, double speedInBitsPerSec);
-        void onRepeatDownloadFinish(int totalTestTime, double speedInBitsPerSec);
+        void onDownloadRepeatIntervalReport(SpeedTestReport report);
+        void onRepeatDownloadFinish(SpeedTestReport report);
     }
 
-    public DownloadManager(SpeedTestConfig.DownloadConfig config,
-                           ServerInformation.ServerDetails serverDetails,
-                           @Nullable ResultsCallback resultsCallback,
-                           @Nullable DownloadTestListener listener) {
+    public DownloadAnalyzer(SpeedTestConfig.DownloadConfig config,
+                            ServerInformation.ServerDetails serverDetails,
+                            @Nullable ResultsCallback resultsCallback) {
         this.downloadConfig = config;
         this.serverDetails = serverDetails;
         this.fileListToDownload = new ArrayList<String>();
@@ -56,6 +55,23 @@ public class DownloadManager {
         enqueueDownloadUrls();
         initializeSpeedTestTasks();
         registerDownloadListener(this.downloadTestListener);
+    }
+
+    /**
+     * Factory constructor to create an instance
+     * @param config Download config
+     * @param serverDetails Best server info
+     * @param resultsCallback callback for download results
+     * @return
+     */
+    @Nullable
+    public static DownloadAnalyzer create(SpeedTestConfig.DownloadConfig config,
+                                          ServerInformation.ServerDetails serverDetails,
+                                          ResultsCallback resultsCallback) {
+        if (serverDetails.serverId > 0) {
+            return new DownloadAnalyzer(config, serverDetails, resultsCallback);
+        }
+        return null;
     }
 
 
@@ -150,7 +166,7 @@ public class DownloadManager {
             // called when download is finished
             Log.v("speedtest", "[DL FINISHED] rate in bit/s   : " + report.getTransferRateBit());
             if (resultsCallback != null) {
-                resultsCallback.onDownloadFinished(report.getTransferRateBit().doubleValue());
+                resultsCallback.onDownloadFinished(report);
             }
         }
 
@@ -160,7 +176,7 @@ public class DownloadManager {
             //Log.v("speedtest", "[DL PROGRESS] progress : " + percent + "%");
             //Log.v("speedtest", "[DL PROGRESS] rate in bit/s   : " + report.getTransferRateBit());
             if (resultsCallback != null) {
-                resultsCallback.onDownloadProgress((double)percent, report.getTransferRateBit().doubleValue());
+                resultsCallback.onDownloadProgress(percent, report);
             }
         }
 
@@ -179,7 +195,7 @@ public class DownloadManager {
             // called to notify download progress
             //Log.v("speedtest", "[DL PROGRESS] rate in bit/s   : " + report.getTransferRateBit());
             if (resultsCallback != null) {
-                resultsCallback.onDownloadRepeatIntervalReport(REPORT_INTERVAL, report.getTransferRateBit().doubleValue());
+                resultsCallback.onDownloadRepeatIntervalReport(report);
             }
         }
 
@@ -189,8 +205,7 @@ public class DownloadManager {
             // called to notify download progress
             Log.v("speedtest", "[DL PROGRESS] rate in bit/s   : " + report.getTransferRateBit());
             if (resultsCallback != null) {
-                resultsCallback.onRepeatDownloadFinish(4 * downloadConfig.testLength * 1000,
-                        report.getTransferRateBit().doubleValue());
+                resultsCallback.onRepeatDownloadFinish(report);
             }
         }
 

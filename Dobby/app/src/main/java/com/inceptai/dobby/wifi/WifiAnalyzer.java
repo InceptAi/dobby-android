@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.DhcpInfo;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.support.annotation.NonNull;
@@ -11,7 +12,8 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.google.common.base.Preconditions;
-import com.google.common.util.concurrent.ListenableFuture;
+import com.inceptai.dobby.utils.Utils;
+
 
 import java.util.List;
 
@@ -55,6 +57,10 @@ public class WifiAnalyzer {
     @Nullable
     public static WifiAnalyzer create(Context context) {
         WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+        DhcpInfo info = wifiManager.getDhcpInfo();
+        String myIP = Utils.intToIp(info.ipAddress);
+        Log.v(TAG, info.toString());
+        Log.v(TAG, myIP);
         if (wifiManager != null) {
             return new WifiAnalyzer(context.getApplicationContext(), wifiManager);
         }
@@ -78,6 +84,10 @@ public class WifiAnalyzer {
     private void unregisterScanReceiver() {
         context.unregisterReceiver(wifiReceiver);
         wifiReceiverState = WIFI_RECEIVER_UNREGISTERED;
+    }
+
+    public DhcpInfo getDhcpInfo() {
+        return wifiManager.getDhcpInfo();
     }
 
     private class WifiReceiver extends BroadcastReceiver {
