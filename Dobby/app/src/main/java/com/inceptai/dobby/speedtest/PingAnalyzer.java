@@ -3,9 +3,11 @@ package com.inceptai.dobby.speedtest;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.google.common.net.InetAddresses;
 import com.google.gson.Gson;
 import com.inceptai.dobby.utils.Utils;
 
+import java.security.InvalidParameterException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -86,6 +88,10 @@ public class PingAnalyzer {
     }
 
     public String pingIP(String ipAddress, int timeOut, int numberOfPings) throws Exception {
+        boolean isValid = InetAddresses.isInetAddress(ipAddress);
+        if (isValid == false) {
+            throw new InvalidParameterException(ipAddress + " is not a valid IP. Format: 1.1.1.1");
+        }
         return runSystemCommand("ping -t " + timeOut + " -c " + numberOfPings + " " + ipAddress);
     }
 

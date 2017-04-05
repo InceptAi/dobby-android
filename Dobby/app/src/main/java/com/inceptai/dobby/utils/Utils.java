@@ -2,6 +2,8 @@ package com.inceptai.dobby.utils;
 
 import android.util.Log;
 
+import com.google.common.net.InetAddresses;
+
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -11,6 +13,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+
 import static com.inceptai.dobby.DobbyApplication.TAG;
 
 /**
@@ -18,8 +21,9 @@ import static com.inceptai.dobby.DobbyApplication.TAG;
  */
 
 public class Utils {
-    private static int readTimeout = 10000;
-    private static int connectionTimeout = 15000;
+    private static int READ_TIMEOUT = 10000;
+    private static int CONNECTION_TIMEOUT = 15000;
+    private static String EMPTY_STRING = "";
     /**
      * Given a string url, connects and returns an input stream
      * @param urlString string to fetch
@@ -32,8 +36,8 @@ public class Utils {
         InputStream stream = null;
         URL url = new URL(urlString);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        connection.setReadTimeout(readTimeout /* milliseconds */);
-        connection.setConnectTimeout(connectionTimeout /* milliseconds */);
+        connection.setReadTimeout(READ_TIMEOUT /* milliseconds */);
+        connection.setConnectTimeout(CONNECTION_TIMEOUT /* milliseconds */);
         connection.setRequestMethod("GET");
         connection.setDoInput(true);
         // Starts the query
@@ -67,8 +71,8 @@ public class Utils {
         InputStream stream = null;
         URL url = new URL(urlString);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        connection.setReadTimeout(readTimeout /* milliseconds */);
-        connection.setConnectTimeout(connectionTimeout /* milliseconds */);
+        connection.setReadTimeout(READ_TIMEOUT /* milliseconds */);
+        connection.setConnectTimeout(CONNECTION_TIMEOUT /* milliseconds */);
         connection.setRequestMethod("GET");
         connection.setDoInput(true);
         // Starts the query
@@ -257,4 +261,18 @@ public class Utils {
             return outputStringBuilder.toString();
         }
     }
+
+    //Int to IP
+    public static String intToIp(int ipAddress) {
+        String returnValue = ((ipAddress & 0xFF) + "." +
+                ((ipAddress >>>= 8) & 0xFF) + "." +
+                ((ipAddress >>>= 8) & 0xFF) + "." +
+                ((ipAddress >>>= 8) & 0xFF));
+        boolean isValid = InetAddresses.isInetAddress(returnValue);
+        if (!isValid) {
+            return EMPTY_STRING;
+        }
+        return returnValue;
+    }
+
 }

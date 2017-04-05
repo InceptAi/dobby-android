@@ -1,6 +1,7 @@
 package com.inceptai.dobby;
 
 import android.content.Context;
+import android.net.DhcpInfo;
 import android.net.wifi.ScanResult;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -11,6 +12,7 @@ import com.inceptai.dobby.speedtest.BandwithTestCodes.BandwidthTestMode;
 import com.inceptai.dobby.speedtest.PingAnalyzer;
 import com.inceptai.dobby.speedtest.ServerInformation;
 import com.inceptai.dobby.speedtest.SpeedTestConfig;
+import com.inceptai.dobby.utils.Utils;
 import com.inceptai.dobby.wifi.WifiAnalyzer;
 
 import java.util.List;
@@ -30,21 +32,39 @@ public class NetworkLayer implements  WifiAnalyzer.ResultsCallback, BandwidthAna
     private WifiAnalyzer wifiAnalyzer;
     private BandwidthAnalyzer bandwidthAnalyzer;
     private PingAnalyzer pingAnalyzer;
+    private IPLayerInfo ipLayerInfonfo;
 
-    /*
-    PingAnalyzer pingAnalyzer = new PingAnalyzer(null);
-    PingAnalyzer.PingStats routerPingStats = pingAnalyzer.pingAndReturnStats("192.168.1.1");
-    */
+    public static class IPLayerInfo {
+        public String dns1;
+        public String dns2;
+        public String gateway;
+        public int leaseDuration;
+        public int netMask;
+        public String serverAddress;
+
+        public IPLayerInfo(DhcpInfo dhcpInfo) {
+            this.dns1 = Utils.intToIp(dhcpInfo.dns1);
+            this.dns2 = Utils.intToIp(dhcpInfo.dns2);
+            this.gateway = Utils.intToIp(dhcpInfo.ipAddress);
+            this.serverAddress = Utils.intToIp(dhcpInfo.serverAddress);
+            this.netMask = dhcpInfo.netmask;
+            this.leaseDuration = dhcpInfo.leaseDuration;
+        }
+    }
 
     public NetworkLayer(Context context, DobbyThreadpool threadpool) {
         this.context = context;
         this.threadpool = threadpool;
+        this.ipLayerInfonfo = null;
     }
 
     void initialize() {
         wifiAnalyzer = WifiAnalyzer.create(context, this);
         bandwidthAnalyzer = BandwidthAnalyzer.create(this);
         pingAnalyzer = PingAnalyzer.create(this);
+        if (wifiAnalyzer != null) {
+            ipLayerInfonfo = new IPLayerInfo(wifiAnalyzer.getDhcpInfo());
+        }
     }
 
     void runWifiAnalysis() {
