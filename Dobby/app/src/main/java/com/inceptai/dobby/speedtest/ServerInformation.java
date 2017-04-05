@@ -18,13 +18,14 @@ import java.util.List;
 
 public class ServerInformation {
     private static final String ns = null;
-    public List<ServerDetails> serverList = new ArrayList<ServerDetails>();
+    public List<ServerDetails> serverList;
 
     public ServerInformation(List<ServerDetails> serverList) {
         this.serverList = serverList;
     }
 
     public ServerInformation(InputStream in) {
+        this.serverList = new ArrayList<ServerDetails>();
         ServerInformation info = parseServerInformation(in);
         if (info != null) {
             this.serverList = info.serverList;

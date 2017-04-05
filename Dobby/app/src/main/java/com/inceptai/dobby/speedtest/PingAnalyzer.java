@@ -1,5 +1,6 @@
 package com.inceptai.dobby.speedtest;
 
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.inceptai.dobby.utils.Utils;
@@ -9,8 +10,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import static com.inceptai.dobby.utils.Utils.runSystemCommand;
 import static com.inceptai.dobby.DobbyApplication.TAG;
+import static com.inceptai.dobby.utils.Utils.runSystemCommand;
 
 /**
  * Created by vivek on 4/2/17.
@@ -21,7 +22,32 @@ public class PingAnalyzer {
     private static int defaultNumberOfPings = 3;
     private static int defaultPacketSize = 1200;
 
+    private ResultsCallback resultsCallback;
+
+    /**
+     * Callback interface for results. More methods to follow.
+     */
+    public interface ResultsCallback {
+        void onPingResults(PingStats stats);
+    }
+
+
+    public PingAnalyzer(@Nullable ResultsCallback resultsCallback) {
+        this.resultsCallback = resultsCallback;
+    }
+
+    /**
+     * Factory constructor to create an instance
+     * @return Instance of PingAnalyzer.
+     */
+    @Nullable
+    public static PingAnalyzer create(ResultsCallback resultsCallback) {
+        return new PingAnalyzer(resultsCallback);
+    }
+
+
     public class PingStats {
+        String ipAddress;
         double minLatency;
         double maxLatency;
         double avgLatency;
@@ -29,8 +55,10 @@ public class PingAnalyzer {
         double lossRate;
 
 
-        public PingStats(double minLatency, double maxLatency, double avgLatency,
+        public PingStats(String ipAddress,double minLatency,
+                         double maxLatency, double avgLatency,
                          double deviation, double lossRate) {
+            this.ipAddress = ipAddress;
             this.minLatency = minLatency;
             this.avgLatency = avgLatency;
             this.maxLatency = maxLatency;
@@ -38,7 +66,8 @@ public class PingAnalyzer {
             this.lossRate = lossRate;
         }
 
-        public PingStats() {
+        public PingStats(String ipAddress) {
+            this.ipAddress = ipAddress;
             this.minLatency = -1;
             this.maxLatency = -1;
             this.avgLatency = -1;
@@ -74,7 +103,7 @@ public class PingAnalyzer {
             round-trip min/avg/max/stddev = 1.847/2.557/3.634/0.774 ms
         */
         //String line = "round-trip min/avg/max/stddev = 1.847/2.557/3.634/0.774 ms";
-        PingStats pingStatsToReturn = new PingStats();
+        PingStats pingStatsToReturn = new PingStats(ipAddress);
         String patternForLatency = "min/avg/max/[a-z]+ = \\d+(\\.\\d+)?/\\d+(\\.\\d+)?/\\d+(\\.\\d+)?/\\d+(\\.\\d+)?";
         String patternForPktLoss = "\\d+(\\.\\d+)?% packet loss";
 
@@ -109,7 +138,9 @@ public class PingAnalyzer {
         } catch (IndexOutOfBoundsException|InvalidParameterException|PatternSyntaxException e) {
             Log.i(TAG, "Exception while parsing ping output: " + e);
         }
-
+        if (resultsCallback != null) {
+            resultsCallback.onPingResults(pingStatsToReturn);
+        }
         return pingStatsToReturn;
     }
 

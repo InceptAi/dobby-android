@@ -1,33 +1,76 @@
 package com.inceptai.dobby.speedtest;
 
+import android.support.annotation.Nullable;
+import android.util.Log;
+
 import com.inceptai.dobby.utils.Utils;
 
 import java.io.IOException;
 import java.io.InputStream;
+
+import static com.inceptai.dobby.DobbyApplication.TAG;
 
 /**
  * Created by vivek on 4/1/17.
  */
 
 public class ParseServerInformation {
-    public ServerInformation serverInformation;
+    private final String defaultServerListUrl1 = "http://www.speedtest.net/speedtest-servers-static.php";
+    private final String defaultServerListUrl2 = "http://c.speedtest.net/speedtest-servers-static.php";
 
-    public ParseServerInformation(String urlString) {
-        this.serverInformation = getServerInfoFromUrlString(urlString);
+    private String serverListUrl1;
+    private String serverListUrl2;
+
+    //Results callback
+    private ResultsCallback resultsCallback;
+
+    /**
+     * Callback interface for results. More methods to follow.
+     */
+    public interface ResultsCallback {
+        void onServerInformationFetch(ServerInformation serverInformation);
+        void onServerInformationFetchError(String error);
     }
 
-    public static ServerInformation getServerInfo() {
-        final String serverListUrl1 = "http://www.speedtest.net/speedtest-servers-static.php";
-        final String serverListUrl2 = "http://c.speedtest.net/speedtest-servers-static.php";
-        ServerInformation info = getServerInfoFromUrlString(serverListUrl1);
+    public ParseServerInformation(String urlString1, String urlString2,
+                                  @Nullable ResultsCallback resultsCallback) {
+        this.serverListUrl1 = urlString1;
+        this.serverListUrl2 = urlString2;
+        this.resultsCallback = resultsCallback;
+    }
+
+    public ParseServerInformation(@Nullable ResultsCallback resultsCallback) {
+        this.serverListUrl1 = defaultServerListUrl1;
+        this.serverListUrl2 = defaultServerListUrl2;
+        this.resultsCallback = resultsCallback;
+    }
+
+    public ServerInformation getServerInfo() {
+        ServerInformation info = null;
+        try {
+            info = downloadAndParseServerInformation(defaultServerListUrl1);
+        } catch (IOException e) {
+            Log.v(TAG, "Exception thrown while fetching config: " + e);
+        }
         if (info == null) {
-            info = getServerInfoFromUrlString(serverListUrl2);
+            try {
+                info = downloadAndParseServerInformation(defaultServerListUrl2);
+            } catch (IOException e) {
+                String exceptionString = "Exception thrown while fetching config: " + e;
+                Log.v(TAG, exceptionString);
+                if (this.resultsCallback != null) {
+                    this.resultsCallback.onServerInformationFetchError(exceptionString);
+                }
+            }
+        }
+        if (this.resultsCallback != null) {
+            this.resultsCallback.onServerInformationFetch(info);
         }
         return info;
     }
 
 
-    public static ServerInformation getServerInfoFromUrlString (String urlString) {
+    public ServerInformation getServerInfoFromUrlString (String urlString) {
         ServerInformation info = null;
         try {
             info = downloadAndParseServerInformation(urlString);
@@ -38,7 +81,7 @@ public class ParseServerInformation {
         }
     }
 
-    public static ServerInformation downloadAndParseServerInformation(String urlString) throws IOException {
+    public ServerInformation downloadAndParseServerInformation(String urlString) throws IOException {
         InputStream stream = null;
         ServerInformation info = null;
         try {
