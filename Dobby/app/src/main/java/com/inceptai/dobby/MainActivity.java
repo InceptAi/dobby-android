@@ -63,7 +63,7 @@ public class MainActivity extends AppCompatActivity
         if (text.length() < 2) {
             return;
         }
-        addUserChat(text);
+        // addUserChat(text);
         chatManager.sendQuery(text);
     }
 
@@ -127,7 +127,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void showResponse(String text) {
-        Message.obtain(handler, MSG_SHOW_DOBBY_CHAT, text).sendToTarget();
+       // Message.obtain(handler, MSG_SHOW_DOBBY_CHAT, text).sendToTarget();
     }
 
     @Override

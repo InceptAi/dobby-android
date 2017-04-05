@@ -4,7 +4,15 @@ import android.content.Context;
 import android.util.Log;
 
 import com.inceptai.dobby.apiai.ApiAiClient;
+import com.inceptai.dobby.speedtest.BestServerSelector;
+import com.inceptai.dobby.speedtest.DownloadManager;
+import com.inceptai.dobby.speedtest.ParseServerInformation;
+import com.inceptai.dobby.speedtest.ParseSpeedTestConfig;
+import com.inceptai.dobby.speedtest.PingAnalyzer;
+import com.inceptai.dobby.speedtest.ServerInformation;
+import com.inceptai.dobby.speedtest.SpeedTestConfig;
 import com.inceptai.dobby.speedtest.SpeedTestTask;
+import com.inceptai.dobby.speedtest.UploadManager;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -52,7 +60,17 @@ public class DobbyChatManager implements ApiAiClient.ResultListener {
         responseCallback.showResponse(response);
         Log.i(TAG, "Got response Action: " + result.toString());
         if (result.toString().contains("test")) {
-            Log.i(TAG, "Performing Speed Test");
+            //Vivek--testing best server code.
+            PingAnalyzer pingAnalyzer = new PingAnalyzer();
+            PingAnalyzer.PingStats routerPingStats = pingAnalyzer.pingAndReturnStats("192.168.1.1");
+            SpeedTestConfig config = ParseSpeedTestConfig.getConfig("https");
+            ServerInformation info = ParseServerInformation.getServerInfo();
+            ServerInformation.ServerDetails bestServer = BestServerSelector.getBestServerId(BestServerSelector.getClosestServers(config, info));
+            DownloadManager downloadManager = new DownloadManager(config.downloadConfig, bestServer, null, null);
+            downloadManager.downloadTestWithOneThread();
+            UploadManager uploadManager = new UploadManager(config.uploadConfig, bestServer, null, null);
+            uploadManager.uploadTestWithOneThread();
+            /*
             threadpool.submit(new Runnable() {
                 @Override
                 public void run() {
@@ -60,6 +78,7 @@ public class DobbyChatManager implements ApiAiClient.ResultListener {
                 }
             });
             speedTestTask.doInBackground();
+            */
         }
     }
 
