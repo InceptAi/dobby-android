@@ -4,6 +4,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.design.widget.NavigationView;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -18,24 +20,30 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.inceptai.dobby.ui.ChatFragment;
 import com.inceptai.dobby.ui.ChatRecyclerViewAdapter;
 
 import java.util.LinkedList;
 
 
+import static android.R.attr.fragment;
 import static com.inceptai.dobby.DobbyApplication.TAG;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, DobbyChatManager.ResponseCallback, Handler.Callback {
+        implements NavigationView.OnNavigationItemSelectedListener,
+        DobbyChatManager.ResponseCallback,
+        Handler.Callback, ChatFragment.OnFragmentInteractionListener {
 
     private DobbyApplication dobbyApplication;
     private DobbyChatManager chatManager;
     private NetworkLayer networkLayer;
     private Handler handler;
+    private ChatFragment chatFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,14 +65,22 @@ public class MainActivity extends AppCompatActivity
         chatManager = new DobbyChatManager(this, dobbyApplication.getThreadpool(), this);
         networkLayer = dobbyApplication.getNetworkLayer();
         handler = new Handler(this);
+
+        setupChatFragment();
     }
 
-    private void processTextQuery(String text) {
-        if (text.length() < 2) {
-            return;
-        }
-        // addUserChat(text);
-        chatManager.sendQuery(text);
+    private void setupFragment(Fragment fragment) {
+
+        // Insert the fragment by replacing any existing fragment
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        fragmentManager.beginTransaction().replace(R.id.placeholder_fl, fragment).commit();
+    }
+
+    private void setupChatFragment() {
+        chatFragment = new ChatFragment();
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        fragmentManager.beginTransaction().replace(R.id.placeholder_fl,
+                chatFragment, ChatFragment.FRAGMENT_TAG).commit();
     }
 
     @Override
@@ -127,7 +143,12 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void showResponse(String text) {
-       // Message.obtain(handler, MSG_SHOW_DOBBY_CHAT, text).sendToTarget();
+        chatFragment.showResponse(text);
+    }
+
+    @Override
+    public void onUserQuery(String text) {
+        chatManager.sendQuery(text);
     }
 
     @Override

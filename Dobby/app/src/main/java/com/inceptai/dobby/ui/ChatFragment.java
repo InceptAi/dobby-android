@@ -33,10 +33,10 @@ import static com.inceptai.dobby.DobbyApplication.TAG;
  * create an instance of this fragment.
  */
 public class ChatFragment extends Fragment implements Handler.Callback {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
+
+    public static final String FRAGMENT_TAG = "ChatFragment";
 
     // Handler message types.
     private static final int MSG_SHOW_DOBBY_CHAT = 1;
@@ -51,6 +51,19 @@ public class ChatFragment extends Fragment implements Handler.Callback {
     private ImageView micButtonIv;
     private OnFragmentInteractionListener mListener;
     private Handler handler;
+
+
+    /**
+     * Interface for parent activities to implement.
+     */
+    public interface OnFragmentInteractionListener {
+
+        /**
+         * Called when user enters a text.
+         * @param text
+         */
+        void onUserQuery(String text);
+    }
 
     public ChatFragment() {
         // Required empty public constructor
@@ -93,7 +106,7 @@ public class ChatFragment extends Fragment implements Handler.Callback {
         recyclerViewAdapter = new ChatRecyclerViewAdapter(this.getContext(), new LinkedList<ChatEntry>());
         chatRv.setAdapter(recyclerViewAdapter);
         chatRv.setLayoutManager(new LinearLayoutManager(this.getContext()));
-        handler = new Handler();
+        handler = new Handler(this);
 
         queryEditText = (EditText) fragmentView.findViewById(R.id.queryEditText);
         queryEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -106,12 +119,12 @@ public class ChatFragment extends Fragment implements Handler.Callback {
                 }
                 if (actionId == EditorInfo.IME_NULL && event.getAction() == KeyEvent.ACTION_DOWN) {
                     Log.i(TAG, "ENTER 1");
-                    // CALLBACK processTextQuery(text);
+                    processTextQuery(text);
                 } else if (actionId == EditorInfo.IME_ACTION_DONE ||
                         actionId == EditorInfo.IME_ACTION_GO ||
                         actionId == EditorInfo.IME_ACTION_NEXT) {
                     Log.i(TAG, "ENTER 2");
-                    // CALLBACK processTextQuery(text);
+                    processTextQuery(text);
                 }
                 queryEditText.getText().clear();
                 return false;
@@ -133,7 +146,7 @@ public class ChatFragment extends Fragment implements Handler.Callback {
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {
         if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
+            // mListener.onFragmentInteraction(uri);
         }
     }
 
@@ -154,25 +167,33 @@ public class ChatFragment extends Fragment implements Handler.Callback {
         mListener = null;
     }
 
-    /**
-     * Interface for parent activities to implement.
-     */
-    public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
-    }
 
-    void addDobbyChat(String text) {
+    private void addDobbyChat(String text) {
+        Log.i(TAG, "Adding dobby chat: " + text);
         ChatEntry chatEntry = new ChatEntry(text.trim(), ChatEntry.DOBBY_CHAT);
         recyclerViewAdapter.addEntryAtBottom(chatEntry);
         chatRv.scrollToPosition(recyclerViewAdapter.getItemCount() - 1);
     }
 
-    void addUserChat(String text) {
+    public void addUserChat(String text) {
         ChatEntry chatEntry = new ChatEntry(text.trim(), ChatEntry.USER_CHAT);
         recyclerViewAdapter.addEntryAtBottom(chatEntry);
         chatRv.scrollToPosition(recyclerViewAdapter.getItemCount() - 1);
     }
+
+    private void processTextQuery(String text) {
+        if (text.length() < 2) {
+            return;
+        }
+        addUserChat(text);
+        // Parent activity callback.
+        mListener.onUserQuery(text);
+    }
+
+    public void showResponse(String text) {
+        Message.obtain(handler, MSG_SHOW_DOBBY_CHAT, text).sendToTarget();
+    }
+
 
     @Override
     public boolean handleMessage(Message msg) {
