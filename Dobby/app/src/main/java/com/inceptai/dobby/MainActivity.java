@@ -25,6 +25,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.dobby.ui.ChatFragment;
 import com.inceptai.dobby.ui.WifiFragment;
 import com.inceptai.dobby.utils.Utils;
@@ -72,7 +73,7 @@ public class MainActivity extends AppCompatActivity
         requestPermissions();
     }
 
-    private void setupFragment(Class fragmentClass, String tag) {
+    private Fragment setupFragment(Class fragmentClass, String tag) {
 
         // Insert the fragment by replacing any existing fragment
         FragmentManager fragmentManager = getSupportFragmentManager();
@@ -82,7 +83,7 @@ public class MainActivity extends AppCompatActivity
                 existingFragment = (Fragment) fragmentClass.newInstance();
             } catch (Exception e) {
                 Log.e(TAG, "Unable to create fragment: " + fragmentClass.getCanonicalName());
-                return;
+                return null;
             }
         }
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
@@ -90,6 +91,7 @@ public class MainActivity extends AppCompatActivity
                 existingFragment, tag);
         fragmentTransaction.addToBackStack(null);
         fragmentTransaction.commit();
+        return existingFragment;
     }
 
     private void setupChatFragment() {
@@ -141,9 +143,10 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.nav_wifi_scan) {
-            networkLayer.startWifiScan(this);
+            ListenableFuture<List<ScanResult>> scanFuture = networkLayer.wifiScan();
             Toast.makeText(this, "Starting wifi scan...", Toast.LENGTH_SHORT).show();
-            setupFragment(WifiFragment.class, WifiFragment.FRAGMENT_TAG);
+            WifiFragment fragment = (WifiFragment) setupFragment(WifiFragment.class, WifiFragment.FRAGMENT_TAG);
+            fragment.setWifiScanFuture(scanFuture, dobbyApplication.getThreadpool().getExecutor());
 
         } else if (id == R.id.nav_gallery) {
 

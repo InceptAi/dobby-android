@@ -3,8 +3,9 @@ package com.inceptai.dobby.ui;
 import android.content.Context;
 import android.net.wifi.ScanResult;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.Fragment;
-import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -13,10 +14,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.dobby.R;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executor;
+
+
 
 import static com.inceptai.dobby.DobbyApplication.TAG;
 
@@ -26,18 +31,20 @@ import static com.inceptai.dobby.DobbyApplication.TAG;
  * Activities containing this fragment MUST implement the {@link OnListFragmentInteractionListener}
  * interface.
  */
-public class WifiFragment extends Fragment {
+public class WifiFragment extends Fragment implements Handler.Callback {
 
     // TODO: Customize parameter argument names
     private static final String ARG_COLUMN_COUNT = "column-count";
 
     public static final String FRAGMENT_TAG = "WifiFragment";
+    private static final int MSG_UPDATE_WIFI_SCAN_RESULT = 101;
 
     // TODO: Customize parameters
     private int mColumnCount = 1;
     private OnListFragmentInteractionListener mListener;
     private RecyclerView recyclerView;
     private WifiScanRecyclerViewAdapter wifiScanRecyclerViewAdapter;
+    private Handler handler;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -68,13 +75,15 @@ public class WifiFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        handler = new Handler(this);
         View view = inflater.inflate(R.layout.fragment_wifi_scan, container, false);
         TextView tv = (TextView) view.findViewById(R.id.wifi_frag_title_tv);
         tv.setText(R.string.wifi_scan_results_title);
         recyclerView = (RecyclerView) view.findViewById(R.id.wifi_scan_list);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        wifiScanRecyclerViewAdapter = new WifiScanRecyclerViewAdapter(new ArrayList<ScanResult>(), mListener);
+        wifiScanRecyclerViewAdapter = new WifiScanRecyclerViewAdapter(
+                new ArrayList<ScanResult>(), mListener);
         recyclerView.setAdapter(wifiScanRecyclerViewAdapter);
 
         return view;
@@ -112,5 +121,29 @@ public class WifiFragment extends Fragment {
 
     public void updateWifiScanResults(List<ScanResult> results) {
         wifiScanRecyclerViewAdapter.refresh(results);
+    }
+
+    public void setWifiScanFuture(final ListenableFuture<List<ScanResult>> scanFuture, Executor executor) {
+        scanFuture.addListener(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Log.i(TAG, "wifi scan future got result:" + scanFuture.get());
+                    Message.obtain(handler, MSG_UPDATE_WIFI_SCAN_RESULT, scanFuture.get()).sendToTarget();
+                } catch (Exception e) {
+                    Log.i(TAG, "Exception getting scan result");
+                }
+            }
+        }, executor);
+    }
+
+    @Override
+    public boolean handleMessage(Message msg) {
+        switch (msg.what) {
+            case MSG_UPDATE_WIFI_SCAN_RESULT:
+                updateWifiScanResults((List<ScanResult>) msg.obj);
+                break;
+        }
+        return false;
     }
 }

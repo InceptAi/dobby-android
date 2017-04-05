@@ -6,6 +6,8 @@ import android.net.wifi.ScanResult;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 import com.inceptai.dobby.speedtest.BandwidthAnalyzer;
 import com.inceptai.dobby.speedtest.BandwithTestCodes.BandwidthTestErrorCodes;
 import com.inceptai.dobby.speedtest.BandwithTestCodes.BandwidthTestMode;
@@ -59,7 +61,7 @@ public class NetworkLayer implements  WifiAnalyzer.WifiScanResultsCallback, Band
     }
 
     void initialize() {
-        wifiAnalyzer = WifiAnalyzer.create(context);
+        wifiAnalyzer = WifiAnalyzer.create(context, threadpool);
         bandwidthAnalyzer = BandwidthAnalyzer.create(this);
         pingAnalyzer = PingAnalyzer.create(this);
         if (wifiAnalyzer != null) {
@@ -69,6 +71,11 @@ public class NetworkLayer implements  WifiAnalyzer.WifiScanResultsCallback, Band
 
     void startWifiScan(WifiAnalyzer.WifiScanResultsCallback resultsCallback) {
         wifiAnalyzer.startWifiScan(resultsCallback);
+    }
+
+
+    ListenableFuture<List<ScanResult>> wifiScan() {
+        return wifiAnalyzer.startWifiScan();
     }
 
     @Override

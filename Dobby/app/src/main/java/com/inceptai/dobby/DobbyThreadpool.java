@@ -1,6 +1,10 @@
 package com.inceptai.dobby;
 
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
+
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -25,6 +29,7 @@ public class DobbyThreadpool {
     private final BlockingQueue<Runnable> workQueue;
 
     private ThreadPoolExecutor dobbyThreadPool;
+    private ListeningExecutorService listeningExecutorService;
 
     DobbyThreadpool() {
 
@@ -38,9 +43,19 @@ public class DobbyThreadpool {
                 KEEP_ALIVE_TIME,
                 KEEP_ALIVE_TIME_UNIT,
                 workQueue);
+
+        listeningExecutorService = MoreExecutors.listeningDecorator(dobbyThreadPool);
     }
 
     public void submit(Runnable runnable) {
         dobbyThreadPool.submit(runnable);
+    }
+
+    public ListeningExecutorService getListeningExecutorService() {
+        return listeningExecutorService;
+    }
+
+    public Executor getExecutor() {
+        return dobbyThreadPool;
     }
 }

@@ -12,6 +12,9 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.google.common.base.Preconditions;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
+import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.utils.Utils;
 
 
@@ -34,6 +37,8 @@ public class WifiAnalyzer {
     private int wifiReceiverState = WIFI_RECEIVER_UNREGISTERED;
     private WifiManager wifiManager;
     private WifiScanResultsCallback wifiScanResultsCallback;
+    private DobbyThreadpool threadpool;
+    private SettableFuture<List<ScanResult>> wifiScanFuture;
 
     /**
      * Callback interface for results. More methods to follow.
@@ -42,11 +47,12 @@ public class WifiAnalyzer {
         void onWifiScan(List<ScanResult> scanResults);
     }
 
-    private WifiAnalyzer(Context context, WifiManager wifiManager) {
+    private WifiAnalyzer(Context context, WifiManager wifiManager, DobbyThreadpool threadpool) {
         Preconditions.checkNotNull(context);
         Preconditions.checkNotNull(wifiManager);
         this.context = context.getApplicationContext();
         this.wifiManager = wifiManager;
+        this.threadpool = threadpool;
     }
 
     /**
@@ -55,14 +61,14 @@ public class WifiAnalyzer {
      * @return Instance of WifiAnalyzer or null on error.
      */
     @Nullable
-    public static WifiAnalyzer create(Context context) {
+    public static WifiAnalyzer create(Context context, DobbyThreadpool threadpool) {
         WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
         DhcpInfo info = wifiManager.getDhcpInfo();
         String myIP = Utils.intToIp(info.ipAddress);
         Log.v(TAG, info.toString());
         Log.v(TAG, myIP);
         if (wifiManager != null) {
-            return new WifiAnalyzer(context.getApplicationContext(), wifiManager);
+            return new WifiAnalyzer(context.getApplicationContext(), wifiManager, threadpool);
         }
         return null;
     }
@@ -73,6 +79,21 @@ public class WifiAnalyzer {
         }
         this.wifiScanResultsCallback = wifiScanResultsCallback;
         return wifiManager.startScan();
+    }
+
+    /**
+     *
+     * @return An instance of a {@link ListenableFuture<List<ScanResult>>} or null on immediate failure.
+     */
+    public ListenableFuture<List<ScanResult>> startWifiScan() {
+        if (wifiReceiverState != WIFI_RECEIVER_REGISTERED) {
+            registerScanReceiver();
+        }
+        if (wifiManager.startScan()){
+            wifiScanFuture = SettableFuture.create();
+            return wifiScanFuture;
+        }
+        return null;
     }
 
     private void registerScanReceiver() {
@@ -103,6 +124,10 @@ public class WifiAnalyzer {
             Log.i(TAG, "Wifi scan result: " + sb.toString());
             if (wifiScanResultsCallback != null) {
                 wifiScanResultsCallback.onWifiScan(wifiList);
+
+            }
+            if (wifiScanFuture != null) {
+                wifiScanFuture.set(wifiList);
             }
             unregisterScanReceiver();
         }
