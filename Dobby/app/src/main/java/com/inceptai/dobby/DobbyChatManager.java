@@ -6,6 +6,9 @@ import android.util.Log;
 import com.inceptai.dobby.apiai.ApiAiClient;
 import com.inceptai.dobby.speedtest.SpeedTestTask;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import ai.api.model.Result;
 
 import static com.inceptai.dobby.DobbyApplication.TAG;
