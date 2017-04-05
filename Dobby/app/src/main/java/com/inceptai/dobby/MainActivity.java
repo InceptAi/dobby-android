@@ -4,6 +4,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.design.widget.NavigationView;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -18,31 +20,30 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.inceptai.dobby.ui.ChatFragment;
 import com.inceptai.dobby.ui.ChatRecyclerViewAdapter;
 
 import java.util.LinkedList;
 
 
+import static android.R.attr.fragment;
 import static com.inceptai.dobby.DobbyApplication.TAG;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, DobbyChatManager.ResponseCallback, Handler.Callback {
-
-    // Handler message types.
-    private static final int MSG_SHOW_DOBBY_CHAT = 1;
+        implements NavigationView.OnNavigationItemSelectedListener,
+        DobbyChatManager.ResponseCallback,
+        Handler.Callback, ChatFragment.OnFragmentInteractionListener {
 
     private DobbyApplication dobbyApplication;
-    private ImageView micButtonIv;
-    private EditText queryEditText;
-    private RecyclerView chatRv;
-    private ChatRecyclerViewAdapter recyclerViewAdapter;
     private DobbyChatManager chatManager;
     private NetworkLayer networkLayer;
     private Handler handler;
+    private ChatFragment chatFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,55 +61,26 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        queryEditText = (EditText) findViewById(R.id.queryEditText);
-        queryEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                String text = queryEditText.getText().toString();
-                Log.i(TAG, "Action ID: " + actionId);
-                if (event != null) {
-                    Log.i(TAG, "key event: " + event.toString());
-                }
-                if (actionId == EditorInfo.IME_NULL && event.getAction() == KeyEvent.ACTION_DOWN) {
-                    Log.i(TAG, "ENTER 1");
-                    processTextQuery(text);
-                } else if (actionId == EditorInfo.IME_ACTION_DONE ||
-                        actionId == EditorInfo.IME_ACTION_GO ||
-                        actionId == EditorInfo.IME_ACTION_NEXT) {
-                    Log.i(TAG, "ENTER 2");
-                    processTextQuery(text);
-                }
-                queryEditText.getText().clear();
-                return false;
-            }
-        });
-
         dobbyApplication = (DobbyApplication) getApplication();
         chatManager = new DobbyChatManager(this, dobbyApplication.getThreadpool(), this);
         networkLayer = dobbyApplication.getNetworkLayer();
         handler = new Handler(this);
 
-        micButtonIv = (ImageView) findViewById(R.id.micButtonIv);
-        micButtonIv.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(MainActivity.this, "Mic not supported yet !", Toast.LENGTH_LONG).show();
-            }
-        });
-
-
-        chatRv = (RecyclerView) findViewById(R.id.chatRv);
-        recyclerViewAdapter = new ChatRecyclerViewAdapter(this, new LinkedList<ChatEntry>());
-        chatRv.setAdapter(recyclerViewAdapter);
-        chatRv.setLayoutManager(new LinearLayoutManager(this));
+        setupChatFragment();
     }
 
-    private void processTextQuery(String text) {
-        if (text.length() < 2) {
-            return;
-        }
-        addUserChat(text);
-        chatManager.sendQuery(text);
+    private void setupFragment(Fragment fragment) {
+
+        // Insert the fragment by replacing any existing fragment
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        fragmentManager.beginTransaction().replace(R.id.placeholder_fl, fragment).commit();
+    }
+
+    private void setupChatFragment() {
+        chatFragment = new ChatFragment();
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        fragmentManager.beginTransaction().replace(R.id.placeholder_fl,
+                chatFragment, ChatFragment.FRAGMENT_TAG).commit();
     }
 
     @Override
@@ -171,31 +143,16 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void showResponse(String text) {
-        Message.obtain(handler, MSG_SHOW_DOBBY_CHAT, text).sendToTarget();
+        chatFragment.showResponse(text);
+    }
+
+    @Override
+    public void onUserQuery(String text) {
+        chatManager.sendQuery(text);
     }
 
     @Override
     public boolean handleMessage(Message msg) {
-        switch (msg.what) {
-            case MSG_SHOW_DOBBY_CHAT:
-                // Add to the recycler view.
-                String text = (String) msg.obj;
-                addDobbyChat(text);
-                break;
-
-        }
         return false;
-    }
-
-    private void addDobbyChat(String text) {
-        ChatEntry chatEntry = new ChatEntry(text.trim(), ChatEntry.DOBBY_CHAT);
-        recyclerViewAdapter.addEntryAtBottom(chatEntry);
-        chatRv.scrollToPosition(recyclerViewAdapter.getItemCount() - 1);
-    }
-
-    private void addUserChat(String text) {
-        ChatEntry chatEntry = new ChatEntry(text.trim(), ChatEntry.USER_CHAT);
-        recyclerViewAdapter.addEntryAtBottom(chatEntry);
-        chatRv.scrollToPosition(recyclerViewAdapter.getItemCount() - 1);
     }
 }

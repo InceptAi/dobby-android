@@ -8,6 +8,9 @@ import com.inceptai.dobby.speedtest.BandwidthAnalyzer;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
 import com.inceptai.dobby.speedtest.SpeedTestTask;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import ai.api.model.Result;
 
 import static com.inceptai.dobby.DobbyApplication.TAG;
