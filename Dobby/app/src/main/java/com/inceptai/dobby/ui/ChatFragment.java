@@ -194,7 +194,6 @@ public class ChatFragment extends Fragment implements Handler.Callback {
         Message.obtain(handler, MSG_SHOW_DOBBY_CHAT, text).sendToTarget();
     }
 
-
     @Override
     public boolean handleMessage(Message msg) {
         switch (msg.what) {
