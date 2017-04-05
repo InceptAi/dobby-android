@@ -1,5 +1,8 @@
 package com.inceptai.dobby.utils;
 
+import android.support.v7.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.util.Log;
 
 import com.google.common.net.InetAddresses;
@@ -17,13 +20,15 @@ import java.net.URL;
 import static com.inceptai.dobby.DobbyApplication.TAG;
 
 /**
- * Created by vivek on 4/1/17.
+ * Utils class.
  */
 
 public class Utils {
-    private static int READ_TIMEOUT = 10000;
-    private static int CONNECTION_TIMEOUT = 15000;
-    private static String EMPTY_STRING = "";
+    private static final String EMPTY_STRING = "";
+    private static final int READ_TIMEOUT_MS = 10000;
+    private static final int CONNECTION_TIMEOUT_MS = 15000;
+
+    private Utils() {}
     /**
      * Given a string url, connects and returns an input stream
      * @param urlString string to fetch
@@ -36,8 +41,8 @@ public class Utils {
         InputStream stream = null;
         URL url = new URL(urlString);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        connection.setReadTimeout(READ_TIMEOUT /* milliseconds */);
-        connection.setConnectTimeout(CONNECTION_TIMEOUT /* milliseconds */);
+        connection.setReadTimeout(READ_TIMEOUT_MS /* milliseconds */);
+        connection.setConnectTimeout(CONNECTION_TIMEOUT_MS /* milliseconds */);
         connection.setRequestMethod("GET");
         connection.setDoInput(true);
         // Starts the query
@@ -71,8 +76,8 @@ public class Utils {
         InputStream stream = null;
         URL url = new URL(urlString);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        connection.setReadTimeout(READ_TIMEOUT /* milliseconds */);
-        connection.setConnectTimeout(CONNECTION_TIMEOUT /* milliseconds */);
+        connection.setReadTimeout(READ_TIMEOUT_MS /* milliseconds */);
+        connection.setConnectTimeout(CONNECTION_TIMEOUT_MS /* milliseconds */);
         connection.setRequestMethod("GET");
         connection.setDoInput(true);
         // Starts the query
@@ -247,7 +252,7 @@ public class Utils {
             BufferedReader inputStream = new BufferedReader(
                     new InputStreamReader(p.getInputStream()));
 
-            String s = "";
+            String s;
             // reading output stream of the command
             while ((s = inputStream.readLine()) != null) {
                 outputStringBuilder.append(s);
@@ -275,4 +280,16 @@ public class Utils {
         return returnValue;
     }
 
+    public static AlertDialog buildSimpleDialog(Context context, String title, String message) {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle(title);
+        builder.setMessage(message);
+        builder.setPositiveButton(android.R.string.ok, null);
+        builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+            }
+        });
+        return builder.show();
+    }
 }

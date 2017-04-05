@@ -26,7 +26,7 @@ import static com.inceptai.dobby.DobbyApplication.TAG;
  * local bots would interact with this class to run tests, diagnostics etc. Also
  */
 
-public class NetworkLayer implements  WifiAnalyzer.ResultsCallback, BandwidthAnalyzer.ResultsCallback, PingAnalyzer.ResultsCallback {
+public class NetworkLayer implements  WifiAnalyzer.WifiScanResultsCallback, BandwidthAnalyzer.ResultsCallback, PingAnalyzer.ResultsCallback {
     private Context context;
     private DobbyThreadpool threadpool;
     private WifiAnalyzer wifiAnalyzer;
@@ -59,7 +59,7 @@ public class NetworkLayer implements  WifiAnalyzer.ResultsCallback, BandwidthAna
     }
 
     void initialize() {
-        wifiAnalyzer = WifiAnalyzer.create(context, this);
+        wifiAnalyzer = WifiAnalyzer.create(context);
         bandwidthAnalyzer = BandwidthAnalyzer.create(this);
         pingAnalyzer = PingAnalyzer.create(this);
         if (wifiAnalyzer != null) {
@@ -67,8 +67,8 @@ public class NetworkLayer implements  WifiAnalyzer.ResultsCallback, BandwidthAna
         }
     }
 
-    void runWifiAnalysis() {
-        wifiAnalyzer.startWifiScan();
+    void startWifiScan(WifiAnalyzer.WifiScanResultsCallback resultsCallback) {
+        wifiAnalyzer.startWifiScan(resultsCallback);
     }
 
     @Override

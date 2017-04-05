@@ -7,6 +7,7 @@ import android.content.IntentFilter;
 import android.net.DhcpInfo;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
@@ -31,22 +32,20 @@ public class WifiAnalyzer {
     private WifiReceiver wifiReceiver = new WifiReceiver();
     private int wifiReceiverState = WIFI_RECEIVER_UNREGISTERED;
     private WifiManager wifiManager;
-    private ResultsCallback resultsCallback;
+    private WifiScanResultsCallback wifiScanResultsCallback;
 
     /**
      * Callback interface for results. More methods to follow.
      */
-    public interface ResultsCallback {
+    public interface WifiScanResultsCallback {
         void onWifiScan(List<ScanResult> scanResults);
     }
 
-    private WifiAnalyzer(Context context, WifiManager wifiManager,
-                         @Nullable ResultsCallback resultsCallback) {
+    private WifiAnalyzer(Context context, WifiManager wifiManager) {
         Preconditions.checkNotNull(context);
         Preconditions.checkNotNull(wifiManager);
         this.context = context.getApplicationContext();
         this.wifiManager = wifiManager;
-        this.resultsCallback = resultsCallback;
     }
 
     /**
@@ -55,22 +54,23 @@ public class WifiAnalyzer {
      * @return Instance of WifiAnalyzer or null on error.
      */
     @Nullable
-    public static WifiAnalyzer create(Context context, ResultsCallback resultsCallback) {
+    public static WifiAnalyzer create(Context context) {
         WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
         DhcpInfo info = wifiManager.getDhcpInfo();
         String myIP = Utils.intToIp(info.ipAddress);
         Log.v(TAG, info.toString());
         Log.v(TAG, myIP);
         if (wifiManager != null) {
-            return new WifiAnalyzer(context.getApplicationContext(), wifiManager, resultsCallback);
+            return new WifiAnalyzer(context.getApplicationContext(), wifiManager);
         }
         return null;
     }
 
-    public boolean startWifiScan() {
+    public boolean startWifiScan(@NonNull WifiScanResultsCallback wifiScanResultsCallback) {
         if (wifiReceiverState != WIFI_RECEIVER_REGISTERED) {
             registerScanReceiver();
         }
+        this.wifiScanResultsCallback = wifiScanResultsCallback;
         return wifiManager.startScan();
     }
 
@@ -100,10 +100,10 @@ public class WifiAnalyzer {
                 sb.append("\\n");
             }
             Log.i(TAG, "Wifi scan result: " + sb.toString());
-            if (resultsCallback != null) {
-                resultsCallback.onWifiScan(wifiList);
+            if (wifiScanResultsCallback != null) {
+                wifiScanResultsCallback.onWifiScan(wifiList);
             }
-
+            unregisterScanReceiver();
         }
     }
 
