@@ -4,7 +4,6 @@ import android.content.Context;
 import android.util.Log;
 
 import com.inceptai.dobby.apiai.ApiAiClient;
-import com.inceptai.dobby.speedtest.PingAnalyzer;
 import com.inceptai.dobby.speedtest.SpeedTestTask;
 
 import ai.api.model.Result;
@@ -51,20 +50,12 @@ public class DobbyChatManager implements ApiAiClient.ResultListener {
         Log.i(TAG, "Got response Action: " + result.toString());
         if (result.toString().contains("test")) {
             //Vivek--testing best server code.
-            PingAnalyzer pingAnalyzer = new PingAnalyzer(null);
-            PingAnalyzer.PingStats routerPingStats = pingAnalyzer.pingAndReturnStats("192.168.1.1");
-            Log.v(TAG, routerPingStats.toJson());
+            //WifiAnalyzer wifiAnalyzer = WifiAnalyzer.create(this.context, null);
+            //PingAnalyzer pingAnalyzer = new PingAnalyzer(null);
+            //PingAnalyzer.PingStats routerPingStats = pingAnalyzer.pingAndReturnStats("192.168.3.1");
+            //Log.v(TAG, routerPingStats.toJson());
             //BandwidthAnalyzer bandwidthAnalyzer = BandwidthAnalyzer.create(null);
             //bandwidthAnalyzer.startBandwidthTest(BandwithTestCodes.BandwidthTestMode.DOWNLOAD_AND_UPLOAD);
-            /*
-            SpeedTestConfig config = ParseSpeedTestConfig.getConfig("https");
-            ServerInformation info = ParseServerInformation.getServerInfo();
-            ServerInformation.ServerDetails bestServer = BestServerSelector.getBestServerId(BestServerSelector.getClosestServers(config, info));
-            DownloadAnalyzer downloadAnalyzer = new DownloadAnalyzer(config.downloadConfig, bestServer, null);
-            downloadAnalyzer.downloadTestWithOneThread();
-            UploadAnalyzer uploadAnalyzer = new UploadAnalyzer(config.uploadConfig, bestServer, null);
-            uploadAnalyzer.uploadTestWithOneThread();
-            */
             /*
             threadpool.submit(new Runnable() {
                 @Override
