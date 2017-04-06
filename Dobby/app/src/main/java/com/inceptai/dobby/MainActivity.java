@@ -29,9 +29,10 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.dobby.ui.ChatFragment;
 import com.inceptai.dobby.ui.WifiFragment;
 import com.inceptai.dobby.utils.Utils;
-import com.inceptai.dobby.wifi.WifiAnalyzer;
 
 import java.util.List;
+
+import javax.inject.Inject;
 
 import static com.inceptai.dobby.DobbyApplication.TAG;
 
@@ -42,7 +43,7 @@ public class MainActivity extends AppCompatActivity
 
     private static final int PERMISSION_COARSE_LOCATION_REQUEST_CODE = 101;
 
-    private DobbyApplication dobbyApplication;
+    @Inject DobbyApplication dobbyApplication;
     private DobbyChatManager chatManager;
     private NetworkLayer networkLayer;
     private Handler handler;
@@ -50,7 +51,9 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ((DobbyApplication) getApplication()).getProdComponent().inject(this);
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -63,8 +66,7 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-
-        dobbyApplication = (DobbyApplication) getApplication();
+        
         chatManager = new DobbyChatManager(this, dobbyApplication.getThreadpool(), this);
         networkLayer = dobbyApplication.getNetworkLayer();
         handler = new Handler(this);
