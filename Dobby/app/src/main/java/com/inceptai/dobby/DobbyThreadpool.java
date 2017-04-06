@@ -31,10 +31,10 @@ public class DobbyThreadpool {
     private ThreadPoolExecutor dobbyThreadPool;
     private ListeningExecutorService listeningExecutorService;
 
-    DobbyThreadpool() {
+    public DobbyThreadpool() {
 
         // Instantiates the queue of Runnables as a LinkedBlockingQueue
-        workQueue = new LinkedBlockingQueue<Runnable>();
+        workQueue = new LinkedBlockingQueue<>();
 
         // Creates a thread pool manager
         dobbyThreadPool = new ThreadPoolExecutor(

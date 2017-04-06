@@ -44,8 +44,9 @@ public class MainActivity extends AppCompatActivity
     private static final int PERMISSION_COARSE_LOCATION_REQUEST_CODE = 101;
 
     @Inject DobbyApplication dobbyApplication;
-    private DobbyChatManager chatManager;
-    private NetworkLayer networkLayer;
+    @Inject DobbyThreadpool threadpool;
+    @Inject DobbyChatManager chatManager;
+    @Inject NetworkLayer networkLayer;
     private Handler handler;
     private ChatFragment chatFragment;
 
@@ -66,9 +67,8 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-        
-        chatManager = new DobbyChatManager(this, dobbyApplication.getThreadpool(), this);
-        networkLayer = dobbyApplication.getNetworkLayer();
+
+        chatManager.setResponseCallback(this);
         handler = new Handler(this);
 
         setupChatFragment();
@@ -148,7 +148,7 @@ public class MainActivity extends AppCompatActivity
             ListenableFuture<List<ScanResult>> scanFuture = networkLayer.wifiScan();
             Toast.makeText(this, "Starting wifi scan...", Toast.LENGTH_SHORT).show();
             WifiFragment fragment = (WifiFragment) setupFragment(WifiFragment.class, WifiFragment.FRAGMENT_TAG);
-            fragment.setWifiScanFuture(scanFuture, dobbyApplication.getThreadpool().getExecutor());
+            fragment.setWifiScanFuture(scanFuture, threadpool.getExecutor());
 
         } else if (id == R.id.nav_gallery) {
 

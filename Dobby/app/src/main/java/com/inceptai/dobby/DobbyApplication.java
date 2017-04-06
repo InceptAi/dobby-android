@@ -16,12 +16,7 @@ public class DobbyApplication extends Application {
     private NetworkLayer networkLayer;
     private ProdComponent prodComponent;
 
-
-    public DobbyThreadpool getThreadpool() {
-        return THREADPOOL;
-    }
-
-    public NetworkLayer getNetworkLayer() {
+    private NetworkLayer getNetworkLayer() {
         if (networkLayer == null) {
             networkLayer = new NetworkLayer(getApplicationContext(), THREADPOOL);
             networkLayer.initialize();

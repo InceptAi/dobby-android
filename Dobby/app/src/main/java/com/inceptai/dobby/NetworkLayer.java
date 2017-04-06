@@ -56,7 +56,7 @@ public class NetworkLayer implements BandwidthAnalyzer.ResultsCallback, PingAnal
         this.ipLayerInfonfo = null;
     }
 
-    void initialize() {
+    public void initialize() {
         wifiAnalyzer = WifiAnalyzer.create(context, threadpool);
         bandwidthAnalyzer = BandwidthAnalyzer.create(this);
         pingAnalyzer = PingAnalyzer.create(this);

@@ -30,14 +30,19 @@ public class DobbyChatManager implements ApiAiClient.ResultListener {
         void showResponse(String text);
     }
 
-    public DobbyChatManager(Context context, DobbyThreadpool threadpool, ResponseCallback callback) {
+    public DobbyChatManager(Context context, DobbyThreadpool threadpool) {
         this.context = context;
         this.threadpool = threadpool;
-        this.responseCallback = callback;
+
         //Why is this not this.apiAiClient
         apiAiClient = new ApiAiClient(context, threadpool);
         apiAiClient.connect();
         this.speedTestTask = new SpeedTestTask();
+    }
+
+
+    public void setResponseCallback(ResponseCallback responseCallback) {
+        this.responseCallback = responseCallback;
     }
 
     @Override
