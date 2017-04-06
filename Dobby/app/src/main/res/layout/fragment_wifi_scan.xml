@@ -3,6 +3,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/wifi_linear_layout"
     android:orientation="vertical"
+    android:fitsSystemWindows="true"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     >
@@ -13,9 +14,8 @@
         android:layout_height="wrap_content"
         android:layout_width="match_parent"
         android:padding="10dp"
-        android:visibility="visible"
-        android:textAppearance="?attr/textAppearanceListItem"
         android:layout_gravity="top"
+        android:textAppearance="?attr/textAppearanceListItem"
         />
 
     <android.support.v7.widget.RecyclerView
@@ -23,8 +23,7 @@
         xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/wifi_scan_list"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="wrap_content"
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
         app:layoutManager="LinearLayoutManager"
@@ -32,7 +31,3 @@
         tools:listitem="@layout/fragment_single_ap" />
 
 </LinearLayout>
-
-<!--
-        android:name="com.inceptai.dobby.ui.WifiFragment"
--->

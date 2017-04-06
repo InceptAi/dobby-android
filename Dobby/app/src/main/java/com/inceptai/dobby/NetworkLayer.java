@@ -4,10 +4,8 @@ import android.content.Context;
 import android.net.DhcpInfo;
 import android.net.wifi.ScanResult;
 import android.support.annotation.Nullable;
-import android.util.Log;
 
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.SettableFuture;
 import com.inceptai.dobby.speedtest.BandwidthAnalyzer;
 import com.inceptai.dobby.speedtest.BandwithTestCodes.BandwidthTestErrorCodes;
 import com.inceptai.dobby.speedtest.BandwithTestCodes.BandwidthTestMode;
@@ -21,14 +19,12 @@ import java.util.List;
 
 import fr.bmartel.speedtest.SpeedTestReport;
 
-import static com.inceptai.dobby.DobbyApplication.TAG;
-
 /**
  * This class abstracts out the implementation details of all things 'network' related. The UI and
  * local bots would interact with this class to run tests, diagnostics etc. Also
  */
 
-public class NetworkLayer implements  WifiAnalyzer.WifiScanResultsCallback, BandwidthAnalyzer.ResultsCallback, PingAnalyzer.ResultsCallback {
+public class NetworkLayer implements BandwidthAnalyzer.ResultsCallback, PingAnalyzer.ResultsCallback {
     private Context context;
     private DobbyThreadpool threadpool;
     private WifiAnalyzer wifiAnalyzer;
@@ -69,30 +65,9 @@ public class NetworkLayer implements  WifiAnalyzer.WifiScanResultsCallback, Band
         }
     }
 
-    void startWifiScan(WifiAnalyzer.WifiScanResultsCallback resultsCallback) {
-        wifiAnalyzer.startWifiScan(resultsCallback);
-    }
-
-
     ListenableFuture<List<ScanResult>> wifiScan() {
         return wifiAnalyzer.startWifiScan();
     }
-
-    @Override
-    public void onWifiScan(List<ScanResult> scanResults) {
-        for (ScanResult result : scanResults) {
-            Log.i(TAG, "Wifi scan results:" + result.toString());
-        }
-
-        // Thread switch logic.
-        threadpool.submit(new Runnable() {
-            @Override
-            public void run() {
-                // Post scan results to caller if needed.
-            }
-        });
-    }
-
 
     //Error callback
     @Override
