@@ -1,9 +1,12 @@
-package com.inceptai.dobby;
+package com.inceptai.dobby.ai;
 
 import android.content.Context;
 import android.util.Log;
 
-import com.inceptai.dobby.apiai.ApiAiClient;
+import com.inceptai.dobby.DobbyThreadpool;
+import com.inceptai.dobby.ai.Action;
+import com.inceptai.dobby.ai.ApiAiClient;
+import com.inceptai.dobby.ai.InferenceEngine;
 import com.inceptai.dobby.speedtest.SpeedTestTask;
 
 import ai.api.model.Result;
@@ -16,28 +19,26 @@ import static com.inceptai.dobby.DobbyApplication.TAG;
  * It can be made to send queries to API AI's server or use a local/another AI system.
  */
 
-public class DobbyChatManager implements ApiAiClient.ResultListener {
-    private static final String CANNED_RESPONSE = "We are working on it.";
-
+public class DobbyAi implements ApiAiClient.ResultListener {
     private Context context;
     private DobbyThreadpool threadpool;
     private ApiAiClient apiAiClient;
     private ResponseCallback responseCallback;
     private SpeedTestTask speedTestTask;
+    private InferenceEngine inferenceEngine;
 
 
     public interface ResponseCallback {
         void showResponse(String text);
     }
 
-    public DobbyChatManager(Context context, DobbyThreadpool threadpool) {
+    public DobbyAi(Context context, DobbyThreadpool threadpool) {
         this.context = context;
         this.threadpool = threadpool;
-
-        //Why is this not this.apiAiClient
         apiAiClient = new ApiAiClient(context, threadpool);
         apiAiClient.connect();
-        this.speedTestTask = new SpeedTestTask();
+        speedTestTask = new SpeedTestTask();
+        inferenceEngine = new InferenceEngine();
     }
 
 
@@ -46,12 +47,17 @@ public class DobbyChatManager implements ApiAiClient.ResultListener {
     }
 
     @Override
-    public void onResult(Result result) {
-        String response = result.getFulfillment().getSpeech();
-        if (response == null || response.isEmpty()) {
-            response = CANNED_RESPONSE;
-        }
-        responseCallback.showResponse(response);
+    public void onResult(final Result result) {
+        // Thread switch (to release any Api.Ai threads).
+        threadpool.submit(new Runnable() {
+            @Override
+            public void run() {
+                Action action = inferenceEngine.interpretApiAiResult(result);
+                takeAction(action);
+            }
+        });
+
+
         Log.i(TAG, "Got response Action: " + result.toString());
         if (result.toString().contains("test")) {
             //Vivek--testing best server code.
@@ -75,6 +81,17 @@ public class DobbyChatManager implements ApiAiClient.ResultListener {
 
     public void startMic() {
 
+    }
+
+    /**
+     * Implements the action returned by the InferenceEngine.
+     *
+     * @param action Action to be taken.
+     */
+    private void takeAction(Action action) {
+        if (responseCallback != null) {
+            responseCallback.showResponse(action.getUserResponse());
+        }
     }
 
     public void sendQuery(String text) {

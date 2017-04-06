@@ -26,6 +26,7 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import com.inceptai.dobby.ai.DobbyAi;
 import com.inceptai.dobby.ui.ChatFragment;
 import com.inceptai.dobby.ui.WifiFragment;
 import com.inceptai.dobby.utils.Utils;
@@ -38,14 +39,14 @@ import static com.inceptai.dobby.DobbyApplication.TAG;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
-        DobbyChatManager.ResponseCallback,
+        DobbyAi.ResponseCallback,
         Handler.Callback, ChatFragment.OnFragmentInteractionListener {
 
     private static final int PERMISSION_COARSE_LOCATION_REQUEST_CODE = 101;
 
     @Inject DobbyApplication dobbyApplication;
     @Inject DobbyThreadpool threadpool;
-    @Inject DobbyChatManager chatManager;
+    @Inject DobbyAi dobbyAi;
     @Inject NetworkLayer networkLayer;
     private Handler handler;
     private ChatFragment chatFragment;
@@ -68,7 +69,7 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        chatManager.setResponseCallback(this);
+        dobbyAi.setResponseCallback(this);
         handler = new Handler(this);
 
         setupChatFragment();
@@ -174,7 +175,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onUserQuery(String text) {
-        chatManager.sendQuery(text);
+        dobbyAi.sendQuery(text);
     }
 
     @Override

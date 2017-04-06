@@ -1,4 +1,4 @@
-package com.inceptai.dobby.apiai;
+package com.inceptai.dobby.ai;
 
 import android.content.Context;
 import android.util.Log;

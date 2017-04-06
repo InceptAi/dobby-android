@@ -1,7 +1,7 @@
 package com.inceptai.dobby.dagger;
 
 import com.inceptai.dobby.DobbyApplication;
-import com.inceptai.dobby.DobbyChatManager;
+import com.inceptai.dobby.ai.DobbyAi;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.NetworkLayer;
 
@@ -36,8 +36,8 @@ public class ProdModule {
 
     @Singleton
     @Provides
-    public DobbyChatManager providesDobbyChatManager(DobbyApplication application, DobbyThreadpool threadpool) {
-        return new DobbyChatManager(application.getApplicationContext(), threadpool);
+    public DobbyAi providesDobbyAi(DobbyApplication application, DobbyThreadpool threadpool) {
+        return new DobbyAi(application.getApplicationContext(), threadpool);
     }
 
     @Singleton
