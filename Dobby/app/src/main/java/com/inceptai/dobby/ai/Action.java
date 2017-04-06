@@ -23,19 +23,19 @@ public class Action {
     private String userResponse;
 
     @ActionType
-    private int actionType;
+    private int action;
 
     public String getUserResponse() {
         return userResponse;
     }
 
     @ActionType
-    public int getActionType() {
-        return actionType;
+    public int getAction() {
+        return action;
     }
 
-    public Action(String userResponse, @ActionType  int actionType) {
+    public Action(String userResponse, @ActionType  int action) {
         this.userResponse = userResponse;
-        this.actionType = actionType;
+        this.action = action;
     }
 }

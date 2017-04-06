@@ -5,7 +5,9 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -30,6 +32,7 @@ public class DobbyThreadpool {
 
     private ThreadPoolExecutor dobbyThreadPool;
     private ListeningExecutorService listeningExecutorService;
+    private ScheduledExecutorService scheduledExecutorService;
 
     public DobbyThreadpool() {
 
@@ -45,6 +48,7 @@ public class DobbyThreadpool {
                 workQueue);
 
         listeningExecutorService = MoreExecutors.listeningDecorator(dobbyThreadPool);
+        scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     }
 
     public void submit(Runnable runnable) {
@@ -57,5 +61,9 @@ public class DobbyThreadpool {
 
     public Executor getExecutor() {
         return dobbyThreadPool;
+    }
+
+    public ScheduledExecutorService getScheduledExecutorService() {
+        return scheduledExecutorService;
     }
 }

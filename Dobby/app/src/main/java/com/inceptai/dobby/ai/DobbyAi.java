@@ -1,15 +1,24 @@
 package com.inceptai.dobby.ai;
 
 import android.content.Context;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.ai.Action;
 import com.inceptai.dobby.ai.ApiAiClient;
 import com.inceptai.dobby.ai.InferenceEngine;
+import com.inceptai.dobby.speedtest.BandwidthAnalyzer;
+import com.inceptai.dobby.speedtest.BandwithTestCodes;
+import com.inceptai.dobby.speedtest.ServerInformation;
+import com.inceptai.dobby.speedtest.SpeedTestConfig;
 import com.inceptai.dobby.speedtest.SpeedTestTask;
 
+import java.util.List;
+
 import ai.api.model.Result;
+import fr.bmartel.speedtest.SpeedTestReport;
+import fr.bmartel.speedtest.model.SpeedTestError;
 
 import static com.inceptai.dobby.DobbyApplication.TAG;
 
@@ -19,7 +28,7 @@ import static com.inceptai.dobby.DobbyApplication.TAG;
  * It can be made to send queries to API AI's server or use a local/another AI system.
  */
 
-public class DobbyAi implements ApiAiClient.ResultListener {
+public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.ActionListener {
     private Context context;
     private DobbyThreadpool threadpool;
     private ApiAiClient apiAiClient;
@@ -38,7 +47,7 @@ public class DobbyAi implements ApiAiClient.ResultListener {
         apiAiClient = new ApiAiClient(context, threadpool);
         apiAiClient.connect();
         speedTestTask = new SpeedTestTask();
-        inferenceEngine = new InferenceEngine();
+        inferenceEngine = new InferenceEngine(threadpool.getScheduledExecutorService(), this);
     }
 
 
@@ -88,13 +97,73 @@ public class DobbyAi implements ApiAiClient.ResultListener {
      *
      * @param action Action to be taken.
      */
-    private void takeAction(Action action) {
+    @Override
+    public void takeAction(Action action) {
         if (responseCallback != null) {
             responseCallback.showResponse(action.getUserResponse());
         }
+
+        if (action.getAction() == Action.ActionType.ACTION_BANDWIDTH_TEST) {
+            Log.i(TAG, "Starting ACTION BANDWIDTH TEST.");
+            runBandwidthTest();
+        }
+    }
+
+    private void runBandwidthTest() {
+        BandwidthAnalyzer bandwidthAnalyzer = BandwidthAnalyzer.create(new BandwidthTestResultProcessor() );
+        bandwidthAnalyzer.startBandwidthTest(BandwithTestCodes.BandwidthTestMode.DOWNLOAD_AND_UPLOAD);
     }
 
     public void sendQuery(String text) {
         apiAiClient.sendTextQuery(text, this);
+    }
+
+    private class BandwidthTestResultProcessor implements BandwidthAnalyzer.ResultsCallback {
+        @Override
+        public void onBandwidthTestError(@BandwithTestCodes.BandwidthTestMode int testMode,
+                                         @BandwithTestCodes.BandwidthTestErrorCodes int errorCode,
+                                         @Nullable String errorMessage) {
+
+        }
+
+        @Override
+        public void onConfigFetch(SpeedTestConfig config) {
+
+        }
+
+        @Override
+        public void onServerInformationFetch(ServerInformation serverInformation) {
+
+        }
+
+        @Override
+        public void onClosestServersSelected(List<ServerInformation.ServerDetails> closestServers) {
+
+        }
+
+        @Override
+        public void onBestServerSelected(ServerInformation.ServerDetails bestServer) {
+
+        }
+
+        @Override
+        public void onTestFinished(@BandwithTestCodes.BandwidthTestMode int testMode, SpeedTestReport report) {
+
+        }
+
+        @Override
+        public void onTestProgress(@BandwithTestCodes.BandwidthTestMode int testMode, float percent, SpeedTestReport report) {
+            inferenceEngine.notifyBandwidthTestProgress(percent, report.getTransferRateBit().doubleValue());
+        }
+
+        @Override
+        public void onTestRepeatIntervalReport(@BandwithTestCodes.BandwidthTestMode int testMode, SpeedTestReport report) {
+
+        }
+
+        @Override
+        public void onRepeatTestFinished(@BandwithTestCodes.BandwidthTestMode int testMode, SpeedTestReport report) {
+            inferenceEngine.notifyBandwidthTestResult(report.getTransferRateBit().doubleValue());
+        }
     }
 }

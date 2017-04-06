@@ -34,7 +34,7 @@ public class BandwidthAnalyzer {
     private int testMode;
     @BandwidthTestMode
     private int currentlyTestingMode;
-    //Callbacks
+    // Callbacks
     private ResultsCallback resultsCallback;
 
     /**
