@@ -38,7 +38,7 @@ import static com.inceptai.dobby.DobbyApplication.TAG;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
         DobbyChatManager.ResponseCallback,
-        Handler.Callback, ChatFragment.OnFragmentInteractionListener, WifiAnalyzer.WifiScanResultsCallback {
+        Handler.Callback, ChatFragment.OnFragmentInteractionListener {
 
     private static final int PERMISSION_COARSE_LOCATION_REQUEST_CODE = 101;
 
@@ -178,22 +178,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     public boolean handleMessage(Message msg) {
         return false;
-    }
-
-    @Override
-    public void onWifiScan(final List<ScanResult> scanResults) {
-        if (scanResults != null) {
-            final WifiFragment fragment = (WifiFragment) getFragmentByTag(WifiFragment.FRAGMENT_TAG);
-            if (fragment != null) {
-                Log.i(TAG, "Updating wifi scan results");
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        fragment.updateWifiScanResults(scanResults);
-                    }
-                });
-            }
-        }
     }
 
     private Fragment getFragmentByTag(String tag) {

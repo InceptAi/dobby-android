@@ -36,16 +36,9 @@ public class WifiAnalyzer {
     private WifiReceiver wifiReceiver = new WifiReceiver();
     private int wifiReceiverState = WIFI_RECEIVER_UNREGISTERED;
     private WifiManager wifiManager;
-    private WifiScanResultsCallback wifiScanResultsCallback;
     private DobbyThreadpool threadpool;
     private SettableFuture<List<ScanResult>> wifiScanFuture;
 
-    /**
-     * Callback interface for results. More methods to follow.
-     */
-    public interface WifiScanResultsCallback {
-        void onWifiScan(List<ScanResult> scanResults);
-    }
 
     private WifiAnalyzer(Context context, WifiManager wifiManager, DobbyThreadpool threadpool) {
         Preconditions.checkNotNull(context);
@@ -71,14 +64,6 @@ public class WifiAnalyzer {
             return new WifiAnalyzer(context.getApplicationContext(), wifiManager, threadpool);
         }
         return null;
-    }
-
-    public boolean startWifiScan(@NonNull WifiScanResultsCallback wifiScanResultsCallback) {
-        if (wifiReceiverState != WIFI_RECEIVER_REGISTERED) {
-            registerScanReceiver();
-        }
-        this.wifiScanResultsCallback = wifiScanResultsCallback;
-        return wifiManager.startScan();
     }
 
     /**
@@ -122,10 +107,6 @@ public class WifiAnalyzer {
                 sb.append("\\n");
             }
             Log.i(TAG, "Wifi scan result: " + sb.toString());
-            if (wifiScanResultsCallback != null) {
-                wifiScanResultsCallback.onWifiScan(wifiList);
-
-            }
             if (wifiScanFuture != null) {
                 wifiScanFuture.set(wifiList);
             }
