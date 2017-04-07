@@ -40,6 +40,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
 
     public interface ResponseCallback {
         void showResponse(String text);
+        void showRtGraph(RtDataSource<Float> rtDataSource);
     }
 
     public DobbyAi(Context context, DobbyThreadpool threadpool) {
@@ -111,7 +112,9 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     }
 
     private void runBandwidthTest() {
-        NewBandwidthAnalyzer newBandwidthAnalyzer = NewBandwidthAnalyzer.create(new BandwidthObserver(inferenceEngine));
+        BandwidthObserver observer = new BandwidthObserver(inferenceEngine);
+        NewBandwidthAnalyzer newBandwidthAnalyzer = NewBandwidthAnalyzer.create(observer);
+        responseCallback.showRtGraph(observer);
         newBandwidthAnalyzer.startBandwidthTest(BandwithTestCodes.BandwidthTestMode.DOWNLOAD_AND_UPLOAD);
     }
 

@@ -82,7 +82,7 @@ public class InferenceEngine {
     public void notifyBandwidthTestProgress(double bandwidth) {
         long currentTs = System.currentTimeMillis();
         if ((currentTs - lastBandwidthUpdateTimestampMs) > 2000L) {
-            sendResponseOnlyAction("Current Bandwidth: " + String.valueOf((int) bandwidth / 1000) + " Kbps.");
+            // sendResponseOnlyAction("Current Bandwidth: " + String.valueOf((int) bandwidth / 1000) + " Kbps.");
             lastBandwidthUpdateTimestampMs = currentTs;
         }
     }

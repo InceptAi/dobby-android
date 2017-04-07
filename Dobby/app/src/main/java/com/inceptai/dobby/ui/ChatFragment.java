@@ -19,9 +19,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.inceptai.dobby.ChatEntry;
-import com.inceptai.dobby.MainActivity;
 import com.inceptai.dobby.R;
+import com.inceptai.dobby.ai.RtDataSource;
+import com.inceptai.dobby.utils.Utils;
 
 import java.util.LinkedList;
 
@@ -40,6 +40,7 @@ public class ChatFragment extends Fragment implements Handler.Callback {
 
     // Handler message types.
     private static final int MSG_SHOW_DOBBY_CHAT = 1;
+    private static final int MSG_SHOW_RT_GRAPH = 2;
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -194,6 +195,10 @@ public class ChatFragment extends Fragment implements Handler.Callback {
         Message.obtain(handler, MSG_SHOW_DOBBY_CHAT, text).sendToTarget();
     }
 
+    public void showRtGraph(RtDataSource<Float> rtDataSource) {
+        Message.obtain(handler, MSG_SHOW_RT_GRAPH, rtDataSource).sendToTarget();
+    }
+
     @Override
     public boolean handleMessage(Message msg) {
         switch (msg.what) {
@@ -202,8 +207,20 @@ public class ChatFragment extends Fragment implements Handler.Callback {
                 String text = (String) msg.obj;
                 addDobbyChat(text);
                 break;
+            case MSG_SHOW_RT_GRAPH:
+                RtDataSource<Integer> rtDataSource = (RtDataSource<Integer>) msg.obj;
+                addRtGraph(rtDataSource);
+                break;
 
         }
         return false;
+    }
+
+    private void addRtGraph(RtDataSource<Integer> rtDataSource) {
+        Log.i(TAG, "Adding GRAPH entry.");
+        ChatEntry entry = new ChatEntry(Utils.EMPTY_STRING, ChatEntry.RT_GRAPH);
+        entry.addGraph(new GraphData(rtDataSource));
+        recyclerViewAdapter.addEntryAtBottom(entry);
+        chatRv.scrollToPosition(recyclerViewAdapter.getItemCount() - 1);
     }
 }
