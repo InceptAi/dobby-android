@@ -10,6 +10,7 @@ import com.inceptai.dobby.ai.ApiAiClient;
 import com.inceptai.dobby.ai.InferenceEngine;
 import com.inceptai.dobby.speedtest.BandwidthAnalyzer;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
+import com.inceptai.dobby.speedtest.NewBandwidthAnalyzer;
 import com.inceptai.dobby.speedtest.ServerInformation;
 import com.inceptai.dobby.speedtest.SpeedTestConfig;
 import com.inceptai.dobby.speedtest.SpeedTestTask;
@@ -110,8 +111,8 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     }
 
     private void runBandwidthTest() {
-        BandwidthAnalyzer bandwidthAnalyzer = BandwidthAnalyzer.create(new BandwidthTestResultProcessor() );
-        bandwidthAnalyzer.startBandwidthTest(BandwithTestCodes.BandwidthTestMode.DOWNLOAD_AND_UPLOAD);
+        NewBandwidthAnalyzer newBandwidthAnalyzer = NewBandwidthAnalyzer.create(new BandwidthObserver(inferenceEngine));
+        newBandwidthAnalyzer.startBandwidthTest(BandwithTestCodes.BandwidthTestMode.DOWNLOAD_AND_UPLOAD);
     }
 
     public void sendQuery(String text) {
@@ -153,7 +154,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
 
         @Override
         public void onTestProgress(@BandwithTestCodes.BandwidthTestMode int testMode, float percent, SpeedTestReport report) {
-            inferenceEngine.notifyBandwidthTestProgress(percent, report.getTransferRateBit().doubleValue());
+
         }
 
         @Override

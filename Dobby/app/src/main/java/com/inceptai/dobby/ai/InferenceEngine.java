@@ -49,7 +49,7 @@ public class InferenceEngine {
     private ScheduledExecutorService scheduledExecutorService;
     private ScheduledFuture<?> bandwidthCheckFuture;
     private ActionListener actionListener;
-    private int lastPercentDigit = 0;
+    private long lastBandwidthUpdateTimestampMs = 0;
 
     public interface ActionListener {
         void takeAction(Action action);
@@ -79,17 +79,17 @@ public class InferenceEngine {
         return previousAction;
     }
 
-    public void notifyBandwidthTestProgress(float percent, double bandwidth) {
-        int digit = (int) percent / 10;
-        if (digit > lastPercentDigit) {
-            sendResponseOnlyAction("Percent: " + (int) percent + " bandwidth: " + String.valueOf((int) bandwidth / 1000) + " Kbps.");
-            lastPercentDigit = digit;
+    public void notifyBandwidthTestProgress(double bandwidth) {
+        long currentTs = System.currentTimeMillis();
+        if ((currentTs - lastBandwidthUpdateTimestampMs) > 2000L) {
+            sendResponseOnlyAction("Current Bandwidth: " + String.valueOf((int) bandwidth / 1000) + " Kbps.");
+            lastBandwidthUpdateTimestampMs = currentTs;
         }
     }
 
     public void notifyBandwidthTestResult(double bandwidth) {
         sendResponseOnlyAction("Bandwidth = " + String.valueOf((int) bandwidth / 1000) + " Kbps.");
-        lastPercentDigit = 0;
+        lastBandwidthUpdateTimestampMs = 0;
     }
 
     private void updateBandwidthState(int toState) {
