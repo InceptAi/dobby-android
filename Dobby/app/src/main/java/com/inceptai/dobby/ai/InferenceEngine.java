@@ -40,7 +40,7 @@ public class InferenceEngine {
 
     private static final int STATE_BANDWIDTH_TEST_NONE = 0;
     private static final int STATE_BANDWIDTH_TEST_REQUESTED = 1;
-    private static final int STATE_BANDWIDTH_TEST_STARTING = 2;
+    private static final int STATE_BANDWIDTH_TEST_RUNNING = 2;
     private static final int STATE_BANDWIDTH_TEST_SUCCESS = 3;
     private static final int STATE_BANDWIDTH_TEST_FAILED = 4;
 
@@ -98,7 +98,7 @@ public class InferenceEngine {
         }
         bandwidthCheckFuture = null;
         if (toState == STATE_BANDWIDTH_TEST_REQUESTED ||
-                toState == STATE_BANDWIDTH_TEST_STARTING) {
+                toState == STATE_BANDWIDTH_TEST_RUNNING) {
             bandwidthCheckFuture = scheduledExecutorService.schedule(new Runnable() {
                 @Override
                 public void run() {
