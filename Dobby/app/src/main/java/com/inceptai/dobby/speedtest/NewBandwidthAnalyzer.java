@@ -4,13 +4,18 @@ package com.inceptai.dobby.speedtest;
  * Created by vivek on 3/30/17.
  */
 
+import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.google.common.base.Preconditions;
+import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.model.BandwidthStats;
 import com.inceptai.dobby.speedtest.BandwithTestCodes.BandwidthTestErrorCodes;
 import com.inceptai.dobby.speedtest.BandwithTestCodes.BandwidthTestMode;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.List;
 
 import fr.bmartel.speedtest.model.SpeedTestError;
@@ -24,11 +29,28 @@ import static com.inceptai.dobby.DobbyApplication.TAG;
 public class NewBandwidthAnalyzer {
     private static final int DOWNLOAD_THREADS = 1;
     private static final int UPLOAD_THREADS = 1;
+    private static final int REPORT_INTERVAL_MS = 250;
+
+    @IntDef({BandwidthAnalyzerState.STOPPED, BandwidthAnalyzerState.RUNNING,
+            BandwidthAnalyzerState.CANCELLING, BandwidthAnalyzerState.CANCELLED})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface BandwidthAnalyzerState {
+        int STOPPED = 0;
+        int RUNNING = 1;
+        int CANCELLING = 2;
+        int CANCELLED = 4;
+    }
+
+    @BandwidthAnalyzerState
+    private int bandwidthAnalyzerState;
 
     private ParseSpeedTestConfig parseSpeedTestConfig;
     private ParseServerInformation parseServerInformation;
     private SpeedTestConfig speedTestConfig;
     private ServerInformation.ServerDetails bestServer;
+    private NewDownloadAnalyzer downloadAnalyzer;
+    private NewUploadAnalyzer uploadAnalyzer;
+    private DobbyThreadpool dobbyThreadpool;
 
     private BandwidthTestListener bandwidthTestListener;
 
@@ -61,13 +83,13 @@ public class NewBandwidthAnalyzer {
                                   @Nullable String errorMessage);
     }
 
-    private NewBandwidthAnalyzer(@Nullable ResultsCallback resultsCallback) {
+    private NewBandwidthAnalyzer(@Nullable ResultsCallback resultsCallback, DobbyThreadpool dobbyThreadpool) {
         this.bandwidthTestListener = new BandwidthTestListener();
         this.resultsCallback = resultsCallback;
         this.testMode = BandwidthTestMode.IDLE;
-
         this.parseSpeedTestConfig = new ParseSpeedTestConfig(this.bandwidthTestListener);
         this.parseServerInformation = new ParseServerInformation(this.bandwidthTestListener);
+        this.dobbyThreadpool = dobbyThreadpool;
     }
 
     /**
@@ -75,9 +97,27 @@ public class NewBandwidthAnalyzer {
      * @return Instance of BandwidthAnalyzer or null on error.
      */
     @Nullable
-    public static NewBandwidthAnalyzer create(ResultsCallback resultsCallback) {
-        return new NewBandwidthAnalyzer(resultsCallback);
+    public static NewBandwidthAnalyzer create(ResultsCallback resultsCallback, DobbyThreadpool dobbyThreadpool) {
+        Preconditions.checkNotNull(dobbyThreadpool);
+        return new NewBandwidthAnalyzer(resultsCallback, dobbyThreadpool);
     }
+
+    /**
+     * Registers new callback -- overrides old listener
+     * @param resultsCallback
+     */
+    public void registerCallback(ResultsCallback resultsCallback) {
+        this.resultsCallback = resultsCallback;
+    }
+
+    /**
+     * Un Registers callback -- sets to null
+     * @param resultsCallback
+     */
+    public void unRegisterCallback() {
+        this.resultsCallback = null;
+    }
+
 
     private ServerInformation.ServerDetails getBestServer(SpeedTestConfig config,
                                                           ServerInformation info) {
@@ -85,28 +125,67 @@ public class NewBandwidthAnalyzer {
         return serverSelector.getBestServer();
     }
 
-    private void performDownload() {
-        NewDownloadAnalyzer downloadAnalyzer = new NewDownloadAnalyzer(speedTestConfig.downloadConfig,
-                bestServer, bandwidthTestListener);
-        downloadAnalyzer.downloadTestWithMultipleThreads(DOWNLOAD_THREADS);
+    private void  performDownload() {
+        if (downloadAnalyzer == null) {
+            downloadAnalyzer = new NewDownloadAnalyzer(speedTestConfig.downloadConfig,
+                    bestServer, bandwidthTestListener);
+        }
+        downloadAnalyzer.downloadTestWithMultipleThreads(DOWNLOAD_THREADS,REPORT_INTERVAL_MS);
     }
 
     private void performUpload() {
-        NewUploadAnalyzer uploadAnalyzer = new NewUploadAnalyzer(speedTestConfig.uploadConfig,
-                bestServer, bandwidthTestListener);
-        uploadAnalyzer.uploadTestWithMultipleThreads(UPLOAD_THREADS);
+        if (uploadAnalyzer == null) {
+            uploadAnalyzer = new NewUploadAnalyzer(speedTestConfig.uploadConfig,
+                    bestServer, bandwidthTestListener);
+        }
+        uploadAnalyzer.uploadTestWithMultipleThreads(UPLOAD_THREADS, REPORT_INTERVAL_MS);
     }
 
 
     private void finishTests() {
-        this.speedTestConfig = null;
-        this.bestServer = null;
+        markTestsAsStopped();
     }
+
+    //Helper functions for state
+    private boolean testsCurrentlyRunning() {
+        return bandwidthAnalyzerState == BandwidthAnalyzerState.RUNNING;
+    }
+
+    private boolean testsCurrentlyInactive() {
+        return (bandwidthAnalyzerState == BandwidthAnalyzerState.STOPPED ||
+                bandwidthAnalyzerState == BandwidthAnalyzerState.CANCELLED);
+    }
+
+    private void markTestsAsRunning() throws Exception {
+        if (!testsCurrentlyInactive()) {
+            throw new Exception("Tests need to be inactive before restarting. Current state is: "
+                    + bandwidthAnalyzerState);
+        }
+        bandwidthAnalyzerState = BandwidthAnalyzerState.RUNNING;
+    }
+
+    private void markTestsAsStopped() {
+        bandwidthAnalyzerState = BandwidthAnalyzerState.STOPPED;
+    }
+
+    private void markTestsAsCancelled() {
+        bandwidthAnalyzerState = BandwidthAnalyzerState.CANCELLED;
+    }
+
+    private void markTestsAsCancelling() {
+        bandwidthAnalyzerState = BandwidthAnalyzerState.CANCELLING;
+    }
+
 
     /**
      * start the speed test
      */
-    public void startBandwidthTest(@BandwidthTestMode int testMode) {
+    public void startBandwidthTest(@BandwidthTestMode int testMode) throws Exception {
+        try {
+            markTestsAsRunning();
+        } catch (Exception e) {
+            throw e;
+        }
         final String downloadMode = "http";
         this.testMode = testMode;
         //Get config
@@ -145,6 +224,13 @@ public class NewBandwidthAnalyzer {
         if (testMode == BandwidthTestMode.UPLOAD) {
             performUpload();
         }
+    }
+
+    public void cancelBandwidthTests() {
+        markTestsAsCancelling();
+        downloadAnalyzer.cancelAllTests();
+        uploadAnalyzer.cancelAllTests();
+        markTestsAsCancelled();
     }
 
     @BandwidthTestErrorCodes
@@ -229,7 +315,12 @@ public class NewBandwidthAnalyzer {
             }
             //Do we need to do upload here ?
             if (callbackTestMode == BandwidthTestMode.DOWNLOAD && testMode == BandwidthTestMode.DOWNLOAD_AND_UPLOAD) {
-                performUpload();
+                dobbyThreadpool.submit(new Runnable() {
+                    @Override
+                    public void run() {
+                        performUpload();
+                    }
+                });
             } else {
                 //Cleanup
                 finishTests();
