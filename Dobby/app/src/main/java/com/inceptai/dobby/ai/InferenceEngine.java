@@ -5,9 +5,10 @@ import android.util.Log;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import static com.inceptai.dobby.DobbyApplication.TAG;
 
 import ai.api.model.Result;
+
+import static com.inceptai.dobby.DobbyApplication.TAG;
 
 /**
  * Inference engine consumes actions from the NLU engine (ApiAi or local) and creates Actions.
@@ -19,6 +20,8 @@ public class InferenceEngine {
     private static final String CANNED_RESPONSE = "We are working on it.";
 
     private static final String APIAI_ACTION_DIAGNOSE_SLOW_INTERNET = "diagnose-slow-internet-action";
+
+    private static final String PERFORM_BW_TEST_RETURN_RESULT = "perform-bw-test-return-result";
 
     private static final String APIAI_ACTION_SI_STARTING_INTENT_NO =
             "slow-internet-starting-intent.slow-internet-starting-intent-no";
@@ -70,7 +73,7 @@ public class InferenceEngine {
 
         @Action.ActionType int action = Action.ActionType.ACTION_NONE;
         String apiAiAction = result.getAction();
-        if (APIAI_ACTION_DIAGNOSE_SLOW_INTERNET.equals(apiAiAction)) {
+        if (APIAI_ACTION_DIAGNOSE_SLOW_INTERNET.equals(apiAiAction) || PERFORM_BW_TEST_RETURN_RESULT.equals(apiAiAction)) {
             action = Action.ActionType.ACTION_BANDWIDTH_TEST;
             updateBandwidthState(STATE_BANDWIDTH_TEST_REQUESTED);
         }
