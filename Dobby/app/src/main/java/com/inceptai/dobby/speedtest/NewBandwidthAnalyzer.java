@@ -7,6 +7,7 @@ package com.inceptai.dobby.speedtest;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.inceptai.dobby.model.BandwidthStats;
 import com.inceptai.dobby.speedtest.BandwithTestCodes.BandwidthTestErrorCodes;
 import com.inceptai.dobby.speedtest.BandwithTestCodes.BandwidthTestMode;
 
@@ -51,7 +52,7 @@ public class NewBandwidthAnalyzer {
         void onBestServerSelected(ServerInformation.ServerDetails bestServer);
 
         //Test callbacks
-        void onTestFinished(@BandwidthTestMode int testMode, BandwidthAggregator.BandwidthStats stats);
+        void onTestFinished(@BandwidthTestMode int testMode, BandwidthStats stats);
         void onTestProgress(@BandwidthTestMode int testMode, double instantBandwidth);
 
         //Error callback
@@ -222,7 +223,7 @@ public class NewBandwidthAnalyzer {
 
 
         @Override
-        public void onFinish(@BandwidthTestMode int callbackTestMode, BandwidthAggregator.BandwidthStats bandwidthStats) {
+        public void onFinish(@BandwidthTestMode int callbackTestMode, BandwidthStats bandwidthStats) {
             if (resultsCallback != null) {
                 resultsCallback.onTestFinished(callbackTestMode, bandwidthStats);
             }

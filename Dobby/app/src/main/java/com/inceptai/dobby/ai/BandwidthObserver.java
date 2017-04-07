@@ -2,6 +2,7 @@ package com.inceptai.dobby.ai;
 
 import android.support.annotation.Nullable;
 
+import com.inceptai.dobby.model.BandwidthStats;
 import com.inceptai.dobby.speedtest.BandwidthAggregator;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
 import com.inceptai.dobby.speedtest.NewBandwidthAnalyzer;
@@ -42,8 +43,8 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback {
     }
 
     @Override
-    public void onTestFinished(@BandwithTestCodes.BandwidthTestMode int testMode, BandwidthAggregator.BandwidthStats stats) {
-        inferenceEngine.notifyBandwidthTestResult(stats.percentile90Throughput);
+    public void onTestFinished(@BandwithTestCodes.BandwidthTestMode int testMode, BandwidthStats stats) {
+        inferenceEngine.notifyBandwidthTestResult(stats.getPercentile90());
     }
 
     @Override

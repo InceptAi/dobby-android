@@ -3,6 +3,7 @@ package com.inceptai.dobby.speedtest;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.inceptai.dobby.model.BandwidthStats;
 import com.inceptai.dobby.utils.Utils;
 
 import java.security.InvalidParameterException;
@@ -127,9 +128,9 @@ public class BandwidthAggregator {
         }
     }
 
-    //Generate final stats
+    // Generate final stats
     public BandwidthStats getFinalBandwidthStats() {
-        BandwidthStats stats = new BandwidthStats();
+        BandwidthStats stats = BandwidthStats.EMPTY_STATS;
         int numThreads = 0;
         List<Double> combinedRates = new ArrayList<>();
         // Iterating over values only
@@ -150,7 +151,7 @@ public class BandwidthAggregator {
         return stats;
     }
 
-
+/*
     public static class BandwidthStats {
         public int threads;
         public double maxThroughput;
@@ -177,7 +178,7 @@ public class BandwidthAggregator {
             this.percentile90Throughput = -1;
             this.percentile10Throughput = -1;
         }
-    }
+    }*/
 
     private class BandwidthInfo {
         private int id;
