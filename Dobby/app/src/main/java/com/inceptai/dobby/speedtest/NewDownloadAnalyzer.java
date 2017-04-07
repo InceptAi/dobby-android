@@ -5,6 +5,8 @@ import android.support.annotation.Nullable;
 import com.inceptai.dobby.model.BandwidthStats;
 import com.inceptai.dobby.speedtest.BandwithTestCodes.BandwidthTestMode;
 
+import java.util.List;
+
 import fr.bmartel.speedtest.SpeedTestSocket;
 import fr.bmartel.speedtest.model.SpeedTestError;
 
@@ -94,6 +96,13 @@ public class NewDownloadAnalyzer {
         }
     }
 
+    public void cancelAllTests() {
+        List<SpeedTestSocket> activeSockets = this.bandwidthAggregator.getActiveSockets();
+        for (SpeedTestSocket socket: activeSockets) {
+            //Cancelling the task
+            socket.forceStopTask();
+        }
+    }
 
     private class DownloadTestListener implements BandwidthAggregator.ResultsCallback {
         @Override

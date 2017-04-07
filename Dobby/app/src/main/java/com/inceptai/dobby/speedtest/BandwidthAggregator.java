@@ -128,6 +128,23 @@ public class BandwidthAggregator {
         }
     }
 
+    synchronized private boolean checkIfThreadHasStarted(int id) {
+        return testInFlight[id];
+    }
+
+
+
+    //Get socket
+    synchronized public List<SpeedTestSocket> getActiveSockets() {
+        List<SpeedTestSocket> activeSocketList = new ArrayList<>();
+        for (BandwidthInfo info : aggregateBandwidthInfo.values()) {
+            if(checkIfThreadHasStarted(info.id)) {
+                activeSocketList.add(info.speedTestSocket);
+            }
+        }
+        return activeSocketList;
+    }
+
     // Generate final stats
     public BandwidthStats getFinalBandwidthStats() {
         BandwidthStats stats = BandwidthStats.EMPTY_STATS;

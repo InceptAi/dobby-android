@@ -29,6 +29,8 @@ public class NewBandwidthAnalyzer {
     private ParseServerInformation parseServerInformation;
     private SpeedTestConfig speedTestConfig;
     private ServerInformation.ServerDetails bestServer;
+    private NewDownloadAnalyzer downloadAnalyzer;
+    private NewUploadAnalyzer uploadAnalyzer;
 
     private BandwidthTestListener bandwidthTestListener;
 
@@ -65,7 +67,6 @@ public class NewBandwidthAnalyzer {
         this.bandwidthTestListener = new BandwidthTestListener();
         this.resultsCallback = resultsCallback;
         this.testMode = BandwidthTestMode.IDLE;
-
         this.parseSpeedTestConfig = new ParseSpeedTestConfig(this.bandwidthTestListener);
         this.parseServerInformation = new ParseServerInformation(this.bandwidthTestListener);
     }
@@ -85,14 +86,14 @@ public class NewBandwidthAnalyzer {
         return serverSelector.getBestServer();
     }
 
-    private void performDownload() {
-        NewDownloadAnalyzer downloadAnalyzer = new NewDownloadAnalyzer(speedTestConfig.downloadConfig,
+    private void  performDownload() {
+        downloadAnalyzer = new NewDownloadAnalyzer(speedTestConfig.downloadConfig,
                 bestServer, bandwidthTestListener);
         downloadAnalyzer.downloadTestWithMultipleThreads(DOWNLOAD_THREADS);
     }
 
     private void performUpload() {
-        NewUploadAnalyzer uploadAnalyzer = new NewUploadAnalyzer(speedTestConfig.uploadConfig,
+        uploadAnalyzer = new NewUploadAnalyzer(speedTestConfig.uploadConfig,
                 bestServer, bandwidthTestListener);
         uploadAnalyzer.uploadTestWithMultipleThreads(UPLOAD_THREADS);
     }
@@ -145,6 +146,12 @@ public class NewBandwidthAnalyzer {
         if (testMode == BandwidthTestMode.UPLOAD) {
             performUpload();
         }
+    }
+
+    public void cancelBandwidthTests() {
+        downloadAnalyzer.cancelAllTests();
+        uploadAnalyzer.cancelAllTests();
+        finishTests();
     }
 
     @BandwidthTestErrorCodes

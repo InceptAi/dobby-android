@@ -5,6 +5,8 @@ import android.support.annotation.Nullable;
 import com.inceptai.dobby.model.BandwidthStats;
 import com.inceptai.dobby.speedtest.BandwithTestCodes.BandwidthTestMode;
 
+import java.util.List;
+
 import fr.bmartel.speedtest.SpeedTestSocket;
 import fr.bmartel.speedtest.model.SpeedTestError;
 
@@ -103,6 +105,14 @@ public class NewUploadAnalyzer {
                     uploadConfig.testLength * 1000, //converting to ms
                     REPORT_INTERVAL_MS, DEFAULT_UPLOAD_FILE_SIZE,
                     bandwidthAggregator.getListener(threadCountIndex));
+        }
+    }
+
+    public void cancelAllTests() {
+        List<SpeedTestSocket> activeSockets = this.bandwidthAggregator.getActiveSockets();
+        for (SpeedTestSocket socket: activeSockets) {
+            //Cancelling the task
+            socket.forceStopTask();
         }
     }
 
