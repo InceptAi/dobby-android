@@ -2,6 +2,8 @@ package com.inceptai.dobby.ai;
 
 import android.util.Log;
 
+import com.inceptai.dobby.speedtest.BandwithTestCodes;
+
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -46,6 +48,7 @@ public class InferenceEngine {
     private static final int STATE_BANDWIDTH_TEST_RUNNING = 2;
     private static final int STATE_BANDWIDTH_TEST_SUCCESS = 3;
     private static final int STATE_BANDWIDTH_TEST_FAILED = 4;
+    private static final int STATE_BANDWIDTH_TEST_CANCELLED = 4;
 
     private Action previousAction;
     private int bandwidthTestState; /* state of the bandwidth test */
@@ -76,22 +79,44 @@ public class InferenceEngine {
         if (APIAI_ACTION_DIAGNOSE_SLOW_INTERNET.equals(apiAiAction) || PERFORM_BW_TEST_RETURN_RESULT.equals(apiAiAction)) {
             action = Action.ActionType.ACTION_BANDWIDTH_TEST;
             updateBandwidthState(STATE_BANDWIDTH_TEST_REQUESTED);
+        } else if((apiAiAction.contains("cancel") || apiAiAction.contains("later") || apiAiAction.contains("no")) && apiAiAction.contains("test")) {
+            //TODO: Remove this hack.
+        /*
+                (APIAI_ACTION_SI_STARTING_INTENT_CANCEL.equals(apiAiAction) ||
+                APIAI_ACTION_SI_STARTING_INTENT_LATER.equals(apiAiAction) ||
+                APIAI_ACTION_SI_STARTING_INTENT_NO.equals(apiAiAction) ||
+                APIAI_ACTION_SI_STARTING_INTENT_YES_YES_CANCEL.equals(apiAiAction) ||
+                APIAI_ACTION_SI_STARTING_INTENT_YES_YES_LATER.equals(apiAiAction) ||
+                APIAI_ACTION_SI_STARTING_INTENT_YES_YES_NO.equals(apiAiAction))
+         */
+            action = Action.ActionType.ACTION_CANCEL_BANDWIDTH_TEST;
+            updateBandwidthState(STATE_BANDWIDTH_TEST_CANCELLED);
         }
-
         previousAction = new Action(response, action);
         return previousAction;
     }
 
-    public void notifyBandwidthTestProgress(double bandwidth) {
+    private String testModeToString(@BandwithTestCodes.BandwidthTestMode int testMode) {
+        String testModeString = "UNKNOWN";
+        if (testMode == BandwithTestCodes.BandwidthTestMode.DOWNLOAD) {
+            testModeString = "DOWNLOAD";
+        } else if (testMode == BandwithTestCodes.BandwidthTestMode.UPLOAD) {
+            testModeString = "UPLOAD";
+        }
+        return testModeString;
+    }
+
+    public void notifyBandwidthTestProgress(@BandwithTestCodes.BandwidthTestMode int testMode, double bandwidth) {
         long currentTs = System.currentTimeMillis();
         if ((currentTs - lastBandwidthUpdateTimestampMs) > 2000L) {
-            sendResponseOnlyAction("Current Bandwidth: " + String.valueOf((int) bandwidth / 1000) + " Kbps.");
+            sendResponseOnlyAction(testModeToString(testMode) + " Current Bandwidth: " + String.format("%.2f", bandwidth / 1000000) + " Mbps");
             lastBandwidthUpdateTimestampMs = currentTs;
         }
     }
 
-    public void notifyBandwidthTestResult(double bandwidth) {
-        sendResponseOnlyAction("Bandwidth = " + String.valueOf((int) bandwidth / 1000) + " Kbps.");
+    public void notifyBandwidthTestResult(@BandwithTestCodes.BandwidthTestMode int testMode,
+                                          double bandwidth) {
+        sendResponseOnlyAction(testModeToString(testMode) + " Overall Bandwidth = " + String.format("%.2f", bandwidth / 1000000) + " Mbps");
         lastBandwidthUpdateTimestampMs = 0;
     }
 

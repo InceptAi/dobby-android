@@ -5,8 +5,6 @@ import android.support.annotation.Nullable;
 import com.inceptai.dobby.model.BandwidthStats;
 import com.inceptai.dobby.speedtest.BandwithTestCodes.BandwidthTestMode;
 
-import java.util.List;
-
 import fr.bmartel.speedtest.SpeedTestSocket;
 import fr.bmartel.speedtest.model.SpeedTestError;
 
@@ -17,7 +15,6 @@ import fr.bmartel.speedtest.model.SpeedTestError;
 
 public class NewUploadAnalyzer {
     private final String DEFAULT_UPLOAD_URI = new String("/speedtest/upload.php");
-    private final int REPORT_INTERVAL_MS = 1000; //in milliseconds
     private final int DEFAULT_UPLOAD_FILE_SIZE = 100000; // ~10Mbyte, in bytes
     //private final int[] ALL_UPLOAD_SIZES = {32768, 65536, 131072, 262144, 524288, 1048576, 7340032}; //TODO: Add more sizes as per speedtest-cli
 
@@ -97,23 +94,19 @@ public class NewUploadAnalyzer {
     }
 
 
-    public void uploadTestWithMultipleThreads(int numThreads) {
+    public void uploadTestWithMultipleThreads(int numThreads, int reportIntervalMs) {
         int threadsToRun = Math.min(numThreads, uploadConfig.threads);
         for (int threadCountIndex = 0; threadCountIndex < threadsToRun; threadCountIndex++) {
             SpeedTestSocket speedTestSocket = this.bandwidthAggregator.getSpeedTestSocket(threadCountIndex);
             speedTestSocket.startUploadRepeat(serverUrlPrefix, uploadUri,
                     uploadConfig.testLength * 1000, //converting to ms
-                    REPORT_INTERVAL_MS, DEFAULT_UPLOAD_FILE_SIZE,
+                    reportIntervalMs, DEFAULT_UPLOAD_FILE_SIZE,
                     bandwidthAggregator.getListener(threadCountIndex));
         }
     }
 
-    public void cancelAllTests() {
-        List<SpeedTestSocket> activeSockets = this.bandwidthAggregator.getActiveSockets();
-        for (SpeedTestSocket socket: activeSockets) {
-            //Cancelling the task
-            socket.forceStopTask();
-        }
+    public boolean cancelAllTests() {
+        return this.bandwidthAggregator.cancelActiveSockets();
     }
 
     private class UploadTestListener implements BandwidthAggregator.ResultsCallback {

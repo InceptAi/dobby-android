@@ -5,9 +5,6 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.inceptai.dobby.DobbyThreadpool;
-import com.inceptai.dobby.ai.Action;
-import com.inceptai.dobby.ai.ApiAiClient;
-import com.inceptai.dobby.ai.InferenceEngine;
 import com.inceptai.dobby.speedtest.BandwidthAnalyzer;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
 import com.inceptai.dobby.speedtest.NewBandwidthAnalyzer;
@@ -19,7 +16,6 @@ import java.util.List;
 
 import ai.api.model.Result;
 import fr.bmartel.speedtest.SpeedTestReport;
-import fr.bmartel.speedtest.model.SpeedTestError;
 
 import static com.inceptai.dobby.DobbyApplication.TAG;
 
@@ -36,6 +32,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     private ResponseCallback responseCallback;
     private SpeedTestTask speedTestTask;
     private InferenceEngine inferenceEngine;
+    private NewBandwidthAnalyzer newBandwidthAnalyzer;
 
 
     public interface ResponseCallback {
@@ -108,11 +105,32 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             Log.i(TAG, "Starting ACTION BANDWIDTH TEST.");
             runBandwidthTest();
         }
+
+        if (action.getAction() == Action.ActionType.ACTION_CANCEL_BANDWIDTH_TEST) {
+            Log.i(TAG, "Starting ACTION CANCEL BANDWIDTH TEST.");
+            try {
+                cancelBandwidthTest();
+            } catch (Exception e) {
+                Log.i(TAG, "Exception while cancelling:" + e);
+            }
+        }
     }
 
     private void runBandwidthTest() {
-        NewBandwidthAnalyzer newBandwidthAnalyzer = NewBandwidthAnalyzer.create(new BandwidthObserver(inferenceEngine));
-        newBandwidthAnalyzer.startBandwidthTest(BandwithTestCodes.BandwidthTestMode.DOWNLOAD_AND_UPLOAD);
+        newBandwidthAnalyzer = NewBandwidthAnalyzer.create(new BandwidthObserver(inferenceEngine), threadpool);
+        try {
+            newBandwidthAnalyzer.startBandwidthTest(BandwithTestCodes.BandwidthTestMode.DOWNLOAD_AND_UPLOAD);
+        } catch (Exception e) {
+            Log.v(TAG, "Exception while starting bandwidth tests: " + e);
+        }
+    }
+
+    private void cancelBandwidthTest() throws Exception {
+        if (newBandwidthAnalyzer == null)
+            throw new Exception("Bandwidth Analyzer cannot be null for this task");
+        if (newBandwidthAnalyzer != null) {
+            newBandwidthAnalyzer.cancelBandwidthTests();
+        }
     }
 
     public void sendQuery(String text) {
@@ -164,7 +182,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
 
         @Override
         public void onRepeatTestFinished(@BandwithTestCodes.BandwidthTestMode int testMode, SpeedTestReport report) {
-            inferenceEngine.notifyBandwidthTestResult(report.getTransferRateBit().doubleValue());
+            inferenceEngine.notifyBandwidthTestResult(testMode, report.getTransferRateBit().doubleValue());
         }
     }
 }

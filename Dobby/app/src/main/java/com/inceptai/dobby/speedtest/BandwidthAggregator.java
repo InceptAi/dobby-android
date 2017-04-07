@@ -20,6 +20,8 @@ import fr.bmartel.speedtest.inter.IRepeatListener;
 import fr.bmartel.speedtest.inter.ISpeedTestListener;
 import fr.bmartel.speedtest.model.SpeedTestError;
 
+import static com.inceptai.dobby.DobbyApplication.TAG;
+
 /**
  * Created by vivek on 4/6/17.
  */
@@ -32,6 +34,8 @@ public class BandwidthAggregator {
     private ResultsCallback resultsCallback;
     private boolean[] testInFlight;
     private AtomicBoolean anyThreadFinished;
+    private List<Double> instantBandwidthList;
+    private AtomicBoolean cancelling;
 
     /**
      * Callback interface for results. More methods to follow.
@@ -50,6 +54,8 @@ public class BandwidthAggregator {
         Arrays.fill(testInFlight, false);
         anyThreadFinished = new AtomicBoolean(false);
         this.resultsCallback = resultsCallback;
+        instantBandwidthList = new ArrayList<>();
+        cancelling = new AtomicBoolean(false);
     }
 
     private BandwidthInfo addNewBandwidthInfo(int id) throws InvalidParameterException {
@@ -93,6 +99,7 @@ public class BandwidthAggregator {
                 cumulativeRate += info.transferRates.get(info.transferRates.size() - 1);
         }
         currentTransferRate = cumulativeRate;
+        instantBandwidthList.add(currentTransferRate);
     }
 
 
@@ -132,8 +139,6 @@ public class BandwidthAggregator {
         return testInFlight[id];
     }
 
-
-
     //Get socket
     synchronized public List<SpeedTestSocket> getActiveSockets() {
         List<SpeedTestSocket> activeSocketList = new ArrayList<>();
@@ -145,57 +150,57 @@ public class BandwidthAggregator {
         return activeSocketList;
     }
 
+    private void cleanUpOnCancellationOrFinish() {
+        aggregateBandwidthInfo.clear();
+        instantBandwidthList.clear();
+        currentTransferRate = 0;
+        Arrays.fill(testInFlight, false);
+        anyThreadFinished.set(false);
+        cancelling.set(false);
+    }
+
+    //Get socket
+    public boolean cancelActiveSockets() {
+        cancelling.set(true);
+        final int WAIT_TIMEOUT_FOR_CANCELLATION_MS = 50;
+        List<SpeedTestSocket> activeSocketList = getActiveSockets();
+        for (SpeedTestSocket socket: activeSocketList) {
+            socket.forceStopTask();
+        }
+        //blocking call
+        while(!checkIfAllThreadsDone()) {
+            try {
+                Thread.sleep(WAIT_TIMEOUT_FOR_CANCELLATION_MS);                 //1000 milliseconds is one second.
+            } catch(InterruptedException e) {
+                Log.v(TAG, "Interrupted while sleeping: " + e);
+                Thread.currentThread().interrupt();
+                return false;
+            }
+        }
+        cleanUpOnCancellationOrFinish();
+        return true;
+    }
+
     // Generate final stats
     public BandwidthStats getFinalBandwidthStats() {
         BandwidthStats stats = BandwidthStats.EMPTY_STATS;
         int numThreads = 0;
-        List<Double> combinedRates = new ArrayList<>();
         // Iterating over values only
         for (BandwidthInfo info : aggregateBandwidthInfo.values()) {
             numThreads++;
-            combinedRates.addAll(info.transferRates);
         }
-        if (combinedRates.size() > 0) {
-            Collections.sort(combinedRates);
-            double min = combinedRates.get(0);
-            double max = combinedRates.get(combinedRates.size() - 1);
-            double median = Utils.computePercentileFromSortedList(combinedRates, 50);
-            double percentile90 = Utils.computePercentileFromSortedList(combinedRates, 90);
-            double percentile10 = Utils.computePercentileFromSortedList(combinedRates, 10);
+        if (instantBandwidthList.size() > 0) {
+            Collections.sort(instantBandwidthList);
+            double min = instantBandwidthList.get(0);
+            double max = instantBandwidthList.get(instantBandwidthList.size() - 1);
+            double median = Utils.computePercentileFromSortedList(instantBandwidthList, 50);
+            double percentile90 = Utils.computePercentileFromSortedList(instantBandwidthList, 90);
+            double percentile10 = Utils.computePercentileFromSortedList(instantBandwidthList, 10);
             stats = new BandwidthStats(numThreads, max, min,
                     median, percentile90, percentile10);
         }
         return stats;
     }
-
-/*
-    public static class BandwidthStats {
-        public int threads;
-        public double maxThroughput;
-        public double minThroughput;
-        public double medianThroughput;
-        public double percentile90Throughput;
-        public double percentile10Throughput;
-
-        public BandwidthStats(int threads, double max, double min, double median,
-                              double percentile90, double percentile10) {
-            this.threads = threads;
-            this.maxThroughput = max;
-            this.minThroughput = min;
-            this.medianThroughput = median;
-            this.percentile90Throughput = percentile90;
-            this.percentile10Throughput = percentile10;
-        }
-
-        public BandwidthStats() {
-            this.threads = 0;
-            this.maxThroughput = -1;
-            this.minThroughput = -1;
-            this.medianThroughput = -1;
-            this.percentile90Throughput = -1;
-            this.percentile10Throughput = -1;
-        }
-    }*/
 
     private class BandwidthInfo {
         private int id;
@@ -219,21 +224,65 @@ public class BandwidthAggregator {
     public class AggregatorListener implements ISpeedTestListener, IRepeatListener {
 
         private int id;
+        private boolean cancelled;
+
 
         public AggregatorListener(int id) {
             this.id = id;
+            this.cancelled = false;
         }
 
         public int getListenerId() {
             return id;
         }
 
+        private void markListenerAsCancelled() {
+            cancelled = true;
+        }
 
-        /**
-         * monitor download process result with transfer rate in bit/s and octet/s.
-         *
-         * @param report download speed test report
-         */
+        private boolean isListenerCancelled() {
+            return cancelled;
+        }
+
+
+        @Override
+        public void onReport(final SpeedTestReport report) {
+            // called when a download report is dispatched
+            // called to notify download progress
+            //Update transfer rate
+            if (isListenerCancelled()) {
+                return;
+            }
+            updateTestAsStarted(id);
+            if (!anyThreadFinished.get()) {
+                updateRate(id, report.getTransferRateBit().doubleValue());
+            }
+            if (resultsCallback != null) {
+                resultsCallback.onProgress(currentTransferRate);
+            }
+        }
+
+        @Override
+        public void onFinish(final SpeedTestReport report) {
+            // called when repeat task is finished
+            // called to notify download progress
+            // If we are trying to cancel, return now.
+            if (isListenerCancelled()) {
+                return;
+            }
+            anyThreadFinished.set(true);
+            updateTestAsDone(id);
+            if (resultsCallback != null && checkIfAllThreadsDone()) {
+                resultsCallback.onFinish(getFinalBandwidthStats());
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    Log.v(TAG, "Interrupted");
+                }
+                cleanUpOnCancellationOrFinish();
+            }
+        }
+
         @Override
         public void onDownloadFinished(SpeedTestReport report) {
             // called when download is finished
@@ -252,34 +301,9 @@ public class BandwidthAggregator {
             }
         }
 
-        @Override
-        public void onReport(final SpeedTestReport report) {
-            // called when a download report is dispatched
-            // called to notify download progress
-            //Update transfer rate
-            updateTestAsStarted(id);
-            if (!anyThreadFinished.get()) {
-                updateRate(id, report.getTransferRateBit().doubleValue());
-            }
-            if (resultsCallback != null) {
-                resultsCallback.onProgress(currentTransferRate);
-            }
-        }
-
-        @Override
-        public void onFinish(final SpeedTestReport report) {
-            // called when repeat task is finished
-            // called to notify download progress
-            anyThreadFinished.set(true);
-            updateTestAsDone(id);
-            if (resultsCallback != null && checkIfAllThreadsDone()) {
-                resultsCallback.onFinish(getFinalBandwidthStats());
-            }
-        }
-
+        //Upload callbacks
         @Override
         public void onUploadFinished(SpeedTestReport report) {
-            Log.v("speedtest", "[UL FINISHED] rate in bit/s   : " + report.getTransferRateBit());
         }
 
         @Override
@@ -296,6 +320,10 @@ public class BandwidthAggregator {
 
         @Override
         public void onInterruption() {
+            if (cancelling.get()) {
+                markListenerAsCancelled();
+            }
+            updateTestAsDone(id);
         }
 
     }

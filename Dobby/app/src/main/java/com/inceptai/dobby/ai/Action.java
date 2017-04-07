@@ -11,12 +11,14 @@ import java.lang.annotation.RetentionPolicy;
 
 public class Action {
 
-    @IntDef({ActionType.ACTION_BANDWIDTH_TEST, ActionType.ACTION_NONE, ActionType.ACTION_WIFI_SCAN})
+    @IntDef({ActionType.ACTION_BANDWIDTH_TEST, ActionType.ACTION_NONE,
+            ActionType.ACTION_WIFI_SCAN, ActionType.ACTION_CANCEL_BANDWIDTH_TEST})
     @Retention(RetentionPolicy.SOURCE)
     public @interface ActionType {
         int ACTION_NONE = 0;
         int ACTION_BANDWIDTH_TEST = 1;
         int ACTION_WIFI_SCAN = 2;
+        int ACTION_CANCEL_BANDWIDTH_TEST = 3;
     }
 
     /* User response to be shown, null for no response. */

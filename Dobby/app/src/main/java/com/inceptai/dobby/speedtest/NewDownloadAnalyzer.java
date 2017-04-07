@@ -5,8 +5,6 @@ import android.support.annotation.Nullable;
 import com.inceptai.dobby.model.BandwidthStats;
 import com.inceptai.dobby.speedtest.BandwithTestCodes.BandwidthTestMode;
 
-import java.util.List;
-
 import fr.bmartel.speedtest.SpeedTestSocket;
 import fr.bmartel.speedtest.model.SpeedTestError;
 
@@ -15,7 +13,6 @@ import fr.bmartel.speedtest.model.SpeedTestError;
  */
 
 public class NewDownloadAnalyzer {
-    private final int REPORT_INTERVAL_MS = 1000; //in milliseconds
     private final int DOWNLOAD_SIZES = 4000; //TODO: Add more sizes as per speedtest-cli
     private final String DOWNLOAD_FILE = "/speedtest/random" + DOWNLOAD_SIZES + "x" + DOWNLOAD_SIZES + ".jpg";
 
@@ -85,23 +82,19 @@ public class NewDownloadAnalyzer {
     }
 
 
-    public void downloadTestWithMultipleThreads(int numThreads) {
+    public void downloadTestWithMultipleThreads(int numThreads, int reportIntervalMs) {
         int threadsToRun = Math.min(numThreads, downloadConfig.threadsPerUrl);
         for (int threadCountIndex = 0; threadCountIndex < threadsToRun; threadCountIndex++) {
             SpeedTestSocket speedTestSocket = this.bandwidthAggregator.getSpeedTestSocket(threadCountIndex);
             speedTestSocket.startDownloadRepeat(serverUrlPrefix, DOWNLOAD_FILE,
                     downloadConfig.testLength * 1000, //converting to ms,
-                    REPORT_INTERVAL_MS,
+                    reportIntervalMs,
                     this.bandwidthAggregator.getListener(threadCountIndex));
         }
     }
 
-    public void cancelAllTests() {
-        List<SpeedTestSocket> activeSockets = this.bandwidthAggregator.getActiveSockets();
-        for (SpeedTestSocket socket: activeSockets) {
-            //Cancelling the task
-            socket.forceStopTask();
-        }
+    public boolean cancelAllTests() {
+        return this.bandwidthAggregator.cancelActiveSockets();
     }
 
     private class DownloadTestListener implements BandwidthAggregator.ResultsCallback {
