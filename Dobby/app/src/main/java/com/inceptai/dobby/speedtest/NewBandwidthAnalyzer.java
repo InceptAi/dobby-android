@@ -267,6 +267,11 @@ public class NewBandwidthAnalyzer {
 
         public void onConfigFetchError(String error) {
             Log.v(TAG, "Speed test config fetched error: " + error);
+            if (resultsCallback != null) {
+                resultsCallback.onBandwidthTestError(BandwidthTestMode.CONFIG_FETCH,
+                        BandwidthTestErrorCodes.ERROR_FETCHING_CONFIG,
+                        error);
+            }
         }
 
         // Server information callbacks
@@ -287,7 +292,8 @@ public class NewBandwidthAnalyzer {
             if (resultsCallback != null) {
                 resultsCallback.onBandwidthTestError(BandwidthTestMode.SERVER_FETCH,
                         BandwidthTestErrorCodes.ERROR_FETCHING_SERVER_INFO,
-                        error);            }
+                        error);
+            }
         }
 
         //Best server selection
