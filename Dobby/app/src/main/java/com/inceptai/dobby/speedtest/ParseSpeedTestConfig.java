@@ -28,13 +28,13 @@ public class ParseSpeedTestConfig {
     }
 
     public ParseSpeedTestConfig(String urlString, @Nullable ResultsCallback resultsCallback) {
-        this.speedTestConfig = getConfigFromUrlString(urlString);
+        this.speedTestConfig = null;
         this.resultsCallback = resultsCallback;
     }
 
 
     public ParseSpeedTestConfig(@Nullable ResultsCallback resultsCallback) {
-        this.speedTestConfig = getConfigFromUrlString(defaultConfigUrl);
+        speedTestConfig = null;
         this.resultsCallback = resultsCallback;
     }
 
