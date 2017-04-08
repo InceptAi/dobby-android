@@ -89,6 +89,11 @@ public class WifiStats {
         return json;
     }
 
+    @Override
+    public String toString() {
+        return toJson();
+    }
+
     private void updateChannelInfo(List<ScanResult> scanResultList) {
         for (ScanResult scanResult: scanResultList) {
             ChannelInfo channelInfo = channelInfoMap.get(scanResult.frequency);
