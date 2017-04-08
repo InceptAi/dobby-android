@@ -5,7 +5,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.DhcpInfo;
+import android.net.NetworkInfo;
 import android.net.wifi.ScanResult;
+import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -14,7 +16,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import com.inceptai.dobby.DobbyThreadpool;
-import com.inceptai.dobby.utils.Utils;
 
 import java.util.List;
 
@@ -35,6 +36,9 @@ public class WifiAnalyzer {
     private int wifiReceiverState = WIFI_RECEIVER_UNREGISTERED;
     private WifiManager wifiManager;
     private DobbyThreadpool threadpool;
+    private WifiStats wifiStats;
+    private boolean wifiConnected;
+    private boolean wifiEnabled;
     private SettableFuture<List<ScanResult>> wifiScanFuture;
 
 
@@ -44,6 +48,10 @@ public class WifiAnalyzer {
         this.context = context.getApplicationContext();
         this.wifiManager = wifiManager;
         this.threadpool = threadpool;
+        wifiConnected = false;
+        wifiEnabled = false;
+        wifiStats = new WifiStats();
+        wifiStats.updateWifiStats(wifiManager.getConnectionInfo(), null);
     }
 
     /**
@@ -54,10 +62,6 @@ public class WifiAnalyzer {
     @Nullable
     public static WifiAnalyzer create(Context context, DobbyThreadpool threadpool) {
         WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
-        DhcpInfo info = wifiManager.getDhcpInfo();
-        String myIP = Utils.intToIp(info.ipAddress);
-        Log.v(TAG, info.toString());
-        Log.v(TAG, myIP);
         if (wifiManager != null) {
             return new WifiAnalyzer(context.getApplicationContext(), wifiManager, threadpool);
         }
@@ -99,6 +103,7 @@ public class WifiAnalyzer {
         public void onReceive(Context c, Intent intent) {
             StringBuilder sb = new StringBuilder();
             List<ScanResult> wifiList = wifiManager.getScanResults();
+            wifiStats.updateWifiStats(wifiManager.getConnectionInfo(), wifiList);
             for(int i = 0; i < wifiList.size(); i++){
                 sb.append(new Integer(i+1).toString() + ".");
                 sb.append((wifiList.get(i)).toString());
@@ -109,6 +114,36 @@ public class WifiAnalyzer {
                 wifiScanFuture.set(wifiList);
             }
             unregisterScanReceiver();
+        }
+    }
+
+    //Listening for WiFi intents
+    private void updateWifiState(Intent intent) {
+        final String action = intent.getAction();
+        int wifiState;
+        if (action.equals(WifiManager.WIFI_STATE_CHANGED_ACTION)) {
+            wifiState = intent.getIntExtra(WifiManager.EXTRA_WIFI_STATE, WifiManager.WIFI_STATE_UNKNOWN);
+            if (wifiState == WifiManager.WIFI_STATE_ENABLED) {
+                wifiEnabled = true;
+            }
+        } else if (action.equals(WifiManager.NETWORK_STATE_CHANGED_ACTION)) {
+            final NetworkInfo networkInfo = intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
+            boolean wasConnected = wifiConnected;
+            wifiConnected = networkInfo != null && networkInfo.isConnected();
+            // If we just connected, grab the inintial signal strength and ssid
+            if (wifiConnected && !wasConnected) {
+                // try getting it out of the intent first
+                WifiInfo info = (WifiInfo) intent.getParcelableExtra(WifiManager.EXTRA_WIFI_INFO);
+                if (info == null) {
+                    info = wifiManager.getConnectionInfo();
+                }
+                wifiStats.updateWifiStats(info, null);
+            } else if (!wifiConnected) {
+                wifiStats.clearWifiConnectionInfo();
+            }
+        } else if (action.equals(WifiManager.RSSI_CHANGED_ACTION)) {
+            int updatedSignal = intent.getIntExtra(WifiManager.EXTRA_NEW_RSSI, 0);
+            wifiStats.updateSignal(updatedSignal);
         }
     }
 
