@@ -2,6 +2,7 @@ package com.inceptai.dobby;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.inceptai.dobby.ui.UiThreadExecutor;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executor;
@@ -34,6 +35,8 @@ public class DobbyThreadpool {
     private ListeningExecutorService listeningExecutorService;
     private ScheduledExecutorService scheduledExecutorService;
 
+    private UiThreadExecutor uiThreadExecutor;
+
     public DobbyThreadpool() {
 
         // Instantiates the queue of Runnables as a LinkedBlockingQueue
@@ -49,6 +52,7 @@ public class DobbyThreadpool {
 
         listeningExecutorService = MoreExecutors.listeningDecorator(dobbyThreadPool);
         scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+        uiThreadExecutor = new UiThreadExecutor();
     }
 
     public void submit(Runnable runnable) {
@@ -65,5 +69,9 @@ public class DobbyThreadpool {
 
     public ScheduledExecutorService getScheduledExecutorService() {
         return scheduledExecutorService;
+    }
+
+    public Executor getUiThreadExecutor() {
+        return uiThreadExecutor;
     }
 }

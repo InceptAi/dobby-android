@@ -77,7 +77,7 @@ public class NetworkLayer implements PingAnalyzer.ResultsCallback {
         }
     }
 
-    ListenableFuture<List<ScanResult>> wifiScan() {
+    public ListenableFuture<List<ScanResult>> wifiScan() {
         return wifiAnalyzer.startWifiScan();
     }
 

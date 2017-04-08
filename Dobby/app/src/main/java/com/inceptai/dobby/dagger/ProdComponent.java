@@ -3,6 +3,7 @@ package com.inceptai.dobby.dagger;
 import com.inceptai.dobby.MainActivity;
 import com.inceptai.dobby.NetworkLayer;
 import com.inceptai.dobby.ai.DobbyAi;
+import com.inceptai.dobby.ui.DebugFragment;
 
 import javax.inject.Singleton;
 
@@ -20,4 +21,6 @@ public interface ProdComponent {
     void inject(DobbyAi dobbyAi);
 
     void inject(NetworkLayer networkLayer);
+
+    void inject(DebugFragment debugFragment);
 }
