@@ -99,6 +99,7 @@ public class WifiStats {
             ChannelInfo channelInfo = channelInfoMap.get(scanResult.frequency);
             if (channelInfo == null) {
                 channelInfo = new ChannelInfo(scanResult.frequency);
+                channelInfoMap.put(scanResult.frequency, channelInfo);
             }
             channelInfo.numberAPs++;
             if (isAPStrong(scanResult.level)) {
