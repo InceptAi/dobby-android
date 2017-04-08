@@ -46,6 +46,7 @@ public class ProdModule {
     @Provides
     public NetworkLayer providesNetworkLayer(DobbyApplication application, DobbyThreadpool threadpool) {
         NetworkLayer networkLayer = new NetworkLayer(application.getApplicationContext(), threadpool);
+        application.getProdComponent().inject(networkLayer);
         networkLayer.initialize();
         return networkLayer;
     }

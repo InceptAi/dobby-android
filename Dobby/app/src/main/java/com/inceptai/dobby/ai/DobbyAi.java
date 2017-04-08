@@ -5,6 +5,7 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.inceptai.dobby.DobbyThreadpool;
+import com.inceptai.dobby.NetworkLayer;
 import com.inceptai.dobby.speedtest.BandwidthAnalyzer;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
 import com.inceptai.dobby.speedtest.NewBandwidthAnalyzer;
@@ -35,7 +36,8 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     private SpeedTestTask speedTestTask;
     private InferenceEngine inferenceEngine;
 
-    @Inject NewBandwidthAnalyzer bandwidthAnalyzer;
+    @Inject
+    NetworkLayer networkLayer;
 
 
     public interface ResponseCallback {
@@ -123,24 +125,17 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     private void runBandwidthTest() {
         BandwidthObserver observer = new BandwidthObserver(inferenceEngine);
         responseCallback.showRtGraph(observer);
-        if (bandwidthAnalyzer == null) {
-            Log.i(TAG, "Null Bandwidth analyzer");
-        }
-        bandwidthAnalyzer.registerCallback(observer);
         Log.i(TAG, "Going to start bandwidth test.");
         try {
-            bandwidthAnalyzer.startBandwidthTest(BandwithTestCodes.BandwidthTestMode.DOWNLOAD_AND_UPLOAD);
+            networkLayer.startBandwidthTest(observer,
+                    BandwithTestCodes.BandwidthTestMode.DOWNLOAD_AND_UPLOAD);
         } catch (Exception e) {
             Log.v(TAG, "Exception while starting bandwidth tests: " + e);
         }
     }
 
     private void cancelBandwidthTest() throws Exception {
-        if (bandwidthAnalyzer == null)
-            throw new Exception("Bandwidth Analyzer cannot be null for this task");
-        if (bandwidthAnalyzer != null) {
-            bandwidthAnalyzer.cancelBandwidthTests();
-        }
+        networkLayer.cancelBandwidthTests();
     }
 
     public void sendQuery(String text) {

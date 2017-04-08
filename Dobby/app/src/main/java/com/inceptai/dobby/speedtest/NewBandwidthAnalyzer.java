@@ -62,6 +62,12 @@ public class NewBandwidthAnalyzer {
     //Callbacks
     private ResultsCallback resultsCallback;
 
+    public static class BandwidthTestAlreadyRunningException extends Exception {
+        BandwidthTestAlreadyRunningException(@BandwidthAnalyzerState  int state) {
+            super("Bandwidth test already running, current state: " + state);
+        }
+    }
+
     /**
      * Callback interface for results. More methods to follow.
      */
@@ -117,7 +123,6 @@ public class NewBandwidthAnalyzer {
 
     /**
      * Un Registers callback -- sets to null
-     * @param resultsCallback
      */
     public void unRegisterCallback() {
         this.resultsCallback = null;
@@ -161,10 +166,9 @@ public class NewBandwidthAnalyzer {
                 bandwidthAnalyzerState == BandwidthAnalyzerState.CANCELLED);
     }
 
-    private void markTestsAsRunning() throws Exception {
+    private void markTestsAsRunning() throws BandwidthTestAlreadyRunningException {
         if (!testsCurrentlyInactive()) {
-            throw new Exception("Tests need to be inactive before restarting. Current state is: "
-                    + bandwidthAnalyzerState);
+            throw new BandwidthTestAlreadyRunningException(bandwidthAnalyzerState);
         }
         bandwidthAnalyzerState = BandwidthAnalyzerState.RUNNING;
     }
@@ -185,12 +189,8 @@ public class NewBandwidthAnalyzer {
     /**
      * start the speed test
      */
-    public void startBandwidthTest(@BandwidthTestMode int testMode) throws Exception {
-        try {
-            markTestsAsRunning();
-        } catch (Exception e) {
-            throw e;
-        }
+    public void startBandwidthTest(@BandwidthTestMode int testMode) throws BandwidthTestAlreadyRunningException {
+        markTestsAsRunning();
         final String downloadMode = "http";
         this.testMode = testMode;
         //Get config

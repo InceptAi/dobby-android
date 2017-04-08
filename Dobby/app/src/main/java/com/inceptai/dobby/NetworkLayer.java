@@ -6,12 +6,15 @@ import android.net.DhcpInfo;
 import android.net.NetworkInfo;
 import android.net.wifi.ScanResult;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.dobby.speedtest.BandwidthAnalyzer;
+import com.inceptai.dobby.speedtest.BandwithTestCodes;
 import com.inceptai.dobby.speedtest.BandwithTestCodes.BandwidthTestErrorCodes;
 import com.inceptai.dobby.speedtest.BandwithTestCodes.BandwidthTestMode;
+import com.inceptai.dobby.speedtest.NewBandwidthAnalyzer;
 import com.inceptai.dobby.speedtest.PingAnalyzer;
 import com.inceptai.dobby.speedtest.ServerInformation;
 import com.inceptai.dobby.speedtest.SpeedTestConfig;
@@ -20,20 +23,26 @@ import com.inceptai.dobby.wifi.WifiAnalyzer;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
 import fr.bmartel.speedtest.SpeedTestReport;
+
+import static com.inceptai.dobby.DobbyApplication.TAG;
 
 /**
  * This class abstracts out the implementation details of all things 'network' related. The UI and
  * local bots would interact with this class to run tests, diagnostics etc. Also
  */
 
-public class NetworkLayer implements BandwidthAnalyzer.ResultsCallback, PingAnalyzer.ResultsCallback {
+public class NetworkLayer implements PingAnalyzer.ResultsCallback {
     private Context context;
     private DobbyThreadpool threadpool;
     private WifiAnalyzer wifiAnalyzer;
-    private BandwidthAnalyzer bandwidthAnalyzer;
     private PingAnalyzer pingAnalyzer;
     private IPLayerInfo ipLayerInfonfo;
+
+    @Inject
+    NewBandwidthAnalyzer bandwidthAnalyzer;
 
     public static class IPLayerInfo {
         public String dns1;
@@ -53,6 +62,7 @@ public class NetworkLayer implements BandwidthAnalyzer.ResultsCallback, PingAnal
         }
     }
 
+    // Use Dagger to get a singleton instance of this class.
     public NetworkLayer(Context context, DobbyThreadpool threadpool) {
         this.context = context;
         this.threadpool = threadpool;
@@ -61,7 +71,6 @@ public class NetworkLayer implements BandwidthAnalyzer.ResultsCallback, PingAnal
 
     public void initialize() {
         wifiAnalyzer = WifiAnalyzer.create(context, threadpool);
-        bandwidthAnalyzer = BandwidthAnalyzer.create(this);
         pingAnalyzer = PingAnalyzer.create(this);
         if (wifiAnalyzer != null) {
             ipLayerInfonfo = new IPLayerInfo(wifiAnalyzer.getDhcpInfo());
@@ -86,55 +95,24 @@ public class NetworkLayer implements BandwidthAnalyzer.ResultsCallback, PingAnal
         return false;
     }
 
+    public void startBandwidthTest(NewBandwidthAnalyzer.ResultsCallback resultsCallback,
+                                   @BandwithTestCodes.BandwidthTestMode int testMode) throws NewBandwidthAnalyzer.BandwidthTestAlreadyRunningException {
 
-    //Error callback
-    @Override
-    public void onBandwidthTestError(@BandwidthTestMode int testMode,
-                              @BandwidthTestErrorCodes int errorCode,
-                              @Nullable String errorMessage) {}
-
-    @Override
-    public void onConfigFetch(SpeedTestConfig config) {
-
+        bandwidthAnalyzer.registerCallback(resultsCallback);
+        Log.i(TAG, "Going to start bandwidth test.");
+        try {
+            bandwidthAnalyzer.startBandwidthTest(BandwithTestCodes.BandwidthTestMode.DOWNLOAD_AND_UPLOAD);
+        } catch (NewBandwidthAnalyzer.BandwidthTestAlreadyRunningException e) {
+            Log.v(TAG, "Exception while starting bandwidth tests: " + e);
+            throw e;
+        }
     }
 
-    @Override
-    public void onServerInformationFetch(ServerInformation serverInformation) {
-
+    public void cancelBandwidthTests() {
+        bandwidthAnalyzer.cancelBandwidthTests();
     }
 
-    @Override
-    public void onTestRepeatIntervalReport(@BandwidthTestMode int testMode, SpeedTestReport report) {
-
-    }
-
-    @Override
-    public void onTestProgress(@BandwidthTestMode int testMode, float percent, SpeedTestReport report) {
-
-    }
-
-    @Override
-    public void onTestFinished(@BandwidthTestMode int testMode, SpeedTestReport report) {
-
-    }
-
-    @Override
-    public void onBestServerSelected(ServerInformation.ServerDetails bestServer) {
-
-    }
-
-    @Override
-    public void onClosestServersSelected(List<ServerInformation.ServerDetails> closestServers) {
-
-    }
-
-    @Override
-    public void onRepeatTestFinished(@BandwidthTestMode int testMode, SpeedTestReport report) {
-
-    }
-
-    //Ping analyzer callbacks
-
+    // Ping analyzer callbacks
     @Override
     public void onPingResults(PingAnalyzer.PingStats stats) {
 
