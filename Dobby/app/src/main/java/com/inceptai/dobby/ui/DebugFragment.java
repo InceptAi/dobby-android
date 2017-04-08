@@ -122,7 +122,7 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
             addConsoleText("Clicked on Ping.");
 
         } else if (TAG_WIFI_SCAN.equals(tag)) {
-            addConsoleText("Starting Wifi scan...");
+            addConsoleText("\nStarting Wifi scan...");
             startWifiScan();
         } else if (TAG_WIFI_STATS.equals(tag)) {
             getWifiStats();
@@ -141,7 +141,7 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
             @Override
             public void run() {
                 try {
-                    addConsoleText("\n\nWifi Scan:" + future.get().toString());
+                    addConsoleText("Wifi Scan:" + future.get().toString());
                 } catch (InterruptedException e) {
                     Log.w(TAG, "Exception parsing scan result.");
                 } catch (ExecutionException e) {
@@ -152,7 +152,7 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
     }
 
     private void getWifiStats() {
-        addConsoleText("\n\nWifi Stats:" + networkLayer.getWifiStats().toString());
+        addConsoleText("\nWifi Stats:" + networkLayer.getWifiStats().toString());
     }
 
     private void startBandwidthTest(@BandwithTestCodes.BandwidthTestMode int testMode) {
