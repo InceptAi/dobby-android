@@ -47,7 +47,9 @@ public class GraphData<T> implements RtDataSource.RtDataListener<T> {
     public void onUpdate(T dataItem) {
         Log.i(TAG, "Update avail: " + dataItem);
         addData(dataItem);
-        listener.updateAvailable();
+        if (listener != null) {
+            listener.updateAvailable();
+        }
     }
 
     @Override
