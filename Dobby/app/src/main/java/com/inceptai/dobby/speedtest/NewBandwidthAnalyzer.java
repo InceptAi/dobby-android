@@ -62,9 +62,30 @@ public class NewBandwidthAnalyzer {
     //Callbacks
     private ResultsCallback resultsCallback;
 
-    public static class BandwidthTestAlreadyRunningException extends Exception {
-        BandwidthTestAlreadyRunningException(@BandwidthAnalyzerState  int state) {
-            super("Bandwidth test already running, current state: " + state);
+    public static class BandwidthTestException extends Exception {
+        public static final int BW_EXCEPTION_TEST_ALREADY_RUNNING = 1;
+        public static final int BW_EXCEPTION_GETTING_CONFIG_FAILED = 2;
+        public static final int BW_EXCEPTION_GETTING_SERVER_INFORMATION_FAILED = 3;
+        public static final int BW_EXCEPTION_GETTING_BEST_SERVER_FAILED = 4;
+        private int exceptionType = 0;
+        public BandwidthTestException(int exceptionType) {
+            this.exceptionType = exceptionType;
+        }
+
+        @Override
+        public String toString() {
+            switch(exceptionType) {
+                case BW_EXCEPTION_TEST_ALREADY_RUNNING:
+                    return "BW Test already running";
+                case BW_EXCEPTION_GETTING_CONFIG_FAILED:
+                    return "BW Test getting config failed";
+                case BW_EXCEPTION_GETTING_SERVER_INFORMATION_FAILED:
+                    return "BW Test getting servers failed";
+                case BW_EXCEPTION_GETTING_BEST_SERVER_FAILED:
+                    return "BW Test getting best server failed";
+                default:
+                    return "Unknown BW Test Error";
+            }
         }
     }
 
@@ -166,9 +187,9 @@ public class NewBandwidthAnalyzer {
                 bandwidthAnalyzerState == BandwidthAnalyzerState.CANCELLED);
     }
 
-    private void markTestsAsRunning() throws BandwidthTestAlreadyRunningException {
+    private void markTestsAsRunning() throws BandwidthTestException {
         if (!testsCurrentlyInactive()) {
-            throw new BandwidthTestAlreadyRunningException(bandwidthAnalyzerState);
+            throw new BandwidthTestException(BandwidthTestException.BW_EXCEPTION_TEST_ALREADY_RUNNING);
         }
         bandwidthAnalyzerState = BandwidthAnalyzerState.RUNNING;
     }
@@ -185,11 +206,20 @@ public class NewBandwidthAnalyzer {
         bandwidthAnalyzerState = BandwidthAnalyzerState.CANCELLING;
     }
 
+    public void startBandwidthTestSafely(@BandwidthTestMode int testMode) {
+        try {
+            startBandwidthTest(testMode);
+        } catch (Exception e) {
+            Log.v(TAG, "Exception: " + e);
+            finishTests();
+        }
+    }
 
     /**
      * start the speed test
      */
-    public void startBandwidthTest(@BandwidthTestMode int testMode) throws BandwidthTestAlreadyRunningException {
+    private void startBandwidthTest(@BandwidthTestMode int testMode) throws
+            BandwidthTestException {
         markTestsAsRunning();
         final String downloadMode = "http";
         this.testMode = testMode;
@@ -201,7 +231,7 @@ public class NewBandwidthAnalyzer {
                         BandwidthTestErrorCodes.ERROR_FETCHING_CONFIG,
                         "Config fetch returned null");
             }
-            return;
+            throw new BandwidthTestException(BandwidthTestException.BW_EXCEPTION_GETTING_CONFIG_FAILED);
         }
         ServerInformation info = parseServerInformation.getServerInfo();
         if (info == null) {
@@ -210,7 +240,7 @@ public class NewBandwidthAnalyzer {
                         BandwidthTestErrorCodes.ERROR_FETCHING_SERVER_INFO,
                         "Server info fetch returned null");
             }
-            return;
+            throw new BandwidthTestException(BandwidthTestException.BW_EXCEPTION_GETTING_SERVER_INFORMATION_FAILED);
         }
 
         bestServer = getBestServer(speedTestConfig, info);
@@ -220,7 +250,7 @@ public class NewBandwidthAnalyzer {
                         BandwidthTestErrorCodes.ERROR_SELECTING_BEST_SERVER,
                         "best server returned as null");
             }
-            return;
+            throw new BandwidthTestException(BandwidthTestException.BW_EXCEPTION_GETTING_BEST_SERVER_FAILED);
         }
 
         if (testMode == BandwidthTestMode.DOWNLOAD_AND_UPLOAD || testMode == BandwidthTestMode.DOWNLOAD) {

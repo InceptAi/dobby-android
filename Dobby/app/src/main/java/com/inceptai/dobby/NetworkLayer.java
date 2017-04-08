@@ -5,27 +5,19 @@ import android.net.ConnectivityManager;
 import android.net.DhcpInfo;
 import android.net.NetworkInfo;
 import android.net.wifi.ScanResult;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.inceptai.dobby.speedtest.BandwidthAnalyzer;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
-import com.inceptai.dobby.speedtest.BandwithTestCodes.BandwidthTestErrorCodes;
-import com.inceptai.dobby.speedtest.BandwithTestCodes.BandwidthTestMode;
 import com.inceptai.dobby.speedtest.NewBandwidthAnalyzer;
 import com.inceptai.dobby.speedtest.PingAnalyzer;
-import com.inceptai.dobby.speedtest.ServerInformation;
-import com.inceptai.dobby.speedtest.SpeedTestConfig;
 import com.inceptai.dobby.utils.Utils;
 import com.inceptai.dobby.wifi.WifiAnalyzer;
 
 import java.util.List;
 
 import javax.inject.Inject;
-
-import fr.bmartel.speedtest.SpeedTestReport;
 
 import static com.inceptai.dobby.DobbyApplication.TAG;
 
@@ -96,16 +88,11 @@ public class NetworkLayer implements PingAnalyzer.ResultsCallback {
     }
 
     public void startBandwidthTest(NewBandwidthAnalyzer.ResultsCallback resultsCallback,
-                                   @BandwithTestCodes.BandwidthTestMode int testMode) throws NewBandwidthAnalyzer.BandwidthTestAlreadyRunningException {
+                                   @BandwithTestCodes.BandwidthTestMode int testMode) {
 
         bandwidthAnalyzer.registerCallback(resultsCallback);
         Log.i(TAG, "Going to start bandwidth test.");
-        try {
-            bandwidthAnalyzer.startBandwidthTest(BandwithTestCodes.BandwidthTestMode.DOWNLOAD_AND_UPLOAD);
-        } catch (NewBandwidthAnalyzer.BandwidthTestAlreadyRunningException e) {
-            Log.v(TAG, "Exception while starting bandwidth tests: " + e);
-            throw e;
-        }
+        bandwidthAnalyzer.startBandwidthTestSafely(BandwithTestCodes.BandwidthTestMode.DOWNLOAD_AND_UPLOAD);
     }
 
     public void cancelBandwidthTests() {

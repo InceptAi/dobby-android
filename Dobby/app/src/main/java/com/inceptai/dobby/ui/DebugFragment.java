@@ -142,12 +142,7 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
     }
 
     private void startBandwidthTest(@BandwithTestCodes.BandwidthTestMode int testMode) {
-        try {
-            networkLayer.startBandwidthTest(this, testMode);
-        } catch (NewBandwidthAnalyzer.BandwidthTestAlreadyRunningException e) {
-            Log.w(TAG, "Exception attempting to start bandwidth test.");
-            addConsoleText("Exception attempting to start bandwidth test.");
-        }
+        networkLayer.startBandwidthTest(this, testMode);
     }
 
     @Override
