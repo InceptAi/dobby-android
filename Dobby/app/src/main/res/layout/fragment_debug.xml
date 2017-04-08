@@ -1,0 +1,71 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:layout_gravity="bottom"
+    tools:context="com.inceptai.dobby.ui.DebugFragment">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:orientation="horizontal"
+        android:layout_height="wrap_content">
+
+        <Button
+            android:id="@+id/bw_test_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/bandwidth_test" />
+
+        <android.support.v7.widget.SwitchCompat
+            android:id="@+id/upload_switch_button"
+            android:layout_width="wrap_content"
+            android:paddingLeft ="10dp"
+            android:layout_height="wrap_content"
+            android:text="@string/upload" />
+
+        <android.support.v7.widget.SwitchCompat
+            android:id="@+id/download_switch_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/download" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:orientation="horizontal"
+
+        android:layout_height="wrap_content">
+
+        <Button
+            android:id="@+id/wifi_scan_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/wifi_scan" />
+
+        <Button
+            android:id="@+id/ping_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/ping" />
+
+    </LinearLayout>
+
+    <ScrollView
+        android:id="@+id/debug_scroll_view"
+        android:layout_margin="10dp"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        >
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="left"
+            android:maxLines="100"
+            android:fontFamily="serif-monospace"
+            android:id="@+id/console_textview"
+            android:text="@string/hello_blank_fragment" />
+    </ScrollView>
+
+
+</LinearLayout>

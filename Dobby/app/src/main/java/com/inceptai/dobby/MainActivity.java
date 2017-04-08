@@ -29,6 +29,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.dobby.ai.DobbyAi;
 import com.inceptai.dobby.ai.RtDataSource;
 import com.inceptai.dobby.ui.ChatFragment;
+import com.inceptai.dobby.ui.DebugFragment;
 import com.inceptai.dobby.ui.WifiFragment;
 import com.inceptai.dobby.utils.Utils;
 
@@ -152,7 +153,8 @@ public class MainActivity extends AppCompatActivity
             WifiFragment fragment = (WifiFragment) setupFragment(WifiFragment.class, WifiFragment.FRAGMENT_TAG);
             fragment.setWifiScanFuture(scanFuture, threadpool.getExecutor());
 
-        } else if (id == R.id.nav_gallery) {
+        } else if (id == R.id.nav_debug) {
+            DebugFragment fragment = (DebugFragment) setupFragment(DebugFragment.class, DebugFragment.FRAGMENT_TAG);
 
         } else if (id == R.id.nav_slideshow) {
 
@@ -166,6 +168,7 @@ public class MainActivity extends AppCompatActivity
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
+        item.setChecked(false);
         return true;
     }
 

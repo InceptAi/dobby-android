@@ -5,11 +5,11 @@
         <item
             android:id="@+id/nav_wifi_scan"
             android:icon="@drawable/ic_menu_camera"
-            android:title="Wifi Scan" />
+            android:title="@string/wifi_scan" />
         <item
-            android:id="@+id/nav_gallery"
+            android:id="@+id/nav_debug"
             android:icon="@drawable/ic_menu_gallery"
-            android:title="Gallery" />
+            android:title="@string/debug" />
         <item
             android:id="@+id/nav_slideshow"
             android:icon="@drawable/ic_menu_slideshow"

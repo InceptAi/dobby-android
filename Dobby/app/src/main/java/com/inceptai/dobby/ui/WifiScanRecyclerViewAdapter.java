@@ -8,10 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.google.common.collect.Lists;
 import com.inceptai.dobby.R;
-import com.inceptai.dobby.ui.WifiFragment.OnListFragmentInteractionListener;
-
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -20,18 +17,14 @@ import java.util.List;
 import static com.inceptai.dobby.DobbyApplication.TAG;
 
 /**
- * {@link RecyclerView.Adapter} that can display a {@link ScanResult} and makes a call to the
- * specified {@link OnListFragmentInteractionListener}.
- * TODO: Replace the implementation with code for your data type.
+ * {@link RecyclerView.Adapter} that can display a {@link ScanResult}.
  */
 public class WifiScanRecyclerViewAdapter extends RecyclerView.Adapter<WifiScanRecyclerViewAdapter.ViewHolder> {
 
     private List<ScanResult> mValues;
-    private final OnListFragmentInteractionListener mListener;
 
-    public WifiScanRecyclerViewAdapter(List<ScanResult> items, OnListFragmentInteractionListener listener) {
+    public WifiScanRecyclerViewAdapter(List<ScanResult> items) {
         mValues = items;
-        mListener = listener;
     }
 
     @Override
@@ -48,17 +41,6 @@ public class WifiScanRecyclerViewAdapter extends RecyclerView.Adapter<WifiScanRe
         holder.mItem = mValues.get(position);
         holder.mIdView.setText(mValues.get(position).BSSID);
         holder.mContentView.setText(String.valueOf(mValues.get(position).level));
-
-        holder.mView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (null != mListener) {
-                    // Notify the active callbacks interface (the activity, if the
-                    // fragment is attached to one) that an item has been selected.
-                    mListener.onListFragmentInteraction(holder.mItem);
-                }
-            }
-        });
     }
 
     @Override
