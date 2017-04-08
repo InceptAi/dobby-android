@@ -44,10 +44,12 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
     private static final String TAG_BW_TEST = "bw test";
     private static final String TAG_WIFI_SCAN = "wifi scan";
     private static final String TAG_PING = "ping";
+    private static final String TAG_WIFI_STATS = "wifi stats";
 
     private Button bwTestButton;
     private Button wifiScanButton;
     private Button pingTestButton;
+    private Button wifiStatsButton;
     private SwitchCompat uploadSwitchButton;
     private SwitchCompat downloadSwitchButton;
     private TextView consoleTv;
@@ -81,6 +83,10 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
         pingTestButton = (Button) mainView.findViewById(R.id.ping_button);
         pingTestButton.setTag(TAG_PING);
         pingTestButton.setOnClickListener(this);
+
+        wifiStatsButton = (Button) mainView.findViewById(R.id.wifi_stats_button);
+        wifiStatsButton.setTag(TAG_WIFI_STATS);
+        wifiStatsButton.setOnClickListener(this);
 
         uploadSwitchButton = (SwitchCompat) mainView.findViewById(R.id.upload_switch_button);
         downloadSwitchButton = (SwitchCompat) mainView.findViewById(R.id.download_switch_button);
@@ -118,6 +124,8 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
         } else if (TAG_WIFI_SCAN.equals(tag)) {
             addConsoleText("Starting Wifi scan...");
             startWifiScan();
+        } else if (TAG_WIFI_STATS.equals(tag)) {
+            getWifiStats();
         }
 
     }
@@ -132,9 +140,19 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
         future.addListener(new Runnable() {
             @Override
             public void run() {
-                addConsoleText("Wifi Stats:" + networkLayer.getWifiStats().toString());
+                try {
+                    addConsoleText("\n\nWifi Scan:" + future.get().toString());
+                } catch (InterruptedException e) {
+                    Log.w(TAG, "Exception parsing scan result.");
+                } catch (ExecutionException e) {
+                    Log.w(TAG, "Exception parsing scan result.");
+                }
             }
         }, threadpool.getUiThreadExecutor());
+    }
+
+    private void getWifiStats() {
+        addConsoleText("\n\nWifi Stats:" + networkLayer.getWifiStats().toString());
     }
 
     private void startBandwidthTest(@BandwithTestCodes.BandwidthTestMode int testMode) {

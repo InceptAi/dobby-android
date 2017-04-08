@@ -44,6 +44,13 @@
             android:text="@string/wifi_scan" />
 
         <Button
+            android:id="@+id/wifi_stats_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/wifi_stats" />
+
+
+        <Button
             android:id="@+id/ping_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -61,7 +68,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="left"
-            android:maxLines="100"
+            android:maxLines="2000"
             android:fontFamily="serif-monospace"
             android:id="@+id/console_textview"
             android:text="@string/hello_blank_fragment" />
