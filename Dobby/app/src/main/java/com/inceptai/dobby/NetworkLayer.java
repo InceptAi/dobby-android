@@ -1,10 +1,13 @@
 package com.inceptai.dobby;
 
 import android.content.Context;
+import android.net.ConnectivityManager;
 import android.net.DhcpInfo;
+import android.net.NetworkInfo;
 import android.net.wifi.ScanResult;
 import android.support.annotation.Nullable;
 
+import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.dobby.speedtest.BandwidthAnalyzer;
 import com.inceptai.dobby.speedtest.BandwithTestCodes.BandwidthTestErrorCodes;
@@ -68,6 +71,21 @@ public class NetworkLayer implements BandwidthAnalyzer.ResultsCallback, PingAnal
     ListenableFuture<List<ScanResult>> wifiScan() {
         return wifiAnalyzer.startWifiScan();
     }
+
+
+    public boolean checkWiFiConnectivity() throws IllegalStateException {
+        Preconditions.checkNotNull(context);
+        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (connectivityManager == null) {
+            throw new IllegalStateException("Cannot get ConnectivityManager to determine WiFi data connectivity");
+        }
+        final NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
+        if (activeNetwork != null && activeNetwork.getType() == ConnectivityManager.TYPE_WIFI && activeNetwork.isConnected()) {
+            return true;
+        }
+        return false;
+    }
+
 
     //Error callback
     @Override
