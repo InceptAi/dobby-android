@@ -18,6 +18,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.List;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import fr.bmartel.speedtest.model.SpeedTestError;
 
 import static com.inceptai.dobby.DobbyApplication.TAG;
@@ -25,7 +28,7 @@ import static com.inceptai.dobby.DobbyApplication.TAG;
 /**
  * Class contains logic performing bandwidth tests.
  */
-
+@Singleton
 public class NewBandwidthAnalyzer {
     private static final int DOWNLOAD_THREADS = 2;
     private static final int UPLOAD_THREADS = 2;
@@ -83,9 +86,9 @@ public class NewBandwidthAnalyzer {
                                   @Nullable String errorMessage);
     }
 
-    private NewBandwidthAnalyzer(@Nullable ResultsCallback resultsCallback, DobbyThreadpool dobbyThreadpool) {
+    @Inject
+    public NewBandwidthAnalyzer(DobbyThreadpool dobbyThreadpool) {
         this.bandwidthTestListener = new BandwidthTestListener();
-        this.resultsCallback = resultsCallback;
         this.testMode = BandwidthTestMode.IDLE;
         this.parseSpeedTestConfig = new ParseSpeedTestConfig(this.bandwidthTestListener);
         this.parseServerInformation = new ParseServerInformation(this.bandwidthTestListener);
@@ -99,7 +102,9 @@ public class NewBandwidthAnalyzer {
     @Nullable
     public static NewBandwidthAnalyzer create(ResultsCallback resultsCallback, DobbyThreadpool dobbyThreadpool) {
         Preconditions.checkNotNull(dobbyThreadpool);
-        return new NewBandwidthAnalyzer(resultsCallback, dobbyThreadpool);
+        NewBandwidthAnalyzer analyzer = new NewBandwidthAnalyzer(dobbyThreadpool);
+        analyzer.registerCallback(resultsCallback);
+        return analyzer;
     }
 
     /**

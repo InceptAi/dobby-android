@@ -21,7 +21,7 @@ public class DobbyApplication extends Application {
         prodComponent = DaggerProdComponent.builder().prodModule(new ProdModule(this)).build();
     }
 
-    ProdComponent getProdComponent() {
+    public ProdComponent getProdComponent() {
         return prodComponent;
     }
 }

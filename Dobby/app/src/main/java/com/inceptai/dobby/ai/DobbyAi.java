@@ -14,6 +14,8 @@ import com.inceptai.dobby.speedtest.SpeedTestTask;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
 import ai.api.model.Result;
 import fr.bmartel.speedtest.SpeedTestReport;
 
@@ -32,7 +34,8 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     private ResponseCallback responseCallback;
     private SpeedTestTask speedTestTask;
     private InferenceEngine inferenceEngine;
-    private NewBandwidthAnalyzer newBandwidthAnalyzer;
+
+    @Inject NewBandwidthAnalyzer bandwidthAnalyzer;
 
 
     public interface ResponseCallback {
@@ -120,72 +123,27 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     private void runBandwidthTest() {
         BandwidthObserver observer = new BandwidthObserver(inferenceEngine);
         responseCallback.showRtGraph(observer);
-        newBandwidthAnalyzer = NewBandwidthAnalyzer.create(new BandwidthObserver(inferenceEngine), threadpool);
+        if (bandwidthAnalyzer == null) {
+            Log.i(TAG, "Null Bandwidth analyzer");
+        }
+        bandwidthAnalyzer.registerCallback(observer);
+        Log.i(TAG, "Going to start bandwidth test.");
         try {
-            newBandwidthAnalyzer.startBandwidthTest(BandwithTestCodes.BandwidthTestMode.DOWNLOAD_AND_UPLOAD);
+            bandwidthAnalyzer.startBandwidthTest(BandwithTestCodes.BandwidthTestMode.DOWNLOAD_AND_UPLOAD);
         } catch (Exception e) {
             Log.v(TAG, "Exception while starting bandwidth tests: " + e);
         }
     }
 
     private void cancelBandwidthTest() throws Exception {
-        if (newBandwidthAnalyzer == null)
+        if (bandwidthAnalyzer == null)
             throw new Exception("Bandwidth Analyzer cannot be null for this task");
-        if (newBandwidthAnalyzer != null) {
-            newBandwidthAnalyzer.cancelBandwidthTests();
+        if (bandwidthAnalyzer != null) {
+            bandwidthAnalyzer.cancelBandwidthTests();
         }
     }
 
     public void sendQuery(String text) {
         apiAiClient.sendTextQuery(text, this);
-    }
-
-    private class BandwidthTestResultProcessor implements BandwidthAnalyzer.ResultsCallback {
-        @Override
-        public void onBandwidthTestError(@BandwithTestCodes.BandwidthTestMode int testMode,
-                                         @BandwithTestCodes.BandwidthTestErrorCodes int errorCode,
-                                         @Nullable String errorMessage) {
-
-        }
-
-        @Override
-        public void onConfigFetch(SpeedTestConfig config) {
-
-        }
-
-        @Override
-        public void onServerInformationFetch(ServerInformation serverInformation) {
-
-        }
-
-        @Override
-        public void onClosestServersSelected(List<ServerInformation.ServerDetails> closestServers) {
-
-        }
-
-        @Override
-        public void onBestServerSelected(ServerInformation.ServerDetails bestServer) {
-
-        }
-
-        @Override
-        public void onTestFinished(@BandwithTestCodes.BandwidthTestMode int testMode, SpeedTestReport report) {
-
-        }
-
-        @Override
-        public void onTestProgress(@BandwithTestCodes.BandwidthTestMode int testMode, float percent, SpeedTestReport report) {
-
-        }
-
-        @Override
-        public void onTestRepeatIntervalReport(@BandwithTestCodes.BandwidthTestMode int testMode, SpeedTestReport report) {
-
-        }
-
-        @Override
-        public void onRepeatTestFinished(@BandwithTestCodes.BandwidthTestMode int testMode, SpeedTestReport report) {
-            inferenceEngine.notifyBandwidthTestResult(testMode, report.getTransferRateBit().doubleValue());
-        }
     }
 }
