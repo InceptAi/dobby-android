@@ -108,7 +108,7 @@ public class InferenceEngine {
 
     public void notifyBandwidthTestProgress(@BandwithTestCodes.BandwidthTestMode int testMode, double bandwidth) {
         long currentTs = System.currentTimeMillis();
-        if ((currentTs - lastBandwidthUpdateTimestampMs) > 2000L) {
+        if ((currentTs - lastBandwidthUpdateTimestampMs) > 500L) {
             sendResponseOnlyAction(testModeToString(testMode) + " Current Bandwidth: " + String.format("%.2f", bandwidth / 1000000) + " Mbps");
             lastBandwidthUpdateTimestampMs = currentTs;
         }

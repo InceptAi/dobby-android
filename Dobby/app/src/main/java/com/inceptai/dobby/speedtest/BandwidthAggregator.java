@@ -275,7 +275,7 @@ public class BandwidthAggregator {
             if (resultsCallback != null && checkIfAllThreadsDone()) {
                 resultsCallback.onFinish(getFinalBandwidthStats());
                 try {
-                    Thread.sleep(2000);
+                    Thread.sleep(200);
                 } catch (InterruptedException e) {
                     Log.v(TAG, "Interrupted");
                 }

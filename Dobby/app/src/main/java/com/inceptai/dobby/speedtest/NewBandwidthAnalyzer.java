@@ -27,9 +27,9 @@ import static com.inceptai.dobby.DobbyApplication.TAG;
  */
 
 public class NewBandwidthAnalyzer {
-    private static final int DOWNLOAD_THREADS = 1;
-    private static final int UPLOAD_THREADS = 1;
-    private static final int REPORT_INTERVAL_MS = 250;
+    private static final int DOWNLOAD_THREADS = 2;
+    private static final int UPLOAD_THREADS = 2;
+    private static final int REPORT_INTERVAL_MS = 500;
 
     @IntDef({BandwidthAnalyzerState.STOPPED, BandwidthAnalyzerState.RUNNING,
             BandwidthAnalyzerState.CANCELLING, BandwidthAnalyzerState.CANCELLED})
