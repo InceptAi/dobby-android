@@ -37,7 +37,9 @@ public class ProdModule {
     @Singleton
     @Provides
     public DobbyAi providesDobbyAi(DobbyApplication application, DobbyThreadpool threadpool) {
-        return new DobbyAi(application.getApplicationContext(), threadpool);
+        DobbyAi dobbyAi = new DobbyAi(application.getApplicationContext(), threadpool);
+        application.getProdComponent().inject(dobbyAi);
+        return dobbyAi;
     }
 
     @Singleton

@@ -1,6 +1,7 @@
 package com.inceptai.dobby.dagger;
 
 import com.inceptai.dobby.MainActivity;
+import com.inceptai.dobby.ai.DobbyAi;
 
 import javax.inject.Singleton;
 
@@ -14,4 +15,6 @@ import dagger.Component;
 public interface ProdComponent {
 
     void inject(MainActivity mainActivity);
+
+    void inject(DobbyAi dobbyAi);
 }
