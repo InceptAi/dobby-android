@@ -108,6 +108,8 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
             if (!config.isEmpty()) {
                 addConsoleText("Starting Bandwidth test with : { " + config + " }.");
                 startBandwidthTest(testMode);
+            } else {
+                addConsoleText("No bandwidth test selected !");
             }
 
         } else if (TAG_PING.equals(tag)) {
@@ -131,7 +133,8 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
             @Override
             public void run() {
                 try {
-                    addConsoleText(future.get().toString());
+                    addConsoleText("Wifi Scan:" + future.get().toString());
+                    addConsoleText("Wifi Stats:" + networkLayer.getWifiStats().toString());
                 } catch (InterruptedException e) {
                     Log.w(TAG, "Exception parsing scan result.");
                 } catch (ExecutionException e) {

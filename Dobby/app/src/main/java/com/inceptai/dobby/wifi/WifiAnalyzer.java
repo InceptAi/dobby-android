@@ -147,4 +147,8 @@ public class WifiAnalyzer {
         }
     }
 
+    public WifiStats getWifiStats() {
+        return wifiStats;
+    }
+
 }

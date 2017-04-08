@@ -14,6 +14,7 @@ import com.inceptai.dobby.speedtest.NewBandwidthAnalyzer;
 import com.inceptai.dobby.speedtest.PingAnalyzer;
 import com.inceptai.dobby.utils.Utils;
 import com.inceptai.dobby.wifi.WifiAnalyzer;
+import com.inceptai.dobby.wifi.WifiStats;
 
 import java.util.List;
 
@@ -71,6 +72,10 @@ public class NetworkLayer implements PingAnalyzer.ResultsCallback {
 
     public ListenableFuture<List<ScanResult>> wifiScan() {
         return wifiAnalyzer.startWifiScan();
+    }
+
+    public WifiStats getWifiStats() {
+        return wifiAnalyzer.getWifiStats();
     }
 
 
