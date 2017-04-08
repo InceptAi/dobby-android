@@ -22,4 +22,5 @@
     <string name="upload">Upload</string>
     <string name="download">Download</string>
     <string name="debug">Debug</string>
+    <string name="wifi_stats"> Wifi Stats</string>
 </resources>
