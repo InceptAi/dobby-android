@@ -132,14 +132,7 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
         future.addListener(new Runnable() {
             @Override
             public void run() {
-                try {
-                    addConsoleText("Wifi Scan:" + future.get().toString());
-                    addConsoleText("Wifi Stats:" + networkLayer.getWifiStats().toString());
-                } catch (InterruptedException e) {
-                    Log.w(TAG, "Exception parsing scan result.");
-                } catch (ExecutionException e) {
-                    Log.w(TAG, "Exception parsing scan result.");
-                }
+                addConsoleText("Wifi Stats:" + networkLayer.getWifiStats().toString());
             }
         }, threadpool.getUiThreadExecutor());
     }
