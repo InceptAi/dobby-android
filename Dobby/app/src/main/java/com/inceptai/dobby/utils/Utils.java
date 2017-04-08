@@ -25,7 +25,7 @@ import static com.inceptai.dobby.DobbyApplication.TAG;
  */
 
 public class Utils {
-    private static final String EMPTY_STRING = "";
+    public static final String EMPTY_STRING = "";
     private static final int READ_TIMEOUT_MS = 10000;
     private static final int CONNECTION_TIMEOUT_MS = 15000;
 

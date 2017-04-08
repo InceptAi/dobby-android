@@ -3,15 +3,18 @@ package com.inceptai.dobby.ui;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.inceptai.dobby.ChatEntry;
 import com.inceptai.dobby.R;
 
 import java.util.List;
 
+import lecho.lib.hellocharts.model.LineChartData;
+
+import static com.inceptai.dobby.DobbyApplication.TAG;
 /**
  * Created by arunesh on 3/28/17.
  */
@@ -47,6 +50,9 @@ public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
         } else if (viewType == ChatEntry.USER_CHAT) {
             View v = inflater.inflate(R.layout.user_chat, parent, false);
             viewHolder = new UserChatViewHolder(v);
+        } else if (viewType == ChatEntry.RT_GRAPH) {
+            View v = inflater.inflate(R.layout.rt_graph, parent, false);
+            viewHolder = new RtGraphViewHolder(v);
         } else {
             View v = inflater.inflate(android.R.layout.simple_list_item_1, parent, false);
             viewHolder = new RecyclerViewSimpleTextViewHolder(v);
@@ -61,10 +67,17 @@ public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
               DobbyChatViewHolder vh1 = (DobbyChatViewHolder) holder;
               configureDobbyViewHolder(vh1, position);
               break;
+
           case ChatEntry.USER_CHAT:
               UserChatViewHolder vh2 = (UserChatViewHolder) holder;
               configureUserViewHolder(vh2, position);
               break;
+
+          case ChatEntry.RT_GRAPH:
+              RtGraphViewHolder vh3 = (RtGraphViewHolder) holder;
+              configureRtGraphViewHolder(vh3, position);
+              break;
+
           default:
               RecyclerViewSimpleTextViewHolder vh = (RecyclerViewSimpleTextViewHolder) holder;
               configureDefaultViewHolder(vh, position);
@@ -84,8 +97,31 @@ public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
         userChatViewHolder.getUserChatTv().setText(entryList.get(position).getText());
     }
 
+    private void configureRtGraphViewHolder(RtGraphViewHolder viewHolder, int position) {
+        ChatEntry entry = entryList.get(position);
+        GraphData graphData = entry.getGraphData();
+        if (graphData != null) {
+            viewHolder.setGraphData(graphData);
+        } else {
+            Log.e(TAG, "Error: Attempting to draw chart with null GraphData.");
+        }
+    }
+
     @Override
     public int getItemCount() {
         return entryList.size();
     }
+
+    @Override
+    public void onViewRecycled(RecyclerView.ViewHolder holder) {
+        int position = holder.getAdapterPosition();
+        ChatEntry entry = entryList.get(position);
+        if (entry != null && entry.getEntryType() == ChatEntry.RT_GRAPH) {
+            // Special logic to unbind this view from its data source.
+            if (holder instanceof RtGraphViewHolder) {
+                ((RtGraphViewHolder) holder).unlinkDataSource();
+            }
+        }
+        super.onViewRecycled(holder);
+     }
 }

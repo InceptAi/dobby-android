@@ -27,6 +27,7 @@ import android.widget.Toast;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.dobby.ai.DobbyAi;
+import com.inceptai.dobby.ai.RtDataSource;
 import com.inceptai.dobby.ui.ChatFragment;
 import com.inceptai.dobby.ui.WifiFragment;
 import com.inceptai.dobby.utils.Utils;
@@ -168,9 +169,16 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
+    // From DobbyAi.ResponseCallback interface.
     @Override
     public void showResponse(String text) {
         chatFragment.showResponse(text);
+    }
+
+    // From DobbyAi.ResponseCallback interface.
+    @Override
+    public void showRtGraph(RtDataSource<Float> rtDataSource) {
+        chatFragment.showRtGraph(rtDataSource);
     }
 
     @Override

@@ -37,7 +37,7 @@ dependencies {
 
     // API.AI Gradle dependencies.
     //  api.ai SDK dependencies
-//  compile 'com.android.support:appcompat-v7:23.2.1'
+    // compile 'com.android.support:appcompat-v7:23.2.1'
 
     //Speed test dependencies
     // Since we are on Android, we need to use guava version 20 for JDK 1.6 / 1.7
@@ -57,4 +57,6 @@ dependencies {
     compile "com.google.dagger:dagger:2.9"
     annotationProcessor "com.google.dagger:dagger-compiler:2.9"
     provided 'javax.annotation:jsr250-api:1.0'
+
+    compile 'com.github.lecho:hellocharts-library:1.5.8@aar'
 }
