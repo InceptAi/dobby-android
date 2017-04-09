@@ -70,18 +70,33 @@ public class WifiStats {
     public void updateWifiStats(@Nullable WifiInfo wifiInfo, @Nullable List<ScanResult> scanResultList) {
         if (wifiInfo != null) {
             linkSSID = wifiInfo.getSSID();
-            linkBSSID = wifiInfo.getSSID();
+            linkBSSID = wifiInfo.getBSSID();
             linkSignal = wifiInfo.getRssi();
             macAddress = wifiInfo.getMacAddress();
             linkSpeedMbps = wifiInfo.getLinkSpeed();
         }
 
         if (scanResultList != null) {
-            updateChannelFrequency(scanResultList);
+            if (linkFrequency == 0) {
+                updateChannelFrequency(scanResultList);
+            }
             updateChannelInfo(scanResultList);
         }
 
     }
+
+    /*
+    private void sortChannelInfoByContention() {
+        Ordering<Map.Entry<Integer, ChannelInfo>> byMapValues = new Ordering<Map.Entry<Integer, ChannelInfo>>() {
+            @Override
+            public int compare(Map.Entry<Integer, ChannelInfo> left, Map.Entry<Integer, ChannelInfo> right) {
+                return (int)(left.getValue().contentionMetric * 1000 - right.getValue().contentionMetric * 1000);
+            }
+        };
+        List<Map.Entry<Integer, ChannelInfo>> channelInfoList = Lists.newArrayList(channelInfoMap.entrySet());
+        Collections.sort(channelInfoList, byMapValues);
+    }
+    */
 
     public String toJson() {
         Gson gson = new Gson();
@@ -120,19 +135,33 @@ public class WifiStats {
         return 0;
     }
 
+    private double getInterferenceFromOtherChannels(int otherChannel) throws IllegalStateException {
+        if (linkFrequency == 0) {
+            throw new IllegalStateException("link frequency cannot be 0 for this operation");
+        }
+        ChannelInfo channelInfo = channelInfoMap.get(otherChannel);
+        if (channelInfo == null) {
+            return 0;
+        }
+        return channelInfo.contentionMetric * getInterferenceFactor(linkFrequency, otherChannel);
+    }
+
     private void updateChannelFrequency(List<ScanResult> scanResultList) {
         if (linkSSID == null && linkBSSID == null) {
             return;
         }
         for (ScanResult scanResult: scanResultList) {
-            if (scanResult.BSSID == linkBSSID || scanResult.SSID == linkSSID) {
+            if (scanResult.BSSID.equals(linkBSSID) || scanResult.SSID.equals(linkSSID)) {
                 linkFrequency = scanResult.frequency;
+                break;
             }
         }
     }
 
     private double computeContention(ScanResult scanResult) {
-        if (linkFrequency == 0) { //not initialized
+        if ((linkBSSID == null && linkSSID == null) || // not initialized
+                scanResult.BSSID.equals(linkBSSID) || //We don't want current AP to contribute to contention.
+                scanResult.SSID.equals(linkSSID) ) {
             return 0;
         }
         double contention = 0;
@@ -149,7 +178,8 @@ public class WifiStats {
         if (contention > 1) {
             contention = 1;
         }
-        return contention * getInterferenceFactor(scanResult.frequency, linkSignal);
+        //return contention * getInterferenceFactor(scanResult.frequency, linkSignal);
+        return contention;
     }
 
 

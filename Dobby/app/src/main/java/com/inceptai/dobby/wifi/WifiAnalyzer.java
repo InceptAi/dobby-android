@@ -32,7 +32,8 @@ public class WifiAnalyzer {
 
     // Store application context to prevent leaks and crashes from an activity going out of scope.
     private Context context;
-    private WifiReceiver wifiReceiver = new WifiReceiver();
+    private WifiReceiver wifiScanReceiver = new WifiReceiver();
+    private WifiReceiver wifiStateReceiver = new WifiReceiver();
     private int wifiReceiverState = WIFI_RECEIVER_UNREGISTERED;
     private WifiManager wifiManager;
     private DobbyThreadpool threadpool;
@@ -52,6 +53,7 @@ public class WifiAnalyzer {
         wifiEnabled = false;
         wifiStats = new WifiStats();
         wifiStats.updateWifiStats(wifiManager.getConnectionInfo(), null);
+        registerWifiStateReceiver();
     }
 
     /**
@@ -84,13 +86,13 @@ public class WifiAnalyzer {
     }
 
     private void registerScanReceiver() {
-        context.registerReceiver(wifiReceiver,
+        context.registerReceiver(wifiScanReceiver,
                 new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
         wifiReceiverState = WIFI_RECEIVER_REGISTERED;
     }
 
     private void unregisterScanReceiver() {
-        context.unregisterReceiver(wifiReceiver);
+        context.unregisterReceiver(wifiScanReceiver);
         wifiReceiverState = WIFI_RECEIVER_UNREGISTERED;
     }
 
@@ -101,20 +103,43 @@ public class WifiAnalyzer {
     private class WifiReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context c, Intent intent) {
-            StringBuilder sb = new StringBuilder();
-            List<ScanResult> wifiList = wifiManager.getScanResults();
-            wifiStats.updateWifiStats(wifiManager.getConnectionInfo(), wifiList);
-            for(int i = 0; i < wifiList.size(); i++){
-                sb.append(new Integer(i+1).toString() + ".");
-                sb.append((wifiList.get(i)).toString());
-                sb.append("\\n");
+            final String action = intent.getAction();
+            if (action.equals(WifiManager.RSSI_CHANGED_ACTION)
+                    || action.equals(WifiManager.WIFI_STATE_CHANGED_ACTION)
+                    || action.equals(WifiManager.NETWORK_STATE_CHANGED_ACTION)) {
+                updateWifiState(intent);
+            } else if (action.equals(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)) {
+                updateWifiScanResults();
+                unregisterScanReceiver();
             }
-            Log.i(TAG, "Wifi scan result: " + sb.toString());
-            if (wifiScanFuture != null) {
-                wifiScanFuture.set(wifiList);
-            }
-            unregisterScanReceiver();
         }
+    }
+
+    private void updateWifiScanResults()  {
+        StringBuilder sb = new StringBuilder();
+        List<ScanResult> wifiList = wifiManager.getScanResults();
+        wifiStats.updateWifiStats(null, wifiList);
+        for(int i = 0; i < wifiList.size(); i++){
+            sb.append(new Integer(i+1).toString() + ".");
+            sb.append((wifiList.get(i)).toString());
+            sb.append("\\n");
+        }
+        Log.i(TAG, "Wifi scan result: " + sb.toString());
+        if (wifiScanFuture != null) {
+            wifiScanFuture.set(wifiList);
+        }
+    }
+
+    private void registerWifiStateReceiver() {
+        IntentFilter wifiStateIntentFilter = new IntentFilter();
+        wifiStateIntentFilter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
+        wifiStateIntentFilter.addAction(WifiManager.RSSI_CHANGED_ACTION);
+        wifiStateIntentFilter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
+        context.registerReceiver(wifiStateReceiver, wifiStateIntentFilter);
+    }
+
+    private void unregisterWifiStateReceiver() {
+        context.unregisterReceiver(wifiStateReceiver);
     }
 
     //Listening for WiFi intents
