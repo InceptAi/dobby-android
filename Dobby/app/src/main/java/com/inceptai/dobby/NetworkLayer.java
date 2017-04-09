@@ -2,17 +2,17 @@ package com.inceptai.dobby;
 
 import android.content.Context;
 import android.net.ConnectivityManager;
-import android.net.DhcpInfo;
 import android.net.NetworkInfo;
 import android.net.wifi.ScanResult;
 import android.util.Log;
 
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.inceptai.dobby.model.IPLayerInfo;
+import com.inceptai.dobby.model.PingStats;
+import com.inceptai.dobby.ping.PingAnalyzer;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
 import com.inceptai.dobby.speedtest.NewBandwidthAnalyzer;
-import com.inceptai.dobby.speedtest.PingAnalyzer;
-import com.inceptai.dobby.utils.Utils;
 import com.inceptai.dobby.wifi.WifiAnalyzer;
 import com.inceptai.dobby.wifi.WifiStats;
 
@@ -27,47 +27,31 @@ import static com.inceptai.dobby.DobbyApplication.TAG;
  * local bots would interact with this class to run tests, diagnostics etc. Also
  */
 
-public class NetworkLayer implements PingAnalyzer.ResultsCallback {
+public class NetworkLayer {
     private Context context;
     private DobbyThreadpool threadpool;
     private WifiAnalyzer wifiAnalyzer;
     private PingAnalyzer pingAnalyzer;
-    private IPLayerInfo ipLayerInfonfo;
+    private IPLayerInfo ipLayerInfo;
 
     @Inject
     NewBandwidthAnalyzer bandwidthAnalyzer;
 
-    public static class IPLayerInfo {
-        public String dns1;
-        public String dns2;
-        public String gateway;
-        public int leaseDuration;
-        public int netMask;
-        public String serverAddress;
 
-        public IPLayerInfo(DhcpInfo dhcpInfo) {
-            this.dns1 = Utils.intToIp(dhcpInfo.dns1);
-            this.dns2 = Utils.intToIp(dhcpInfo.dns2);
-            this.gateway = Utils.intToIp(dhcpInfo.ipAddress);
-            this.serverAddress = Utils.intToIp(dhcpInfo.serverAddress);
-            this.netMask = dhcpInfo.netmask;
-            this.leaseDuration = dhcpInfo.leaseDuration;
-        }
-    }
 
     // Use Dagger to get a singleton instance of this class.
     public NetworkLayer(Context context, DobbyThreadpool threadpool) {
         this.context = context;
         this.threadpool = threadpool;
-        this.ipLayerInfonfo = null;
+        this.ipLayerInfo = null;
     }
 
     public void initialize() {
         wifiAnalyzer = WifiAnalyzer.create(context, threadpool);
-        pingAnalyzer = PingAnalyzer.create(this);
         if (wifiAnalyzer != null) {
-            ipLayerInfonfo = new IPLayerInfo(wifiAnalyzer.getDhcpInfo());
+            ipLayerInfo = new IPLayerInfo(wifiAnalyzer.getDhcpInfo());
         }
+        pingAnalyzer = PingAnalyzer.create(ipLayerInfo, null);
     }
 
     public ListenableFuture<List<ScanResult>> wifiScan() {
@@ -78,6 +62,13 @@ public class NetworkLayer implements PingAnalyzer.ResultsCallback {
         return wifiAnalyzer.getWifiStats();
     }
 
+    public IPLayerInfo.IPLayerPingStats getPingStats() {
+        return pingAnalyzer.performAllPingTests();
+    }
+
+    public PingStats getGatewayPingStats() {
+        return pingAnalyzer.performGatewayPing();
+    }
 
     public boolean checkWiFiConnectivity() throws IllegalStateException {
         Preconditions.checkNotNull(context);
@@ -104,14 +95,5 @@ public class NetworkLayer implements PingAnalyzer.ResultsCallback {
         bandwidthAnalyzer.cancelBandwidthTests();
     }
 
-    // Ping analyzer callbacks
-    @Override
-    public void onPingResults(PingAnalyzer.PingStats stats) {
 
-    }
-
-    @Override
-    public void onPingError(String error) {
-
-    }
 }
