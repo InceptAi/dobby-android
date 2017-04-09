@@ -21,11 +21,13 @@ public class PingAnalyzer {
     public PingAnalyzer(IPLayerInfo ipLayerInfo) {
         this.ipLayerInfo = ipLayerInfo;
         externalServerPingAddress = DEFAULT_EXTERNAL_SERVER_ADDRESS;
+        ipLayerPingStats = new IPLayerInfo.IPLayerPingStats(ipLayerInfo, externalServerPingAddress);
     }
 
     public PingAnalyzer(IPLayerInfo ipLayerInfo, String externalServerPingAddress) {
         this.ipLayerInfo = ipLayerInfo;
         this.externalServerPingAddress = externalServerPingAddress;
+        ipLayerPingStats = new IPLayerInfo.IPLayerPingStats(ipLayerInfo, externalServerPingAddress);
     }
 
 

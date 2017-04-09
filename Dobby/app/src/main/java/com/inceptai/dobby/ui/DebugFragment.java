@@ -20,6 +20,7 @@ import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.NetworkLayer;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.model.BandwidthStats;
+import com.inceptai.dobby.model.IPLayerInfo;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
 import com.inceptai.dobby.speedtest.NewBandwidthAnalyzer;
 import com.inceptai.dobby.speedtest.ServerInformation;
@@ -119,8 +120,8 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
             }
 
         } else if (TAG_PING.equals(tag)) {
-            addConsoleText("Clicked on Ping.");
-
+            addConsoleText("\nStarting Ping.");
+            startPing();
         } else if (TAG_WIFI_SCAN.equals(tag)) {
             addConsoleText("\nStarting Wifi scan...");
             startWifiScan();
@@ -134,6 +135,12 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
         String existingText = consoleTv.getText().toString();
         consoleTv.setText(existingText + "\n" + text);
     }
+
+    private void startPing() {
+        IPLayerInfo.IPLayerPingStats ipLayerPingStats = networkLayer.getPingStats();
+        addConsoleText("Ping results:" + ipLayerPingStats.toJson());
+    }
+
 
     private void startWifiScan() {
         final ListenableFuture<List<ScanResult>> future = networkLayer.wifiScan();

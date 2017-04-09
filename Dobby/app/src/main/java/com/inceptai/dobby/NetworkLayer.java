@@ -43,7 +43,6 @@ public class NetworkLayer {
     public NetworkLayer(Context context, DobbyThreadpool threadpool) {
         this.context = context;
         this.threadpool = threadpool;
-        this.ipLayerInfo = null;
     }
 
     public void initialize() {
