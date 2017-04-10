@@ -40,4 +40,9 @@ public class PingStats {
         String json = gson.toJson(this);
         return json;
     }
+
+    @Override
+    public String toString() {
+        return toJson();
+    }
 }

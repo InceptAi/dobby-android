@@ -21,12 +21,13 @@ import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.NetworkLayer;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.model.BandwidthStats;
-import com.inceptai.dobby.model.IPLayerInfo;
+import com.inceptai.dobby.model.PingStats;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
 import com.inceptai.dobby.speedtest.NewBandwidthAnalyzer;
 import com.inceptai.dobby.speedtest.ServerInformation;
 import com.inceptai.dobby.speedtest.SpeedTestConfig;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -147,8 +148,24 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
     }
 
     private void startPing() {
-        IPLayerInfo.IPLayerPingStats ipLayerPingStats = networkLayer.getPingStats();
-        addConsoleText("Ping results:" + ipLayerPingStats.toJson());
+        final ListenableFuture<HashMap<String, PingStats>> future = networkLayer.startPing();
+        if (future == null) {
+            Log.v(TAG, "Starting ping failed");
+            return;
+        }
+        future.addListener(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Log.v(TAG, "Printing results: " + future.get().toString());
+                    addConsoleText("Ping Results:" + future.get().toString());
+                } catch (InterruptedException e) {
+                    Log.w(TAG, "Exception parsing " + e);
+                } catch (ExecutionException e) {
+                    Log.w(TAG, "Exception parsing " + e);
+                }
+            }
+        }, threadpool.getUiThreadExecutor());
     }
 
 
@@ -160,9 +177,9 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
                 try {
                     addConsoleText("Wifi Scan:" + future.get().toString());
                 } catch (InterruptedException e) {
-                    Log.w(TAG, "Exception parsing scan result.");
+                    Log.w(TAG, "Exception parsing " + e);
                 } catch (ExecutionException e) {
-                    Log.w(TAG, "Exception parsing scan result.");
+                    Log.w(TAG, "Exception parsing " + e);
                 }
             }
         }, threadpool.getUiThreadExecutor());

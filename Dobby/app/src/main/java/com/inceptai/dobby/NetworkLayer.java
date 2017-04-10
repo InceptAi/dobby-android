@@ -4,6 +4,7 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.wifi.ScanResult;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.google.common.base.Preconditions;
@@ -16,6 +17,7 @@ import com.inceptai.dobby.speedtest.NewBandwidthAnalyzer;
 import com.inceptai.dobby.wifi.WifiAnalyzer;
 import com.inceptai.dobby.wifi.WifiStats;
 
+import java.util.HashMap;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -37,8 +39,6 @@ public class NetworkLayer {
     @Inject
     NewBandwidthAnalyzer bandwidthAnalyzer;
 
-
-
     // Use Dagger to get a singleton instance of this class.
     public NetworkLayer(Context context, DobbyThreadpool threadpool) {
         this.context = context;
@@ -50,7 +50,7 @@ public class NetworkLayer {
         if (wifiAnalyzer != null) {
             ipLayerInfo = new IPLayerInfo(wifiAnalyzer.getDhcpInfo());
         }
-        pingAnalyzer = PingAnalyzer.create(ipLayerInfo, null);
+        pingAnalyzer = PingAnalyzer.create(ipLayerInfo, threadpool);
     }
 
     public ListenableFuture<List<ScanResult>> wifiScan() {
@@ -61,12 +61,14 @@ public class NetworkLayer {
         return wifiAnalyzer.getWifiStats();
     }
 
-    public IPLayerInfo.IPLayerPingStats getPingStats() {
-        return pingAnalyzer.performAllPingTests();
-    }
-
-    public PingStats getGatewayPingStats() {
-        return pingAnalyzer.performGatewayPing();
+    @Nullable
+    public ListenableFuture<HashMap<String, PingStats>> startPing() {
+        try {
+            return pingAnalyzer.scheduleEssentialPingTestsAsyc();
+        } catch (Exception e) {
+            Log.v(TAG, "Exception while scheduling ping tests: " + e);
+        }
+        return null;
     }
 
     public boolean checkWiFiConnectivity() throws IllegalStateException {
