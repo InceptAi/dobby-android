@@ -120,6 +120,7 @@ public class NewBandwidthAnalyzer {
         this.parseSpeedTestConfig = new ParseSpeedTestConfig(this.bandwidthTestListener);
         this.parseServerInformation = new ParseServerInformation(this.bandwidthTestListener);
         this.dobbyThreadpool = dobbyThreadpool;
+        Log.e(TAG, "NEW BANDWIDTH ANALYZER INSTANCE CREATED.");
     }
 
     /**

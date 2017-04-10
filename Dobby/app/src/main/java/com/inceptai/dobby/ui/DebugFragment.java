@@ -3,6 +3,7 @@ package com.inceptai.dobby.ui;
 
 import android.net.wifi.ScanResult;
 import android.os.Bundle;
+import android.os.Looper;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.SwitchCompat;
@@ -114,7 +115,7 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
             }
 
             if (!config.isEmpty()) {
-                addConsoleText("Starting Bandwidth test with : { " + config + " }.");
+                addConsoleText("Starting Bandwidth test with : { " + config + " } and " + testMode);
                 startBandwidthTest(testMode);
             } else {
                 addConsoleText("No bandwidth test selected !");
@@ -132,9 +133,18 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
 
     }
 
-    public void addConsoleText(String text) {
-        String existingText = consoleTv.getText().toString();
-        consoleTv.setText(existingText + "\n" + text);
+    public void addConsoleText(final String text) {
+        if (Thread.currentThread() == Looper.getMainLooper().getThread()) {
+            String existingText = consoleTv.getText().toString();
+            consoleTv.setText(existingText + "\n" + text);
+        } else {
+            threadpool.getUiThreadExecutor().execute(new Runnable() {
+                @Override
+                public void run() {
+                    addConsoleText(text);
+                }
+            });
+        }
     }
 
     private void startPing() {
@@ -179,8 +189,13 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
         addConsoleText("\nWifi Stats:" + networkLayer.getWifiStats().toString());
     }
 
-    private void startBandwidthTest(@BandwithTestCodes.BandwidthTestMode int testMode) {
-        networkLayer.startBandwidthTest(this, testMode);
+    private void startBandwidthTest(@BandwithTestCodes.BandwidthTestMode final int testMode) {
+        threadpool.submit(new Runnable() {
+            @Override
+            public void run() {
+                networkLayer.startBandwidthTest(DebugFragment.this, testMode);
+            }
+        });
     }
 
     @Override
