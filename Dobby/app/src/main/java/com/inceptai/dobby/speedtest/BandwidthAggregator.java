@@ -3,6 +3,7 @@ package com.inceptai.dobby.speedtest;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.inceptai.dobby.fake.FakeSpeedTestSocket;
 import com.inceptai.dobby.model.BandwidthStats;
 import com.inceptai.dobby.utils.Utils;
 
@@ -210,7 +211,8 @@ public class BandwidthAggregator {
 
         public BandwidthInfo(int id) {
             this.id = id;
-            this.speedTestSocket = new SpeedTestSocket();
+            // this.speedTestSocket = new SpeedTestSocket();
+            this.speedTestSocket = SpeedTestSocketFactory.newSocket();
             this.aggregatorListener = new AggregatorListener(id);
             this.transferRates = new ArrayList<>();
         }
