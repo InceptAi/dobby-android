@@ -86,8 +86,8 @@ public class NetworkLayer {
                                    @BandwithTestCodes.BandwidthTestMode int testMode) {
 
         bandwidthAnalyzer.registerCallback(resultsCallback);
-        Log.i(TAG, "Going to start bandwidth test.");
-        bandwidthAnalyzer.startBandwidthTestSafely(BandwithTestCodes.BandwidthTestMode.DOWNLOAD_AND_UPLOAD);
+        Log.i(TAG, "NetworkLayer: Going to start bandwidth test.");
+        bandwidthAnalyzer.startBandwidthTestSafely(testMode);
     }
 
     public void cancelBandwidthTests() {
