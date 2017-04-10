@@ -155,7 +155,7 @@ public class WifiAnalyzer {
             final NetworkInfo networkInfo = intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
             boolean wasConnected = wifiConnected;
             wifiConnected = networkInfo != null && networkInfo.isConnected();
-            // If we just connected, grab the inintial signal strength and ssid
+            // If we just connected, grab the initial signal strength and SSID
             if (wifiConnected && !wasConnected) {
                 // try getting it out of the intent first
                 WifiInfo info = (WifiInfo) intent.getParcelableExtra(WifiManager.EXTRA_WIFI_INFO);
