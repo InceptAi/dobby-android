@@ -1,17 +1,22 @@
 package com.inceptai.dobby.ping;
 
+import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.inceptai.dobby.model.PingStats;
 import com.inceptai.dobby.utils.Utils;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.inceptai.dobby.DobbyApplication.TAG;
-import static com.inceptai.dobby.ping.PingAction.PingActionException.PING_EXCEPTION_COMMAND_NOT_FOUND;
-import static com.inceptai.dobby.ping.PingAction.PingActionException.PING_EXCEPTION_PARSING_OUTPUT;
+import static com.inceptai.dobby.ping.PingAction.PingErrorCode.PING_EXCEPTION_COMMAND_NOT_FOUND;
+import static com.inceptai.dobby.ping.PingAction.PingErrorCode.PING_EXCEPTION_INVALID_HOST;
+import static com.inceptai.dobby.ping.PingAction.PingErrorCode.PING_EXCEPTION_PARSING_OUTPUT;
 import static com.inceptai.dobby.utils.Utils.EMPTY_STRING;
 import static com.inceptai.dobby.utils.Utils.runSystemCommand;
 
@@ -23,23 +28,46 @@ public class PingAction {
     private static int defaultTimeOut = 3;
     private static int defaultNumberOfPings = 3;
     private static int defaultPacketSize = 1200;
+    private ResultsCallback resultsCallback;
+
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef({PING_EXCEPTION_INVALID_HOST,
+            PING_EXCEPTION_COMMAND_NOT_FOUND,
+            PING_EXCEPTION_PARSING_OUTPUT})
+    public @interface PingErrorCode {
+        int PING_EXCEPTION_INVALID_HOST = 1;
+        int PING_EXCEPTION_COMMAND_NOT_FOUND = 2;
+        int PING_EXCEPTION_PARSING_OUTPUT = 3;
+    }
+
+    /**
+     * Callback interface for results. More methods to follow.
+     */
+    public interface ResultsCallback {
+        void onFinish(HashMap<String, PingStats> pingStatsHashMap);
+        void onError(@PingErrorCode int errorType, String[] addressList, String errorMessage);
+    }
+
+    private PingAction(@Nullable ResultsCallback resultsCallback) {
+        this.resultsCallback = resultsCallback;
+    }
 
     /**
      * Factory constructor to create an instance
      * @return Instance of PingAction.
      */
     @Nullable
-    public static PingAction create() {
-        return new PingAction();
+    public static PingAction create(@Nullable ResultsCallback resultsCallback) {
+        return new PingAction(resultsCallback);
     }
 
+
+
     public static class PingActionException extends Exception {
-        public static final int PING_EXCEPTION_INVALID_HOST = 1;
-        public static final int PING_EXCEPTION_COMMAND_NOT_FOUND = 2;
-        public static final int PING_EXCEPTION_PARSING_OUTPUT = 3;
+        @PingErrorCode
         private int exceptionType = 0;
         private String addressToPing = EMPTY_STRING;
-        public PingActionException(int exceptionType, String addressToPing) {
+        public PingActionException(@PingErrorCode  int exceptionType, String addressToPing) {
             this.exceptionType = exceptionType;
             this.addressToPing = addressToPing;
         }
@@ -74,11 +102,42 @@ public class PingAction {
         return output;
     }
 
-    public static PingStats pingAndReturnStats(String ipAddress) throws PingActionException{
-        return pingAndReturnStats(ipAddress, defaultTimeOut, defaultNumberOfPings);
+    public HashMap<String, PingStats> pingAndReturnStatsList(String[] pingAddressList, int timeOut, int numberOfPings) {
+        if (pingAddressList == null) {
+            return null;
+        }
+
+        HashMap<String, PingStats> pingStatsMap = new HashMap<>();
+        try {
+            for (int addressIndex = 0; addressIndex < pingAddressList.length; addressIndex++) {
+                pingStatsMap.put(pingAddressList[addressIndex],
+                        pingAndReturnStats(pingAddressList[addressIndex], timeOut, numberOfPings));
+            }
+            if (resultsCallback != null) {
+                resultsCallback.onFinish(pingStatsMap);
+            }
+        } catch (PingActionException e) {
+            Log.i(TAG, "Exception while pinging: " + e);
+            if (resultsCallback != null) {
+                resultsCallback.onError(e.exceptionType, pingAddressList,
+                        "Exception while pinging: " + e);
+            }
+        }  catch (Exception e) {
+            Log.i(TAG, "Exception while pinging: " + e);
+            if (resultsCallback != null) {
+                //TODO: Return meaningful error code here.
+                resultsCallback.onError(PingErrorCode.PING_EXCEPTION_PARSING_OUTPUT,
+                        pingAddressList, "Exception while pinging: " + e);
+            }
+        }
+        return pingStatsMap;
     }
 
-    public static PingStats pingAndReturnStats(String ipAddress, int timeOut, int numberOfPings) throws PingActionException {
+    public HashMap<String, PingStats> pingAndReturnStatsList(String[] pingAddressList) {
+        return pingAndReturnStatsList(pingAddressList, defaultTimeOut, defaultNumberOfPings);
+    }
+
+    public PingStats pingAndReturnStats(String ipAddress, int timeOut, int numberOfPings) throws PingActionException, IndexOutOfBoundsException {
         /*
             PING 192.168.1.1 (192.168.1.1): 56 data bytes
             64 bytes from 192.168.1.1: icmp_seq=0 ttl=64 time=2.191 ms
@@ -94,34 +153,29 @@ public class PingAction {
         String patternForPktLoss = "\\d+(\\.\\d+)?% packet loss";
 
         //Get pkts stats
-        try {
-            String pingOutput = pingIP(ipAddress, timeOut, numberOfPings);
-            Pattern pktsPattern = Pattern.compile(patternForPktLoss);
-            Matcher pktsMatcher = pktsPattern.matcher(pingOutput);
-            if (pktsMatcher.find()) {
-                String[] matchingStrings = pktsMatcher.group(0).split(" ");
-                if (matchingStrings.length >= 3) {
-                    pingStatsToReturn.lossRatePercent = Utils.parseDoubleWithDefault(-1, matchingStrings[0].split("%")[0]);
-                }
+        String pingOutput = pingIP(ipAddress, timeOut, numberOfPings);
+        Pattern pktsPattern = Pattern.compile(patternForPktLoss);
+        Matcher pktsMatcher = pktsPattern.matcher(pingOutput);
+        if (pktsMatcher.find()) {
+            String[] matchingStrings = pktsMatcher.group(0).split(" ");
+            if (matchingStrings.length >= 3) {
+                pingStatsToReturn.lossRatePercent = Utils.parseDoubleWithDefault(-1, matchingStrings[0].split("%")[0]);
             }
+        }
 
-            Pattern latencyPattern = Pattern.compile(patternForLatency);
-            Matcher latencyMatcher = latencyPattern.matcher(pingOutput);
-            if (latencyMatcher.find()) {
-                String[] matchingStrings = latencyMatcher.group(0).split(" ");
-                if (matchingStrings.length >= 3) {
-                    String[] latencies = matchingStrings[2].split("/");
-                    if (latencies.length >= 4) {
-                        pingStatsToReturn.minLatencyMs = Utils.parseDoubleWithDefault(-1.0, latencies[0]);
-                        pingStatsToReturn.avgLatencyMs = Utils.parseDoubleWithDefault(-1.0, latencies[1]);
-                        pingStatsToReturn.maxLatencyMs = Utils.parseDoubleWithDefault(-1.0, latencies[2]);
-                        pingStatsToReturn.deviationMs = Utils.parseDoubleWithDefault(-1.0, latencies[3]);
-                    }
+        Pattern latencyPattern = Pattern.compile(patternForLatency);
+        Matcher latencyMatcher = latencyPattern.matcher(pingOutput);
+        if (latencyMatcher.find()) {
+            String[] matchingStrings = latencyMatcher.group(0).split(" ");
+            if (matchingStrings.length >= 3) {
+                String[] latencies = matchingStrings[2].split("/");
+                if (latencies.length >= 4) {
+                    pingStatsToReturn.minLatencyMs = Utils.parseDoubleWithDefault(-1.0, latencies[0]);
+                    pingStatsToReturn.avgLatencyMs = Utils.parseDoubleWithDefault(-1.0, latencies[1]);
+                    pingStatsToReturn.maxLatencyMs = Utils.parseDoubleWithDefault(-1.0, latencies[2]);
+                    pingStatsToReturn.deviationMs = Utils.parseDoubleWithDefault(-1.0, latencies[3]);
                 }
             }
-        } catch (Exception e) {
-            Log.i(TAG, "Exception while pinging: " + e);
-            throw new PingActionException(PING_EXCEPTION_PARSING_OUTPUT, ipAddress);
         }
         return pingStatsToReturn;
     }
