@@ -13,7 +13,8 @@ import fr.bmartel.speedtest.model.SpeedTestMode;
 import fr.bmartel.speedtest.model.UploadStorageType;
 
 /**
- * Created by arunesh on 4/9/17.
+ * FakeSpeedTestSocket allows fake behavior to be programmed.
+ * Other related fake classes: SpeedTestReport and SpeedTestError.
  */
 
 public class FakeSpeedTestSocket extends SpeedTestSocket {
@@ -23,7 +24,8 @@ public class FakeSpeedTestSocket extends SpeedTestSocket {
 
     @Override
     public void addSpeedTestListener(ISpeedTestListener listener) {
-        super.addSpeedTestListener(listener);
+        // IMPLEMENT.
+        // super.addSpeedTestListener(listener);
     }
 
     @Override
@@ -168,7 +170,8 @@ public class FakeSpeedTestSocket extends SpeedTestSocket {
 
     @Override
     public void forceStopTask() {
-        super.forceStopTask();
+        // IMPLEMENT.
+        // super.forceStopTask();
     }
 
     @Override
