@@ -97,6 +97,9 @@ public class WifiAnalyzer {
     }
 
     public WifiStats getWifiStats() {
+        if (DobbyApplication.USE_FAKES.get()) {
+            return fakeWifiAnalyzer.getWifiStats();
+        }
         return wifiStats;
     }
 

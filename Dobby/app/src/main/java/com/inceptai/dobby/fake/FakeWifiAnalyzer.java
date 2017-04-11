@@ -34,6 +34,7 @@ public class FakeWifiAnalyzer {
     private WifiStats fakeWifiStats;
     private DhcpInfo fakeDhcpInfo;
     private DobbyThreadpool threadpool;
+    private WifiStats wifiStats;
 
     public static class FakeWifiScanConfig {
         public int numApsChannelOne, numApsChannelSix, numApsChannelEleven;
@@ -49,18 +50,24 @@ public class FakeWifiAnalyzer {
 
     public FakeWifiAnalyzer(DobbyThreadpool threadpool) {
         this.threadpool = threadpool;
+        wifiStats = new WifiStats();
     }
 
     public ListenableFuture<List<ScanResult>> startWifiScan() {
         wifiScanFuture = threadpool.getListeningScheduledExecutorService().schedule(new Callable<List<ScanResult>>() {
             @Override
             public List<ScanResult> call() {
-                return generateFakeWifiScan();
+                List<ScanResult> wifiScan = generateFakeWifiScan();
+                wifiStats.updateWifiStats(null, wifiScan);
+                return  wifiScan;
             }
         }, SCAN_LATENCY_MS, TimeUnit.MILLISECONDS);
         return wifiScanFuture;
     }
 
+    public WifiStats getWifiStats() {
+        return wifiStats;
+    }
 
     public List<ScanResult> generateFakeWifiScan() {
         List<ScanResult> list = new LinkedList<>();
