@@ -26,7 +26,7 @@ public class DobbyThreadpool {
 
     private static int NUMBER_OF_CORES =
             Runtime.getRuntime().availableProcessors();
-    private static int INTIAL_POOL_SIZE = 1;
+    private static int INTIAL_POOL_SIZE = NUMBER_OF_CORES;
 
     // A queue of Runnables
     private final BlockingQueue<Runnable> workQueue;

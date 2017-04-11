@@ -126,6 +126,16 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
         } else if (TAG_PING.equals(tag)) {
             addConsoleText("\nStarting Ping.");
             startPing();
+            //TODO: Remove this hack testing.
+            try {
+                Thread.sleep(500);
+                addConsoleText("\nCancelling Ping.");
+            } catch (InterruptedException e) {
+                addConsoleText("\nException while sleeping.");
+            } finally {
+                addConsoleText("\nStarting Ping again");
+                startPing();
+            }
         } else if (TAG_WIFI_SCAN.equals(tag)) {
             addConsoleText("\nStarting Wifi scan...");
             startWifiScan();
@@ -150,6 +160,8 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
     }
 
     private void startPing() {
+        final long startedAt = System.currentTimeMillis();
+        Log.v(TAG, "Ping started at: " + System.currentTimeMillis());
         final ListenableFuture<HashMap<String, PingStats>> future = networkLayer.startPing();
         if (future == null) {
             Log.v(TAG, "Starting ping failed");
@@ -161,10 +173,13 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
                 try {
                     Log.v(TAG, "Printing results: " + future.get().toString());
                     addConsoleText("Ping Results:" + future.get().toString());
+                    Log.v(TAG, "Ping ended at: " + System.currentTimeMillis());
+                    long estimatedTime = System.currentTimeMillis() - startedAt;
+                    Log.v(TAG, "Time elapsed: " + estimatedTime + " ms");
                 } catch (InterruptedException e) {
-                    Log.w(TAG, "Exception parsing " + e);
+                    Log.w(TAG, "Exception pinging " + e);
                 } catch (ExecutionException e) {
-                    Log.w(TAG, "Exception parsing " + e);
+                    Log.w(TAG, "Exception pinging " + e);
                 }
             }
         }, threadpool.getUiThreadExecutor());
