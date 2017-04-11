@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -17,6 +18,7 @@ import android.widget.ToggleButton;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.fake.FakeSpeedTestSocket;
 import com.inceptai.dobby.speedtest.SpeedTestSocketFactory;
+import com.inceptai.dobby.utils.Utils;
 
 import static com.inceptai.dobby.DobbyApplication.TAG;
 
@@ -28,10 +30,12 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
     private static final String TOGGLE_TAG = "ToggleTag";
     private static final String UPLOAD_ET_TAG = "Upload";
     private static final String DOWNLOAD_ET_TAG = "Download";
+    private static final String SAVE_BUTTON_TAG = "SaveButton";
 
     private EditText uploadBwEt;
     private EditText downloadBwEt;
     private ToggleButton fakeDataToggle;
+    private Button saveButton;
 
     public FakeDataFragment() {
         // Required empty public constructor
@@ -43,17 +47,20 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
         // Inflate the layout for this fragment
         View view =  inflater.inflate(R.layout.fragment_fake_data, container, false);
 
+        saveButton = (Button) view.findViewById(R.id.save_button);
+        saveButton.setOnClickListener(this);
+        saveButton.setTag(SAVE_BUTTON_TAG);
+
         uploadBwEt = (EditText) view.findViewById(R.id.upload_bw_et);
         uploadBwEt.setTag(UPLOAD_ET_TAG);
-        uploadBwEt.setOnEditorActionListener(this);
-        uploadBwEt.setOnFocusChangeListener(this);
+        uploadBwEt.setText(String.valueOf(FakeSpeedTestSocket.DEFAULT_FAKE_CONFIG.getMaxUploadBandwidthMbps()));
 
         downloadBwEt = (EditText) view.findViewById(R.id.download_bw_et);
         downloadBwEt.setTag(DOWNLOAD_ET_TAG);
-        downloadBwEt.setOnEditorActionListener(this);
-        downloadBwEt.setOnFocusChangeListener(this);
+        downloadBwEt.setText(String.valueOf(FakeSpeedTestSocket.DEFAULT_FAKE_CONFIG.getMaxDownloadBandwidthMbps()));
 
         fakeDataToggle = (ToggleButton) view.findViewById(R.id.fake_data_toggle);
+        fakeDataToggle.setChecked(SpeedTestSocketFactory.useFakes());
 
         fakeDataToggle.setOnClickListener(this);
         fakeDataToggle.setTag(TOGGLE_TAG);
@@ -62,8 +69,8 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
 
     @Override
     public void onClick(View v) {
-        if (TOGGLE_TAG.equals(v.getTag())) {
-            SpeedTestSocketFactory.setUseFakes(fakeDataToggle.isChecked());
+        if (SAVE_BUTTON_TAG.equals(v.getTag())) {
+            saveChanges();
         }
     }
 
@@ -107,6 +114,38 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
     public void onFocusChange(View v, boolean hasFocus) {
         if (!hasFocus) {
             processBandwidthChange(v, ((TextView) v).getText().toString());
+        }
+    }
+
+    private void saveChanges() {
+        boolean hasChanged = false;
+        String changedMessage = "Saving changes: ";
+        String newDownloadBw = downloadBwEt.getText().toString();
+        if (!newDownloadBw.isEmpty()) {
+            double dbValue = Double.valueOf(newDownloadBw);
+            if (dbValue != FakeSpeedTestSocket.DEFAULT_FAKE_CONFIG.getMaxDownloadBandwidthMbps()) {
+                hasChanged = true;
+                changedMessage = changedMessage + "Download to " + newDownloadBw + " Mbps.";
+                FakeSpeedTestSocket.DEFAULT_FAKE_CONFIG.setMaxDownloadBandwidthMbps(dbValue);
+            }
+        }
+
+        String newUploadBw = uploadBwEt.getText().toString();
+        if (!newUploadBw.isEmpty()) {
+            double dbValue = Double.valueOf(newUploadBw);
+            if (dbValue != FakeSpeedTestSocket.DEFAULT_FAKE_CONFIG.getMaxUploadBandwidthMbps()) {
+                changedMessage = changedMessage + " Upload to " + newUploadBw + " Mbps.";
+                hasChanged = true;
+                FakeSpeedTestSocket.DEFAULT_FAKE_CONFIG.setMaxUploadBandwidthMbps(dbValue);
+            }
+        }
+        if (SpeedTestSocketFactory.useFakes() != fakeDataToggle.isChecked()) {
+            changedMessage = changedMessage + " Fake data to " + (fakeDataToggle.isChecked() ? "ON." : "OFF.");
+            SpeedTestSocketFactory.setUseFakes(fakeDataToggle.isChecked());
+            hasChanged = true;
+        }
+        if (hasChanged) {
+            Toast.makeText(getContext(), changedMessage, Toast.LENGTH_SHORT).show();
         }
     }
 }

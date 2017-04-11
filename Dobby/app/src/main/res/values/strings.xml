@@ -26,4 +26,5 @@
     <string name="download_bandwidth_mbps">Download bandwidth (per thread Mbps)</string>
     <string name="upload_bandwidth_mbps">Upload bandwidth (per thread Mbps)</string>
     <string name="fake_data_injection_title">Fake data injection (click to toggle):</string>
+    <string name="save_changes">Save changes</string>
 </resources>

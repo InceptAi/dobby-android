@@ -19,6 +19,10 @@ public class SpeedTestSocketFactory {
         sUseFakes.set(value);
     }
 
+    public static boolean useFakes() {
+        return sUseFakes.get();
+    }
+
     public static SpeedTestSocket newSocket() {
         if (sUseFakes.get()) {
             return new FakeSpeedTestSocket();
