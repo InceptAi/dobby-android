@@ -62,6 +62,14 @@ public class FakeSpeedTestSocket extends SpeedTestSocket {
         public SpeedTestError getErrorToBeInjected() {
             return errorToBeInjected;
         }
+
+        public void setMaxDownloadBandwidthMbps(double maxDownloadBandwidthMbps) {
+            this.maxDownloadBandwidthMbps = maxDownloadBandwidthMbps;
+        }
+
+        public void setMaxUploadBandwidthMbps(double maxUploadBandwidthMbps) {
+            this.maxUploadBandwidthMbps = maxUploadBandwidthMbps;
+        }
     }
 
     public static final Config DEFAULT_FAKE_CONFIG = new Config(10.0, 5.0, null);

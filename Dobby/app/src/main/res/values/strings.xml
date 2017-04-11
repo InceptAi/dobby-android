@@ -23,4 +23,7 @@
     <string name="download">Download</string>
     <string name="debug">Debug</string>
     <string name="wifi_stats"> Wifi Stats</string>
+    <string name="download_bandwidth_mbps">Download bandwidth (per thread Mbps)</string>
+    <string name="upload_bandwidth_mbps">Upload bandwidth (per thread Mbps)</string>
+    <string name="fake_data_injection_title">Fake data injection (click to toggle):</string>
 </resources>

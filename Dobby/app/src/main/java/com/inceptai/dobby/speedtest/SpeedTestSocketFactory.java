@@ -2,6 +2,8 @@ package com.inceptai.dobby.speedtest;
 
 import com.inceptai.dobby.fake.FakeSpeedTestSocket;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import fr.bmartel.speedtest.SpeedTestSocket;
 
 /**
@@ -9,11 +11,16 @@ import fr.bmartel.speedtest.SpeedTestSocket;
  */
 
 public class SpeedTestSocketFactory {
-    public static boolean USE_FAKES = true;
+    public static AtomicBoolean sUseFakes = new AtomicBoolean(true);
 
+    private SpeedTestSocketFactory() {}
+
+    public static void setUseFakes(boolean value) {
+        sUseFakes.set(value);
+    }
 
     public static SpeedTestSocket newSocket() {
-        if (USE_FAKES) {
+        if (sUseFakes.get()) {
             return new FakeSpeedTestSocket();
         } else {
             return new SpeedTestSocket();

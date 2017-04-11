@@ -15,6 +15,8 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.google.common.base.Strings;
+import com.google.common.util.concurrent.AsyncFunction;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.DobbyThreadpool;
@@ -30,6 +32,7 @@ import com.inceptai.dobby.speedtest.SpeedTestConfig;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.RunnableFuture;
 
 import javax.inject.Inject;
 
@@ -66,7 +69,6 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
     public DebugFragment() {
         // Required empty public constructor
     }
-
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
