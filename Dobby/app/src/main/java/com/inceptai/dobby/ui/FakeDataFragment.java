@@ -90,6 +90,9 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
 
 
     private void processBandwidthChange(View v, String value) {
+        if (value == null || value.isEmpty()) {
+            return;
+        }
         double dbValue = Double.valueOf(value);
         if (UPLOAD_ET_TAG.equals(v.getTag())) {
             FakeSpeedTestSocket.DEFAULT_FAKE_CONFIG.setMaxUploadBandwidthMbps(dbValue);
