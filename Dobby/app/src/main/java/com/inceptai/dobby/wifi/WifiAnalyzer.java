@@ -15,7 +15,9 @@ import android.util.Log;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
+import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.DobbyThreadpool;
+import com.inceptai.dobby.fake.FakeWifiAnalyzer;
 
 import java.util.List;
 
@@ -41,6 +43,7 @@ public class WifiAnalyzer {
     private boolean wifiConnected;
     private boolean wifiEnabled;
     private SettableFuture<List<ScanResult>> wifiScanFuture;
+    private FakeWifiAnalyzer fakeWifiAnalyzer;
 
 
     private WifiAnalyzer(Context context, WifiManager wifiManager, DobbyThreadpool threadpool) {
@@ -54,6 +57,7 @@ public class WifiAnalyzer {
         wifiStats = new WifiStats();
         wifiStats.updateWifiStats(wifiManager.getConnectionInfo(), null);
         registerWifiStateReceiver();
+        fakeWifiAnalyzer = new FakeWifiAnalyzer(threadpool);
     }
 
     /**
@@ -75,6 +79,9 @@ public class WifiAnalyzer {
      * @return An instance of a {@link ListenableFuture<List<ScanResult>>} or null on immediate failure.
      */
     public ListenableFuture<List<ScanResult>> startWifiScan() {
+        if (DobbyApplication.USE_FAKES.get()) {
+            return fakeWifiAnalyzer.startWifiScan();
+        }
         if (wifiReceiverState != WIFI_RECEIVER_REGISTERED) {
             registerScanReceiver();
         }

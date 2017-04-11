@@ -27,4 +27,15 @@
     <string name="upload_bandwidth_mbps">Upload bandwidth (per thread Mbps)</string>
     <string name="fake_data_injection_title">Fake data injection (click to toggle):</string>
     <string name="save_changes">Save changes</string>
+    <string name="wifi_chan_1_num_aps">Channel 1, Num APs:</string>
+    <string name="wifi_chan_6_num_aps">Channel 6, Num APs:</string>
+    <string name="wifi_chan_11_num_aps">Channel 11, Num APs:</string>
+    <string name="fake_wifi_scan_settings">Fake wifi scan settings:</string>
+
+    <string-array name="rssi_level_array">
+        <item>High</item>
+        <item>Medium</item>
+        <item>Low</item>
+        <item>Fringe</item>
+    </string-array>
 </resources>

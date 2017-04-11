@@ -9,16 +9,23 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.fake.FakeSpeedTestSocket;
+import com.inceptai.dobby.fake.FakeWifiAnalyzer;
 import com.inceptai.dobby.speedtest.SpeedTestSocketFactory;
 import com.inceptai.dobby.utils.Utils;
+import com.inceptai.dobby.wifi.WifiStats;
+
+import java.util.ArrayList;
 
 import static com.inceptai.dobby.DobbyApplication.TAG;
 
@@ -36,6 +43,18 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
     private EditText downloadBwEt;
     private ToggleButton fakeDataToggle;
     private Button saveButton;
+
+    // Fake wifi scan UI:
+
+    private Spinner chanOneNumApsSpinner;
+    private Spinner chanOneRssiSpinner;
+
+    private Spinner chanSixNumApsSpinner;
+    private Spinner chanSixRssiSpinner;
+
+    private Spinner chanElevenNumApsSpinner;
+    private Spinner chanElevenRssiSpinner;
+
 
     public FakeDataFragment() {
         // Required empty public constructor
@@ -60,11 +79,64 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
         downloadBwEt.setText(String.valueOf(FakeSpeedTestSocket.DEFAULT_FAKE_CONFIG.getMaxDownloadBandwidthMbps()));
 
         fakeDataToggle = (ToggleButton) view.findViewById(R.id.fake_data_toggle);
-        fakeDataToggle.setChecked(SpeedTestSocketFactory.useFakes());
+        fakeDataToggle.setChecked(DobbyApplication.USE_FAKES.get());
 
         fakeDataToggle.setOnClickListener(this);
         fakeDataToggle.setTag(TOGGLE_TAG);
+
+        chanOneNumApsSpinner = (Spinner) view.findViewById(R.id.num_aps_chan_1_spinner);
+        chanOneRssiSpinner = (Spinner) view.findViewById(R.id.rssi_level_chan_1_spinner);
+        populateNumApsSpinner(chanOneNumApsSpinner, FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.numApsChannelOne);
+        setRssiSelection(chanOneRssiSpinner, FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.signalZoneChannelOne);
+
+        chanSixNumApsSpinner = (Spinner) view.findViewById(R.id.num_aps_chan_6_spinner);
+        chanSixRssiSpinner = (Spinner) view.findViewById(R.id.rssi_level_chan_6_spinner);
+        populateNumApsSpinner(chanSixNumApsSpinner, FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.numApsChannelSix);
+        setRssiSelection(chanSixRssiSpinner, FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.signalZoneChannelSix);
+
+        chanElevenNumApsSpinner = (Spinner) view.findViewById(R.id.num_aps_chan_11_spinner);
+        chanElevenRssiSpinner = (Spinner) view.findViewById(R.id.rssi_level_chan_11_spinner);
+        populateNumApsSpinner(chanElevenNumApsSpinner, FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.numApsChannelEleven);
+        setRssiSelection(chanElevenRssiSpinner, FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.signalZoneChannelEleven);
+
         return view;
+    }
+
+    private void populateNumApsSpinner(Spinner spinner, int numAps) {
+        ArrayList<String> numApsList = new ArrayList<>();
+        for (int i = 0; i < 15; i++) {
+            numApsList.add(String.valueOf(i));
+        }
+        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_dropdown_item, numApsList);
+        arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(arrayAdapter);
+        spinner.setSelection(numAps, true);
+    }
+
+    private static void setRssiSelection(Spinner spinner, @WifiStats.SignalStrengthZones int rssiZone) {
+        if (rssiZone == WifiStats.SignalStrengthZones.HIGH) {
+            spinner.setSelection(0, true);
+        } else if (rssiZone == WifiStats.SignalStrengthZones.MEDIUM) {
+            spinner.setSelection(1, true);
+        }  else if (rssiZone == WifiStats.SignalStrengthZones.LOW) {
+            spinner.setSelection(2, true);
+        }  else if (rssiZone == WifiStats.SignalStrengthZones.FRINGE) {
+            spinner.setSelection(3, true);
+        }
+    }
+
+    @WifiStats.SignalStrengthZones
+    private static int getRssiZone(Spinner spinner) {
+        if (spinner.getSelectedItemPosition() == 0) {
+            return WifiStats.SignalStrengthZones.HIGH;
+        } else if (spinner.getSelectedItemPosition() == 1) {
+            return WifiStats.SignalStrengthZones.MEDIUM;
+        }  else if (spinner.getSelectedItemPosition() == 2) {
+            return WifiStats.SignalStrengthZones.LOW;
+        }  else if (spinner.getSelectedItemPosition() == 3) {
+            return WifiStats.SignalStrengthZones.FRINGE;
+        }
+        return 0;
     }
 
     @Override
@@ -139,13 +211,57 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
                 FakeSpeedTestSocket.DEFAULT_FAKE_CONFIG.setMaxUploadBandwidthMbps(dbValue);
             }
         }
-        if (SpeedTestSocketFactory.useFakes() != fakeDataToggle.isChecked()) {
+        if (DobbyApplication.USE_FAKES.get() != fakeDataToggle.isChecked()) {
             changedMessage = changedMessage + " Fake data to " + (fakeDataToggle.isChecked() ? "ON." : "OFF.");
-            SpeedTestSocketFactory.setUseFakes(fakeDataToggle.isChecked());
+            DobbyApplication.USE_FAKES.set(fakeDataToggle.isChecked());
             hasChanged = true;
+        }
+        if (saveWifiSettingsIfChanged()) {
+            hasChanged = true;
+            changedMessage = changedMessage + " Wifi settings. ";
         }
         if (hasChanged) {
             Toast.makeText(getContext(), changedMessage, Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private boolean saveWifiSettingsIfChanged() {
+        boolean hasChanged = false;
+        if (chanOneNumApsSpinner.getSelectedItemPosition() != FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.numApsChannelOne) {
+            hasChanged = true;
+            FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.numApsChannelOne = chanOneNumApsSpinner.getSelectedItemPosition();
+            Log.i(TAG, "Setting num Aps for Channel 1 to : " + chanOneNumApsSpinner.getSelectedItemPosition());
+        }
+
+        if (chanSixNumApsSpinner.getSelectedItemPosition() != FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.numApsChannelSix) {
+            hasChanged = true;
+            FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.numApsChannelSix = chanSixNumApsSpinner.getSelectedItemPosition();
+            Log.i(TAG, "Setting num Aps for Channel 6 to : " + chanSixNumApsSpinner.getSelectedItemPosition());
+        }
+
+        if (chanElevenNumApsSpinner.getSelectedItemPosition() != FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.numApsChannelEleven) {
+            hasChanged = true;
+            FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.numApsChannelEleven = chanElevenNumApsSpinner.getSelectedItemPosition();
+            Log.i(TAG, "Setting num Aps for Channel 11 to : " + chanElevenNumApsSpinner.getSelectedItemPosition());
+        }
+
+        int zone = getRssiZone(chanOneRssiSpinner);
+        if (zone != FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.signalZoneChannelOne) {
+            hasChanged = true;
+            FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.signalZoneChannelOne = zone;
+        }
+
+        zone = getRssiZone(chanSixRssiSpinner);
+        if (zone != FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.signalZoneChannelSix) {
+            hasChanged = true;
+            FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.signalZoneChannelSix = zone;
+        }
+
+        zone = getRssiZone(chanElevenRssiSpinner);
+        if (zone != FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.signalZoneChannelEleven) {
+            hasChanged = true;
+            FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.signalZoneChannelEleven = zone;
+        }
+        return hasChanged;
     }
 }

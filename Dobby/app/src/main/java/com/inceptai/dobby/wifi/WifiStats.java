@@ -110,7 +110,7 @@ public class WifiStats {
     }
 
     private void updateChannelInfo(List<ScanResult> scanResultList) {
-        for (ScanResult scanResult: scanResultList) {
+        for (ScanResult scanResult : scanResultList) {
             ChannelInfo channelInfo = channelInfoMap.get(scanResult.frequency);
             if (channelInfo == null) {
                 channelInfo = new ChannelInfo(scanResult.frequency);
@@ -160,7 +160,7 @@ public class WifiStats {
 
     private double computeContention(ScanResult scanResult) {
         if ((linkBSSID == null && linkSSID == null) || // not initialized
-                scanResult.BSSID.equals(linkBSSID) || //We don't want current AP to contribute to contention.
+                scanResult.BSSID.equals(linkBSSID) || // We don't want current AP to contribute to contention.
                 scanResult.SSID.equals(linkSSID) ) {
             return 0;
         }

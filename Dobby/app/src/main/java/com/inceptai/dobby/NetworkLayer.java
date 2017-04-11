@@ -96,5 +96,10 @@ public class NetworkLayer {
         bandwidthAnalyzer.cancelBandwidthTests();
     }
 
+    public void cleanup() {
+        if (wifiAnalyzer != null) {
+            wifiAnalyzer.cleanup();
+        }
 
+    }
 }
