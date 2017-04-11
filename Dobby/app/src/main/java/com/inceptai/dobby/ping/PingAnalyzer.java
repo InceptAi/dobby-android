@@ -3,6 +3,8 @@ package com.inceptai.dobby.ping;
 import android.support.annotation.Nullable;
 
 import com.google.common.base.Preconditions;
+import com.google.common.util.concurrent.AsyncFunction;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import com.inceptai.dobby.DobbyThreadpool;
@@ -85,13 +87,31 @@ public class PingAnalyzer {
         return pingsAllDone;
     }
 
-    public ListenableFuture<HashMap<String, PingStats>> scheduleEssentialPingTestsAsyc() throws Exception {
-        if (!checkIfAllPingsDone()) {
-            throw new Exception("Ping tests still in progress, cannot start another one");
+    public ListenableFuture<HashMap<String, PingStats>> scheduleEssentialPingTestsAsyncSafely() throws IllegalStateException {
+        if (pingResultsFuture != null && !pingResultsFuture.isDone()) {
+            AsyncFunction<HashMap<String, PingStats>, HashMap<String, PingStats>> redoPing = new
+                    AsyncFunction<HashMap<String, PingStats>, HashMap<String, PingStats>>() {
+                        @Override
+                        public ListenableFuture<HashMap<String, PingStats>> apply(HashMap<String, PingStats> input) throws Exception {
+                            return scheduleEssentialPingTestsAsync();
+                        }
+                    };
+            ListenableFuture<HashMap<String, PingStats>> newPingResultsFuture = Futures.transformAsync(pingResultsFuture, redoPing);
+            return newPingResultsFuture;
+        } else {
+            return scheduleEssentialPingTestsAsync();
         }
+    }
+
+    private ListenableFuture<HashMap<String, PingStats>> scheduleEssentialPingTestsAsync() throws IllegalStateException {
+
         if (ipLayerInfo == null) {
             throw new IllegalStateException("Cannot schedule pings when iplayerInfo is null");
         }
+
+        //if (pingResultsFuture != null && !pingResultsFuture.isDone()) {
+        //    throw new IllegalStateException("Cannot run another ping while one is running.");
+        //}
         pingsInFlight.clear();
         String[] addressList = {ipLayerInfo.gateway, ipLayerInfo.dns1,ipLayerInfo.dns2,
                 ipLayerInfo.referenceExternalAddress1, ipLayerInfo.referenceExternalAddress2};
@@ -107,9 +127,9 @@ public class PingAnalyzer {
         return ipLayerPingStats;
     }
 
-    public ListenableFuture<HashMap<String, PingStats>> updateIPLayerInfo(IPLayerInfo updatedInfo) throws Exception {
+    public ListenableFuture<HashMap<String, PingStats>> updateIPLayerInfo(IPLayerInfo updatedInfo) throws IllegalStateException {
         this.ipLayerInfo = updatedInfo;
-        return scheduleEssentialPingTestsAsyc();
+        return scheduleEssentialPingTestsAsync();
     }
 
     private class PingActionListener implements PingAction.ResultsCallback {

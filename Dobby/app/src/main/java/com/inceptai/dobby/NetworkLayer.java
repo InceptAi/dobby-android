@@ -64,8 +64,8 @@ public class NetworkLayer {
     @Nullable
     public ListenableFuture<HashMap<String, PingStats>> startPing() {
         try {
-            return pingAnalyzer.scheduleEssentialPingTestsAsyc();
-        } catch (Exception e) {
+            return pingAnalyzer.scheduleEssentialPingTestsAsyncSafely();
+        } catch (IllegalStateException e) {
             Log.v(TAG, "Exception while scheduling ping tests: " + e);
         }
         return null;
