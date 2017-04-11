@@ -58,6 +58,7 @@ public class WifiAnalyzer {
 
     /**
      * Factory constructor to create an instance
+     *
      * @param context Application context.
      * @return Instance of WifiAnalyzer or null on error.
      */
@@ -71,18 +72,31 @@ public class WifiAnalyzer {
     }
 
     /**
-     *
      * @return An instance of a {@link ListenableFuture<List<ScanResult>>} or null on immediate failure.
      */
     public ListenableFuture<List<ScanResult>> startWifiScan() {
         if (wifiReceiverState != WIFI_RECEIVER_REGISTERED) {
             registerScanReceiver();
         }
-        if (wifiManager.startScan()){
+        if (wifiManager.startScan()) {
             wifiScanFuture = SettableFuture.create();
             return wifiScanFuture;
         }
         return null;
+    }
+
+    public DhcpInfo getDhcpInfo() {
+        return wifiManager.getDhcpInfo();
+    }
+
+    public WifiStats getWifiStats() {
+        return wifiStats;
+    }
+
+    // Called in order to cleanup any held resources.
+    public void cleanup() {
+        unregisterScanReceiver();
+        unregisterWifiStateReceiver();
     }
 
     private void registerScanReceiver() {
@@ -96,31 +110,12 @@ public class WifiAnalyzer {
         wifiReceiverState = WIFI_RECEIVER_UNREGISTERED;
     }
 
-    public DhcpInfo getDhcpInfo() {
-        return wifiManager.getDhcpInfo();
-    }
-
-    private class WifiReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context c, Intent intent) {
-            final String action = intent.getAction();
-            if (action.equals(WifiManager.RSSI_CHANGED_ACTION)
-                    || action.equals(WifiManager.WIFI_STATE_CHANGED_ACTION)
-                    || action.equals(WifiManager.NETWORK_STATE_CHANGED_ACTION)) {
-                updateWifiState(intent);
-            } else if (action.equals(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)) {
-                updateWifiScanResults();
-                unregisterScanReceiver();
-            }
-        }
-    }
-
-    private void updateWifiScanResults()  {
+    private void updateWifiScanResults() {
         StringBuilder sb = new StringBuilder();
         List<ScanResult> wifiList = wifiManager.getScanResults();
         wifiStats.updateWifiStats(null, wifiList);
-        for(int i = 0; i < wifiList.size(); i++){
-            sb.append(new Integer(i+1).toString() + ".");
+        for (int i = 0; i < wifiList.size(); i++) {
+            sb.append(new Integer(i + 1).toString() + ".");
             sb.append((wifiList.get(i)).toString());
             sb.append("\\n");
         }
@@ -172,8 +167,19 @@ public class WifiAnalyzer {
         }
     }
 
-    public WifiStats getWifiStats() {
-        return wifiStats;
+    private class WifiReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context c, Intent intent) {
+            final String action = intent.getAction();
+            if (action.equals(WifiManager.RSSI_CHANGED_ACTION)
+                    || action.equals(WifiManager.WIFI_STATE_CHANGED_ACTION)
+                    || action.equals(WifiManager.NETWORK_STATE_CHANGED_ACTION)) {
+                updateWifiState(intent);
+            } else if (action.equals(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)) {
+                updateWifiScanResults();
+                unregisterScanReceiver();
+            }
+        }
     }
 
 }
