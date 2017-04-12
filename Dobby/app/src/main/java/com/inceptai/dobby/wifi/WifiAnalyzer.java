@@ -147,7 +147,7 @@ public class WifiAnalyzer {
         context.unregisterReceiver(wifiStateReceiver);
     }
 
-    //Listening for WiFi intents
+    // Listening for WiFi intents
     private void updateWifiState(Intent intent) {
         final String action = intent.getAction();
         int wifiState;

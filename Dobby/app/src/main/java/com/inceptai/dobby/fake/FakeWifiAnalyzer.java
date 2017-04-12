@@ -2,6 +2,7 @@ package com.inceptai.dobby.fake;
 
 import android.net.DhcpInfo;
 import android.net.wifi.ScanResult;
+import android.net.wifi.WifiInfo;
 import android.util.Log;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -38,13 +39,18 @@ public class FakeWifiAnalyzer {
 
     public static class FakeWifiScanConfig {
         public int numApsChannelOne, numApsChannelSix, numApsChannelEleven;
-        @WifiStats.SignalStrengthZones public int signalZoneChannelOne, signalZoneChannelSix, signalZoneChannelEleven;
+        @WifiStats.SignalStrengthZones public int signalZoneChannelOne, signalZoneChannelSix, signalZoneChannelEleven, signalZoneMainAp;
+
+        public int mainApChannelNumber;
+
 
         FakeWifiScanConfig() {
             numApsChannelOne = numApsChannelSix = numApsChannelEleven = 4;
+            mainApChannelNumber = 6;
             signalZoneChannelOne = WifiStats.SignalStrengthZones.MEDIUM;
             signalZoneChannelEleven = WifiStats.SignalStrengthZones.MEDIUM;
             signalZoneChannelSix = WifiStats.SignalStrengthZones.MEDIUM;
+            signalZoneMainAp = WifiStats.SignalStrengthZones.MEDIUM;
         }
     }
 
@@ -125,6 +131,10 @@ public class FakeWifiAnalyzer {
             Log.e(TAG, "Unable to generate fake ScanResult");
         }
         return result;
+    }
+
+    private WifiInfo generateFakeWifiInfo() {
+        return null;
     }
 
     private static String randomBssid() {

@@ -31,6 +31,8 @@
     <string name="wifi_chan_6_num_aps">Channel 6, Num APs:</string>
     <string name="wifi_chan_11_num_aps">Channel 11, Num APs:</string>
     <string name="fake_wifi_scan_settings">Fake wifi scan settings:</string>
+    <string name="primary_ap_rssi">Primary AP Rssi:</string>
+    <string name="primary_ap_channel">Primary AP channel:</string>
 
     <string-array name="rssi_level_array">
         <item>High</item>

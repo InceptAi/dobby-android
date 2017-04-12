@@ -55,6 +55,9 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
     private Spinner chanElevenNumApsSpinner;
     private Spinner chanElevenRssiSpinner;
 
+    private Spinner mainApChannelSpinner;
+    private Spinner mainApRssiSpinner;
+
 
     public FakeDataFragment() {
         // Required empty public constructor
@@ -86,31 +89,42 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
 
         chanOneNumApsSpinner = (Spinner) view.findViewById(R.id.num_aps_chan_1_spinner);
         chanOneRssiSpinner = (Spinner) view.findViewById(R.id.rssi_level_chan_1_spinner);
-        populateNumApsSpinner(chanOneNumApsSpinner, FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.numApsChannelOne);
+        populateSpinnerWithNumbers(chanOneNumApsSpinner, 15, FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.numApsChannelOne, 0);
         setRssiSelection(chanOneRssiSpinner, FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.signalZoneChannelOne);
 
         chanSixNumApsSpinner = (Spinner) view.findViewById(R.id.num_aps_chan_6_spinner);
         chanSixRssiSpinner = (Spinner) view.findViewById(R.id.rssi_level_chan_6_spinner);
-        populateNumApsSpinner(chanSixNumApsSpinner, FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.numApsChannelSix);
+        populateSpinnerWithNumbers(chanSixNumApsSpinner, 15, FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.numApsChannelSix, 0);
         setRssiSelection(chanSixRssiSpinner, FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.signalZoneChannelSix);
 
         chanElevenNumApsSpinner = (Spinner) view.findViewById(R.id.num_aps_chan_11_spinner);
         chanElevenRssiSpinner = (Spinner) view.findViewById(R.id.rssi_level_chan_11_spinner);
-        populateNumApsSpinner(chanElevenNumApsSpinner, FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.numApsChannelEleven);
+        populateSpinnerWithNumbers(chanElevenNumApsSpinner, 15, FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.numApsChannelEleven, 0);
         setRssiSelection(chanElevenRssiSpinner, FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.signalZoneChannelEleven);
+
+        mainApChannelSpinner = (Spinner) view.findViewById(R.id.main_ap_channel_spinner);
+        mainApRssiSpinner = (Spinner) view.findViewById(R.id.rssi_level_main_ap_spinner);
+        setRssiSelection(mainApRssiSpinner, FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.signalZoneMainAp);
+        populateSpinnerWithNumbers(mainApChannelSpinner, 11, FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.mainApChannelNumber, 1);
 
         return view;
     }
 
-    private void populateNumApsSpinner(Spinner spinner, int numAps) {
-        ArrayList<String> numApsList = new ArrayList<>();
-        for (int i = 0; i < 15; i++) {
-            numApsList.add(String.valueOf(i));
+    /**
+     * Populates from 0 .. max - 1
+     * @param spinner
+     * @param max
+     * @param selection
+     */
+    private void populateSpinnerWithNumbers(Spinner spinner, int max, int selection, int offset) {
+        ArrayList<String> numberList = new ArrayList<>();
+        for (int i = 0; i < max; i++) {
+            numberList.add(String.valueOf(i + offset));
         }
-        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_dropdown_item, numApsList);
+        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_dropdown_item, numberList);
         arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(arrayAdapter);
-        spinner.setSelection(numAps, true);
+        spinner.setSelection(selection, true);
     }
 
     private static void setRssiSelection(Spinner spinner, @WifiStats.SignalStrengthZones int rssiZone) {
@@ -261,6 +275,18 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
         if (zone != FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.signalZoneChannelEleven) {
             hasChanged = true;
             FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.signalZoneChannelEleven = zone;
+        }
+
+        zone = getRssiZone(mainApRssiSpinner);
+        if (zone != FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.signalZoneMainAp) {
+            hasChanged = true;
+            FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.signalZoneMainAp = zone;
+        }
+
+        int mainApSelectedChannel = mainApChannelSpinner.getSelectedItemPosition() + 1;
+        if (mainApSelectedChannel != FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.mainApChannelNumber) {
+            hasChanged = true;
+            FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.mainApChannelNumber = mainApSelectedChannel;
         }
         return hasChanged;
     }

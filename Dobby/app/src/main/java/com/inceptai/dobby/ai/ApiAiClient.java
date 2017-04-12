@@ -82,6 +82,9 @@ public class ApiAiClient implements AIListener {
         aiService.cancel();
     }
 
+    public void cleanup() {
+    }
+
     @Override
     public void onResult(final  AIResponse result) {
         Log.i(TAG, "Action: " + result.getResult().getAction());

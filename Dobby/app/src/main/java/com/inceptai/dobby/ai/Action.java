@@ -2,6 +2,8 @@ package com.inceptai.dobby.ai;
 
 import android.support.annotation.IntDef;
 
+import com.inceptai.dobby.utils.Utils;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
@@ -10,15 +12,16 @@ import java.lang.annotation.RetentionPolicy;
  */
 
 public class Action {
+    public static final Action ACTION_NONE = new Action(Utils.EMPTY_STRING, ActionType.ACTION_TYPE_NONE);
 
-    @IntDef({ActionType.ACTION_BANDWIDTH_TEST, ActionType.ACTION_NONE,
-            ActionType.ACTION_WIFI_SCAN, ActionType.ACTION_CANCEL_BANDWIDTH_TEST})
+    @IntDef({ActionType.ACTION_TYPE_BANDWIDTH_TEST, ActionType.ACTION_TYPE_NONE,
+            ActionType.ACTION_TYPE_WIFI_SCAN, ActionType.ACTION_TYPE_CANCEL_BANDWIDTH_TEST})
     @Retention(RetentionPolicy.SOURCE)
     public @interface ActionType {
-        int ACTION_NONE = 0;
-        int ACTION_BANDWIDTH_TEST = 1;
-        int ACTION_WIFI_SCAN = 2;
-        int ACTION_CANCEL_BANDWIDTH_TEST = 3;
+        int ACTION_TYPE_NONE = 0;
+        int ACTION_TYPE_BANDWIDTH_TEST = 1;
+        int ACTION_TYPE_WIFI_SCAN = 2;
+        int ACTION_TYPE_CANCEL_BANDWIDTH_TEST = 3;
     }
 
     /* User response to be shown, null for no response. */

@@ -50,7 +50,7 @@ public class InferenceEngine {
     private static final int STATE_BANDWIDTH_TEST_FAILED = 4;
     private static final int STATE_BANDWIDTH_TEST_CANCELLED = 4;
 
-    private Action previousAction;
+    private Action previousAction = Action.ACTION_NONE;
     private int bandwidthTestState; /* state of the bandwidth test */
     private ScheduledExecutorService scheduledExecutorService;
     private ScheduledFuture<?> bandwidthCheckFuture;
@@ -74,10 +74,10 @@ public class InferenceEngine {
             response = CANNED_RESPONSE;
         }
 
-        @Action.ActionType int action = Action.ActionType.ACTION_NONE;
+        @Action.ActionType int action = Action.ActionType.ACTION_TYPE_NONE;
         String apiAiAction = result.getAction();
         if (APIAI_ACTION_DIAGNOSE_SLOW_INTERNET.equals(apiAiAction) || PERFORM_BW_TEST_RETURN_RESULT.equals(apiAiAction)) {
-            action = Action.ActionType.ACTION_BANDWIDTH_TEST;
+            action = Action.ActionType.ACTION_TYPE_BANDWIDTH_TEST;
             updateBandwidthState(STATE_BANDWIDTH_TEST_REQUESTED);
         } else if((apiAiAction.contains("cancel") || apiAiAction.contains("later") || apiAiAction.contains("no")) && apiAiAction.contains("test")) {
             //TODO: Remove this hack.
@@ -89,7 +89,7 @@ public class InferenceEngine {
                 APIAI_ACTION_SI_STARTING_INTENT_YES_YES_LATER.equals(apiAiAction) ||
                 APIAI_ACTION_SI_STARTING_INTENT_YES_YES_NO.equals(apiAiAction))
          */
-            action = Action.ActionType.ACTION_CANCEL_BANDWIDTH_TEST;
+            action = Action.ActionType.ACTION_TYPE_CANCEL_BANDWIDTH_TEST;
             updateBandwidthState(STATE_BANDWIDTH_TEST_CANCELLED);
         }
         previousAction = new Action(response, action);
@@ -120,6 +120,14 @@ public class InferenceEngine {
         lastBandwidthUpdateTimestampMs = 0;
     }
 
+    public void cleanup() {
+        if (!bandwidthCheckFuture.isDone()) {
+            bandwidthCheckFuture.cancel(true);
+            bandwidthCheckFuture = null;
+        }
+        previousAction = Action.ACTION_NONE;
+    }
+
     private void updateBandwidthState(int toState) {
         if (bandwidthCheckFuture != null) {
             bandwidthCheckFuture.cancel(true);
@@ -148,6 +156,6 @@ public class InferenceEngine {
         if (response == null || response.isEmpty()) {
             response = CANNED_RESPONSE;
         }
-        actionListener.takeAction(new Action(response, Action.ActionType.ACTION_NONE));
+        actionListener.takeAction(new Action(response, Action.ActionType.ACTION_TYPE_NONE));
     }
 }

@@ -100,6 +100,8 @@ public class NetworkLayer {
         if (wifiAnalyzer != null) {
             wifiAnalyzer.cleanup();
         }
-
+        if (bandwidthAnalyzer != null) {
+            bandwidthAnalyzer.cleanup();
+        }
     }
 }
