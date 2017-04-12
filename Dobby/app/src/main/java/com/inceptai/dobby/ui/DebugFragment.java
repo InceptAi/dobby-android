@@ -28,6 +28,7 @@ import com.inceptai.dobby.speedtest.BandwithTestCodes;
 import com.inceptai.dobby.speedtest.NewBandwidthAnalyzer;
 import com.inceptai.dobby.speedtest.ServerInformation;
 import com.inceptai.dobby.speedtest.SpeedTestConfig;
+import com.inceptai.dobby.utils.DobbyLog;
 
 import java.util.HashMap;
 import java.util.List;
@@ -146,6 +147,12 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
     }
 
     public void addConsoleText(final String text) {
+        threadpool.submit(new Runnable() {
+            @Override
+            public void run() {
+                DobbyLog.i(text);
+            }
+        });
         if (Thread.currentThread() == Looper.getMainLooper().getThread()) {
             String existingText = consoleTv.getText().toString();
             consoleTv.setText(existingText + "\n" + text);
