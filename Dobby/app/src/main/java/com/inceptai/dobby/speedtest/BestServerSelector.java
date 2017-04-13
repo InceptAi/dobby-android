@@ -22,7 +22,9 @@ import static com.inceptai.dobby.DobbyApplication.TAG;
  */
 
 public class BestServerSelector {
-
+    public static final int MAX_LATENCY_TRY = 3;
+    public static final int MAX_STRING_LENGTH = 100;
+    
     private SpeedTestConfig config;
     private ServerInformation info;
     //Results callback
@@ -83,24 +85,22 @@ public class BestServerSelector {
     }
 
     public ServerInformation.ServerDetails getBestServerFromClosestServers(List<ServerInformation.ServerDetails> closeServerList) {
-        final int MAX_LATENCY_TRY = 3;
-        final int MAX_STRING_LENGTH = 100;
-        double bestLatency = 60000;
+        double bestLatencyMs = 60000;
         ServerInformation.ServerDetails bestServer = null;
         for (ServerInformation.ServerDetails detailInfo : closeServerList) {
-            String latencyUrl = detailInfo.url + "/latency.txt";
-            //Get url/latency.txt 3 time and average
-            double[] latency = {60000, 60000, 60000};
+            String latencyUrl = detailInfo.url + "/latencyMs.txt";
+            //Get url/latencyMs.txt 3 time and average
+            double[] latencyMeasurementsMs = {60000, 60000, 60000};
             for (int i = 0; i < MAX_LATENCY_TRY; i++) {
                 String dataFromUrl = null;
                 try {
                     long startTime = System.currentTimeMillis();
                     dataFromUrl = Utils.getDataFromUrl(latencyUrl, MAX_STRING_LENGTH);
                     if (dataFromUrl.equals("size=500")) {
-                        latency[i] = (System.currentTimeMillis() - startTime);
+                        latencyMeasurementsMs[i] = (System.currentTimeMillis() - startTime);
                     }
                 } catch (IOException e) {
-                    String errorString = "Exception while performing latency test: " + e;
+                    String errorString = "Exception while performing latencyMs test: " + e;
                     if (this.resultsCallback != null) {
                         this.resultsCallback.onBestServerSelectionError(errorString);
                     }
@@ -108,9 +108,9 @@ public class BestServerSelector {
                 }
             }
             try {
-                detailInfo.latency = Utils.computeAverage(latency);
-                if (detailInfo.latency < bestLatency) {
-                    bestLatency = detailInfo.latency;
+                detailInfo.latencyMs = Utils.computeAverage(latencyMeasurementsMs);
+                if (detailInfo.latencyMs < bestLatencyMs) {
+                    bestLatencyMs = detailInfo.latencyMs;
                     bestServer = detailInfo;
                 }
             } catch (InvalidParameterException e) {

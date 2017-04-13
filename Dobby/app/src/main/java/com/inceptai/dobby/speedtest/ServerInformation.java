@@ -43,7 +43,7 @@ public class ServerInformation {
         public String name;
         public String sponsor;
         public double distance;
-        public double latency;
+        public double latencyMs;
 
         public ServerDetails(int serverId, double lat, double lon,
                              String url, String host, String country,
@@ -57,7 +57,7 @@ public class ServerInformation {
             this.name = name;
             this.sponsor = sponsor;
             this.distance = Double.MAX_VALUE;
-            this.latency = Double.MAX_VALUE;
+            this.latencyMs = Double.MAX_VALUE;
         }
     }
     // Parses the contents of an client config. If it encounters a ip, summary, or link tag, hands them off

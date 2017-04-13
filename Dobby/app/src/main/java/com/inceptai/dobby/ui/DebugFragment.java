@@ -16,8 +16,6 @@ import android.widget.TextView;
 
 import com.google.common.base.Strings;
 import com.google.common.eventbus.Subscribe;
-import com.google.common.util.concurrent.AsyncFunction;
-import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.DobbyThreadpool;
@@ -36,7 +34,6 @@ import com.inceptai.dobby.utils.DobbyLog;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.RunnableFuture;
 
 import javax.inject.Inject;
 
@@ -235,7 +232,7 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
     public void onClosestServersSelected(List<ServerInformation.ServerDetails> closestServers) {
         addConsoleText("Closest server selected.");
         for (ServerInformation.ServerDetails details : closestServers) {
-            addConsoleText("Server : " + details.name + " : " + details.latency + " ms.");
+            addConsoleText("Server : " + details.name + " : " + details.latencyMs + " ms.");
         }
     }
 
