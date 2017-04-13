@@ -80,7 +80,7 @@ public class InferenceEngine {
             action = Action.ActionType.ACTION_TYPE_BANDWIDTH_TEST;
             updateBandwidthState(STATE_BANDWIDTH_TEST_REQUESTED);
         } else if((apiAiAction.contains("cancel") || apiAiAction.contains("later") || apiAiAction.contains("no")) && apiAiAction.contains("test")) {
-            //TODO: Remove this hack.
+            // TODO: Remove this hack.
         /*
                 (APIAI_ACTION_SI_STARTING_INTENT_CANCEL.equals(apiAiAction) ||
                 APIAI_ACTION_SI_STARTING_INTENT_LATER.equals(apiAiAction) ||
