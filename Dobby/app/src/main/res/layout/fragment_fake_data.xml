@@ -1,0 +1,219 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.inceptai.dobby.ui.FakeDataFragment">
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:orientation="horizontal"
+        android:padding="10dp"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/textView2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="15sp"
+            android:layout_gravity="start|center_vertical"
+            android:text="@string/fake_data_injection_title" />
+
+        <ToggleButton
+            android:id="@+id/fake_data_toggle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:orientation="horizontal"
+        android:layout_height="wrap_content">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_horizontal|center_vertical"
+            android:padding="10dp"
+            android:textSize="14sp"
+            android:text="@string/upload_bandwidth_mbps" />
+
+        <EditText
+            android:id="@+id/upload_bw_et"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ems="10"
+            android:imeOptions="actionGo"
+            android:inputType="numberDecimal" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:orientation="horizontal"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_horizontal|center_vertical"
+            android:padding="10dp"
+            android:textSize="14sp"
+            android:text="@string/download_bandwidth_mbps" />
+
+        <EditText
+            android:id="@+id/download_bw_et"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ems="10"
+            android:imeOptions="actionGo"
+            android:inputType="numberDecimal" />
+
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:textSize="15sp"
+        android:text="@string/fake_wifi_scan_settings" />
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:orientation="horizontal"
+        android:paddingLeft="10dp"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/wifi_chan_1_num_aps" />
+
+        <Spinner
+            android:id="@+id/num_aps_chan_1_spinner"
+            android:layout_width="wrap_content"
+            android:prompt="@string/wifi_chan_1_num_aps"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Rssi: " />
+
+        <Spinner
+            android:id="@+id/rssi_level_chan_1_spinner"
+            android:layout_width="wrap_content"
+            android:entries="@array/rssi_level_array"
+            android:prompt="@string/wifi_chan_1_num_aps"
+            android:layout_height="wrap_content" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:orientation="horizontal"
+        android:paddingLeft="10dp"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/wifi_chan_6_num_aps" />
+
+        <Spinner
+            android:id="@+id/num_aps_chan_6_spinner"
+            android:layout_width="wrap_content"
+            android:prompt="@string/wifi_chan_6_num_aps"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Rssi: " />
+
+        <Spinner
+            android:id="@+id/rssi_level_chan_6_spinner"
+            android:layout_width="wrap_content"
+            android:entries="@array/rssi_level_array"
+            android:prompt="@string/wifi_chan_6_num_aps"
+            android:layout_height="wrap_content" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:orientation="horizontal"
+        android:paddingLeft="10dp"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/wifi_chan_11_num_aps" />
+
+        <Spinner
+            android:id="@+id/num_aps_chan_11_spinner"
+            android:layout_width="wrap_content"
+            android:prompt="@string/wifi_chan_11_num_aps"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Rssi: " />
+
+        <Spinner
+            android:id="@+id/rssi_level_chan_11_spinner"
+            android:layout_width="wrap_content"
+            android:entries="@array/rssi_level_array"
+            android:prompt="@string/wifi_chan_11_num_aps"
+            android:layout_height="wrap_content" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:orientation="horizontal"
+        android:paddingLeft="10dp"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/primary_ap_channel" />
+
+        <Spinner
+            android:id="@+id/main_ap_channel_spinner"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/primary_ap_rssi" />
+
+        <Spinner
+            android:id="@+id/rssi_level_main_ap_spinner"
+            android:layout_width="wrap_content"
+            android:entries="@array/rssi_level_array"
+            android:layout_height="wrap_content" />
+
+        </LinearLayout>
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_weight="0.4"
+        android:layout_height="0dp" />
+
+    <Button
+        android:id="@+id/save_button"
+        android:layout_width="wrap_content"
+        android:layout_weight="0.15"
+        android:layout_height="0dp"
+        android:layout_gravity="center_horizontal|bottom"
+        android:text="@string/save_changes" />
+
+</LinearLayout>

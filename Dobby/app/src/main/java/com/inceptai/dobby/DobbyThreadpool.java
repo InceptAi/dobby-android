@@ -1,6 +1,7 @@
 package com.inceptai.dobby;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.ListeningScheduledExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.inceptai.dobby.ui.UiThreadExecutor;
 
@@ -33,7 +34,7 @@ public class DobbyThreadpool {
 
     private ThreadPoolExecutor dobbyThreadPool;
     private ListeningExecutorService listeningExecutorService;
-    private ScheduledExecutorService scheduledExecutorService;
+    private ListeningScheduledExecutorService scheduledExecutorService;
 
     private UiThreadExecutor uiThreadExecutor;
 
@@ -51,7 +52,7 @@ public class DobbyThreadpool {
                 workQueue);
 
         listeningExecutorService = MoreExecutors.listeningDecorator(dobbyThreadPool);
-        scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+        scheduledExecutorService = MoreExecutors.listeningDecorator(Executors.newSingleThreadScheduledExecutor());
         uiThreadExecutor = new UiThreadExecutor();
     }
 
@@ -68,6 +69,10 @@ public class DobbyThreadpool {
     }
 
     public ScheduledExecutorService getScheduledExecutorService() {
+        return scheduledExecutorService;
+    }
+
+    public ListeningScheduledExecutorService getListeningScheduledExecutorService() {
         return scheduledExecutorService;
     }
 

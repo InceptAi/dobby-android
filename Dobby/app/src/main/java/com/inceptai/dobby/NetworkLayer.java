@@ -119,4 +119,12 @@ public class NetworkLayer {
         }
     }
 
+    public void cleanup() {
+        if (wifiAnalyzer != null) {
+            wifiAnalyzer.cleanup();
+        }
+        if (bandwidthAnalyzer != null) {
+            bandwidthAnalyzer.cleanup();
+        }
+    }
 }

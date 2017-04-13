@@ -15,9 +15,11 @@ import android.util.Log;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
+import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
+import com.inceptai.dobby.fake.FakeWifiAnalyzer;
 
 import java.util.List;
 
@@ -45,6 +47,7 @@ public class WifiAnalyzer {
     private boolean wifiEnabled;
     private SettableFuture<List<ScanResult>> wifiScanFuture;
     private DobbyEventBus eventBus;
+    private FakeWifiAnalyzer fakeWifiAnalyzer;
 
 
     private WifiAnalyzer(Context context, WifiManager wifiManager, DobbyThreadpool threadpool, DobbyEventBus eventBus) {
@@ -59,10 +62,12 @@ public class WifiAnalyzer {
         wifiStats = new WifiStats();
         wifiStats.updateWifiStats(wifiManager.getConnectionInfo(), null);
         registerWifiStateReceiver();
+        fakeWifiAnalyzer = new FakeWifiAnalyzer(threadpool);
     }
 
     /**
      * Factory constructor to create an instance
+     *
      * @param context Application context.
      * @return Instance of WifiAnalyzer or null on error.
      */
@@ -76,18 +81,37 @@ public class WifiAnalyzer {
     }
 
     /**
-     *
      * @return An instance of a {@link ListenableFuture<List<ScanResult>>} or null on immediate failure.
      */
     public ListenableFuture<List<ScanResult>> startWifiScan() {
+        if (DobbyApplication.USE_FAKES.get()) {
+            return fakeWifiAnalyzer.startWifiScan();
+        }
         if (wifiReceiverState != WIFI_RECEIVER_REGISTERED) {
             registerScanReceiver();
         }
-        if (wifiManager.startScan()){
+        if (wifiManager.startScan()) {
             wifiScanFuture = SettableFuture.create();
             return wifiScanFuture;
         }
         return null;
+    }
+
+    public DhcpInfo getDhcpInfo() {
+        return wifiManager.getDhcpInfo();
+    }
+
+    public WifiStats getWifiStats() {
+        if (DobbyApplication.USE_FAKES.get()) {
+            return fakeWifiAnalyzer.getWifiStats();
+        }
+        return wifiStats;
+    }
+
+    // Called in order to cleanup any held resources.
+    public void cleanup() {
+        unregisterScanReceiver();
+        unregisterWifiStateReceiver();
     }
 
     private void registerScanReceiver() {
@@ -131,12 +155,12 @@ public class WifiAnalyzer {
         }
     }
 
-    private void updateWifiScanResults()  {
+    private void updateWifiScanResults() {
         StringBuilder sb = new StringBuilder();
         List<ScanResult> wifiList = wifiManager.getScanResults();
         wifiStats.updateWifiStats(null, wifiList);
-        for(int i = 0; i < wifiList.size(); i++){
-            sb.append(new Integer(i+1).toString() + ".");
+        for (int i = 0; i < wifiList.size(); i++) {
+            sb.append(new Integer(i + 1).toString() + ".");
             sb.append((wifiList.get(i)).toString());
             sb.append("\\n");
         }
@@ -214,8 +238,19 @@ public class WifiAnalyzer {
         }
     }
 
-    public WifiStats getWifiStats() {
-        return wifiStats;
+    private class WifiReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context c, Intent intent) {
+            final String action = intent.getAction();
+            if (action.equals(WifiManager.RSSI_CHANGED_ACTION)
+                    || action.equals(WifiManager.WIFI_STATE_CHANGED_ACTION)
+                    || action.equals(WifiManager.NETWORK_STATE_CHANGED_ACTION)) {
+                updateWifiState(intent);
+            } else if (action.equals(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)) {
+                updateWifiScanResults();
+                unregisterScanReceiver();
+            }
+        }
     }
 
 }

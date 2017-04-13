@@ -18,6 +18,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
+import java.util.Random;
 
 import static com.inceptai.dobby.DobbyApplication.TAG;
 
@@ -29,8 +30,14 @@ public class Utils {
     public static final String EMPTY_STRING = "";
     private static final int READ_TIMEOUT_MS = 10000;
     private static final int CONNECTION_TIMEOUT_MS = 15000;
+    private static Random random = new Random();
 
     private Utils() {}
+
+    public static Random getRandom() {
+        return random;
+    }
+
     /**
      * Given a string url, connects and returns an input stream
      * @param urlString string to fetch

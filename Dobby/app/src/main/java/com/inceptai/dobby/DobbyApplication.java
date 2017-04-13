@@ -6,12 +6,16 @@ import com.inceptai.dobby.dagger.DaggerProdComponent;
 import com.inceptai.dobby.dagger.ProdComponent;
 import com.inceptai.dobby.dagger.ProdModule;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * Created by arunesh on 3/28/17.
  */
 
 public class DobbyApplication extends Application {
     public static final String TAG = "Dobby";
+    public static final AtomicBoolean USE_FAKES = new AtomicBoolean(false);
+
     private ProdComponent prodComponent;
 
     @Override

@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "1094026000636",
+    "firebase_url": "https://dobbybackend.firebaseio.com",
+    "project_id": "dobbybackend",
+    "storage_bucket": "dobbybackend.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1094026000636:android:a270b32cfed56b95",
+        "android_client_info": {
+          "package_name": "com.inceptai.dobby"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1094026000636-3trd5tq8lb9efoh9ijboa3ik7bi33fc7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.inceptai.dobby",
+            "certificate_hash": "94f6c260efb7835371cc1a61476405f92b71ce6f"
+          }
+        },
+        {
+          "client_id": "1094026000636-24j48ikt1egocntv96lt738q5knpj9nn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBVDYH0xGaIiiht8xriI8Yxdoo2PuSxR-Y"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1094026000636-24j48ikt1egocntv96lt738q5knpj9nn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

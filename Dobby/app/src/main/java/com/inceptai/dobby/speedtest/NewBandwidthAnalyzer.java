@@ -146,122 +146,12 @@ public class NewBandwidthAnalyzer {
         this.resultsCallback = resultsCallback;
     }
 
-    /**
-     * Un Registers callback -- sets to null
-     */
-    public void unRegisterCallback() {
-        this.resultsCallback = null;
-    }
-
-
-    private ServerInformation.ServerDetails getBestServer(SpeedTestConfig config,
-                                                          ServerInformation info) {
-        BestServerSelector serverSelector = new BestServerSelector(config, info, null);
-        return serverSelector.getBestServer();
-    }
-
-    private void  performDownload() {
-        if (downloadAnalyzer == null) {
-            downloadAnalyzer = new NewDownloadAnalyzer(speedTestConfig.downloadConfig,
-                    bestServer, bandwidthTestListener);
-        }
-        downloadAnalyzer.downloadTestWithMultipleThreads(DOWNLOAD_THREADS,REPORT_INTERVAL_MS);
-    }
-
-    private void performUpload() {
-        if (uploadAnalyzer == null) {
-            uploadAnalyzer = new NewUploadAnalyzer(speedTestConfig.uploadConfig,
-                    bestServer, bandwidthTestListener);
-        }
-        uploadAnalyzer.uploadTestWithMultipleThreads(UPLOAD_THREADS, REPORT_INTERVAL_MS);
-    }
-
-
-    private void finishTests() {
-        markTestsAsStopped();
-    }
-
-    //Helper functions for state
-    private boolean testsCurrentlyRunning() {
-        return bandwidthAnalyzerState == BandwidthAnalyzerState.RUNNING;
-    }
-
-    private boolean testsCurrentlyInactive() {
-        return (bandwidthAnalyzerState == BandwidthAnalyzerState.STOPPED ||
-                bandwidthAnalyzerState == BandwidthAnalyzerState.CANCELLED);
-    }
-
-    private void markTestsAsRunning() throws BandwidthTestException {
-        if (!testsCurrentlyInactive()) {
-            throw new BandwidthTestException(BandwidthTestException.BW_EXCEPTION_TEST_ALREADY_RUNNING);
-        }
-        bandwidthAnalyzerState = BandwidthAnalyzerState.RUNNING;
-    }
-
-    private void markTestsAsStopped() {
-        bandwidthAnalyzerState = BandwidthAnalyzerState.STOPPED;
-    }
-
-    private void markTestsAsCancelled() {
-        bandwidthAnalyzerState = BandwidthAnalyzerState.CANCELLED;
-    }
-
-    private void markTestsAsCancelling() {
-        bandwidthAnalyzerState = BandwidthAnalyzerState.CANCELLING;
-    }
-
     public void startBandwidthTestSafely(@BandwidthTestMode int testMode) {
         try {
             startBandwidthTest(testMode);
         } catch (Exception e) {
             Log.v(TAG, "Exception: " + e);
             finishTests();
-        }
-    }
-
-    /**
-     * start the speed test
-     */
-    private void startBandwidthTest(@BandwidthTestMode int testMode) throws
-            BandwidthTestException {
-        markTestsAsRunning();
-        final String downloadMode = "http";
-        this.testMode = testMode;
-        //Get config
-        speedTestConfig = parseSpeedTestConfig.getConfig(downloadMode);
-        if (speedTestConfig == null) {
-            if (resultsCallback != null) {
-                resultsCallback.onBandwidthTestError(BandwidthTestMode.CONFIG_FETCH,
-                        BandwidthTestErrorCodes.ERROR_FETCHING_CONFIG,
-                        "Config fetch returned null");
-            }
-            throw new BandwidthTestException(BandwidthTestException.BW_EXCEPTION_GETTING_CONFIG_FAILED);
-        }
-        ServerInformation info = parseServerInformation.getServerInfo();
-        if (info == null) {
-            if (resultsCallback != null) {
-                resultsCallback.onBandwidthTestError(BandwidthTestMode.SERVER_FETCH,
-                        BandwidthTestErrorCodes.ERROR_FETCHING_SERVER_INFO,
-                        "Server info fetch returned null");
-            }
-            throw new BandwidthTestException(BandwidthTestException.BW_EXCEPTION_GETTING_SERVER_INFORMATION_FAILED);
-        }
-
-        bestServer = getBestServer(speedTestConfig, info);
-        if (bestServer == null) {
-            if (resultsCallback != null) {
-                resultsCallback.onBandwidthTestError(BandwidthTestMode.SERVER_FETCH,
-                        BandwidthTestErrorCodes.ERROR_SELECTING_BEST_SERVER,
-                        "best server returned as null");
-            }
-            throw new BandwidthTestException(BandwidthTestException.BW_EXCEPTION_GETTING_BEST_SERVER_FAILED);
-        }
-
-        if (testMode == BandwidthTestMode.DOWNLOAD_AND_UPLOAD || testMode == BandwidthTestMode.DOWNLOAD) {
-            performDownload();
-        }
-        if (testMode == BandwidthTestMode.UPLOAD) {
-            performUpload();
         }
     }
 
@@ -272,24 +162,15 @@ public class NewBandwidthAnalyzer {
         markTestsAsCancelled();
     }
 
-    @BandwidthTestErrorCodes
-    private int convertToBandwidthTestCodes(SpeedTestError error) {
-        int errorCodeToReturn = BandwidthTestErrorCodes.ERROR_UNKNOWN;
-        switch (error) {
-            case INVALID_HTTP_RESPONSE:
-                errorCodeToReturn = BandwidthTestErrorCodes.ERROR_INVALID_HTTP_RESPONSE;
-                break;
-            case SOCKET_ERROR:
-                errorCodeToReturn = BandwidthTestErrorCodes.ERROR_SOCKET_ERROR;
-                break;
-            case SOCKET_TIMEOUT:
-                errorCodeToReturn = BandwidthTestErrorCodes.ERROR_SOCKET_TIMEOUT;
-                break;
-            case CONNECTION_ERROR:
-                errorCodeToReturn = BandwidthTestErrorCodes.ERROR_CONNECTION_ERROR;
-                break;
-        }
-        return errorCodeToReturn;
+    /**
+     * Un Registers callback -- sets to null
+     */
+    public void unRegisterCallback() {
+        this.resultsCallback = null;
+    }
+
+    public void cleanup() {
+        unRegisterCallback();
     }
 
     public class BandwidthTestListener implements ParseSpeedTestConfig.ResultsCallback,
@@ -352,7 +233,6 @@ public class NewBandwidthAnalyzer {
                 resultsCallback.onClosestServersSelected(closestServers);
         }
 
-
         @Override
         public void onFinish(@BandwidthTestMode int callbackTestMode, BandwidthStats bandwidthStats) {
             if (resultsCallback != null) {
@@ -386,6 +266,126 @@ public class NewBandwidthAnalyzer {
                         convertToBandwidthTestCodes(speedTestError), errorMessage);
             }
         }
+    }
 
+    private ServerInformation.ServerDetails getBestServer(SpeedTestConfig config,
+                                                          ServerInformation info) {
+        BestServerSelector serverSelector = new BestServerSelector(config, info, null);
+        return serverSelector.getBestServer();
+    }
+
+    private void  performDownload() {
+        if (downloadAnalyzer == null) {
+            downloadAnalyzer = new NewDownloadAnalyzer(speedTestConfig.downloadConfig,
+                    bestServer, bandwidthTestListener);
+        }
+        downloadAnalyzer.downloadTestWithMultipleThreads(DOWNLOAD_THREADS,REPORT_INTERVAL_MS);
+    }
+
+    private void performUpload() {
+        if (uploadAnalyzer == null) {
+            uploadAnalyzer = new NewUploadAnalyzer(speedTestConfig.uploadConfig,
+                    bestServer, bandwidthTestListener);
+        }
+        uploadAnalyzer.uploadTestWithMultipleThreads(UPLOAD_THREADS, REPORT_INTERVAL_MS);
+    }
+
+    private void finishTests() {
+        markTestsAsStopped();
+    }
+
+    //Helper functions for state
+    private boolean testsCurrentlyRunning() {
+        return bandwidthAnalyzerState == BandwidthAnalyzerState.RUNNING;
+    }
+
+    private boolean testsCurrentlyInactive() {
+        return (bandwidthAnalyzerState == BandwidthAnalyzerState.STOPPED ||
+                bandwidthAnalyzerState == BandwidthAnalyzerState.CANCELLED);
+    }
+
+    private void markTestsAsRunning() throws BandwidthTestException {
+        if (!testsCurrentlyInactive()) {
+            throw new BandwidthTestException(BandwidthTestException.BW_EXCEPTION_TEST_ALREADY_RUNNING);
+        }
+        bandwidthAnalyzerState = BandwidthAnalyzerState.RUNNING;
+    }
+
+    private void markTestsAsStopped() {
+        bandwidthAnalyzerState = BandwidthAnalyzerState.STOPPED;
+    }
+
+    private void markTestsAsCancelled() {
+        bandwidthAnalyzerState = BandwidthAnalyzerState.CANCELLED;
+    }
+
+    private void markTestsAsCancelling() {
+        bandwidthAnalyzerState = BandwidthAnalyzerState.CANCELLING;
+    }
+
+    /**
+     * start the speed test
+     */
+    private void startBandwidthTest(@BandwidthTestMode int testMode) throws
+            BandwidthTestException {
+        markTestsAsRunning();
+        final String downloadMode = "http";
+        this.testMode = testMode;
+        //Get config
+        speedTestConfig = parseSpeedTestConfig.getConfig(downloadMode);
+        if (speedTestConfig == null) {
+            if (resultsCallback != null) {
+                resultsCallback.onBandwidthTestError(BandwidthTestMode.CONFIG_FETCH,
+                        BandwidthTestErrorCodes.ERROR_FETCHING_CONFIG,
+                        "Config fetch returned null");
+            }
+            throw new BandwidthTestException(BandwidthTestException.BW_EXCEPTION_GETTING_CONFIG_FAILED);
+        }
+        ServerInformation info = parseServerInformation.getServerInfo();
+        if (info == null) {
+            if (resultsCallback != null) {
+                resultsCallback.onBandwidthTestError(BandwidthTestMode.SERVER_FETCH,
+                        BandwidthTestErrorCodes.ERROR_FETCHING_SERVER_INFO,
+                        "Server info fetch returned null");
+            }
+            throw new BandwidthTestException(BandwidthTestException.BW_EXCEPTION_GETTING_SERVER_INFORMATION_FAILED);
+        }
+
+        bestServer = getBestServer(speedTestConfig, info);
+        if (bestServer == null) {
+            if (resultsCallback != null) {
+                resultsCallback.onBandwidthTestError(BandwidthTestMode.SERVER_FETCH,
+                        BandwidthTestErrorCodes.ERROR_SELECTING_BEST_SERVER,
+                        "best server returned as null");
+            }
+            throw new BandwidthTestException(BandwidthTestException.BW_EXCEPTION_GETTING_BEST_SERVER_FAILED);
+        }
+
+        if (testMode == BandwidthTestMode.DOWNLOAD_AND_UPLOAD || testMode == BandwidthTestMode.DOWNLOAD) {
+            performDownload();
+        }
+        if (testMode == BandwidthTestMode.UPLOAD) {
+            performUpload();
+        }
+    }
+
+    @BandwidthTestErrorCodes
+    private int convertToBandwidthTestCodes(SpeedTestError error) {
+        int errorCodeToReturn = BandwidthTestErrorCodes.ERROR_UNKNOWN;
+        switch (error) {
+            case INVALID_HTTP_RESPONSE:
+                errorCodeToReturn = BandwidthTestErrorCodes.ERROR_INVALID_HTTP_RESPONSE;
+                break;
+            case SOCKET_ERROR:
+                errorCodeToReturn = BandwidthTestErrorCodes.ERROR_SOCKET_ERROR;
+                break;
+            case SOCKET_TIMEOUT:
+                errorCodeToReturn = BandwidthTestErrorCodes.ERROR_SOCKET_TIMEOUT;
+                break;
+            case CONNECTION_ERROR:
+                errorCodeToReturn = BandwidthTestErrorCodes.ERROR_CONNECTION_ERROR;
+                break;
+        }
+        return errorCodeToReturn;
     }
 }

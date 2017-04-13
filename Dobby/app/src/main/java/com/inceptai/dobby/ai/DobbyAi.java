@@ -1,24 +1,16 @@
 package com.inceptai.dobby.ai;
 
 import android.content.Context;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.NetworkLayer;
-import com.inceptai.dobby.speedtest.BandwidthAnalyzer;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
-import com.inceptai.dobby.speedtest.NewBandwidthAnalyzer;
-import com.inceptai.dobby.speedtest.ServerInformation;
-import com.inceptai.dobby.speedtest.SpeedTestConfig;
 import com.inceptai.dobby.speedtest.SpeedTestTask;
-
-import java.util.List;
 
 import javax.inject.Inject;
 
 import ai.api.model.Result;
-import fr.bmartel.speedtest.SpeedTestReport;
 
 import static com.inceptai.dobby.DobbyApplication.TAG;
 
@@ -107,12 +99,12 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             responseCallback.showResponse(action.getUserResponse());
         }
 
-        if (action.getAction() == Action.ActionType.ACTION_BANDWIDTH_TEST) {
+        if (action.getAction() == Action.ActionType.ACTION_TYPE_BANDWIDTH_TEST) {
             Log.i(TAG, "Starting ACTION BANDWIDTH TEST.");
             runBandwidthTest();
         }
 
-        if (action.getAction() == Action.ActionType.ACTION_CANCEL_BANDWIDTH_TEST) {
+        if (action.getAction() == Action.ActionType.ACTION_TYPE_CANCEL_BANDWIDTH_TEST) {
             Log.i(TAG, "Starting ACTION CANCEL BANDWIDTH TEST.");
             try {
                 cancelBandwidthTest();
@@ -140,5 +132,11 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
 
     public void sendQuery(String text) {
         apiAiClient.sendTextQuery(text, this);
+    }
+
+    public void cleanup() {
+        networkLayer.cleanup();
+        inferenceEngine.cleanup();
+        apiAiClient.cleanup();
     }
 }

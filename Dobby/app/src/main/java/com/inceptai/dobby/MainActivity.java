@@ -31,6 +31,7 @@ import com.inceptai.dobby.ai.RtDataSource;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.ui.ChatFragment;
 import com.inceptai.dobby.ui.DebugFragment;
+import com.inceptai.dobby.ui.FakeDataFragment;
 import com.inceptai.dobby.ui.WifiFragment;
 import com.inceptai.dobby.utils.Utils;
 
@@ -159,7 +160,8 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_debug) {
             DebugFragment fragment = (DebugFragment) setupFragment(DebugFragment.class, DebugFragment.FRAGMENT_TAG);
 
-        } else if (id == R.id.nav_slideshow) {
+        } else if (id == R.id.nav_fake_data) {
+            FakeDataFragment fragment = (FakeDataFragment) setupFragment(FakeDataFragment.class, FakeDataFragment.FRAGMENT_TAG);
 
         } else if (id == R.id.nav_manage) {
 
@@ -234,5 +236,11 @@ public class MainActivity extends AppCompatActivity
                 return;
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        dobbyAi.cleanup();
     }
 }
