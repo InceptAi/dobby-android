@@ -73,13 +73,14 @@
 
     </LinearLayout>
 
+
     <TextView
+        android:id="@+id/textView4"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="10dp"
-        android:textSize="15sp"
-        android:text="@string/fake_wifi_scan_settings" />
-
+        android:text="@string/fake_wifi_scan_settings"
+        android:textSize="15sp" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -203,17 +204,37 @@
 
         </LinearLayout>
 
+    <TextView
+        android:id="@+id/textView5"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:text="@string/fake_ping_data_setting"
+        android:textSize="15sp" />
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/ping_stats_mode_selector" />
+
+    <Spinner
+        android:id="@+id/ping_stats_mode_selector"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:prompt="@string/ping_stats_mode_selector" />
+
     <Space
         android:layout_width="match_parent"
-        android:layout_weight="0.4"
-        android:layout_height="0dp" />
+        android:layout_height="0dp"
+        android:layout_weight="0.06" />
 
     <Button
         android:id="@+id/save_button"
         android:layout_width="wrap_content"
-        android:layout_weight="0.15"
         android:layout_height="0dp"
         android:layout_gravity="center_horizontal|bottom"
+        android:layout_weight="0.15"
         android:text="@string/save_changes" />
 
 </LinearLayout>

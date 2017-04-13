@@ -33,6 +33,8 @@
     <string name="fake_wifi_scan_settings">Fake wifi scan settings:</string>
     <string name="primary_ap_rssi">Primary AP Rssi:</string>
     <string name="primary_ap_channel">Primary AP channel:</string>
+    <string name="ping_stats_mode_selector">Ping Mode Selector</string>
+    <string name="fake_ping_data_setting">Fake Ping Data Settings</string>
 
     <string-array name="rssi_level_array">
         <item>High</item>
@@ -40,4 +42,5 @@
         <item>Low</item>
         <item>Fringe</item>
     </string-array>
+
 </resources>

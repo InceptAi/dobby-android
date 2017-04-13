@@ -19,6 +19,7 @@ import android.widget.ToggleButton;
 
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.R;
+import com.inceptai.dobby.fake.FakePingAnalyzer;
 import com.inceptai.dobby.fake.FakeSpeedTestSocket;
 import com.inceptai.dobby.fake.FakeWifiAnalyzer;
 import com.inceptai.dobby.speedtest.SpeedTestSocketFactory;
@@ -27,6 +28,8 @@ import com.inceptai.dobby.wifi.WifiStats;
 
 import java.util.ArrayList;
 
+import static android.R.attr.max;
+import static android.R.attr.offset;
 import static com.inceptai.dobby.DobbyApplication.TAG;
 
 /**
@@ -58,6 +61,10 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
     private Spinner mainApChannelSpinner;
     private Spinner mainApRssiSpinner;
 
+
+    // Fake ping UI:
+
+    private Spinner pingStatsModeSpinner;
 
     public FakeDataFragment() {
         // Required empty public constructor
@@ -107,8 +114,29 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
         setRssiSelection(mainApRssiSpinner, FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.signalZoneMainAp);
         populateSpinnerWithNumbers(mainApChannelSpinner, 11, FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.mainApChannelNumber, 1);
 
+        pingStatsModeSpinner = (Spinner) view.findViewById(R.id.ping_stats_mode_selector);
+        populateSpinnerWithPingModes(pingStatsModeSpinner, FakePingAnalyzer.PingStatsMode.DEFAULT_WORKING_STATE);
+
         return view;
     }
+
+
+    /**
+     * Populates from 0 .. max - 1
+     * @param spinner
+     * @param selection
+     */
+    private void populateSpinnerWithPingModes(Spinner spinner, @FakePingAnalyzer.PingStatsMode int selection) {
+        ArrayList<String> modeList = new ArrayList<>();
+        for (@FakePingAnalyzer.PingStatsMode int i = 0; i < FakePingAnalyzer.PingStatsMode.MAX_STATES; i++) {
+            modeList.add(FakePingAnalyzer.getPingStatsModeName(i));
+        }
+        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_dropdown_item, modeList);
+        arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(arrayAdapter);
+        spinner.setSelection(selection, true);
+    }
+
 
     /**
      * Populates from 0 .. max - 1
@@ -234,9 +262,25 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
             hasChanged = true;
             changedMessage = changedMessage + " Wifi settings. ";
         }
+        if (savePingSettingsIfChanged()) {
+            hasChanged = true;
+            changedMessage = changedMessage + " Ping settings. ";
+        }
         if (hasChanged) {
             Toast.makeText(getContext(), changedMessage, Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private boolean savePingSettingsIfChanged() {
+        boolean hasChanged = false;
+        int selectedMode = pingStatsModeSpinner.getSelectedItemPosition();
+        if (selectedMode != FakePingAnalyzer.PingStatsMode.DEFAULT_WORKING_STATE) {
+            hasChanged = true;
+            //noinspection ResourceType
+            FakePingAnalyzer.pingStatsMode = selectedMode;
+            Log.i(TAG, "Setting ping stats mode to : " + FakePingAnalyzer.getPingStatsModeName(FakePingAnalyzer.pingStatsMode));
+        }
+        return hasChanged;
     }
 
     private boolean saveWifiSettingsIfChanged() {
@@ -290,4 +334,5 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
         }
         return hasChanged;
     }
+
 }

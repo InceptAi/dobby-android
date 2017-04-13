@@ -265,7 +265,7 @@ public class Utils {
             // reading output stream of the command
             while ((s = inputStream.readLine()) != null) {
                 outputStringBuilder.append(s);
-                Log.i(TAG, "ping response: " + s);
+                Log.v(TAG, "ping response: " + s);
             }
 
         } catch (Exception e) {
