@@ -18,7 +18,6 @@ import static com.inceptai.dobby.ping.PingAction.PingErrorCode.PING_EXCEPTION_CO
 import static com.inceptai.dobby.ping.PingAction.PingErrorCode.PING_EXCEPTION_INVALID_HOST;
 import static com.inceptai.dobby.ping.PingAction.PingErrorCode.PING_EXCEPTION_PARSING_OUTPUT;
 import static com.inceptai.dobby.utils.Utils.EMPTY_STRING;
-import static com.inceptai.dobby.utils.Utils.runSystemCommand;
 
 /**
  * Created by vivek on 4/2/17.
@@ -96,13 +95,14 @@ public class PingAction {
         Log.v(TAG, "Starting ping for IP: " + ipAddress);
         String output = EMPTY_STRING;
         try {
-            output = runSystemCommand("ping -w 0.2 -c " + numberOfPings + " " + ipAddress);
+            output = Utils.runSystemCommand("ping -w 0.2 -c " + numberOfPings + " " + ipAddress);
         } catch (Exception e) {
             throw new PingActionException(PING_EXCEPTION_COMMAND_NOT_FOUND, ipAddress);
         }
         Log.v(TAG, "Ending ping for IP: " + ipAddress);
         return output;
     }
+
 
     public HashMap<String, PingStats> pingAndReturnStatsList(String[] pingAddressList, int timeOut, int numberOfPings) {
         if (pingAddressList == null) {
