@@ -171,11 +171,6 @@ public class FakePingAnalyzer extends PingAnalyzer {
             externalServer2LossRangePercent = LossRangePercent.UNREACHABLE;
         }
 
-        FakePingConfig() {
-            //Default config
-            InitializeToWorkingState();
-        }
-
         FakePingConfig(@PingStatsMode int mode) {
             InitializeToWorkingState();
             switch (mode) {
@@ -347,7 +342,7 @@ public class FakePingAnalyzer extends PingAnalyzer {
         fakePingResultsFuture = dobbyThreadpool.getListeningScheduledExecutorService().schedule(new Callable<HashMap<String, PingStats>>() {
             @Override
             public HashMap<String, PingStats> call() {
-                HashMap<String, PingStats> pingStatsHashMap = generateFakePingStats(DEFAULT_WORKING_STATE);
+                HashMap<String, PingStats> pingStatsHashMap = generateFakePingStats(pingStatsMode);
                 ipLayerPingStats = pingStatsHashMap;
                 Log.v(TAG, "Ping Info: " + ipLayerPingStats.toString());
                 eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.PING_INFO_AVAILABLE));
