@@ -26,16 +26,17 @@ import static com.inceptai.dobby.DobbyApplication.TAG;
 public class PingAnalyzer {
     public static final int MAX_ASYNC_PING = 10;
 
-    private IPLayerInfo ipLayerInfo;
-    private HashMap<String, PingStats> ipLayerPingStats;
-    private DobbyThreadpool dobbyThreadpool;
-    private DobbyEventBus eventBus;
+    protected IPLayerInfo ipLayerInfo;
+    protected HashMap<String, PingStats> ipLayerPingStats;
+    protected DobbyThreadpool dobbyThreadpool;
+    protected DobbyEventBus eventBus;
+
     private PingAction pingAction;
     private PingActionListener pingActionListener;
     private ConcurrentHashMap<String, Boolean> pingsInFlight;
     private SettableFuture<HashMap<String, PingStats>> pingResultsFuture;
 
-    private PingAnalyzer(IPLayerInfo ipLayerInfo, DobbyThreadpool dobbyThreadpool, DobbyEventBus eventBus) {
+    protected PingAnalyzer(IPLayerInfo ipLayerInfo, DobbyThreadpool dobbyThreadpool, DobbyEventBus eventBus) {
         this.ipLayerInfo = ipLayerInfo;
         this.dobbyThreadpool = dobbyThreadpool;
         this.eventBus = eventBus;

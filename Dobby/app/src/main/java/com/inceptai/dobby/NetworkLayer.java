@@ -12,6 +12,7 @@ import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.IPLayerInfo;
 import com.inceptai.dobby.model.PingStats;
 import com.inceptai.dobby.ping.PingAnalyzer;
+import com.inceptai.dobby.ping.PingAnalyzerFactory;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
 import com.inceptai.dobby.speedtest.NewBandwidthAnalyzer;
 import com.inceptai.dobby.wifi.ConnectivityAnalyzer;
@@ -57,7 +58,7 @@ public class NetworkLayer {
         if (wifiAnalyzer != null) {
             ipLayerInfo = new IPLayerInfo(wifiAnalyzer.getDhcpInfo());
         }
-        pingAnalyzer = PingAnalyzer.create(ipLayerInfo, threadpool, eventBus);
+        pingAnalyzer = PingAnalyzerFactory.create(ipLayerInfo, threadpool, eventBus);
         connectivityAnalyzer = ConnectivityAnalyzer.create(context, threadpool, eventBus);
         eventBus.registerListener(this);
     }
