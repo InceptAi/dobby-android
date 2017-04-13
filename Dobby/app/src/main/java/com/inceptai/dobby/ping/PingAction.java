@@ -179,6 +179,7 @@ public class PingAction {
                 }
             }
         }
+        pingStatsToReturn.updatedAt = System.currentTimeMillis();
         return pingStatsToReturn;
     }
 

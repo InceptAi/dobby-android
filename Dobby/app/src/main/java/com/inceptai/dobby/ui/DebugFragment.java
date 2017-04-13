@@ -15,11 +15,14 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.google.common.base.Strings;
+import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.NetworkLayer;
 import com.inceptai.dobby.R;
+import com.inceptai.dobby.eventbus.DobbyEvent;
+import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.BandwidthStats;
 import com.inceptai.dobby.model.PingStats;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
@@ -62,16 +65,22 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
     NetworkLayer networkLayer;
     @Inject
     DobbyThreadpool threadpool;
+    @Inject
+    DobbyEventBus eventBus;
+
 
     public DebugFragment() {
         // Required empty public constructor
     }
 
 
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         ((DobbyApplication) getActivity().getApplication()).getProdComponent().inject(this);
+        //Assigning listener for event bus
+        eventBus.registerListener(this);
 
         // Inflate the layout for this fragment
         View mainView =  inflater.inflate(R.layout.fragment_debug, container, false);
@@ -124,16 +133,6 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
         } else if (TAG_PING.equals(tag)) {
             addConsoleText("\nStarting Ping.");
             startPing();
-            //TODO: Remove this hack testing.
-            try {
-                Thread.sleep(500);
-                addConsoleText("\nCancelling Ping.");
-            } catch (InterruptedException e) {
-                addConsoleText("\nException while sleeping.");
-            } finally {
-                addConsoleText("\nStarting Ping again");
-                startPing();
-            }
         } else if (TAG_WIFI_SCAN.equals(tag)) {
             addConsoleText("\nStarting Wifi scan...");
             startWifiScan();
@@ -156,6 +155,7 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
             });
         }
     }
+
 
     private void startPing() {
         final long startedAt = System.currentTimeMillis();
@@ -256,5 +256,11 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
     public void onBandwidthTestError(@BandwithTestCodes.BandwidthTestMode int testMode, @BandwithTestCodes.BandwidthTestErrorCodes int errorCode, @Nullable String errorMessage) {
         String msg = Strings.isNullOrEmpty(errorMessage) ? "" : errorMessage;
         addConsoleText("Bandwidth test error, errorCode: " + errorCode + ",  " + msg);
+    }
+
+
+    @Subscribe
+    public void listen(DobbyEvent event) {
+        addConsoleText("Found event on dobby event bus: " + event.toString());
     }
 }

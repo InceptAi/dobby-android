@@ -1,18 +1,23 @@
 package com.inceptai.dobby.ping;
 
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import com.google.common.base.Preconditions;
+import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import com.inceptai.dobby.DobbyThreadpool;
+import com.inceptai.dobby.eventbus.DobbyEvent;
+import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.IPLayerInfo;
 import com.inceptai.dobby.model.PingStats;
 
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
+import static com.inceptai.dobby.DobbyApplication.TAG;
 
 /**
  * Created by vivek on 4/8/17.
@@ -24,15 +29,18 @@ public class PingAnalyzer {
     private IPLayerInfo ipLayerInfo;
     private HashMap<String, PingStats> ipLayerPingStats;
     private DobbyThreadpool dobbyThreadpool;
+    private DobbyEventBus eventBus;
     private PingAction pingAction;
     private PingActionListener pingActionListener;
     private ConcurrentHashMap<String, Boolean> pingsInFlight;
     private SettableFuture<HashMap<String, PingStats>> pingResultsFuture;
 
-    private PingAnalyzer(IPLayerInfo ipLayerInfo, DobbyThreadpool dobbyThreadpool) {
+    private PingAnalyzer(IPLayerInfo ipLayerInfo, DobbyThreadpool dobbyThreadpool, DobbyEventBus eventBus) {
         this.ipLayerInfo = ipLayerInfo;
-        pingActionListener = new PingActionListener();
         this.dobbyThreadpool = dobbyThreadpool;
+        this.eventBus = eventBus;
+        this.eventBus.registerListener(this);
+        pingActionListener = new PingActionListener();
         pingAction = PingAction.create(pingActionListener);
         pingsInFlight = new ConcurrentHashMap<String, Boolean>();
         ipLayerPingStats = new HashMap<>();
@@ -56,10 +64,11 @@ public class PingAnalyzer {
      */
     @Nullable
     public static PingAnalyzer create(IPLayerInfo ipLayerInfo,
-                                      DobbyThreadpool dobbyThreadpool) {
+                                      DobbyThreadpool dobbyThreadpool,
+                                      DobbyEventBus eventBus) {
         Preconditions.checkNotNull(ipLayerInfo);
         Preconditions.checkNotNull(dobbyThreadpool);
-        return new PingAnalyzer(ipLayerInfo, dobbyThreadpool);
+        return new PingAnalyzer(ipLayerInfo, dobbyThreadpool, eventBus);
     }
 
     private void schedulePingAndReturn(String[] pingAddressList) {
@@ -104,14 +113,12 @@ public class PingAnalyzer {
     }
 
     private ListenableFuture<HashMap<String, PingStats>> scheduleEssentialPingTestsAsync() throws IllegalStateException {
-
+        eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.PING_STARTED));
         if (ipLayerInfo == null) {
-            throw new IllegalStateException("Cannot schedule pings when iplayerInfo is null");
+            //Try to get new iplayerInfo
+            eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.PING_FAILED));
+            throw new IllegalStateException("Cannot schedule pings when iplayerInfo is null or own IP is 0.0.0.0");
         }
-
-        //if (pingResultsFuture != null && !pingResultsFuture.isDone()) {
-        //    throw new IllegalStateException("Cannot run another ping while one is running.");
-        //}
         pingsInFlight.clear();
         String[] addressList = {ipLayerInfo.gateway, ipLayerInfo.dns1,ipLayerInfo.dns2,
                 ipLayerInfo.referenceExternalAddress1, ipLayerInfo.referenceExternalAddress2};
@@ -127,9 +134,26 @@ public class PingAnalyzer {
         return ipLayerPingStats;
     }
 
-    public ListenableFuture<HashMap<String, PingStats>> updateIPLayerInfo(IPLayerInfo updatedInfo) throws IllegalStateException {
+    public boolean checkIfShouldRedoPingStats(int minGapToRetriggerPing, int lossRateToTriggerPing) {
+        boolean redoPing = false;
+        long maxTimeUpdatedAt = 0;
+        for (PingStats pingStats : ipLayerPingStats.values()) {
+            maxTimeUpdatedAt = Math.max(maxTimeUpdatedAt, pingStats.updatedAt);
+            if (pingStats.lossRatePercent == -1 || pingStats.lossRatePercent > lossRateToTriggerPing) {
+                redoPing = true;
+                break;
+            }
+        }
+        long gap = System.currentTimeMillis() - maxTimeUpdatedAt;
+        Log.v(TAG, "Gap is " + gap);
+        if (gap > minGapToRetriggerPing) {
+            redoPing = true;
+        }
+        return redoPing;
+    }
+
+    public void updateIPLayerInfo(IPLayerInfo updatedInfo) {
         this.ipLayerInfo = updatedInfo;
-        return scheduleEssentialPingTestsAsync();
     }
 
     private class PingActionListener implements PingAction.ResultsCallback {
@@ -150,16 +174,23 @@ public class PingAnalyzer {
                 //Return the results here
                 if (pingResultsFuture != null) {
                     pingResultsFuture.set(ipLayerPingStats);
+                    Log.v(TAG, "Ping Info: " + ipLayerPingStats.toString());
+                    eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.PING_INFO_AVAILABLE));
                 }
             }
         }
 
         @Override
         public void onError(@PingAction.PingErrorCode int errorType, String[] addressList, String errorMessage) {
+            eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.PING_FAILED));
             for (String address: addressList) {
                 pingsInFlight.put(address, false);
             }
         }
+    }
+
+    @Subscribe
+    public void listen(DobbyEvent event) {
     }
 
 
