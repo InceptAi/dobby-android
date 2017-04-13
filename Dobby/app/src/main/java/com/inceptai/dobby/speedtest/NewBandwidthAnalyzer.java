@@ -10,6 +10,7 @@ import android.util.Log;
 
 import com.google.common.base.Preconditions;
 import com.inceptai.dobby.DobbyThreadpool;
+import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.BandwidthStats;
 import com.inceptai.dobby.speedtest.BandwithTestCodes.BandwidthTestErrorCodes;
 import com.inceptai.dobby.speedtest.BandwithTestCodes.BandwidthTestMode;
@@ -54,6 +55,7 @@ public class NewBandwidthAnalyzer {
     private NewDownloadAnalyzer downloadAnalyzer;
     private NewUploadAnalyzer uploadAnalyzer;
     private DobbyThreadpool dobbyThreadpool;
+    private DobbyEventBus eventBus;
 
     private BandwidthTestListener bandwidthTestListener;
 
@@ -114,9 +116,10 @@ public class NewBandwidthAnalyzer {
     }
 
     @Inject
-    public NewBandwidthAnalyzer(DobbyThreadpool dobbyThreadpool) {
+    public NewBandwidthAnalyzer(DobbyThreadpool dobbyThreadpool, DobbyEventBus eventBus) {
         this.bandwidthTestListener = new BandwidthTestListener();
         this.testMode = BandwidthTestMode.IDLE;
+        this.eventBus = eventBus;
         this.parseSpeedTestConfig = new ParseSpeedTestConfig(this.bandwidthTestListener);
         this.parseServerInformation = new ParseServerInformation(this.bandwidthTestListener);
         this.dobbyThreadpool = dobbyThreadpool;
@@ -128,9 +131,9 @@ public class NewBandwidthAnalyzer {
      * @return Instance of BandwidthAnalyzer or null on error.
      */
     @Nullable
-    public static NewBandwidthAnalyzer create(ResultsCallback resultsCallback, DobbyThreadpool dobbyThreadpool) {
+    public static NewBandwidthAnalyzer create(ResultsCallback resultsCallback, DobbyThreadpool dobbyThreadpool, DobbyEventBus eventBus) {
         Preconditions.checkNotNull(dobbyThreadpool);
-        NewBandwidthAnalyzer analyzer = new NewBandwidthAnalyzer(dobbyThreadpool);
+        NewBandwidthAnalyzer analyzer = new NewBandwidthAnalyzer(dobbyThreadpool, eventBus);
         analyzer.registerCallback(resultsCallback);
         return analyzer;
     }

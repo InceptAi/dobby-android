@@ -1,19 +1,20 @@
 package com.inceptai.dobby;
 
 import android.content.Context;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.wifi.ScanResult;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.google.common.base.Preconditions;
+import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.inceptai.dobby.eventbus.DobbyEvent;
+import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.IPLayerInfo;
 import com.inceptai.dobby.model.PingStats;
 import com.inceptai.dobby.ping.PingAnalyzer;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
 import com.inceptai.dobby.speedtest.NewBandwidthAnalyzer;
+import com.inceptai.dobby.wifi.ConnectivityAnalyzer;
 import com.inceptai.dobby.wifi.WifiAnalyzer;
 import com.inceptai.dobby.wifi.WifiStats;
 
@@ -30,27 +31,35 @@ import static com.inceptai.dobby.DobbyApplication.TAG;
  */
 
 public class NetworkLayer {
+    public static final int MIN_TIME_GAP_TO_RETRIGGER_PING_MS = 10000; //10sec
+    public static final int MIN_PKT_LOSS_RATE_TO_RETRIGGER_PING_PERCENT = 50;
+
     private Context context;
     private DobbyThreadpool threadpool;
+    private DobbyEventBus eventBus;
     private WifiAnalyzer wifiAnalyzer;
     private PingAnalyzer pingAnalyzer;
     private IPLayerInfo ipLayerInfo;
+    private ConnectivityAnalyzer connectivityAnalyzer;
 
     @Inject
     NewBandwidthAnalyzer bandwidthAnalyzer;
 
     // Use Dagger to get a singleton instance of this class.
-    public NetworkLayer(Context context, DobbyThreadpool threadpool) {
+    public NetworkLayer(Context context, DobbyThreadpool threadpool, DobbyEventBus eventBus) {
         this.context = context;
         this.threadpool = threadpool;
+        this.eventBus = eventBus;
     }
 
     public void initialize() {
-        wifiAnalyzer = WifiAnalyzer.create(context, threadpool);
+        wifiAnalyzer = WifiAnalyzer.create(context, threadpool, eventBus);
         if (wifiAnalyzer != null) {
             ipLayerInfo = new IPLayerInfo(wifiAnalyzer.getDhcpInfo());
         }
-        pingAnalyzer = PingAnalyzer.create(ipLayerInfo, threadpool);
+        pingAnalyzer = PingAnalyzer.create(ipLayerInfo, threadpool, eventBus);
+        connectivityAnalyzer = ConnectivityAnalyzer.create(context, threadpool, eventBus);
+        eventBus.registerListener(this);
     }
 
     public ListenableFuture<List<ScanResult>> wifiScan() {
@@ -71,30 +80,43 @@ public class NetworkLayer {
         return null;
     }
 
-    public boolean checkWiFiConnectivity() throws IllegalStateException {
-        Preconditions.checkNotNull(context);
-        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        if (connectivityManager == null) {
-            throw new IllegalStateException("Cannot get ConnectivityManager to determine WiFi data connectivity");
-        }
-        final NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
-        if (activeNetwork != null && activeNetwork.getType() == ConnectivityManager.TYPE_WIFI && activeNetwork.isConnected()) {
-            return true;
-        }
-        return false;
-    }
 
-    public void startBandwidthTest(NewBandwidthAnalyzer.ResultsCallback resultsCallback,
+    public boolean startBandwidthTest(NewBandwidthAnalyzer.ResultsCallback resultsCallback,
                                    @BandwithTestCodes.BandwidthTestMode int testMode) {
-
-        bandwidthAnalyzer.registerCallback(resultsCallback);
-        Log.i(TAG, "NetworkLayer: Going to start bandwidth test.");
-        bandwidthAnalyzer.startBandwidthTestSafely(testMode);
+        if (connectivityAnalyzer.isWifiOnline()) {
+            bandwidthAnalyzer.registerCallback(resultsCallback);
+            Log.i(TAG, "NetworkLayer: Going to start bandwidth test.");
+            bandwidthAnalyzer.startBandwidthTestSafely(testMode);
+            return true;
+        } else {
+            Log.i(TAG, "NetworkLayer: Wifi is offline, so cannot run bandwidth tests");
+            return false;
+        }
     }
 
     public void cancelBandwidthTests() {
         bandwidthAnalyzer.cancelBandwidthTests();
     }
 
+    public HashMap<String, PingStats> getRecentIPLayerPingStats() {
+        return pingAnalyzer.getRecentIPLayerPingStats();
+    }
+
+    //Process events from eventbus
+
+    @Subscribe
+    public void listen(DobbyEvent event) {
+        if (event.getLastEventType() == DobbyEvent.EventType.DHCP_INFO_AVAILABLE) {
+            IPLayerInfo updatedIPLayerInfo = new IPLayerInfo(wifiAnalyzer.getDhcpInfo());
+            if (updatedIPLayerInfo != null) {
+                pingAnalyzer.updateIPLayerInfo(updatedIPLayerInfo);
+                startPing();
+            }
+        } else if (event.getLastEventType() == DobbyEvent.EventType.WIFI_INTERNET_CONNECTIVITY_ONLINE) {
+            if (pingAnalyzer.checkIfShouldRedoPingStats(MIN_TIME_GAP_TO_RETRIGGER_PING_MS, MIN_PKT_LOSS_RATE_TO_RETRIGGER_PING_PERCENT)) {
+                startPing();
+            }
+        }
+    }
 
 }

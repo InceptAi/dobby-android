@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 
@@ -37,7 +38,7 @@ public class Utils {
      * @return
      * @throws IOException
      */
-    public static String getDataFromUrl(String urlString, int maxStringLength) throws IOException {
+    public static String getDataFromUrl(String urlString, int maxStringLength) throws IOException, MalformedURLException {
         String outputString = null;
         InputStream stream = null;
         URL url = new URL(urlString);
@@ -58,7 +59,7 @@ public class Utils {
         }
         outputString = readStream(stream, maxStringLength);
         if (stream != null) {
-                stream.close();
+            stream.close();
         }
         if (connection != null) {
             connection.disconnect();
@@ -118,7 +119,7 @@ public class Utils {
      * @throws IOException
      */
     public static String readStream(InputStream stream, int maxLength) throws IOException {
-        String result = null;
+        String result = Utils.EMPTY_STRING;
         // Read InputStream using the UTF-8 charset.
         InputStreamReader reader = new InputStreamReader(stream, "UTF-8");
         // Create temporary buffer to hold Stream data with specified max length.

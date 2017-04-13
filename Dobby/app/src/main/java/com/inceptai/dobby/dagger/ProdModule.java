@@ -4,6 +4,7 @@ import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.ai.DobbyAi;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.NetworkLayer;
+import com.inceptai.dobby.eventbus.DobbyEventBus;
 
 import javax.inject.Singleton;
 
@@ -34,6 +35,15 @@ public class ProdModule {
         return new DobbyThreadpool();
     }
 
+
+    /*
+    @Singleton
+    @Provides
+    public DobbyEventBus providesEventBus() {
+        return new DobbyEventBus();
+    }
+    */
+
     @Singleton
     @Provides
     public DobbyAi providesDobbyAi(DobbyApplication application, DobbyThreadpool threadpool) {
@@ -44,10 +54,14 @@ public class ProdModule {
 
     @Singleton
     @Provides
-    public NetworkLayer providesNetworkLayer(DobbyApplication application, DobbyThreadpool threadpool) {
-        NetworkLayer networkLayer = new NetworkLayer(application.getApplicationContext(), threadpool);
+    public NetworkLayer providesNetworkLayer(DobbyApplication application,
+                                             DobbyThreadpool threadpool,
+                                             DobbyEventBus eventBus) {
+        NetworkLayer networkLayer = new NetworkLayer(application.getApplicationContext(),
+                threadpool, eventBus);
         application.getProdComponent().inject(networkLayer);
         networkLayer.initialize();
         return networkLayer;
     }
+
 }

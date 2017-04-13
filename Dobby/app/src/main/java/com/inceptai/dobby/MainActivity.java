@@ -28,6 +28,7 @@ import android.widget.Toast;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.dobby.ai.DobbyAi;
 import com.inceptai.dobby.ai.RtDataSource;
+import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.ui.ChatFragment;
 import com.inceptai.dobby.ui.DebugFragment;
 import com.inceptai.dobby.ui.WifiFragment;
@@ -50,6 +51,8 @@ public class MainActivity extends AppCompatActivity
     @Inject DobbyThreadpool threadpool;
     @Inject DobbyAi dobbyAi;
     @Inject NetworkLayer networkLayer;
+    @Inject DobbyEventBus eventBus;
+
     private Handler handler;
     private ChatFragment chatFragment;
 
