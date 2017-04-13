@@ -20,6 +20,7 @@ import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.fake.FakeWifiAnalyzer;
+import com.inceptai.dobby.model.DobbyWifiInfo;
 
 import java.util.List;
 
@@ -33,7 +34,6 @@ public class WifiAnalyzer {
 
     private static final int WIFI_RECEIVER_UNREGISTERED = 0;
     private static final int WIFI_RECEIVER_REGISTERED = 1;
-    private static final String UNINITIALIZED_IP_ADDRESS = "0.0.0.0";
 
     // Store application context to prevent leaks and crashes from an activity going out of scope.
     private Context context;
@@ -60,7 +60,7 @@ public class WifiAnalyzer {
         wifiConnected = false;
         wifiEnabled = false;
         wifiStats = new WifiStats();
-        wifiStats.updateWifiStats(wifiManager.getConnectionInfo(), null);
+        wifiStats.updateWifiStats(new DobbyWifiInfo(wifiManager.getConnectionInfo()), null);
         registerWifiStateReceiver();
         fakeWifiAnalyzer = new FakeWifiAnalyzer(threadpool);
     }
@@ -123,10 +123,6 @@ public class WifiAnalyzer {
     private void unregisterScanReceiver() {
         context.unregisterReceiver(wifiScanReceiver);
         wifiReceiverState = WIFI_RECEIVER_UNREGISTERED;
-    }
-
-    public DhcpInfo getDhcpInfo() {
-        return wifiManager.getDhcpInfo();
     }
 
     private class WifiReceiver extends BroadcastReceiver {
@@ -213,11 +209,12 @@ public class WifiAnalyzer {
             if (wifiConnected && !wasConnected) {
                 // try getting it out of the intent first
                 WifiInfo info = (WifiInfo) intent.getParcelableExtra(WifiManager.EXTRA_WIFI_INFO);
-
                 if (info == null) {
                     info = wifiManager.getConnectionInfo();
                 }
-                wifiStats.updateWifiStats(info, null);
+                //Convert to DobbyWifiInfo
+                DobbyWifiInfo dobbyWifiInfo = new DobbyWifiInfo(info);
+                wifiStats.updateWifiStats(dobbyWifiInfo, null);
 
                 DhcpInfo dhcpInfo = getDhcpInfo();
                 if (dhcpInfo != null && dhcpInfo.ipAddress != 0) {
@@ -235,21 +232,6 @@ public class WifiAnalyzer {
             eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.WIFI_RSSI_CHANGED));
             int updatedSignal = intent.getIntExtra(WifiManager.EXTRA_NEW_RSSI, 0);
             wifiStats.updateSignal(updatedSignal);
-        }
-    }
-
-    private class WifiReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context c, Intent intent) {
-            final String action = intent.getAction();
-            if (action.equals(WifiManager.RSSI_CHANGED_ACTION)
-                    || action.equals(WifiManager.WIFI_STATE_CHANGED_ACTION)
-                    || action.equals(WifiManager.NETWORK_STATE_CHANGED_ACTION)) {
-                updateWifiState(intent);
-            } else if (action.equals(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)) {
-                updateWifiScanResults();
-                unregisterScanReceiver();
-            }
         }
     }
 

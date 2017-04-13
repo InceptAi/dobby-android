@@ -1,11 +1,11 @@
 package com.inceptai.dobby.wifi;
 
 import android.net.wifi.ScanResult;
-import android.net.wifi.WifiInfo;
 import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
 
 import com.google.gson.Gson;
+import com.inceptai.dobby.model.DobbyWifiInfo;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -67,7 +67,7 @@ public class WifiStats {
     }
 
 
-    public void updateWifiStats(@Nullable WifiInfo wifiInfo, @Nullable List<ScanResult> scanResultList) {
+    public void updateWifiStats(@Nullable DobbyWifiInfo wifiInfo, @Nullable List<ScanResult> scanResultList) {
         if (wifiInfo != null) {
             linkSSID = wifiInfo.getSSID();
             linkBSSID = wifiInfo.getBSSID();
@@ -84,19 +84,6 @@ public class WifiStats {
         }
 
     }
-
-    /*
-    private void sortChannelInfoByContention() {
-        Ordering<Map.Entry<Integer, ChannelInfo>> byMapValues = new Ordering<Map.Entry<Integer, ChannelInfo>>() {
-            @Override
-            public int compare(Map.Entry<Integer, ChannelInfo> left, Map.Entry<Integer, ChannelInfo> right) {
-                return (int)(left.getValue().contentionMetric * 1000 - right.getValue().contentionMetric * 1000);
-            }
-        };
-        List<Map.Entry<Integer, ChannelInfo>> channelInfoList = Lists.newArrayList(channelInfoMap.entrySet());
-        Collections.sort(channelInfoList, byMapValues);
-    }
-    */
 
     public String toJson() {
         Gson gson = new Gson();
