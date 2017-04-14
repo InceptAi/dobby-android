@@ -278,7 +278,7 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
             hasChanged = true;
             //noinspection ResourceType
             FakePingAnalyzer.pingStatsMode = selectedMode;
-            Log.i(TAG, "Setting ping stats mode to : " + FakePingAnalyzer.getPingStatsModeName(FakePingAnalyzer.pingStatsMode));
+            Log.i(TAG, "FAKE Setting ping stats mode to : " + FakePingAnalyzer.getPingStatsModeName(FakePingAnalyzer.pingStatsMode));
         }
         return hasChanged;
     }
