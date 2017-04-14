@@ -25,6 +25,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import static com.inceptai.dobby.DobbyApplication.TAG;
+import static com.inceptai.dobby.ping.PingAnalyzerFactory.getPingAnalyzer;
 
 /**
  * This class abstracts out the implementation details of all things 'network' related. The UI and
@@ -74,6 +75,7 @@ public class NetworkLayer {
     @Nullable
     public ListenableFuture<HashMap<String, PingStats>> startPing() {
         try {
+            // getPingAnalyzer()
             return pingAnalyzer.scheduleEssentialPingTestsAsyncSafely();
         } catch (IllegalStateException e) {
             Log.v(TAG, "Exception while scheduling ping tests: " + e);
