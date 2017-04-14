@@ -121,7 +121,7 @@ public class InferenceEngine {
     }
 
     public void cleanup() {
-        if (!bandwidthCheckFuture.isDone()) {
+        if (bandwidthCheckFuture!= null && !bandwidthCheckFuture.isDone()) {
             bandwidthCheckFuture.cancel(true);
             bandwidthCheckFuture = null;
         }
