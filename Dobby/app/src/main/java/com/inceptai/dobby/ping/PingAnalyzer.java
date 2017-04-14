@@ -236,14 +236,16 @@ public class PingAnalyzer {
         }
 
         //Compute avg, min, max
-        try {
-            Collections.sort(latencyMeasurementsMs);
-            downloadLatencyStats.avgLatencyMs = Utils.computePercentileFromSortedList(latencyMeasurementsMs, 50);
-            downloadLatencyStats.maxLatencyMs = Utils.computePercentileFromSortedList(latencyMeasurementsMs, 100);
-            downloadLatencyStats.minLatencyMs = Utils.computePercentileFromSortedList(latencyMeasurementsMs, 0);
-        } catch (IllegalArgumentException e) {
-            String errorString = "Got exception while computing average: " + e;
-            Log.v(TAG, errorString);
+        if (latencyMeasurementsMs.size() > 0) {
+            try {
+                Collections.sort(latencyMeasurementsMs);
+                downloadLatencyStats.avgLatencyMs = Utils.computePercentileFromSortedList(latencyMeasurementsMs, 50);
+                downloadLatencyStats.maxLatencyMs = Utils.computePercentileFromSortedList(latencyMeasurementsMs, 100);
+                downloadLatencyStats.minLatencyMs = Utils.computePercentileFromSortedList(latencyMeasurementsMs, 0);
+            } catch (IllegalArgumentException e) {
+                String errorString = "Got exception while computing average: " + e;
+                Log.v(TAG, errorString);
+            }
         }
         gatewayDownloadLatencyTestStats = downloadLatencyStats;
         gatewayDownloadTestFuture.set(gatewayDownloadLatencyTestStats);
