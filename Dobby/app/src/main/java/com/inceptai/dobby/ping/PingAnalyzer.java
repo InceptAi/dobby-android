@@ -194,8 +194,8 @@ public class PingAnalyzer {
             }
             if (checkIfAllPingsDone() && pingInProgress.get()) {
                 //Return the results here
+                pingInProgress.set(false);
                 if (pingResultsFuture != null) {
-                    pingInProgress.set(false);
                     pingResultsFuture.set(ipLayerPingStats);
                     Log.v(TAG, "IP Layer Ping Stats " + ipLayerPingStats.toString());
                     eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.PING_INFO_AVAILABLE));
