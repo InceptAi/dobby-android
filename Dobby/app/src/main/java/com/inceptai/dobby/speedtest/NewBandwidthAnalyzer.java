@@ -33,7 +33,7 @@ import static com.inceptai.dobby.DobbyApplication.TAG;
 public class NewBandwidthAnalyzer {
     private static final int DOWNLOAD_THREADS = 2;
     private static final int UPLOAD_THREADS = 2;
-    private static final int REPORT_INTERVAL_MS = 500;
+    private static final int REPORT_INTERVAL_MS = 200;
 
     @IntDef({BandwidthAnalyzerState.STOPPED, BandwidthAnalyzerState.RUNNING,
             BandwidthAnalyzerState.CANCELLING, BandwidthAnalyzerState.CANCELLED})
@@ -235,6 +235,7 @@ public class NewBandwidthAnalyzer {
 
         @Override
         public void onFinish(@BandwidthTestMode int callbackTestMode, BandwidthStats bandwidthStats) {
+            Log.v(TAG, "NewBandwidthAnalyzer  onFinish");
             if (resultsCallback != null) {
                 resultsCallback.onTestFinished(callbackTestMode, bandwidthStats);
             }
@@ -254,6 +255,7 @@ public class NewBandwidthAnalyzer {
 
         @Override
         public void onProgress(@BandwidthTestMode int callbackTestMode, double instantBandwidth) {
+            Log.v(TAG, "NewBandwidthAnalyzer  onProgress");
             if (resultsCallback != null) {
                 resultsCallback.onTestProgress(callbackTestMode, instantBandwidth);
             }

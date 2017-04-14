@@ -3,7 +3,6 @@ package com.inceptai.dobby.speedtest;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.inceptai.dobby.fake.FakeSpeedTestSocket;
 import com.inceptai.dobby.model.BandwidthStats;
 import com.inceptai.dobby.utils.Utils;
 
@@ -118,21 +117,26 @@ public class BandwidthAggregator {
     synchronized  private boolean checkIfAllThreadsDone() {
         for (int threadIndex=0; threadIndex < testInFlight.length; threadIndex++) {
             if (testInFlight[threadIndex]) {
+                Log.v(TAG, "Thread not done index: " + threadIndex);
                 return false;
             }
         }
+        Log.v(TAG, "All threads are done ");
         return true;
     }
 
     synchronized private void updateTestAsDone(int id) {
+        Log.v(TAG, "Coming into updateTestasDone for id: " + id);
         if (id < MAX_THREADS) {
             testInFlight[id] = false;
+            Log.v(TAG, "Updating listener as done with id: " + id);
         }
     }
 
     synchronized private void updateTestAsStarted(int id) {
         if (id < MAX_THREADS) {
             testInFlight[id] = true;
+            Log.v(TAG, "Updating listener as started with id: " + id);
         }
     }
 
@@ -252,6 +256,7 @@ public class BandwidthAggregator {
             // called when a download report is dispatched
             // called to notify download progress
             //Update transfer rate
+            Log.v(TAG, "onReport id " + id);
             if (isListenerCancelled()) {
                 return;
             }
@@ -269,17 +274,15 @@ public class BandwidthAggregator {
             // called when repeat task is finished
             // called to notify download progress
             // If we are trying to cancel, return now.
+            Log.v(TAG, "OnFinish id: " + id);
+            updateTestAsDone(id);
             if (isListenerCancelled()) {
                 return;
             }
             anyThreadFinished.set(true);
-            updateTestAsDone(id);
-            if (resultsCallback != null && checkIfAllThreadsDone()) {
-                resultsCallback.onFinish(getFinalBandwidthStats());
-                try {
-                    Thread.sleep(200);
-                } catch (InterruptedException e) {
-                    Log.v(TAG, "Interrupted");
+            if (checkIfAllThreadsDone()) {
+                if (resultsCallback != null) {
+                    resultsCallback.onFinish(getFinalBandwidthStats());
                 }
                 cleanUpOnCancellationOrFinish();
             }
@@ -322,6 +325,7 @@ public class BandwidthAggregator {
 
         @Override
         public void onInterruption() {
+            Log.v(TAG, "onInterruption id " + id);
             if (cancelling.get()) {
                 markListenerAsCancelled();
             }

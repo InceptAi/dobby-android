@@ -1,6 +1,7 @@
 package com.inceptai.dobby.ai;
 
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import com.inceptai.dobby.model.BandwidthStats;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
@@ -10,6 +11,8 @@ import com.inceptai.dobby.speedtest.SpeedTestConfig;
 
 import java.util.HashSet;
 import java.util.List;
+
+import static android.content.ContentValues.TAG;
 
 /**
  * Created by arunesh on 4/6/17.
@@ -46,6 +49,7 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
 
     @Override
     public void onTestFinished(@BandwithTestCodes.BandwidthTestMode int testMode, BandwidthStats stats) {
+        Log.v(TAG, "BandwidthObserver onTestFinished");
         inferenceEngine.notifyBandwidthTestResult(testMode, stats.getPercentile90());
 
         for (RtDataListener<Float> listener : listeners) {
@@ -56,6 +60,7 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
 
     @Override
     public void onTestProgress(@BandwithTestCodes.BandwidthTestMode int testMode, double instantBandwidth) {
+        Log.v(TAG, "BandwidthObserver onTestProgress");
         inferenceEngine.notifyBandwidthTestProgress(testMode, instantBandwidth);
 
         for (RtDataListener<Float> listener : listeners) {
@@ -64,7 +69,9 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
     }
 
     @Override
-    public void onBandwidthTestError(@BandwithTestCodes.BandwidthTestMode int testMode, @BandwithTestCodes.BandwidthTestErrorCodes int errorCode, @Nullable String errorMessage) {
+    public void onBandwidthTestError(@BandwithTestCodes.BandwidthTestMode int testMode,
+                                     @BandwithTestCodes.BandwidthTestErrorCodes int errorCode,
+                                     @Nullable String errorMessage) {
 
     }
 
