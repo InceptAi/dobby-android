@@ -14,10 +14,17 @@ import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.IPLayerInfo;
 import com.inceptai.dobby.model.PingStats;
+import com.inceptai.dobby.utils.Utils;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+
 import static com.inceptai.dobby.DobbyApplication.TAG;
+import static com.inceptai.dobby.speedtest.BestServerSelector.MAX_STRING_LENGTH;
 
 /**
  * Created by vivek on 4/8/17.
@@ -25,9 +32,12 @@ import static com.inceptai.dobby.DobbyApplication.TAG;
 
 public class PingAnalyzer {
     public static final int MAX_ASYNC_PING = 10;
+    public static final int MAX_GATEWAY_DOWNLOAD_TRIES = 5;
+    public static final double MAX_LATENCY_GATEWAY_MS = 60000;
 
     protected IPLayerInfo ipLayerInfo;
     protected HashMap<String, PingStats> ipLayerPingStats;
+    protected PingStats gatewayDownloadLatencyTestStats;
     protected DobbyThreadpool dobbyThreadpool;
     protected DobbyEventBus eventBus;
 
@@ -35,6 +45,8 @@ public class PingAnalyzer {
     private PingActionListener pingActionListener;
     private ConcurrentHashMap<String, Boolean> pingsInFlight;
     private SettableFuture<HashMap<String, PingStats>> pingResultsFuture;
+    private SettableFuture<PingStats> gatewayDownloadTestFuture;
+
 
     protected PingAnalyzer(IPLayerInfo ipLayerInfo, DobbyThreadpool dobbyThreadpool, DobbyEventBus eventBus) {
         this.ipLayerInfo = ipLayerInfo;
@@ -46,6 +58,7 @@ public class PingAnalyzer {
         pingsInFlight = new ConcurrentHashMap<String, Boolean>();
         ipLayerPingStats = new HashMap<>();
         initializePingStats(ipLayerInfo);
+        gatewayDownloadLatencyTestStats = new PingStats(ipLayerInfo.gateway);
     }
 
     private void initializePingStats(IPLayerInfo ipLayerInfo) {
@@ -135,6 +148,11 @@ public class PingAnalyzer {
         return ipLayerPingStats;
     }
 
+    public PingStats getRecentGatewayDownloadTestStats() {
+        return gatewayDownloadLatencyTestStats;
+    }
+
+
     public boolean checkIfShouldRedoPingStats(int minGapToRetriggerPing, int lossRateToTriggerPing) {
         boolean redoPing = false;
         long maxTimeUpdatedAt = 0;
@@ -146,7 +164,6 @@ public class PingAnalyzer {
             }
         }
         long gap = System.currentTimeMillis() - maxTimeUpdatedAt;
-        Log.v(TAG, "Gap is " + gap);
         if (gap > minGapToRetriggerPing) {
             redoPing = true;
         }
@@ -175,7 +192,7 @@ public class PingAnalyzer {
                 //Return the results here
                 if (pingResultsFuture != null) {
                     pingResultsFuture.set(ipLayerPingStats);
-                    Log.v(TAG, "Ping Info: " + ipLayerPingStats.toString());
+                    Log.v(TAG, "IP Layer Ping Stats " + ipLayerPingStats.toString());
                     eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.PING_INFO_AVAILABLE));
                 }
             }
@@ -188,6 +205,76 @@ public class PingAnalyzer {
                 pingsInFlight.put(address, false);
             }
         }
+    }
+
+
+    //Perform download tests with router
+    private void performGatewayDownloadTest() {
+        PingStats downloadLatencyStats = new PingStats(ipLayerInfo.gateway);
+        if (ipLayerInfo.gateway == null || ipLayerInfo.gateway.equals("0.0.0.0")) {
+            return;
+        }
+
+        String gatewayURLToDownload = "http://" + ipLayerInfo.gateway;
+        List<Double> latencyMeasurementsMs = new ArrayList<>();
+        for (int i = 0; i < MAX_GATEWAY_DOWNLOAD_TRIES; i++) {
+            String dataFromUrl = Utils.EMPTY_STRING;
+            long startTime = System.currentTimeMillis();
+            try {
+                dataFromUrl = Utils.getDataFromUrl(gatewayURLToDownload, MAX_STRING_LENGTH);
+                if (dataFromUrl.length() > 0) {
+                    latencyMeasurementsMs.add(Double.valueOf((double)System.currentTimeMillis() - startTime));
+                }
+            } catch (Utils.HTTPReturnCodeException e) {
+                Log.v(TAG, "Error code: " + e.httpReturnCode);
+                latencyMeasurementsMs.add(Double.valueOf((double)System.currentTimeMillis() - startTime));
+            } catch (IOException e) {
+                String errorString = "Exception while performing latencyMs test: " + e;
+                Log.v(TAG, errorString);
+                latencyMeasurementsMs.add(MAX_LATENCY_GATEWAY_MS);
+            }
+        }
+
+        //Compute avg, min, max
+        try {
+            Collections.sort(latencyMeasurementsMs);
+            downloadLatencyStats.avgLatencyMs = Utils.computePercentileFromSortedList(latencyMeasurementsMs, 50);
+            downloadLatencyStats.maxLatencyMs = Utils.computePercentileFromSortedList(latencyMeasurementsMs, 100);
+            downloadLatencyStats.minLatencyMs = Utils.computePercentileFromSortedList(latencyMeasurementsMs, 0);
+        } catch (IllegalArgumentException e) {
+            String errorString = "Got exception while computing average: " + e;
+            Log.v(TAG, errorString);
+        }
+        gatewayDownloadLatencyTestStats = downloadLatencyStats;
+        gatewayDownloadTestFuture.set(gatewayDownloadLatencyTestStats);
+        Log.v(TAG, "GW server latency is : " + gatewayDownloadLatencyTestStats.toString());
+    }
+
+    public ListenableFuture<PingStats> scheduleRouterDownloadLatencyTestSafely() throws IllegalStateException {
+        if (gatewayDownloadTestFuture != null && !gatewayDownloadTestFuture.isDone()) {
+            AsyncFunction<PingStats, PingStats> redoDownloadLatencyTest = new
+                    AsyncFunction<PingStats, PingStats>() {
+                        @Override
+                        public ListenableFuture<PingStats> apply(PingStats input) throws Exception {
+                            return scheduleGatewayDownloadLatencyTest();
+                        }
+                    };
+            ListenableFuture<PingStats> newGatewayDownloadTestFuture = Futures.transformAsync(gatewayDownloadTestFuture, redoDownloadLatencyTest);
+            return newGatewayDownloadTestFuture;
+        } else {
+            return scheduleGatewayDownloadLatencyTest();
+        }
+    }
+
+    private ListenableFuture<PingStats> scheduleGatewayDownloadLatencyTest() throws IllegalStateException {
+        dobbyThreadpool.submit(new Runnable() {
+            @Override
+            public void run() {
+                performGatewayDownloadTest();
+            }
+        });
+        gatewayDownloadTestFuture = SettableFuture.create();
+        return gatewayDownloadTestFuture;
     }
 
     @Subscribe

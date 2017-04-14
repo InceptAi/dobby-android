@@ -81,6 +81,15 @@ public class NetworkLayer {
         return null;
     }
 
+    @Nullable
+    public ListenableFuture<PingStats> startGatewayDownloadLatencyTest() {
+        try {
+            return pingAnalyzer.scheduleRouterDownloadLatencyTestSafely();
+        } catch (IllegalStateException e) {
+            Log.v(TAG, "Exception while scheduling ping tests: " + e);
+        }
+        return null;
+    }
 
     public boolean startBandwidthTest(NewBandwidthAnalyzer.ResultsCallback resultsCallback,
                                    @BandwithTestCodes.BandwidthTestMode int testMode) {
@@ -112,11 +121,13 @@ public class NetworkLayer {
             if (updatedIPLayerInfo != null) {
                 pingAnalyzer.updateIPLayerInfo(updatedIPLayerInfo);
                 startPing();
+                startGatewayDownloadLatencyTest();
             }
         } else if (event.getLastEventType() == DobbyEvent.EventType.WIFI_INTERNET_CONNECTIVITY_ONLINE) {
             if (pingAnalyzer.checkIfShouldRedoPingStats(MIN_TIME_GAP_TO_RETRIGGER_PING_MS, MIN_PKT_LOSS_RATE_TO_RETRIGGER_PING_PERCENT)) {
                 startPing();
             }
+            startGatewayDownloadLatencyTest();
         }
     }
 

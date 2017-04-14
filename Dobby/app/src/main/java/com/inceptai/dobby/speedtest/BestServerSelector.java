@@ -24,7 +24,7 @@ import static com.inceptai.dobby.DobbyApplication.TAG;
 public class BestServerSelector {
     public static final int MAX_LATENCY_TRY = 3;
     public static final int MAX_STRING_LENGTH = 100;
-    
+
     private SpeedTestConfig config;
     private ServerInformation info;
     //Results callback

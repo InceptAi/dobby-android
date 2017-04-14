@@ -3,7 +3,6 @@ package com.inceptai.dobby.utils;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.support.v7.app.AlertDialog;
-import android.util.Log;
 
 import com.google.common.net.InetAddresses;
 
@@ -15,12 +14,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 import java.util.Random;
-
-import static com.inceptai.dobby.DobbyApplication.TAG;
 
 /**
  * Utils class.
@@ -38,6 +34,14 @@ public class Utils {
         return random;
     }
 
+    public static class HTTPReturnCodeException extends IOException {
+        public int httpReturnCode = 0;
+        public HTTPReturnCodeException(int httpReturnCode) {
+            this.httpReturnCode = httpReturnCode;
+        }
+    }
+
+
     /**
      * Given a string url, connects and returns an input stream
      * @param urlString string to fetch
@@ -45,7 +49,7 @@ public class Utils {
      * @return
      * @throws IOException
      */
-    public static String getDataFromUrl(String urlString, int maxStringLength) throws IOException, MalformedURLException {
+    public static String getDataFromUrl(String urlString, int maxStringLength) throws IOException {
         String outputString = null;
         InputStream stream = null;
         URL url = new URL(urlString);
@@ -58,7 +62,7 @@ public class Utils {
         connection.connect();
         int responseCode = connection.getResponseCode();
         if (responseCode != HttpURLConnection.HTTP_OK) {
-            throw new IOException("HTTP error code: " + responseCode);
+            throw new HTTPReturnCodeException(responseCode);
         }
         stream = connection.getInputStream();
         if (stream == null) {
@@ -265,7 +269,7 @@ public class Utils {
             // reading output stream of the command
             while ((s = inputStream.readLine()) != null) {
                 outputStringBuilder.append(s);
-                Log.v(TAG, "ping response: " + s);
+                //Log.v(TAG, "ping response: " + s);
             }
 
         } catch (Exception e) {
@@ -302,8 +306,11 @@ public class Utils {
         return builder.show();
     }
 
-    public static double computePercentileFromSortedList(List<Double> sortedList, int percentile) {
+    public static double computePercentileFromSortedList(List<Double> sortedList, int percentile) throws IllegalArgumentException {
         int size = sortedList.size();
+        if (size == 0) {
+            throw new IllegalArgumentException("List is empty");
+        }
         int index = (percentile * size) / 100;
         //special case for median
         if (percentile == 50) {
@@ -312,6 +319,10 @@ public class Utils {
                 double median = (sortedList.get(index) + sortedList.get(index1)) / 2;
                 return median;
             }
+        } else if (percentile == 100) {
+            return sortedList.get(size -1);
+        } else if (percentile == 0) {
+            return sortedList.get(0);
         }
         return sortedList.get(index);
     }

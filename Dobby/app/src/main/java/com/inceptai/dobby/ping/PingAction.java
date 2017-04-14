@@ -24,9 +24,9 @@ import static com.inceptai.dobby.utils.Utils.EMPTY_STRING;
  */
 
 public class PingAction {
-    private static int defaultTimeOut = 3;
-    private static int defaultNumberOfPings = 3;
-    private static int defaultPacketSize = 1200;
+    private static int DEFAULT_TIME_OUT_SEC = 3;
+    private static int DEFAULT_NUMBER_OF_PINGS = 6;
+    private static int DEFAULT_PACKET_SIZE_BYTES = 1200;
     private ResultsCallback resultsCallback;
 
     @Retention(RetentionPolicy.SOURCE)
@@ -88,18 +88,18 @@ public class PingAction {
 
 
     public static String pingIP(String ipAddress) throws PingActionException {
-        return pingIP(ipAddress, defaultTimeOut, defaultNumberOfPings);
+        return pingIP(ipAddress, DEFAULT_TIME_OUT_SEC, DEFAULT_NUMBER_OF_PINGS);
     }
 
     public static String pingIP(String ipAddress, int timeOut, int numberOfPings) throws PingActionException {
-        Log.v(TAG, "Starting ping for IP: " + ipAddress);
+        //Log.v(TAG, "Starting ping for IP: " + ipAddress);
         String output = EMPTY_STRING;
         try {
-            output = Utils.runSystemCommand("ping -w 0.2 -c " + numberOfPings + " " + ipAddress);
+            output = Utils.runSystemCommand("ping -s 1200 -w 0.2 -c " + numberOfPings + " " + ipAddress);
         } catch (Exception e) {
             throw new PingActionException(PING_EXCEPTION_COMMAND_NOT_FOUND, ipAddress);
         }
-        Log.v(TAG, "Ending ping for IP: " + ipAddress);
+        //Log.v(TAG, "Ending ping for IP: " + ipAddress);
         return output;
     }
 
@@ -136,7 +136,7 @@ public class PingAction {
     }
 
     public HashMap<String, PingStats> pingAndReturnStatsList(String[] pingAddressList) {
-        return pingAndReturnStatsList(pingAddressList, defaultTimeOut, defaultNumberOfPings);
+        return pingAndReturnStatsList(pingAddressList, DEFAULT_TIME_OUT_SEC, DEFAULT_NUMBER_OF_PINGS);
     }
 
     public PingStats pingAndReturnStats(String ipAddress, int timeOut, int numberOfPings) throws PingActionException, IndexOutOfBoundsException {
