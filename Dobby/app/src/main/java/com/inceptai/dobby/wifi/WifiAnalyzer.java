@@ -121,7 +121,11 @@ public class WifiAnalyzer {
     }
 
     private void unregisterScanReceiver() {
-        context.unregisterReceiver(wifiScanReceiver);
+        try {
+            context.unregisterReceiver(wifiScanReceiver);
+        } catch (IllegalArgumentException e) {
+            Log.v(TAG, "Exception while unregistering wifi receiver: " + e);
+        }
         wifiReceiverState = WIFI_RECEIVER_UNREGISTERED;
     }
 
@@ -175,7 +179,11 @@ public class WifiAnalyzer {
     }
 
     private void unregisterWifiStateReceiver() {
-        context.unregisterReceiver(wifiStateReceiver);
+        try {
+            context.unregisterReceiver(wifiStateReceiver);
+        } catch (IllegalArgumentException e) {
+            Log.v(TAG, "Exception while unregistering wifi state receiver: " + e);
+        }
     }
 
     //Listening for WiFi intents
