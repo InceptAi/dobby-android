@@ -215,6 +215,7 @@ public class WifiAnalyzer {
             wifiConnected = networkInfo != null && networkInfo.isConnected();
             // If we just connected, grab the initial signal strength and SSID
             if (wifiConnected && !wasConnected) {
+                eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.WIFI_CONNECTED));
                 // try getting it out of the intent first
                 WifiInfo info = (WifiInfo) intent.getParcelableExtra(WifiManager.EXTRA_WIFI_INFO);
                 if (info == null) {
@@ -228,13 +229,15 @@ public class WifiAnalyzer {
                 if (dhcpInfo != null && dhcpInfo.ipAddress != 0) {
                     eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.DHCP_INFO_AVAILABLE));
                 }
-
-                eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.WIFI_CONNECTED));
             } else if (!wifiConnected && wasConnected) {
                 wifiStats.clearWifiConnectionInfo();
                 eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.WIFI_NOT_CONNECTED));
             } else {
-
+                if (wifiConnected) {
+                    Log.v(TAG, "No change in wifi state -- we were connected and are connected");
+                } else {
+                    Log.v(TAG, "No change in wifi state -- we were NOT connected and are still NOT connected");
+                }
             }
         } else if (action.equals(WifiManager.RSSI_CHANGED_ACTION)) {
             eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.WIFI_RSSI_CHANGED));
