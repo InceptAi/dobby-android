@@ -323,6 +323,10 @@ public class NewBandwidthAnalyzer {
         bandwidthAnalyzerState = BandwidthAnalyzerState.CANCELLING;
     }
 
+    public ServerInformation.ServerDetails getLastBestServer() {
+        return bestServer;
+    }
+
     /**
      * start the speed test
      */
