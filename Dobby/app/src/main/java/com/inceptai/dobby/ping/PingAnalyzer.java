@@ -231,7 +231,7 @@ public class PingAnalyzer {
             } catch (IOException e) {
                 String errorString = "Exception while performing latencyMs test: " + e;
                 Log.v(TAG, errorString);
-                latencyMeasurementsMs.add(MAX_LATENCY_GATEWAY_MS);
+                //latencyMeasurementsMs.add(MAX_LATENCY_GATEWAY_MS);
             }
         }
 

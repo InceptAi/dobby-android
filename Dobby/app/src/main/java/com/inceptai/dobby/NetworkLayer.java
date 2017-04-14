@@ -121,12 +121,12 @@ public class NetworkLayer {
             if (updatedIPLayerInfo != null) {
                 pingAnalyzer.updateIPLayerInfo(updatedIPLayerInfo);
                 startPing();
-                startGatewayDownloadLatencyTest();
             }
         } else if (event.getLastEventType() == DobbyEvent.EventType.WIFI_INTERNET_CONNECTIVITY_ONLINE) {
             if (pingAnalyzer.checkIfShouldRedoPingStats(MIN_TIME_GAP_TO_RETRIGGER_PING_MS, MIN_PKT_LOSS_RATE_TO_RETRIGGER_PING_PERCENT)) {
                 startPing();
             }
+        } else if (event.getLastEventType() == DobbyEvent.EventType.PING_INFO_AVAILABLE || event.getLastEventType() == DobbyEvent.EventType.PING_FAILED) {
             startGatewayDownloadLatencyTest();
         }
     }
