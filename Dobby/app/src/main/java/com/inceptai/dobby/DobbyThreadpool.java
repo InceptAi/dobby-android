@@ -46,7 +46,7 @@ public class DobbyThreadpool {
         // Creates a thread pool manager
         dobbyThreadPool = new ThreadPoolExecutor(
                 INTIAL_POOL_SIZE,       // Initial pool size
-                NUMBER_OF_CORES,       // Max pool size
+                2 * NUMBER_OF_CORES,       // Max pool size
                 KEEP_ALIVE_TIME,
                 KEEP_ALIVE_TIME_UNIT,
                 workQueue);
