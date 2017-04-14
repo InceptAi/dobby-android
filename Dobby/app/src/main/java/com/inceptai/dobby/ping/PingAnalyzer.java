@@ -22,7 +22,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.inceptai.dobby.DobbyApplication.TAG;
 import static com.inceptai.dobby.speedtest.BestServerSelector.MAX_STRING_LENGTH;
@@ -41,7 +40,6 @@ public class PingAnalyzer {
     protected PingStats gatewayDownloadLatencyTestStats;
     protected DobbyThreadpool dobbyThreadpool;
     protected DobbyEventBus eventBus;
-    protected AtomicBoolean pingInProgress = new AtomicBoolean(false);
 
     private PingAction pingAction;
     private PingActionListener pingActionListener;
@@ -58,7 +56,6 @@ public class PingAnalyzer {
         pingActionListener = new PingActionListener();
         pingAction = PingAction.create(pingActionListener);
         pingsInFlight = new ConcurrentHashMap<String, Boolean>();
-        pingInProgress = new AtomicBoolean(false);
         ipLayerPingStats = new HashMap<>();
         initializePingStats(ipLayerInfo);
         gatewayDownloadLatencyTestStats = new PingStats(ipLayerInfo.gateway);
@@ -130,13 +127,12 @@ public class PingAnalyzer {
     }
 
     private ListenableFuture<HashMap<String, PingStats>> scheduleEssentialPingTestsAsync() throws IllegalStateException {
+        eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.PING_STARTED));
         if (ipLayerInfo == null) {
             //Try to get new iplayerInfo
             eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.PING_FAILED));
             throw new IllegalStateException("Cannot schedule pings when iplayerInfo is null or own IP is 0.0.0.0");
         }
-        eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.PING_STARTED));
-        pingInProgress.set(true);
         pingsInFlight.clear();
         String[] addressList = {ipLayerInfo.gateway, ipLayerInfo.dns1,ipLayerInfo.dns2,
                 ipLayerInfo.referenceExternalAddress1, ipLayerInfo.referenceExternalAddress2};
@@ -192,10 +188,9 @@ public class PingAnalyzer {
                     pingsInFlight.put(key, false);
                 }
             }
-            if (checkIfAllPingsDone() && pingInProgress.get()) {
+            if (checkIfAllPingsDone()) {
                 //Return the results here
                 if (pingResultsFuture != null) {
-                    pingInProgress.set(false);
                     pingResultsFuture.set(ipLayerPingStats);
                     Log.v(TAG, "IP Layer Ping Stats " + ipLayerPingStats.toString());
                     eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.PING_INFO_AVAILABLE));
@@ -209,7 +204,6 @@ public class PingAnalyzer {
             for (String address: addressList) {
                 pingsInFlight.put(address, false);
             }
-            pingInProgress.set(false);
         }
     }
 
