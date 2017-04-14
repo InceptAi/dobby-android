@@ -110,7 +110,7 @@ public class ConnectivityAnalyzer {
         return connectedAndOnline;
     }
 
-    private void updateWifiConnectivityMode(final int scheduleCount) {
+    synchronized private void updateWifiConnectivityMode(final int scheduleCount) {
         if (isWifiOnline()) {
             return;
         }
@@ -142,7 +142,7 @@ public class ConnectivityAnalyzer {
         }
     }
 
-    private void rescheduleConnectivityTest(final int scheduleCount) {
+    synchronized private void rescheduleConnectivityTest(final int scheduleCount) {
         threadpool.getScheduledExecutorService().schedule(new Runnable() {
             @Override
             public void run() {
@@ -167,6 +167,7 @@ public class ConnectivityAnalyzer {
         Log.v(TAG, "Got event: " + event);
         switch(eventType) {
             case DobbyEvent.EventType.WIFI_STATE_ENABLED:
+            case DobbyEvent.EventType.WIFI_NOT_CONNECTED:
                 wifiConnectivityMode = WifiConnectivityMode.ON_AND_DISCONNECTED;
                 break;
             case DobbyEvent.EventType.WIFI_STATE_DISABLED:
@@ -177,14 +178,15 @@ public class ConnectivityAnalyzer {
             case DobbyEvent.EventType.WIFI_STATE_UNKNOWN:
                 wifiConnectivityMode = WifiConnectivityMode.UNKNOWN;
                 break;
-            case DobbyEvent.EventType.WIFI_NOT_CONNECTED:
-                wifiConnectivityMode = WifiConnectivityMode.ON_AND_DISCONNECTED;
-                break;
-            case DobbyEvent.EventType.DHCP_INFO_AVAILABLE:
             case DobbyEvent.EventType.WIFI_CONNECTED:
+            case DobbyEvent.EventType.WIFI_RSSI_CHANGED:
+            case DobbyEvent.EventType.DHCP_INFO_AVAILABLE:
+            case DobbyEvent.EventType.PING_INFO_AVAILABLE:
+                //Safe to call since it doesn't do anyting if we are already online
                 updateWifiConnectivityMode(MAX_SCHEDULING_TRIES_FOR_CHECKING_WIFI_CONNECTIVITY /* try to schdule again twice */);
                 break;
         }
+        Log.v(TAG, "WifiConnectivity Mode is " + wifiConnectivityMode);
     }
 
     @TargetApi(Build.VERSION_CODES.N)
