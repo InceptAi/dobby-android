@@ -47,7 +47,7 @@ public class FakeWifiAnalyzer {
         FakeWifiScanConfig() {
             numApsChannelOne = numApsChannelSix = numApsChannelEleven = 4;
             mainApChannelNumber = 6;
-            mainApSSID = randomBssid();
+            mainApSSID = "FAKE-AP";
             signalZoneChannelOne = WifiStats.SignalStrengthZones.MEDIUM;
             signalZoneChannelEleven = WifiStats.SignalStrengthZones.MEDIUM;
             signalZoneChannelSix = WifiStats.SignalStrengthZones.MEDIUM;
