@@ -2,11 +2,11 @@ package com.inceptai.dobby.fake;
 
 import android.net.DhcpInfo;
 import android.net.wifi.ScanResult;
-import android.net.wifi.WifiInfo;
 import android.util.Log;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.dobby.DobbyThreadpool;
+import com.inceptai.dobby.model.DobbyWifiInfo;
 import com.inceptai.dobby.utils.Utils;
 import com.inceptai.dobby.wifi.WifiStats;
 
@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.inceptai.dobby.DobbyApplication.TAG;
 
@@ -38,6 +37,7 @@ public class FakeWifiAnalyzer {
     private WifiStats wifiStats;
 
     public static class FakeWifiScanConfig {
+        public String mainApSSID;
         public int numApsChannelOne, numApsChannelSix, numApsChannelEleven;
         @WifiStats.SignalStrengthZones public int signalZoneChannelOne, signalZoneChannelSix, signalZoneChannelEleven, signalZoneMainAp;
 
@@ -47,6 +47,7 @@ public class FakeWifiAnalyzer {
         FakeWifiScanConfig() {
             numApsChannelOne = numApsChannelSix = numApsChannelEleven = 4;
             mainApChannelNumber = 6;
+            mainApSSID = randomBssid();
             signalZoneChannelOne = WifiStats.SignalStrengthZones.MEDIUM;
             signalZoneChannelEleven = WifiStats.SignalStrengthZones.MEDIUM;
             signalZoneChannelSix = WifiStats.SignalStrengthZones.MEDIUM;
@@ -87,6 +88,8 @@ public class FakeWifiAnalyzer {
         for (int i = 0; i < FAKE_WIFI_SCAN_CONFIG.numApsChannelOne; i++) {
             list.add(getFakeScanResult(FAKE_WIFI_SCAN_CONFIG.signalZoneChannelEleven, CHAN_11_FREQ));
         }
+        //Add a scan result for the main AP.
+        list.add(getFakeScanResultForMainAP());
         return list;
     }
 
@@ -133,8 +136,44 @@ public class FakeWifiAnalyzer {
         return result;
     }
 
-    private WifiInfo generateFakeWifiInfo() {
-        return null;
+    private ScanResult getFakeScanResultForMainAP() {
+
+        String ssid = FAKE_WIFI_SCAN_CONFIG.mainApSSID;
+        int level = getLevel(FAKE_WIFI_SCAN_CONFIG.signalZoneMainAp);
+        int channelFreq = CHAN_1_FREQ;
+        switch(FAKE_WIFI_SCAN_CONFIG.mainApChannelNumber) {
+            case 1:
+                channelFreq = CHAN_1_FREQ;
+                break;
+            case 6:
+                channelFreq = CHAN_6_FREQ;
+                break;
+            case 11:
+                channelFreq = CHAN_11_FREQ;
+                break;
+        }
+        ScanResult result = null;
+        try {
+            result = ScanResult.class.newInstance();
+            result.BSSID = ssid;
+            result.SSID = ssid;
+            result.level = level;
+            result. frequency = channelFreq;
+            result.centerFreq0 = channelFreq;
+            result.centerFreq1 = channelFreq;
+            result.channelWidth = ScanResult.CHANNEL_WIDTH_20MHZ;
+        } catch (InstantiationException e) {
+        } catch (IllegalAccessException e) {
+            Log.e(TAG, "Unable to generate fake ScanResult");
+        }
+        return result;
+    }
+
+
+    public DobbyWifiInfo generateFakeWifiInfo() {
+        final int linkSpeedMbps = 36;
+        return new DobbyWifiInfo(FAKE_WIFI_SCAN_CONFIG.mainApSSID, FAKE_WIFI_SCAN_CONFIG.mainApSSID,
+                randomBssid(), getLevel(FAKE_WIFI_SCAN_CONFIG.signalZoneMainAp), linkSpeedMbps);
     }
 
     private static String randomBssid() {
