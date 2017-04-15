@@ -222,7 +222,13 @@ public class WifiAnalyzer {
                     info = wifiManager.getConnectionInfo();
                 }
                 //Convert to DobbyWifiInfo
-                DobbyWifiInfo dobbyWifiInfo = new DobbyWifiInfo(info);
+                DobbyWifiInfo dobbyWifiInfo = null;
+                if (DobbyApplication.USE_FAKES.get()) {
+                    dobbyWifiInfo = fakeWifiAnalyzer.generateFakeWifiInfo();
+                } else {
+                    dobbyWifiInfo  = new DobbyWifiInfo(info);
+                }
+
                 wifiStats.updateWifiStats(dobbyWifiInfo, null);
 
                 DhcpInfo dhcpInfo = getDhcpInfo();
