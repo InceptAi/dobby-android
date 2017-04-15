@@ -17,7 +17,7 @@ import java.util.List;
  */
 
 public class WifiStats {
-    private static final int MIN_SIGNAL_CHANGE_FOR_CLEARING_CHANNEL_STATS = 10;
+    private static final int MIN_SIGNAL_CHANGE_FOR_CLEARING_CHANNEL_STATS = 100;
     private static final int SNR_BASE_GAP = 10;
     private static final int SNR_MAX_POSITIVE_GAP = 10;
     private static final int SNR_MAX_POSITIVE_GAP_SQ = SNR_MAX_POSITIVE_GAP * SNR_MAX_POSITIVE_GAP;

@@ -59,6 +59,7 @@ public class FakeWifiAnalyzer extends WifiAnalyzer {
     public FakeWifiAnalyzer(Context context, WifiManager wifiManager,
                             DobbyThreadpool threadpool, DobbyEventBus eventBus) {
         super(context, wifiManager, threadpool, eventBus);
+        wifiStats.updateWifiStats(generateFakeWifiInfo(), null);
     }
 
     /**
@@ -81,7 +82,7 @@ public class FakeWifiAnalyzer extends WifiAnalyzer {
             @Override
             public List<ScanResult> call() {
                 List<ScanResult> wifiScan = generateFakeWifiScan();
-                wifiStats.updateWifiStats(null, wifiScan);
+                wifiStats.updateWifiStats(generateFakeWifiInfo(), wifiScan);
                 return  wifiScan;
             }
         }, SCAN_LATENCY_MS, TimeUnit.MILLISECONDS);
@@ -107,8 +108,7 @@ public class FakeWifiAnalyzer extends WifiAnalyzer {
 
     @Override
     protected void updateWifiStatsWithWifiInfo(WifiInfo info) {
-        DobbyWifiInfo dobbyWifiInfo = generateFakeWifiInfo();
-        wifiStats.updateWifiStats(dobbyWifiInfo, null);
+        wifiStats.updateWifiStats(generateFakeWifiInfo(), null);
     }
 
     private ScanResult getFakeScanResult(@WifiStats.SignalStrengthZones int zone, int channelFreq) {
