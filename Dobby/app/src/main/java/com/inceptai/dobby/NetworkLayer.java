@@ -114,14 +114,18 @@ public class NetworkLayer {
         return pingAnalyzer.getRecentIPLayerPingStats();
     }
 
+    public IPLayerInfo getIpLayerInfo() {
+        return ipLayerInfo;
+    }
+
     //Process events from eventbus
 
     @Subscribe
     public void listen(DobbyEvent event) {
         if (event.getLastEventType() == DobbyEvent.EventType.DHCP_INFO_AVAILABLE) {
-            IPLayerInfo updatedIPLayerInfo = new IPLayerInfo(wifiAnalyzer.getDhcpInfo());
-            if (updatedIPLayerInfo != null) {
-                pingAnalyzer.updateIPLayerInfo(updatedIPLayerInfo);
+            ipLayerInfo = new IPLayerInfo(wifiAnalyzer.getDhcpInfo());
+            if (ipLayerInfo != null) {
+                pingAnalyzer.updateIPLayerInfo(ipLayerInfo);
                 startPing();
             }
         } else if (event.getLastEventType() == DobbyEvent.EventType.WIFI_INTERNET_CONNECTIVITY_ONLINE) {
