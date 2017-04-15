@@ -117,6 +117,10 @@ public class NetworkLayer {
         return getPingAnalyzerInstance().getRecentIPLayerPingStats();
     }
 
+    public IPLayerInfo getIpLayerInfo() {
+        return ipLayerInfo;
+    }
+
     //Process events from eventbus
 
     @Subscribe

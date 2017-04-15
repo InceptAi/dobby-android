@@ -131,7 +131,7 @@ public class PingAnalyzer {
 
     private ListenableFuture<HashMap<String, PingStats>> scheduleEssentialPingTestsAsync() throws IllegalStateException {
         if (ipLayerInfo == null) {
-            //Try to get new iplayerInfo
+            // Try to get new iplayerInfo
             eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.PING_FAILED));
             throw new IllegalStateException("Cannot schedule pings when iplayerInfo is null or own IP is 0.0.0.0");
         }
