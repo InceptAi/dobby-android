@@ -92,7 +92,7 @@ public class PingAction {
     }
 
     public static String pingIP(String ipAddress, int timeOut, int numberOfPings) throws PingActionException {
-        //Log.v(TAG, "Starting ping for IP: " + ipAddress);
+        Log.v(TAG, "Starting ping for IP: " + ipAddress);
         String output = EMPTY_STRING;
         try {
             //output = Utils.runSystemCommand("ping -w 0.2 -c " + numberOfPings + " " + ipAddress);
@@ -100,7 +100,7 @@ public class PingAction {
         } catch (Exception e) {
             throw new PingActionException(PING_EXCEPTION_COMMAND_NOT_FOUND, ipAddress);
         }
-        //Log.v(TAG, "Ending ping for IP: " + ipAddress);
+        Log.v(TAG, "Ending ping for IP: " + ipAddress);
         return output;
     }
 

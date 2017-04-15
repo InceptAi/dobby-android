@@ -12,7 +12,6 @@ import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.IPLayerInfo;
 import com.inceptai.dobby.model.PingStats;
 import com.inceptai.dobby.ping.PingAnalyzer;
-import com.inceptai.dobby.ping.PingAnalyzerFactory;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
 import com.inceptai.dobby.speedtest.NewBandwidthAnalyzer;
 import com.inceptai.dobby.wifi.ConnectivityAnalyzer;
@@ -40,7 +39,7 @@ public class NetworkLayer {
     private DobbyThreadpool threadpool;
     private DobbyEventBus eventBus;
     private WifiAnalyzer wifiAnalyzer;
-    private PingAnalyzer pingAnalyzer;
+    //private PingAnalyzer pingAnalyzer;
     private IPLayerInfo ipLayerInfo;
     private ConnectivityAnalyzer connectivityAnalyzer;
 
@@ -59,7 +58,7 @@ public class NetworkLayer {
         if (wifiAnalyzer != null) {
             ipLayerInfo = new IPLayerInfo(wifiAnalyzer.getDhcpInfo());
         }
-        pingAnalyzer = PingAnalyzerFactory.create(ipLayerInfo, threadpool, eventBus);
+        //pingAnalyzer = PingAnalyzerFactory.create(ipLayerInfo, threadpool, eventBus);
         connectivityAnalyzer = ConnectivityAnalyzer.create(context, threadpool, eventBus);
         eventBus.registerListener(this);
     }
@@ -72,11 +71,14 @@ public class NetworkLayer {
         return wifiAnalyzer.getWifiStats();
     }
 
+    private PingAnalyzer getPingAnalyzerInstance() {
+        return getPingAnalyzer(ipLayerInfo, threadpool, eventBus);
+    }
+
     @Nullable
     public ListenableFuture<HashMap<String, PingStats>> startPing() {
         try {
-            // getPingAnalyzer()
-            return pingAnalyzer.scheduleEssentialPingTestsAsyncSafely();
+            return getPingAnalyzerInstance().scheduleEssentialPingTestsAsyncSafely();
         } catch (IllegalStateException e) {
             Log.v(TAG, "Exception while scheduling ping tests: " + e);
         }
@@ -86,7 +88,7 @@ public class NetworkLayer {
     @Nullable
     public ListenableFuture<PingStats> startGatewayDownloadLatencyTest() {
         try {
-            return pingAnalyzer.scheduleRouterDownloadLatencyTestSafely();
+            return getPingAnalyzerInstance().scheduleRouterDownloadLatencyTestSafely();
         } catch (IllegalStateException e) {
             Log.v(TAG, "Exception while scheduling ping tests: " + e);
         }
@@ -111,7 +113,7 @@ public class NetworkLayer {
     }
 
     public HashMap<String, PingStats> getRecentIPLayerPingStats() {
-        return pingAnalyzer.getRecentIPLayerPingStats();
+        return getPingAnalyzerInstance().getRecentIPLayerPingStats();
     }
 
     public IPLayerInfo getIpLayerInfo() {
@@ -129,7 +131,7 @@ public class NetworkLayer {
                 startPing();
             }
         } else if (event.getLastEventType() == DobbyEvent.EventType.WIFI_INTERNET_CONNECTIVITY_ONLINE) {
-            if (pingAnalyzer.checkIfShouldRedoPingStats(MIN_TIME_GAP_TO_RETRIGGER_PING_MS, MIN_PKT_LOSS_RATE_TO_RETRIGGER_PING_PERCENT)) {
+            if (getPingAnalyzerInstance().checkIfShouldRedoPingStats(MIN_TIME_GAP_TO_RETRIGGER_PING_MS, MIN_PKT_LOSS_RATE_TO_RETRIGGER_PING_PERCENT)) {
                 startPing();
             }
         } else if (event.getLastEventType() == DobbyEvent.EventType.PING_INFO_AVAILABLE || event.getLastEventType() == DobbyEvent.EventType.PING_FAILED) {

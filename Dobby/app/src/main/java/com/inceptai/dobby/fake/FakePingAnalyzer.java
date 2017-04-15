@@ -41,7 +41,7 @@ public class FakePingAnalyzer extends PingAnalyzer {
 
     //Additional variables
     @FakePingAnalyzer.PingStatsMode
-    public static int pingStatsMode;
+    public static int pingStatsMode = PingStatsMode.DEFAULT_WORKING_STATE;
     private ListenableFuture<HashMap<String, PingStats>> fakePingResultsFuture;
     private Random random;
 
@@ -49,7 +49,6 @@ public class FakePingAnalyzer extends PingAnalyzer {
     private FakePingAnalyzer(IPLayerInfo ipLayerInfo, DobbyThreadpool dobbyThreadpool, DobbyEventBus eventBus) {
         super(ipLayerInfo, dobbyThreadpool, eventBus);
         random = new Random(RANDOM_SEED);
-        pingStatsMode = PingStatsMode.DEFAULT_WORKING_STATE;
     }
 
     private void initializePingStats(IPLayerInfo ipLayerInfo) {
@@ -294,9 +293,10 @@ public class FakePingAnalyzer extends PingAnalyzer {
         return pingStats;
     }
 
-    public HashMap<String, PingStats> generateFakePingStats(@PingStatsMode int mode) {
+    public HashMap<String, PingStats> generateFakePingStats() {
         HashMap<String, PingStats> pingStatsHashMap = new HashMap<>();
-        FakePingConfig fakePingConfig = new FakePingConfig(mode);
+        Log.v(TAG, "FAKE Generating fake ping for mode " + getPingStatsModeName(FakePingAnalyzer.pingStatsMode));
+        FakePingConfig fakePingConfig = new FakePingConfig(FakePingAnalyzer.pingStatsMode);
         PingStats gatewayPingStats = generateIndividualPingStats(ipLayerInfo.gateway,
                 fakePingConfig.gatewayLatencyRangeMs, fakePingConfig.gatewayLossRangePercent);
         PingStats dns1PingStats = generateIndividualPingStats(ipLayerInfo.dns1,
@@ -342,9 +342,9 @@ public class FakePingAnalyzer extends PingAnalyzer {
         fakePingResultsFuture = dobbyThreadpool.getListeningScheduledExecutorService().schedule(new Callable<HashMap<String, PingStats>>() {
             @Override
             public HashMap<String, PingStats> call() {
-                HashMap<String, PingStats> pingStatsHashMap = generateFakePingStats(pingStatsMode);
+                HashMap<String, PingStats> pingStatsHashMap = generateFakePingStats();
                 ipLayerPingStats = pingStatsHashMap;
-                Log.v(TAG, "Ping Info: " + ipLayerPingStats.toString());
+                Log.v(TAG, "FAKE IP Layer Ping Stats " + ipLayerPingStats.toString());
                 eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.PING_INFO_AVAILABLE));
                 return  pingStatsHashMap;
             }
