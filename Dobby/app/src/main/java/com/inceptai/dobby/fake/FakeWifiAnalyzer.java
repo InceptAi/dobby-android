@@ -1,13 +1,18 @@
 package com.inceptai.dobby.fake;
 
-import android.net.DhcpInfo;
+import android.content.Context;
 import android.net.wifi.ScanResult;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.dobby.DobbyThreadpool;
+import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.DobbyWifiInfo;
 import com.inceptai.dobby.utils.Utils;
+import com.inceptai.dobby.wifi.WifiAnalyzer;
 import com.inceptai.dobby.wifi.WifiStats;
 
 import java.util.LinkedList;
@@ -22,7 +27,7 @@ import static com.inceptai.dobby.DobbyApplication.TAG;
  * Created by arunesh on 4/11/17.
  */
 
-public class FakeWifiAnalyzer {
+public class FakeWifiAnalyzer extends WifiAnalyzer {
     private static final long SCAN_LATENCY_MS = 5000;
     public static final FakeWifiScanConfig FAKE_WIFI_SCAN_CONFIG = new FakeWifiScanConfig();
 
@@ -30,11 +35,7 @@ public class FakeWifiAnalyzer {
     private static final int CHAN_6_FREQ = 2437;
     private static final int CHAN_11_FREQ = 2462;
 
-    private ListenableFuture<List<ScanResult>> wifiScanFuture;
-    private WifiStats fakeWifiStats;
-    private DhcpInfo fakeDhcpInfo;
-    private DobbyThreadpool threadpool;
-    private WifiStats wifiStats;
+    private ListenableFuture<List<ScanResult>> fakeWifiScanFuture;
 
     public static class FakeWifiScanConfig {
         public String mainApSSID;
@@ -55,13 +56,28 @@ public class FakeWifiAnalyzer {
         }
     }
 
-    public FakeWifiAnalyzer(DobbyThreadpool threadpool) {
-        this.threadpool = threadpool;
-        wifiStats = new WifiStats();
+    public FakeWifiAnalyzer(Context context, WifiManager wifiManager,
+                            DobbyThreadpool threadpool, DobbyEventBus eventBus) {
+        super(context, wifiManager, threadpool, eventBus);
+    }
+
+    /**
+     * Factory constructor to create an instance
+     *
+     * @param context Application context.
+     * @return Instance of WifiAnalyzer or null on error.
+     */
+    @Nullable
+    public static FakeWifiAnalyzer create(Context context, DobbyThreadpool threadpool, DobbyEventBus eventBus) {
+        WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+        if (wifiManager != null) {
+            return new FakeWifiAnalyzer(context.getApplicationContext(), wifiManager, threadpool, eventBus);
+        }
+        return null;
     }
 
     public ListenableFuture<List<ScanResult>> startWifiScan() {
-        wifiScanFuture = threadpool.getListeningScheduledExecutorService().schedule(new Callable<List<ScanResult>>() {
+        fakeWifiScanFuture = threadpool.getListeningScheduledExecutorService().schedule(new Callable<List<ScanResult>>() {
             @Override
             public List<ScanResult> call() {
                 List<ScanResult> wifiScan = generateFakeWifiScan();
@@ -69,11 +85,7 @@ public class FakeWifiAnalyzer {
                 return  wifiScan;
             }
         }, SCAN_LATENCY_MS, TimeUnit.MILLISECONDS);
-        return wifiScanFuture;
-    }
-
-    public WifiStats getWifiStats() {
-        return wifiStats;
+        return fakeWifiScanFuture;
     }
 
     public List<ScanResult> generateFakeWifiScan() {
@@ -93,14 +105,11 @@ public class FakeWifiAnalyzer {
         return list;
     }
 
-//
-//    public DhcpInfo getDhcpInfo() {
-//        return wifiManager.getDhcpInfo();
-//    }
-//
-//    public WifiStats getWifiStats() {
-//        return wifiStats;
-//    }
+    @Override
+    protected void updateWifiStatsWithWifiInfo(WifiInfo info) {
+        DobbyWifiInfo dobbyWifiInfo = generateFakeWifiInfo();
+        wifiStats.updateWifiStats(dobbyWifiInfo, null);
+    }
 
     private ScanResult getFakeScanResult(@WifiStats.SignalStrengthZones int zone, int channelFreq) {
 

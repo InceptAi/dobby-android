@@ -25,6 +25,7 @@ import javax.inject.Inject;
 
 import static com.inceptai.dobby.DobbyApplication.TAG;
 import static com.inceptai.dobby.ping.PingAnalyzerFactory.getPingAnalyzer;
+import static com.inceptai.dobby.wifi.WifiAnalyzerFactory.getWifiAnalyzer;
 
 /**
  * This class abstracts out the implementation details of all things 'network' related. The UI and
@@ -38,8 +39,6 @@ public class NetworkLayer {
     private Context context;
     private DobbyThreadpool threadpool;
     private DobbyEventBus eventBus;
-    private WifiAnalyzer wifiAnalyzer;
-    //private PingAnalyzer pingAnalyzer;
     private IPLayerInfo ipLayerInfo;
     private ConnectivityAnalyzer connectivityAnalyzer;
 
@@ -54,25 +53,27 @@ public class NetworkLayer {
     }
 
     public void initialize() {
-        wifiAnalyzer = WifiAnalyzer.create(context, threadpool, eventBus);
-        if (wifiAnalyzer != null) {
-            ipLayerInfo = new IPLayerInfo(wifiAnalyzer.getDhcpInfo());
+        if (getWifiAnalyzerInstance() != null) {
+            ipLayerInfo = new IPLayerInfo(getWifiAnalyzerInstance().getDhcpInfo());
         }
-        //pingAnalyzer = PingAnalyzerFactory.create(ipLayerInfo, threadpool, eventBus);
         connectivityAnalyzer = ConnectivityAnalyzer.create(context, threadpool, eventBus);
         eventBus.registerListener(this);
     }
 
     public ListenableFuture<List<ScanResult>> wifiScan() {
-        return wifiAnalyzer.startWifiScan();
+        return getWifiAnalyzerInstance().startWifiScan();
     }
 
     public WifiStats getWifiStats() {
-        return wifiAnalyzer.getWifiStats();
+        return getWifiAnalyzerInstance().getWifiStats();
     }
 
     private PingAnalyzer getPingAnalyzerInstance() {
         return getPingAnalyzer(ipLayerInfo, threadpool, eventBus);
+    }
+
+    private WifiAnalyzer getWifiAnalyzerInstance() {
+        return getWifiAnalyzer(context, threadpool, eventBus);
     }
 
     @Nullable
@@ -121,9 +122,9 @@ public class NetworkLayer {
     @Subscribe
     public void listen(DobbyEvent event) {
         if (event.getLastEventType() == DobbyEvent.EventType.DHCP_INFO_AVAILABLE) {
-            IPLayerInfo updatedIPLayerInfo = new IPLayerInfo(wifiAnalyzer.getDhcpInfo());
-            if (updatedIPLayerInfo != null) {
-                getPingAnalyzerInstance().updateIPLayerInfo(updatedIPLayerInfo);
+            ipLayerInfo = new IPLayerInfo(getWifiAnalyzerInstance().getDhcpInfo());
+            if (ipLayerInfo != null) {
+                getPingAnalyzerInstance().updateIPLayerInfo(ipLayerInfo);
                 startPing();
             }
         } else if (event.getLastEventType() == DobbyEvent.EventType.WIFI_INTERNET_CONNECTIVITY_ONLINE) {
@@ -136,8 +137,8 @@ public class NetworkLayer {
     }
 
     public void cleanup() {
-        if (wifiAnalyzer != null) {
-            wifiAnalyzer.cleanup();
+        if (getWifiAnalyzerInstance() != null) {
+            getWifiAnalyzerInstance().cleanup();
         }
         if (bandwidthAnalyzer != null) {
             bandwidthAnalyzer.cleanup();
