@@ -19,6 +19,7 @@ import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.DobbyWifiInfo;
+import com.inceptai.dobby.utils.Utils;
 
 import java.util.List;
 
@@ -32,6 +33,8 @@ public class WifiAnalyzer {
 
     private static final int WIFI_RECEIVER_UNREGISTERED = 0;
     private static final int WIFI_RECEIVER_REGISTERED = 1;
+    private static final boolean TRIGGER_WIFI_SCAN_ON_RSSI_CHANGE = true;
+    private static final int GAP_FOR_GETTING_DETAILED_NETWORK_STATE_STATS_MS = 200000;
 
     // Store application context to prevent leaks and crashes from an activity going out of scope.
     protected Context context;
@@ -185,8 +188,19 @@ public class WifiAnalyzer {
         wifiStats.updateWifiStats(dobbyWifiInfo, null);
     }
 
+    protected void updateWifiStatsDetailedState(NetworkInfo.DetailedState detailedState) {
+        wifiStats.updateDetailedWifiStateInfo(detailedState, System.currentTimeMillis());
+        Utils.PercentileStats stats = wifiStats.getStatsForDetailedState(detailedState, GAP_FOR_GETTING_DETAILED_NETWORK_STATE_STATS_MS);
+        Log.v(TAG, "updateDetailedWifiStateInfo5 State: " + detailedState.name() + " stats: " + stats.toString());
+    }
+
     private void processNetworkStateChangedIntent(Intent intent) {
         final NetworkInfo networkInfo = intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
+        if (networkInfo != null) {
+            NetworkInfo.DetailedState detailedWifiState = networkInfo.getDetailedState();
+            updateWifiStatsDetailedState(detailedWifiState);
+        }
+
         boolean wasConnected = wifiConnected;
         wifiConnected = networkInfo != null && networkInfo.isConnected();
         // If we just connected, grab the initial signal strength and SSID
@@ -242,7 +256,10 @@ public class WifiAnalyzer {
         } else if (action.equals(WifiManager.RSSI_CHANGED_ACTION)) {
             eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.WIFI_RSSI_CHANGED));
             int updatedSignal = intent.getIntExtra(WifiManager.EXTRA_NEW_RSSI, 0);
-            wifiStats.updateSignal(updatedSignal);
+            if (TRIGGER_WIFI_SCAN_ON_RSSI_CHANGE && wifiStats.updateSignal(updatedSignal)){
+                //Reissue wifi scan to correctly compute contention since the signal has changed significantly
+                startWifiScan();
+            }
         }
     }
 

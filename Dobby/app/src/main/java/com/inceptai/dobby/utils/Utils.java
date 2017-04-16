@@ -5,6 +5,7 @@ import android.content.DialogInterface;
 import android.support.v7.app.AlertDialog;
 
 import com.google.common.net.InetAddresses;
+import com.google.gson.Gson;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -15,6 +16,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -41,6 +43,42 @@ public class Utils {
         }
     }
 
+    public static class PercentileStats {
+        public double median;
+        public double max;
+        public double min;
+        public double percentile90;
+        public double getPercentile10;
+        public int samples;
+        public PercentileStats() {
+            median = 0;
+            max = 0;
+            min = 0;
+            percentile90 = 0;
+            getPercentile10 = 0;
+            samples = 0;
+        }
+        public PercentileStats(List<Double> list) {
+            Collections.sort(list);
+            median = computePercentileFromSortedList(list, 50);
+            max = computePercentileFromSortedList(list, 100);
+            min = computePercentileFromSortedList(list, 0);
+            percentile90 = computePercentileFromSortedList(list, 90);
+            getPercentile10 = computePercentileFromSortedList(list, 10);
+            samples = list.size();
+        }
+
+        public String toJson() {
+            Gson gson = new Gson();
+            String json = gson.toJson(this);
+            return json;
+        }
+
+        @Override
+        public String toString() {
+            return toJson();
+        }
+    }
 
     /**
      * Given a string url, connects and returns an input stream
