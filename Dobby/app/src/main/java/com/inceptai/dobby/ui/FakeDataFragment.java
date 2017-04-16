@@ -19,18 +19,17 @@ import android.widget.ToggleButton;
 
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.R;
+import com.inceptai.dobby.connectivity.ConnectivityAnalyzer;
+import com.inceptai.dobby.fake.FakeConnectivityAnalyzer;
 import com.inceptai.dobby.fake.FakePingAnalyzer;
 import com.inceptai.dobby.fake.FakeSpeedTestSocket;
 import com.inceptai.dobby.fake.FakeWifiAnalyzer;
-import com.inceptai.dobby.speedtest.SpeedTestSocketFactory;
-import com.inceptai.dobby.utils.Utils;
 import com.inceptai.dobby.wifi.WifiStats;
 
 import java.util.ArrayList;
 
-import static android.R.attr.max;
-import static android.R.attr.offset;
 import static com.inceptai.dobby.DobbyApplication.TAG;
+import static com.inceptai.dobby.fake.FakePingAnalyzer.PingStatsMode.DEFAULT_WORKING_STATE;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -63,8 +62,10 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
 
 
     // Fake ping UI:
-
     private Spinner pingStatsModeSpinner;
+
+    // Fake connectivity selector
+    private Spinner connectivityModeSpinner;
 
     public FakeDataFragment() {
         // Required empty public constructor
@@ -115,7 +116,10 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
         populateSpinnerWithNumbers(mainApChannelSpinner, 11, FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.mainApChannelNumber, 1);
 
         pingStatsModeSpinner = (Spinner) view.findViewById(R.id.ping_stats_mode_selector);
-        populateSpinnerWithPingModes(pingStatsModeSpinner, FakePingAnalyzer.PingStatsMode.DEFAULT_WORKING_STATE);
+        populateSpinnerWithPingModes(pingStatsModeSpinner, DEFAULT_WORKING_STATE);
+
+        connectivityModeSpinner = (Spinner) view.findViewById(R.id.connectivity_mode_selector);
+        populateSpinnerWithConnectivityModes(connectivityModeSpinner, ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_ONLINE);
 
         return view;
     }
@@ -130,6 +134,24 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
         ArrayList<String> modeList = new ArrayList<>();
         for (@FakePingAnalyzer.PingStatsMode int i = 0; i < FakePingAnalyzer.PingStatsMode.MAX_STATES; i++) {
             modeList.add(FakePingAnalyzer.getPingStatsModeName(i));
+        }
+        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_dropdown_item, modeList);
+        arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(arrayAdapter);
+        spinner.setSelection(selection, true);
+    }
+
+
+    /**
+     * Populates from 0 .. max - 1
+     * @param spinner
+     * @param selection
+     */
+    private void populateSpinnerWithConnectivityModes(Spinner spinner, @ConnectivityAnalyzer.WifiConnectivityMode int selection) {
+        ArrayList<String> modeList = new ArrayList<>();
+        for (@ConnectivityAnalyzer.WifiConnectivityMode int modeIndex = 0;
+             modeIndex < ConnectivityAnalyzer.WifiConnectivityMode.MAX_MODES; modeIndex++) {
+            modeList.add(ConnectivityAnalyzer.getConnecitivyStateName(modeIndex));
         }
         ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_dropdown_item, modeList);
         arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -178,7 +200,7 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
         }  else if (spinner.getSelectedItemPosition() == 3) {
             return WifiStats.SignalStrengthZones.FRINGE;
         }
-        return 0;
+        return WifiStats.SignalStrengthZones.HIGH;
     }
 
     @Override
@@ -264,17 +286,34 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
         }
         if (savePingSettingsIfChanged()) {
             hasChanged = true;
-            changedMessage = changedMessage + " Ping settings. ";
+            changedMessage = changedMessage + " Ping settings changed. ";
+        }
+        if (saveConnectivitySettingsIfChanged()) {
+            hasChanged = true;
+            changedMessage = changedMessage + " Connectivity settings changed. ";
         }
         if (hasChanged) {
             Toast.makeText(getContext(), changedMessage, Toast.LENGTH_SHORT).show();
         }
     }
 
+    private boolean saveConnectivitySettingsIfChanged() {
+        boolean hasChanged = false;
+        @ConnectivityAnalyzer.WifiConnectivityMode  int selectedMode = connectivityModeSpinner.getSelectedItemPosition();
+        if (selectedMode != FakeConnectivityAnalyzer.fakeWifiConnectivityMode) {
+            hasChanged = true;
+            //noinspection ResourceType
+            FakeConnectivityAnalyzer.setFakeWifiConnectivityMode(selectedMode);
+            Log.i(TAG, "FAKE Setting Connectivity mode to : " +
+                    ConnectivityAnalyzer.getConnecitivyStateName(FakeConnectivityAnalyzer.fakeWifiConnectivityMode));
+        }
+        return hasChanged;
+    }
+
     private boolean savePingSettingsIfChanged() {
         boolean hasChanged = false;
-        int selectedMode = pingStatsModeSpinner.getSelectedItemPosition();
-        if (selectedMode != FakePingAnalyzer.PingStatsMode.DEFAULT_WORKING_STATE) {
+        @FakePingAnalyzer.PingStatsMode int selectedMode = pingStatsModeSpinner.getSelectedItemPosition();
+        if (selectedMode != FakePingAnalyzer.pingStatsMode) {
             hasChanged = true;
             //noinspection ResourceType
             FakePingAnalyzer.pingStatsMode = selectedMode;

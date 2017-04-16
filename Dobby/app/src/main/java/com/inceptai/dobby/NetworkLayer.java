@@ -14,7 +14,7 @@ import com.inceptai.dobby.model.PingStats;
 import com.inceptai.dobby.ping.PingAnalyzer;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
 import com.inceptai.dobby.speedtest.NewBandwidthAnalyzer;
-import com.inceptai.dobby.wifi.ConnectivityAnalyzer;
+import com.inceptai.dobby.connectivity.ConnectivityAnalyzer;
 import com.inceptai.dobby.wifi.WifiAnalyzer;
 import com.inceptai.dobby.wifi.WifiStats;
 
@@ -26,6 +26,7 @@ import javax.inject.Inject;
 import static com.inceptai.dobby.DobbyApplication.TAG;
 import static com.inceptai.dobby.ping.PingAnalyzerFactory.getPingAnalyzer;
 import static com.inceptai.dobby.wifi.WifiAnalyzerFactory.getWifiAnalyzer;
+import static com.inceptai.dobby.connectivity.ConnectivityAnalyzerFactory.getConnecitivityAnalyzer;
 
 /**
  * This class abstracts out the implementation details of all things 'network' related. The UI and
@@ -40,7 +41,6 @@ public class NetworkLayer {
     private DobbyThreadpool threadpool;
     private DobbyEventBus eventBus;
     private IPLayerInfo ipLayerInfo;
-    private ConnectivityAnalyzer connectivityAnalyzer;
 
     @Inject
     NewBandwidthAnalyzer bandwidthAnalyzer;
@@ -56,7 +56,6 @@ public class NetworkLayer {
         if (getWifiAnalyzerInstance() != null) {
             ipLayerInfo = new IPLayerInfo(getWifiAnalyzerInstance().getDhcpInfo());
         }
-        connectivityAnalyzer = ConnectivityAnalyzer.create(context, threadpool, eventBus);
         eventBus.registerListener(this);
     }
 
@@ -74,6 +73,10 @@ public class NetworkLayer {
 
     private WifiAnalyzer getWifiAnalyzerInstance() {
         return getWifiAnalyzer(context, threadpool, eventBus);
+    }
+
+    private ConnectivityAnalyzer getConnectivityAnalyzerInstance() {
+        return getConnecitivityAnalyzer(context, threadpool, eventBus);
     }
 
     @Nullable
@@ -98,7 +101,7 @@ public class NetworkLayer {
 
     public boolean startBandwidthTest(NewBandwidthAnalyzer.ResultsCallback resultsCallback,
                                    @BandwithTestCodes.BandwidthTestMode int testMode) {
-        if (connectivityAnalyzer.isWifiOnline()) {
+        if (getConnectivityAnalyzerInstance().isWifiOnline()) {
             bandwidthAnalyzer.registerCallback(resultsCallback);
             Log.i(TAG, "NetworkLayer: Going to start bandwidth test.");
             bandwidthAnalyzer.startBandwidthTestSafely(testMode);

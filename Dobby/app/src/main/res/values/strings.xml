@@ -35,6 +35,8 @@
     <string name="primary_ap_channel">Primary AP channel:</string>
     <string name="ping_stats_mode_selector">Ping Mode Selector</string>
     <string name="fake_ping_data_setting">Fake Ping Data Settings</string>
+    <string name="fake_connectivity_mode_selector">Connectivity Mode Selector</string>
+    <string name="fake_connectivity_setting">Fake Connectivity Mode Settings</string>
 
     <string-array name="rssi_level_array">
         <item>High</item>
