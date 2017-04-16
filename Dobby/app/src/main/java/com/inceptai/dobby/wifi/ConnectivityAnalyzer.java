@@ -22,6 +22,7 @@ import com.inceptai.dobby.utils.Utils;
 import java.io.IOException;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.net.HttpURLConnection;
 import java.util.concurrent.TimeUnit;
 
 import static com.inceptai.dobby.DobbyApplication.TAG;
@@ -31,8 +32,9 @@ import static com.inceptai.dobby.DobbyApplication.TAG;
  * Created by vivek on 4/12/17.
  */
 public class ConnectivityAnalyzer {
-    public static int MIN_STRING_LENGTH_TO_FETCH = 1000; //1Kbyte
+    public static int MAX_STRING_LENGTH_TO_FETCH = 1000; //1Kbyte
     public static String URL_FOR_CONNECTIVITY_TEST = "http://www.google.com";
+    public static String URL_FOR_CONNECTIVITY_AND_PORTAL_TEST = "http://clients3.google.com/generate_204";
     private static int MAX_SCHEDULING_TRIES_FOR_CHECKING_WIFI_CONNECTIVITY = 5;
     private static int GAP_BETWEEN_CONNECTIIVITY_CHECKS_MS = 2000;
     private static int MAX_TRIES_AFTER_CONNECTIVITY_CHECK_RETURNS_FALSE = 1;
@@ -40,14 +42,16 @@ public class ConnectivityAnalyzer {
 
 
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({WifiConnectivityMode.CONNECTED_AND_ONLINE, WifiConnectivityMode.CONNECTED_AND_OFFLINE,
-            WifiConnectivityMode.ON_AND_DISCONNECTED, WifiConnectivityMode.OFF, WifiConnectivityMode.UNKNOWN})
+    @IntDef({WifiConnectivityMode.CONNECTED_AND_ONLINE, WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL,
+            WifiConnectivityMode.CONNECTED_AND_OFFLINE, WifiConnectivityMode.ON_AND_DISCONNECTED,
+            WifiConnectivityMode.OFF, WifiConnectivityMode.UNKNOWN})
     public @interface WifiConnectivityMode {
         int CONNECTED_AND_ONLINE = 0;
-        int CONNECTED_AND_OFFLINE = 1;
-        int ON_AND_DISCONNECTED = 2;
-        int OFF = 3;
-        int UNKNOWN = 4;
+        int CONNECTED_AND_CAPTIVE_PORTAL = 1;
+        int CONNECTED_AND_OFFLINE = 2;
+        int ON_AND_DISCONNECTED = 3;
+        int OFF = 4;
+        int UNKNOWN = 5;
     }
 
     @WifiConnectivityMode
@@ -91,13 +95,40 @@ public class ConnectivityAnalyzer {
         return null;
     }
 
+    @WifiConnectivityMode
+    public int performConnectivityAndPortalTest(NetworkInfo activeNetwork) {
+        @WifiConnectivityMode int mode = WifiConnectivityMode.UNKNOWN;
+        if (activeNetwork != null && activeNetwork.getType() == ConnectivityManager.TYPE_WIFI && activeNetwork.isConnected()) {
+            //Fetch google.com to validate
+            String dataFetched = Utils.EMPTY_STRING;
+            try {
+                dataFetched = Utils.getDataFromUrl(URL_FOR_CONNECTIVITY_AND_PORTAL_TEST, MAX_STRING_LENGTH_TO_FETCH);
+            } catch (Utils.HTTPReturnCodeException e) {
+                Log.v(TAG, "Exception, wanted 200, Got return code " + e.httpReturnCode);
+                if (e.httpReturnCode == HttpURLConnection.HTTP_NO_CONTENT) {
+                    //This is working, we can return as online
+                    mode = WifiConnectivityMode.CONNECTED_AND_ONLINE;
+                } else if (e.httpReturnCode == HttpURLConnection.HTTP_MOVED_TEMP) {
+                    //This is a captive portal
+                    mode = WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL;
+                }
+            } catch (IOException e) {
+                Log.v(TAG, "Unable to fetch: " + URL_FOR_CONNECTIVITY_TEST + " Except: " + e);
+                mode = WifiConnectivityMode.CONNECTED_AND_OFFLINE;
+            } catch (Exception e) {
+                Log.v(TAG, "Exception : " + e);
+            }
+        }
+        return mode;
+    }
+
     public boolean performConnectivityTest(NetworkInfo activeNetwork) {
         boolean connectedAndOnline = false;
         if (activeNetwork != null && activeNetwork.getType() == ConnectivityManager.TYPE_WIFI && activeNetwork.isConnected()) {
             //Fetch google.com to validate
             String dataFetched = Utils.EMPTY_STRING;
             try {
-                dataFetched = Utils.getDataFromUrl(URL_FOR_CONNECTIVITY_TEST, MIN_STRING_LENGTH_TO_FETCH);
+                dataFetched = Utils.getDataFromUrl(URL_FOR_CONNECTIVITY_TEST, MAX_STRING_LENGTH_TO_FETCH);
             } catch (IOException e) {
                 Log.v(TAG, "Unable to fetch: " + URL_FOR_CONNECTIVITY_TEST + " Except: " + e);
                 return false;
@@ -111,6 +142,7 @@ public class ConnectivityAnalyzer {
     }
 
     synchronized private void updateWifiConnectivityMode(final int scheduleCount) {
+        @WifiConnectivityMode int currentWifiMode = WifiConnectivityMode.UNKNOWN;
         if (isWifiOnline()) {
             return;
         }
@@ -125,19 +157,21 @@ public class ConnectivityAnalyzer {
         Log.v(TAG, "active network is not null, activeNetwork:" + activeNetwork.toString());
         boolean isWifiConnectionOnline = false;
         try {
-            isWifiConnectionOnline = performConnectivityTest(activeNetwork);
+            //isWifiConnectionOnline = performConnectivityTest(activeNetwork);
+            currentWifiMode = performConnectivityAndPortalTest(activeNetwork);
+            isWifiConnectionOnline = currentWifiMode == WifiConnectivityMode.CONNECTED_AND_ONLINE;
         } catch (IllegalStateException e) {
             Log.v(TAG, "Exception while checking connectivity: " + e);
         }
         if (scheduleCount > 0 && !isWifiConnectionOnline) {
-            rescheduleConnectivityTest(MAX_TRIES_AFTER_CONNECTIVITY_CHECK_RETURNS_FALSE);  // Try once more before quitting.
+            rescheduleConnectivityTest(0);  // Try once more before quitting.
             return;
         }
-        if (isWifiConnectionOnline) {
-            wifiConnectivityMode = WifiConnectivityMode.CONNECTED_AND_ONLINE;
+        //Set the wifiConnectivityMode
+        wifiConnectivityMode = currentWifiMode;
+        if (wifiConnectivityMode == WifiConnectivityMode.CONNECTED_AND_ONLINE) {
             eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.WIFI_INTERNET_CONNECTIVITY_ONLINE));
         } else {
-            wifiConnectivityMode = WifiConnectivityMode.CONNECTED_AND_OFFLINE;
             eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.WIFI_INTERNET_CONNECTIVITY_OFFLINE));
         }
     }
@@ -159,6 +193,10 @@ public class ConnectivityAnalyzer {
 
     synchronized public boolean isWifiOnline() {
         return (wifiConnectivityMode == WifiConnectivityMode.CONNECTED_AND_ONLINE);
+    }
+
+    synchronized public boolean isWifiInCaptivePortal() {
+        return (wifiConnectivityMode == WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL);
     }
 
     @Subscribe
