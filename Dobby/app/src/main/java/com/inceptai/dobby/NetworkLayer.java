@@ -67,6 +67,34 @@ public class NetworkLayer {
         return getWifiAnalyzerInstance().getWifiState();
     }
 
+    public HashMap<Integer, Double> getChannelContention() {
+        HashMap<Integer, Double> channelContention = new HashMap<>();
+        WifiState wifiState = getWifiAnalyzerInstance().getWifiState();
+        if (wifiState != null) {
+            channelContention = wifiState.getCurrentContentionMetric();
+        }
+        return channelContention;
+    }
+
+    @WifiState.WifiStateProblemMode
+    public int getWifiProblemMode() {
+        int problemMode = WifiState.WifiStateProblemMode.UNKNOWN;
+        WifiState wifiState = getWifiAnalyzerInstance().getWifiState();
+        if (wifiState != null) {
+            problemMode = wifiState.getCurrentWifiProblemMode();
+        }
+        return problemMode;
+    }
+
+    @ConnectivityAnalyzer.WifiConnectivityMode
+    public int getCurrentConnectivityMode() {
+        int problemMode = ConnectivityAnalyzer.WifiConnectivityMode.UNKNOWN;
+        if (getConnectivityAnalyzerInstance() != null) {
+            problemMode = getConnectivityAnalyzerInstance().getWifiConnectivityMode();
+        }
+        return problemMode;
+    }
+
     private PingAnalyzer getPingAnalyzerInstance() {
         return getPingAnalyzer(ipLayerInfo, threadpool, eventBus);
     }
