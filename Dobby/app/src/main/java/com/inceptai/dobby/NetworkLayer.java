@@ -16,7 +16,7 @@ import com.inceptai.dobby.speedtest.BandwithTestCodes;
 import com.inceptai.dobby.speedtest.NewBandwidthAnalyzer;
 import com.inceptai.dobby.connectivity.ConnectivityAnalyzer;
 import com.inceptai.dobby.wifi.WifiAnalyzer;
-import com.inceptai.dobby.wifi.WifiStats;
+import com.inceptai.dobby.wifi.WifiState;
 
 import java.util.HashMap;
 import java.util.List;
@@ -63,15 +63,15 @@ public class NetworkLayer {
         return getWifiAnalyzerInstance().startWifiScan();
     }
 
-    public WifiStats getWifiStats() {
-        return getWifiAnalyzerInstance().getWifiStats();
+    public WifiState getWifiStats() {
+        return getWifiAnalyzerInstance().getWifiState();
     }
 
     private PingAnalyzer getPingAnalyzerInstance() {
         return getPingAnalyzer(ipLayerInfo, threadpool, eventBus);
     }
 
-    private WifiAnalyzer getWifiAnalyzerInstance() {
+    public WifiAnalyzer getWifiAnalyzerInstance() {
         return getWifiAnalyzer(context, threadpool, eventBus);
     }
 

@@ -19,7 +19,6 @@ import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.DobbyWifiInfo;
-import com.inceptai.dobby.utils.Utils;
 
 import java.util.List;
 
@@ -43,11 +42,12 @@ public class WifiAnalyzer {
     protected int wifiReceiverState = WIFI_RECEIVER_UNREGISTERED;
     protected WifiManager wifiManager;
     protected DobbyThreadpool threadpool;
-    protected WifiStats wifiStats;
+    protected WifiState wifiState;
     protected boolean wifiConnected;
     protected boolean wifiEnabled;
     protected SettableFuture<List<ScanResult>> wifiScanFuture;
     protected DobbyEventBus eventBus;
+    @WifiState.WifiStateProblemMode protected int wifiStateProblemMode;
 
 
     protected WifiAnalyzer(Context context, WifiManager wifiManager, DobbyThreadpool threadpool, DobbyEventBus eventBus) {
@@ -59,9 +59,10 @@ public class WifiAnalyzer {
         this.eventBus = eventBus;
         wifiConnected = false;
         wifiEnabled = false;
-        wifiStats = new WifiStats();
-        wifiStats.updateWifiStats(new DobbyWifiInfo(wifiManager.getConnectionInfo()), null);
+        wifiState = new WifiState();
+        wifiState.updateWifiStats(new DobbyWifiInfo(wifiManager.getConnectionInfo()), null);
         registerWifiStateReceiver();
+        wifiStateProblemMode = WifiState.WifiStateProblemMode.NO_PROBLEM_DEFAULT_STATE;
     }
 
     /**
@@ -97,8 +98,8 @@ public class WifiAnalyzer {
         return wifiManager.getDhcpInfo();
     }
 
-    public WifiStats getWifiStats() {
-        return wifiStats;
+    public WifiState getWifiState() {
+        return wifiState;
     }
 
     // Called in order to cleanup any held resources.
@@ -151,7 +152,7 @@ public class WifiAnalyzer {
     private void updateWifiScanResults() {
         StringBuilder sb = new StringBuilder();
         List<ScanResult> wifiList = wifiManager.getScanResults();
-        wifiStats.updateWifiStats(null, wifiList);
+        wifiState.updateWifiStats(null, wifiList);
         for (int i = 0; i < wifiList.size(); i++) {
             sb.append(new Integer(i + 1).toString() + ".");
             sb.append((wifiList.get(i)).toString());
@@ -185,13 +186,42 @@ public class WifiAnalyzer {
         }
         //Convert to DobbyWifiInfo
         DobbyWifiInfo dobbyWifiInfo = new DobbyWifiInfo(info);;
-        wifiStats.updateWifiStats(dobbyWifiInfo, null);
+        wifiState.updateWifiStats(dobbyWifiInfo, null);
+    }
+
+    @DobbyEvent.EventType
+    protected int convertWifiStateProblemToDobbyEventType(@WifiState.WifiStateProblemMode int problemMode) {
+        @DobbyEvent.EventType int eventTypeToBroadcast;
+        switch (wifiStateProblemMode) {
+            case WifiState.WifiStateProblemMode.HANGING_ON_DHCP:
+                eventTypeToBroadcast = DobbyEvent.EventType.HANGING_ON_DHCP;
+                break;
+            case WifiState.WifiStateProblemMode.HANGING_ON_AUTHENTICATING:
+                eventTypeToBroadcast = DobbyEvent.EventType.HANGING_ON_AUTHENTICATING;
+                break;
+            case WifiState.WifiStateProblemMode.HANGING_ON_SCANNING:
+                eventTypeToBroadcast = DobbyEvent.EventType.HANGING_ON_SCANNING;
+                break;
+            case WifiState.WifiStateProblemMode.FREQUENT_DISCONNECTIONS:
+                eventTypeToBroadcast = DobbyEvent.EventType.FREQUENT_DISCONNECTIONS;
+                break;
+            default:
+                eventTypeToBroadcast = DobbyEvent.EventType.WIFI_STATE_UNKNOWN;
+        }
+        return eventTypeToBroadcast;
     }
 
     protected void updateWifiStatsDetailedState(NetworkInfo.DetailedState detailedState) {
-        wifiStats.updateDetailedWifiStateInfo(detailedState, System.currentTimeMillis());
-        Utils.PercentileStats stats = wifiStats.getStatsForDetailedState(detailedState, GAP_FOR_GETTING_DETAILED_NETWORK_STATE_STATS_MS);
-        Log.v(TAG, "updateDetailedWifiStateInfo5 State: " + detailedState.name() + " stats: " + stats.toString());
+        @WifiState.WifiStateProblemMode int problemMode = wifiState.updateDetailedWifiStateInfo(detailedState, System.currentTimeMillis());
+        if (wifiStateProblemMode != problemMode) {
+            wifiStateProblemMode = problemMode;
+            @DobbyEvent.EventType int eventTypeToBroadcast = convertWifiStateProblemToDobbyEventType(wifiStateProblemMode);
+            if (eventTypeToBroadcast != DobbyEvent.EventType.WIFI_STATE_UNKNOWN) {
+                eventBus.postEvent(new DobbyEvent(eventTypeToBroadcast));
+            }
+        }
+        //Utils.PercentileStats stats = wifiState.getStatsForDetailedState(detailedState, GAP_FOR_GETTING_DETAILED_NETWORK_STATE_STATS_MS);
+        //Log.v(TAG, "updateDetailedWifiStateInfo State: " + detailedState.name() + " stats: " + stats.toString());
     }
 
     private void processNetworkStateChangedIntent(Intent intent) {
@@ -215,7 +245,7 @@ public class WifiAnalyzer {
                 eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.DHCP_INFO_AVAILABLE));
             }
         } else if (!wifiConnected && wasConnected) {
-            wifiStats.clearWifiConnectionInfo();
+            wifiState.clearWifiConnectionInfo();
             eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.WIFI_NOT_CONNECTED));
         } else {
             if (wifiConnected) {
@@ -256,7 +286,7 @@ public class WifiAnalyzer {
         } else if (action.equals(WifiManager.RSSI_CHANGED_ACTION)) {
             eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.WIFI_RSSI_CHANGED));
             int updatedSignal = intent.getIntExtra(WifiManager.EXTRA_NEW_RSSI, 0);
-            if (TRIGGER_WIFI_SCAN_ON_RSSI_CHANGE && wifiStats.updateSignal(updatedSignal)){
+            if (TRIGGER_WIFI_SCAN_ON_RSSI_CHANGE && this.wifiState.updateSignal(updatedSignal)){
                 //Reissue wifi scan to correctly compute contention since the signal has changed significantly
                 startWifiScan();
             }

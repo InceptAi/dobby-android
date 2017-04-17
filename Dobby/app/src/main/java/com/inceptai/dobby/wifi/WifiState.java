@@ -23,12 +23,17 @@ import static android.content.ContentValues.TAG;
  * Created by vivek on 4/8/17.
  */
 
-public class WifiStats {
+public class WifiState {
     private static final int MIN_SIGNAL_CHANGE_FOR_CLEARING_CHANNEL_STATS = 20;
     private static final int SNR_BASE_GAP = 10;
     private static final int SNR_MAX_POSITIVE_GAP = 10;
     private static final int SNR_MAX_POSITIVE_GAP_SQ = SNR_MAX_POSITIVE_GAP * SNR_MAX_POSITIVE_GAP;
     private static final int MOVING_AVERAGE_DECAY_FACTOR = 20;
+    private static final int THRESHOLD_FOR_DECLARING_CONNECTION_SETUP_STATE_AS_HANGING_MS = 10000;
+    private static final int THRESHOLD_FOR_FLAGGING_FREQUENT_STATE_CHANGES = 5;
+    private static final int THRESHOLD_FOR_COUNTING_FREQUENT_STATE_CHANGES_MS = 10000;
+
+
 
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({SignalStrengthZones.HIGH, SignalStrengthZones.MEDIUM,
@@ -40,23 +45,58 @@ public class WifiStats {
         int FRINGE = -140;
     }
 
-    public String linkSSID;
-    public String linkBSSID;
-    public String macAddress;
-    public int linkSignal;
-    public int linkFrequency;
-    public int linkSpeedMbps;
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef({WifiStateProblemMode.NO_PROBLEM_DEFAULT_STATE, WifiStateProblemMode.HANGING_ON_DHCP,
+            WifiStateProblemMode.HANGING_ON_AUTHENTICATING, WifiStateProblemMode.HANGING_ON_SCANNING,
+            WifiStateProblemMode.FREQUENT_DISCONNECTIONS, WifiStateProblemMode.MAX_MODES})
+    public @interface WifiStateProblemMode {
+        int NO_PROBLEM_DEFAULT_STATE = 0;
+        int HANGING_ON_DHCP = 1;
+        int HANGING_ON_AUTHENTICATING = 2;
+        int HANGING_ON_SCANNING = 3;
+        int FREQUENT_DISCONNECTIONS = 4;
+        int MAX_MODES = 5;
+    }
 
-    public NetworkInfo.DetailedState lastWifiState;
-    public long lastWifiStateTimestampMs;
-    public HashMap<Integer, ChannelInfo> channelInfoMap;
-    public HashMap<NetworkInfo.DetailedState, List<WifiStateInfo>> detailedWifiStateStats;
-    public List<ScanResult> lastWifiScanResult;
+    public static String getWifiStatsModeName(@WifiStateProblemMode int mode) {
+        switch (mode) {
+            case WifiStateProblemMode.NO_PROBLEM_DEFAULT_STATE:
+                return "NO_PROBLEM_DEFAULT_STATE";
+            case WifiStateProblemMode.HANGING_ON_DHCP:
+                return "HANGING_ON_DHCP";
+            case WifiStateProblemMode.HANGING_ON_AUTHENTICATING:
+                return "HANGING_ON_AUTHENTICATING";
+            case WifiStateProblemMode.HANGING_ON_SCANNING:
+                return "HANGING_ON_SCANNING";
+            case WifiStateProblemMode.FREQUENT_DISCONNECTIONS:
+                return "FREQUENT_DISCONNECTIONS";
+            default:
+                return "Unknown";
+        }
+    }
 
 
-    public WifiStats() {
+    private String linkSSID;
+    private String linkBSSID;
+    private String macAddress;
+    private int linkSignal;
+    private int linkFrequency;
+    private int linkSpeedMbps;
+
+    private NetworkInfo.DetailedState lastWifiState;
+    private long lastWifiStateTimestampMs;
+    private HashMap<Integer, ChannelInfo> channelInfoMap;
+    private HashMap<NetworkInfo.DetailedState, List<WifiStateInfo>> detailedWifiStateStats;
+    private List<ScanResult> lastWifiScanResult;
+    @WifiStateProblemMode private int wifiProblemMode;
+
+
+    public WifiState() {
         channelInfoMap = new HashMap<>();
         detailedWifiStateStats = new HashMap<>();
+        wifiProblemMode = WifiStateProblemMode.NO_PROBLEM_DEFAULT_STATE;
+        lastWifiState = NetworkInfo.DetailedState.IDLE;
+        lastWifiStateTimestampMs = 0;
     }
 
     public void clearWifiConnectionInfo() {
@@ -65,9 +105,7 @@ public class WifiStats {
         linkFrequency = 0;
         linkSpeedMbps = 0;
         linkSignal = 0;
-        lastWifiState = NetworkInfo.DetailedState.IDLE;
-        lastWifiStateTimestampMs = 0;
-        channelInfoMap = new HashMap<>();
+        //channelInfoMap = new HashMap<>();
     }
 
     public boolean updateSignal(int updatedSignal) {
@@ -85,6 +123,11 @@ public class WifiStats {
         return false;
     }
 
+    @WifiStateProblemMode
+    public int getCurrentWifiProblemMode() {
+        return wifiProblemMode;
+    }
+
     private void printHashMap() {
         for (Map.Entry<NetworkInfo.DetailedState, List<WifiStateInfo>> entry : detailedWifiStateStats.entrySet()) {
             NetworkInfo.DetailedState key = entry.getKey();
@@ -97,8 +140,33 @@ public class WifiStats {
         }
     }
 
-    synchronized public void updateDetailedWifiStateInfo(NetworkInfo.DetailedState detailedWifiState, long timestampMs) {
-        //Log.v(TAG, "Coming in updateDetailedWifiStateInfo4 with detailedState " + detailedWifiState.name() + " ts:" + timestampMs);
+    @WifiStateProblemMode
+    private int updateWifiProblemMode() {
+        long startTimeMs = getCurrentStateStartTimeMs();
+        if (System.currentTimeMillis() - startTimeMs >= THRESHOLD_FOR_DECLARING_CONNECTION_SETUP_STATE_AS_HANGING_MS) {
+            NetworkInfo.DetailedState currentState = getCurrentState();
+            currentState.name();
+            switch(currentState) {
+                case SCANNING:
+                    wifiProblemMode = WifiStateProblemMode.HANGING_ON_SCANNING;
+                    break;
+                case AUTHENTICATING:
+                    wifiProblemMode = WifiStateProblemMode.HANGING_ON_AUTHENTICATING;
+                    break;
+                case OBTAINING_IPADDR:
+                    wifiProblemMode = WifiStateProblemMode.HANGING_ON_DHCP;
+                    break;
+            }
+        } else if (getNumberOfTimesWifiInState(NetworkInfo.DetailedState.DISCONNECTED,
+                THRESHOLD_FOR_COUNTING_FREQUENT_STATE_CHANGES_MS) > THRESHOLD_FOR_FLAGGING_FREQUENT_STATE_CHANGES){
+            //Check for frequenct disconnections
+            wifiProblemMode = WifiStateProblemMode.FREQUENT_DISCONNECTIONS;
+        }
+        return wifiProblemMode;
+    }
+
+    @WifiStateProblemMode
+    synchronized protected int updateDetailedWifiStateInfo(NetworkInfo.DetailedState detailedWifiState, long timestampMs) {
         if (lastWifiState != detailedWifiState) {
             if (lastWifiStateTimestampMs != 0) {
                 WifiStateInfo lastWifiStateInfo = new WifiStateInfo(lastWifiState,
@@ -118,10 +186,12 @@ public class WifiStats {
         } else if (lastWifiStateTimestampMs == 0) {
                 lastWifiStateTimestampMs = timestampMs;
         }
+        //Update the wifi problem mode if any
+        return updateWifiProblemMode();
         //printHashMap();
     }
 
-    public int getNumberOfTimesWifiInState(NetworkInfo.DetailedState detailedState, long timeIntervalMs) {
+    private int getNumberOfTimesWifiInState(NetworkInfo.DetailedState detailedState, long timeIntervalMs) {
         int count = 0;
         List<WifiStateInfo> list = detailedWifiStateStats.get(detailedState);
         if (list == null) {
@@ -159,15 +229,15 @@ public class WifiStats {
         return wifiStateInfo.endTimestampMs - wifiStateInfo.startTimestampMs;
     }
 
-    public NetworkInfo.DetailedState getCurrentState() {
+    private NetworkInfo.DetailedState getCurrentState() {
         return lastWifiState;
     }
 
-    public long getCurrentStateStartTimeMs() {
+    private long getCurrentStateStartTimeMs() {
         return lastWifiStateTimestampMs;
     }
 
-    public HashMap<NetworkInfo.DetailedState, List<WifiStateInfo>> getStatsHashMap() {
+    private HashMap<NetworkInfo.DetailedState, List<WifiStateInfo>> getStatsHashMap() {
         return detailedWifiStateStats;
     }
 
@@ -188,7 +258,7 @@ public class WifiStats {
         }
     }
 
-    public String toJson() {
+    private String toJson() {
         Gson gson = new Gson();
         String json = gson.toJson(this);
         return json;
@@ -309,5 +379,6 @@ public class WifiStats {
             String json = gson.toJson(this);
             return json;
         }
+
     }
 }
