@@ -37,7 +37,7 @@ import static com.inceptai.dobby.connectivity.ConnectivityAnalyzer.WifiConnectiv
  * Created by vivek on 4/12/17.
  */
 public class ConnectivityAnalyzer {
-    public static int MAX_STRING_LENGTH_TO_FETCH = 1000; //1Kbyte
+    public static int MAX_STRING_LENGTH_TO_FETCH = 1000; // 1Kbyte
     public static String URL_FOR_CONNECTIVITY_TEST = "http://www.google.com";
     public static String URL_FOR_CONNECTIVITY_AND_PORTAL_TEST = "http://clients3.google.com/generate_204";
     protected static int MAX_SCHEDULING_TRIES_FOR_CHECKING_WIFI_CONNECTIVITY = 5;
@@ -45,7 +45,7 @@ public class ConnectivityAnalyzer {
     protected static int MAX_TRIES_AFTER_CONNECTIVITY_CHECK_RETURNS_FALSE = 1;
 
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({CONNECTED_AND_ONLINE, WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL,
+    @IntDef({WifiConnectivityMode.CONNECTED_AND_ONLINE, WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL,
             WifiConnectivityMode.CONNECTED_AND_OFFLINE, WifiConnectivityMode.ON_AND_DISCONNECTED,
             WifiConnectivityMode.OFF, WifiConnectivityMode.UNKNOWN, WifiConnectivityMode.MAX_MODES})
     public @interface WifiConnectivityMode {

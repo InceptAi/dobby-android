@@ -28,6 +28,11 @@ public class InferenceMap {
         int CABLE_MODEM_FAULT = 40;
     }
 
+    /**
+     * Exhaustive list of problems:
+     *
+     */
+
     public static Set<Integer> getPossibleConditionsFor(DataInterpreter.BandwidthGrade interpretation) {
         return null;
     }

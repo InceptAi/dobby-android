@@ -63,7 +63,7 @@ public class NetworkLayer {
         return getWifiAnalyzerInstance().startWifiScan();
     }
 
-    public WifiState getWifiStats() {
+    public WifiState getWifiState() {
         return getWifiAnalyzerInstance().getWifiState();
     }
 
