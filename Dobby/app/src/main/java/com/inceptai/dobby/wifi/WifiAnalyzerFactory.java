@@ -28,6 +28,20 @@ public class WifiAnalyzerFactory {
         }
     }
 
+    public static void cleanupFakeWifiAnalyzer() {
+        if (FAKE_WIFI_ANALYZER_INSTANCE != null) {
+            FAKE_WIFI_ANALYZER_INSTANCE.cleanup();
+            FAKE_WIFI_ANALYZER_INSTANCE = null;
+        }
+    }
+
+    public static void cleanupRealWifiAnalyzer() {
+        if (WIFI_ANALYZER_INSTANCE != null) {
+            WIFI_ANALYZER_INSTANCE.cleanup();
+            WIFI_ANALYZER_INSTANCE = null;
+        }
+    }
+
     public static WifiAnalyzer getWifiAnalyzer(Context context,
                                                DobbyThreadpool dobbyThreadpool,
                                                DobbyEventBus eventBus) {
@@ -42,6 +56,7 @@ public class WifiAnalyzerFactory {
     private static FakeWifiAnalyzer getFakeInstance(Context context,
                                                     DobbyThreadpool dobbyThreadpool,
                                                     DobbyEventBus eventBus) {
+        cleanupRealWifiAnalyzer();
         if (FAKE_WIFI_ANALYZER_INSTANCE ==  null) {
             // create new instance
             FAKE_WIFI_ANALYZER_INSTANCE = FakeWifiAnalyzer.create(context, dobbyThreadpool, eventBus);
@@ -52,6 +67,7 @@ public class WifiAnalyzerFactory {
     private static WifiAnalyzer getRealInstance(Context context,
                                                     DobbyThreadpool dobbyThreadpool,
                                                     DobbyEventBus eventBus) {
+        cleanupFakeWifiAnalyzer();
         if (WIFI_ANALYZER_INSTANCE ==  null) {
             // create new instance
             WIFI_ANALYZER_INSTANCE = WifiAnalyzer.create(context, dobbyThreadpool, eventBus);
