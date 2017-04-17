@@ -48,14 +48,16 @@ public class WifiState {
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({WifiStateProblemMode.NO_PROBLEM_DEFAULT_STATE, WifiStateProblemMode.HANGING_ON_DHCP,
             WifiStateProblemMode.HANGING_ON_AUTHENTICATING, WifiStateProblemMode.HANGING_ON_SCANNING,
-            WifiStateProblemMode.FREQUENT_DISCONNECTIONS, WifiStateProblemMode.MAX_MODES})
+            WifiStateProblemMode.FREQUENT_DISCONNECTIONS, WifiStateProblemMode.UNKNOWN,
+            WifiStateProblemMode.MAX_MODES})
     public @interface WifiStateProblemMode {
         int NO_PROBLEM_DEFAULT_STATE = 0;
         int HANGING_ON_DHCP = 1;
         int HANGING_ON_AUTHENTICATING = 2;
         int HANGING_ON_SCANNING = 3;
         int FREQUENT_DISCONNECTIONS = 4;
-        int MAX_MODES = 5;
+        int UNKNOWN = 5;
+        int MAX_MODES = 6;
     }
 
     public static String getWifiStatsModeName(@WifiStateProblemMode int mode) {
@@ -105,7 +107,6 @@ public class WifiState {
         linkFrequency = 0;
         linkSpeedMbps = 0;
         linkSignal = 0;
-        //channelInfoMap = new HashMap<>();
     }
 
     public boolean updateSignal(int updatedSignal) {
@@ -126,6 +127,14 @@ public class WifiState {
     @WifiStateProblemMode
     public int getCurrentWifiProblemMode() {
         return wifiProblemMode;
+    }
+
+    public HashMap<Integer, Double> getCurrentContentionMetric() {
+        HashMap<Integer, Double> channelMapToReturn = new HashMap<>();
+        for (ChannelInfo channelInfo: channelInfoMap.values()) {
+            channelMapToReturn.put(channelInfo.channelFrequency, channelInfo.contentionMetric);
+        }
+        return channelMapToReturn;
     }
 
     private void printHashMap() {
@@ -345,13 +354,13 @@ public class WifiState {
 
 
     public class ChannelInfo {
-        public double channelNumber;
+        public int channelFrequency;
         public int numberAPs;
         public int numberStrongAPs;
         public double contentionMetric;
 
-        public ChannelInfo(int channelNumber) {
-            this.channelNumber = channelNumber;
+        public ChannelInfo(int channelFrequency) {
+            this.channelFrequency = channelFrequency;
         }
 
         public String toJson() {
