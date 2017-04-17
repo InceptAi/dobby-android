@@ -1,6 +1,7 @@
 package com.inceptai.dobby.fake;
 
 import android.content.Context;
+import android.net.NetworkInfo;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
@@ -9,11 +10,12 @@ import android.util.Log;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.dobby.DobbyThreadpool;
+import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.DobbyWifiInfo;
 import com.inceptai.dobby.utils.Utils;
 import com.inceptai.dobby.wifi.WifiAnalyzer;
-import com.inceptai.dobby.wifi.WifiStats;
+import com.inceptai.dobby.wifi.WifiState;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -38,9 +40,15 @@ public class FakeWifiAnalyzer extends WifiAnalyzer {
     private ListenableFuture<List<ScanResult>> fakeWifiScanFuture;
 
     public static class FakeWifiScanConfig {
+
+
         public String mainApSSID;
         public int numApsChannelOne, numApsChannelSix, numApsChannelEleven;
-        @WifiStats.SignalStrengthZones public int signalZoneChannelOne, signalZoneChannelSix, signalZoneChannelEleven, signalZoneMainAp;
+        @WifiState.SignalStrengthZones public int signalZoneChannelOne, signalZoneChannelSix, signalZoneChannelEleven, signalZoneMainAp;
+        public NetworkInfo.DetailedState lastDetailedState;
+        public long lastDetailedStateStartTimestampMs;
+        @WifiState.WifiStateProblemMode public int fakeWifiProblemMode;
+
 
         public int mainApChannelNumber;
 
@@ -49,17 +57,21 @@ public class FakeWifiAnalyzer extends WifiAnalyzer {
             numApsChannelOne = numApsChannelSix = numApsChannelEleven = 4;
             mainApChannelNumber = 6;
             mainApSSID = "FAKE-AP";
-            signalZoneChannelOne = WifiStats.SignalStrengthZones.MEDIUM;
-            signalZoneChannelEleven = WifiStats.SignalStrengthZones.MEDIUM;
-            signalZoneChannelSix = WifiStats.SignalStrengthZones.MEDIUM;
-            signalZoneMainAp = WifiStats.SignalStrengthZones.MEDIUM;
+            signalZoneChannelOne = WifiState.SignalStrengthZones.MEDIUM;
+            signalZoneChannelEleven = WifiState.SignalStrengthZones.MEDIUM;
+            signalZoneChannelSix = WifiState.SignalStrengthZones.MEDIUM;
+            signalZoneMainAp = WifiState.SignalStrengthZones.MEDIUM;
+            lastDetailedState = NetworkInfo.DetailedState.CONNECTED;
+            lastDetailedStateStartTimestampMs = System.currentTimeMillis();
+            fakeWifiProblemMode = WifiState.WifiStateProblemMode.NO_PROBLEM_DEFAULT_STATE;
         }
     }
 
     public FakeWifiAnalyzer(Context context, WifiManager wifiManager,
                             DobbyThreadpool threadpool, DobbyEventBus eventBus) {
         super(context, wifiManager, threadpool, eventBus);
-        wifiStats.updateWifiStats(generateFakeWifiInfo(), null);
+        wifiState.updateWifiStats(generateFakeWifiInfo(), null);
+        wifiStateProblemMode = FAKE_WIFI_SCAN_CONFIG.fakeWifiProblemMode;
     }
 
     /**
@@ -77,12 +89,23 @@ public class FakeWifiAnalyzer extends WifiAnalyzer {
         return null;
     }
 
+    @Override
+    protected void updateWifiStatsDetailedState(NetworkInfo.DetailedState detailedState) {
+        @WifiState.WifiStateProblemMode int problemMode = FAKE_WIFI_SCAN_CONFIG.fakeWifiProblemMode;
+        wifiStateProblemMode = problemMode;
+        @DobbyEvent.EventType int eventTypeToBroadcast = convertWifiStateProblemToDobbyEventType(wifiStateProblemMode);
+        if (eventTypeToBroadcast != DobbyEvent.EventType.WIFI_STATE_UNKNOWN) {
+            eventBus.postEvent(new DobbyEvent(eventTypeToBroadcast));
+        }
+    }
+
+    @Override
     public ListenableFuture<List<ScanResult>> startWifiScan() {
         fakeWifiScanFuture = threadpool.getListeningScheduledExecutorService().schedule(new Callable<List<ScanResult>>() {
             @Override
             public List<ScanResult> call() {
                 List<ScanResult> wifiScan = generateFakeWifiScan();
-                wifiStats.updateWifiStats(generateFakeWifiInfo(), wifiScan);
+                wifiState.updateWifiStats(generateFakeWifiInfo(), wifiScan);
                 return  wifiScan;
             }
         }, SCAN_LATENCY_MS, TimeUnit.MILLISECONDS);
@@ -108,10 +131,10 @@ public class FakeWifiAnalyzer extends WifiAnalyzer {
 
     @Override
     protected void updateWifiStatsWithWifiInfo(WifiInfo info) {
-        wifiStats.updateWifiStats(generateFakeWifiInfo(), null);
+        wifiState.updateWifiStats(generateFakeWifiInfo(), null);
     }
 
-    private ScanResult getFakeScanResult(@WifiStats.SignalStrengthZones int zone, int channelFreq) {
+    private ScanResult getFakeScanResult(@WifiState.SignalStrengthZones int zone, int channelFreq) {
 
         String ssid = randomBssid();
         int level = getLevel(zone);
@@ -196,16 +219,16 @@ public class FakeWifiAnalyzer extends WifiAnalyzer {
                 random.nextInt(16));
     }
 
-    private static int getLevel(@WifiStats.SignalStrengthZones int zone) {
-        if (zone == WifiStats.SignalStrengthZones.HIGH) {
-            return getRandomSignal(WifiStats.SignalStrengthZones.HIGH, -30);
-        } else if (zone == WifiStats.SignalStrengthZones.MEDIUM) {
-            return getRandomSignal(WifiStats.SignalStrengthZones.MEDIUM, WifiStats.SignalStrengthZones.HIGH);
+    private static int getLevel(@WifiState.SignalStrengthZones int zone) {
+        if (zone == WifiState.SignalStrengthZones.HIGH) {
+            return getRandomSignal(WifiState.SignalStrengthZones.HIGH, -30);
+        } else if (zone == WifiState.SignalStrengthZones.MEDIUM) {
+            return getRandomSignal(WifiState.SignalStrengthZones.MEDIUM, WifiState.SignalStrengthZones.HIGH);
 
-        } else if (zone == WifiStats.SignalStrengthZones.LOW) {
-            return getRandomSignal(WifiStats.SignalStrengthZones.LOW, WifiStats.SignalStrengthZones.MEDIUM);
-        } else if (zone == WifiStats.SignalStrengthZones.FRINGE) {
-            return getRandomSignal(WifiStats.SignalStrengthZones.FRINGE, WifiStats.SignalStrengthZones.LOW);
+        } else if (zone == WifiState.SignalStrengthZones.LOW) {
+            return getRandomSignal(WifiState.SignalStrengthZones.LOW, WifiState.SignalStrengthZones.MEDIUM);
+        } else if (zone == WifiState.SignalStrengthZones.FRINGE) {
+            return getRandomSignal(WifiState.SignalStrengthZones.FRINGE, WifiState.SignalStrengthZones.LOW);
         }
         return -150;
     }

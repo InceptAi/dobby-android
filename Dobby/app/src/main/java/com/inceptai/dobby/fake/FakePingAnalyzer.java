@@ -76,7 +76,7 @@ public class FakePingAnalyzer extends PingAnalyzer {
     }
 
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({DEFAULT_WORKING_STATE, PingStatsMode.GATEWAY_UNREACHABLE,
+    @IntDef({PingStatsMode.DEFAULT_WORKING_STATE, PingStatsMode.GATEWAY_UNREACHABLE,
             PingStatsMode.GATEWAY_SLOW, PingStatsMode.EXTERNAL_SERVER_UNREACHABLE,
             PingStatsMode.EXTERNAL_SERVER_SLOW, PingStatsMode.DNS_UNREACHABLE,
             PingStatsMode.DNS_SLOW, PingStatsMode.MAX_STATES})

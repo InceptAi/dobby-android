@@ -250,6 +250,24 @@
                 android:layout_height="wrap_content"
                 android:prompt="@string/fake_connectivity_mode_selector" />
 
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="10dp"
+                android:text="@string/fake_wifi_problem_setting"
+                android:textSize="15sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/fake_wifi_problem_mode_selector" />
+
+            <Spinner
+                android:id="@+id/wifiproblem_mode_selector"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:prompt="@string/fake_wifi_problem_mode_selector" />
         </LinearLayout>
 
     </ScrollView>

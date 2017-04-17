@@ -18,18 +18,24 @@ import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.inceptai.dobby.DobbyApplication;
+import com.inceptai.dobby.DobbyThreadpool;
+import com.inceptai.dobby.NetworkLayer;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.connectivity.ConnectivityAnalyzer;
-import com.inceptai.dobby.fake.FakeConnectivityAnalyzer;
+import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.fake.FakePingAnalyzer;
 import com.inceptai.dobby.fake.FakeSpeedTestSocket;
-import com.inceptai.dobby.fake.FakeWifiAnalyzer;
-import com.inceptai.dobby.wifi.WifiStats;
+import com.inceptai.dobby.wifi.WifiState;
 
 import java.util.ArrayList;
 
+import javax.inject.Inject;
+
 import static com.inceptai.dobby.DobbyApplication.TAG;
+import static com.inceptai.dobby.fake.FakeConnectivityAnalyzer.fakeWifiConnectivityMode;
+import static com.inceptai.dobby.fake.FakeConnectivityAnalyzer.setFakeWifiConnectivityMode;
 import static com.inceptai.dobby.fake.FakePingAnalyzer.PingStatsMode.DEFAULT_WORKING_STATE;
+import static com.inceptai.dobby.fake.FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -67,6 +73,16 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
     // Fake connectivity selector
     private Spinner connectivityModeSpinner;
 
+    //Fake Wifi Problem State UI
+    private Spinner wifiProblemStateSpinner;
+
+    @Inject
+    NetworkLayer networkLayer;
+    @Inject
+    DobbyThreadpool threadpool;
+    @Inject
+    DobbyEventBus eventBus;
+
     public FakeDataFragment() {
         // Required empty public constructor
     }
@@ -75,6 +91,7 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
+        ((DobbyApplication) getActivity().getApplication()).getProdComponent().inject(this);
         View view =  inflater.inflate(R.layout.fragment_fake_data, container, false);
 
         saveButton = (Button) view.findViewById(R.id.save_button);
@@ -97,29 +114,32 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
 
         chanOneNumApsSpinner = (Spinner) view.findViewById(R.id.num_aps_chan_1_spinner);
         chanOneRssiSpinner = (Spinner) view.findViewById(R.id.rssi_level_chan_1_spinner);
-        populateSpinnerWithNumbers(chanOneNumApsSpinner, 15, FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.numApsChannelOne, 0);
-        setRssiSelection(chanOneRssiSpinner, FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.signalZoneChannelOne);
+        populateSpinnerWithNumbers(chanOneNumApsSpinner, 15, FAKE_WIFI_SCAN_CONFIG.numApsChannelOne, 0);
+        setRssiSelection(chanOneRssiSpinner, FAKE_WIFI_SCAN_CONFIG.signalZoneChannelOne);
 
         chanSixNumApsSpinner = (Spinner) view.findViewById(R.id.num_aps_chan_6_spinner);
         chanSixRssiSpinner = (Spinner) view.findViewById(R.id.rssi_level_chan_6_spinner);
-        populateSpinnerWithNumbers(chanSixNumApsSpinner, 15, FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.numApsChannelSix, 0);
-        setRssiSelection(chanSixRssiSpinner, FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.signalZoneChannelSix);
+        populateSpinnerWithNumbers(chanSixNumApsSpinner, 15, FAKE_WIFI_SCAN_CONFIG.numApsChannelSix, 0);
+        setRssiSelection(chanSixRssiSpinner, FAKE_WIFI_SCAN_CONFIG.signalZoneChannelSix);
 
         chanElevenNumApsSpinner = (Spinner) view.findViewById(R.id.num_aps_chan_11_spinner);
         chanElevenRssiSpinner = (Spinner) view.findViewById(R.id.rssi_level_chan_11_spinner);
-        populateSpinnerWithNumbers(chanElevenNumApsSpinner, 15, FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.numApsChannelEleven, 0);
-        setRssiSelection(chanElevenRssiSpinner, FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.signalZoneChannelEleven);
+        populateSpinnerWithNumbers(chanElevenNumApsSpinner, 15, FAKE_WIFI_SCAN_CONFIG.numApsChannelEleven, 0);
+        setRssiSelection(chanElevenRssiSpinner, FAKE_WIFI_SCAN_CONFIG.signalZoneChannelEleven);
 
         mainApChannelSpinner = (Spinner) view.findViewById(R.id.main_ap_channel_spinner);
         mainApRssiSpinner = (Spinner) view.findViewById(R.id.rssi_level_main_ap_spinner);
-        setRssiSelection(mainApRssiSpinner, FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.signalZoneMainAp);
-        populateSpinnerWithNumbers(mainApChannelSpinner, 11, FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.mainApChannelNumber, 1);
+        setRssiSelection(mainApRssiSpinner, FAKE_WIFI_SCAN_CONFIG.signalZoneMainAp);
+        populateSpinnerWithNumbers(mainApChannelSpinner, 11, FAKE_WIFI_SCAN_CONFIG.mainApChannelNumber, 1);
 
         pingStatsModeSpinner = (Spinner) view.findViewById(R.id.ping_stats_mode_selector);
         populateSpinnerWithPingModes(pingStatsModeSpinner, DEFAULT_WORKING_STATE);
 
         connectivityModeSpinner = (Spinner) view.findViewById(R.id.connectivity_mode_selector);
         populateSpinnerWithConnectivityModes(connectivityModeSpinner, ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_ONLINE);
+
+        wifiProblemStateSpinner = (Spinner) view.findViewById(R.id.wifiproblem_mode_selector);
+        populateSpinnerWithWifiProblemModes(wifiProblemStateSpinner, WifiState.WifiStateProblemMode.NO_PROBLEM_DEFAULT_STATE);
 
         return view;
     }
@@ -159,6 +179,23 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
         spinner.setSelection(selection, true);
     }
 
+    /**
+     * Populates from 0 .. max - 1
+     * @param spinner
+     * @param selection
+     */
+    private void populateSpinnerWithWifiProblemModes(Spinner spinner, @WifiState.WifiStateProblemMode int selection) {
+        ArrayList<String> modeList = new ArrayList<>();
+        for (@WifiState.WifiStateProblemMode int modeIndex = 0;
+             modeIndex < WifiState.WifiStateProblemMode.MAX_MODES; modeIndex++) {
+            modeList.add(WifiState.getWifiStatsModeName(modeIndex));
+        }
+        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_dropdown_item, modeList);
+        arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(arrayAdapter);
+        spinner.setSelection(selection, true);
+    }
+
 
     /**
      * Populates from 0 .. max - 1
@@ -177,30 +214,30 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
         spinner.setSelection(selection, true);
     }
 
-    private static void setRssiSelection(Spinner spinner, @WifiStats.SignalStrengthZones int rssiZone) {
-        if (rssiZone == WifiStats.SignalStrengthZones.HIGH) {
+    private static void setRssiSelection(Spinner spinner, @WifiState.SignalStrengthZones int rssiZone) {
+        if (rssiZone == WifiState.SignalStrengthZones.HIGH) {
             spinner.setSelection(0, true);
-        } else if (rssiZone == WifiStats.SignalStrengthZones.MEDIUM) {
+        } else if (rssiZone == WifiState.SignalStrengthZones.MEDIUM) {
             spinner.setSelection(1, true);
-        }  else if (rssiZone == WifiStats.SignalStrengthZones.LOW) {
+        }  else if (rssiZone == WifiState.SignalStrengthZones.LOW) {
             spinner.setSelection(2, true);
-        }  else if (rssiZone == WifiStats.SignalStrengthZones.FRINGE) {
+        }  else if (rssiZone == WifiState.SignalStrengthZones.FRINGE) {
             spinner.setSelection(3, true);
         }
     }
 
-    @WifiStats.SignalStrengthZones
+    @WifiState.SignalStrengthZones
     private static int getRssiZone(Spinner spinner) {
         if (spinner.getSelectedItemPosition() == 0) {
-            return WifiStats.SignalStrengthZones.HIGH;
+            return WifiState.SignalStrengthZones.HIGH;
         } else if (spinner.getSelectedItemPosition() == 1) {
-            return WifiStats.SignalStrengthZones.MEDIUM;
+            return WifiState.SignalStrengthZones.MEDIUM;
         }  else if (spinner.getSelectedItemPosition() == 2) {
-            return WifiStats.SignalStrengthZones.LOW;
+            return WifiState.SignalStrengthZones.LOW;
         }  else if (spinner.getSelectedItemPosition() == 3) {
-            return WifiStats.SignalStrengthZones.FRINGE;
+            return WifiState.SignalStrengthZones.FRINGE;
         }
-        return WifiStats.SignalStrengthZones.HIGH;
+        return WifiState.SignalStrengthZones.HIGH;
     }
 
     @Override
@@ -255,6 +292,7 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
 
     private void saveChanges() {
         boolean hasChanged = false;
+        boolean hasFakeDataSwichBeenToggled = false;
         String changedMessage = "Saving changes: ";
         String newDownloadBw = downloadBwEt.getText().toString();
         if (!newDownloadBw.isEmpty()) {
@@ -279,6 +317,7 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
             changedMessage = changedMessage + " Fake data to " + (fakeDataToggle.isChecked() ? "ON." : "OFF.");
             DobbyApplication.USE_FAKES.set(fakeDataToggle.isChecked());
             hasChanged = true;
+            hasFakeDataSwichBeenToggled = true;
         }
         if (saveWifiSettingsIfChanged()) {
             hasChanged = true;
@@ -292,20 +331,44 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
             hasChanged = true;
             changedMessage = changedMessage + " Connectivity settings changed. ";
         }
+        if (saveWifiProblemModeSettings()) {
+            hasChanged = true;
+            changedMessage = changedMessage + " Wifi problem mode settings changed. ";
+        }
+        if (hasFakeDataSwichBeenToggled) {
+            //To cleanup the old instance and get the new instance.
+            //Make sure this goes at the end so we can get all the changes.
+            if (networkLayer != null) {
+                networkLayer.getWifiAnalyzerInstance();
+            }
+        }
         if (hasChanged) {
             Toast.makeText(getContext(), changedMessage, Toast.LENGTH_SHORT).show();
         }
     }
 
+    private boolean saveWifiProblemModeSettings() {
+        boolean hasChanged = false;
+        @WifiState.WifiStateProblemMode int selectedMode = wifiProblemStateSpinner.getSelectedItemPosition();
+        if (selectedMode != FAKE_WIFI_SCAN_CONFIG.fakeWifiProblemMode) {
+            hasChanged = true;
+            //noinspection ResourceType
+            FAKE_WIFI_SCAN_CONFIG.fakeWifiProblemMode = selectedMode;
+            Log.i(TAG, "FAKE Setting Wifi Problem mode to : " +
+                    WifiState.getWifiStatsModeName(selectedMode));
+        }
+        return hasChanged;
+    }
+
     private boolean saveConnectivitySettingsIfChanged() {
         boolean hasChanged = false;
         @ConnectivityAnalyzer.WifiConnectivityMode  int selectedMode = connectivityModeSpinner.getSelectedItemPosition();
-        if (selectedMode != FakeConnectivityAnalyzer.fakeWifiConnectivityMode) {
+        if (selectedMode != fakeWifiConnectivityMode) {
             hasChanged = true;
             //noinspection ResourceType
-            FakeConnectivityAnalyzer.setFakeWifiConnectivityMode(selectedMode);
+            setFakeWifiConnectivityMode(selectedMode);
             Log.i(TAG, "FAKE Setting Connectivity mode to : " +
-                    ConnectivityAnalyzer.getConnecitivyStateName(FakeConnectivityAnalyzer.fakeWifiConnectivityMode));
+                    ConnectivityAnalyzer.getConnecitivyStateName(fakeWifiConnectivityMode));
         }
         return hasChanged;
     }
@@ -324,52 +387,52 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
 
     private boolean saveWifiSettingsIfChanged() {
         boolean hasChanged = false;
-        if (chanOneNumApsSpinner.getSelectedItemPosition() != FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.numApsChannelOne) {
+        if (chanOneNumApsSpinner.getSelectedItemPosition() != FAKE_WIFI_SCAN_CONFIG.numApsChannelOne) {
             hasChanged = true;
-            FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.numApsChannelOne = chanOneNumApsSpinner.getSelectedItemPosition();
+            FAKE_WIFI_SCAN_CONFIG.numApsChannelOne = chanOneNumApsSpinner.getSelectedItemPosition();
             Log.i(TAG, "Setting num Aps for Channel 1 to : " + chanOneNumApsSpinner.getSelectedItemPosition());
         }
 
-        if (chanSixNumApsSpinner.getSelectedItemPosition() != FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.numApsChannelSix) {
+        if (chanSixNumApsSpinner.getSelectedItemPosition() != FAKE_WIFI_SCAN_CONFIG.numApsChannelSix) {
             hasChanged = true;
-            FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.numApsChannelSix = chanSixNumApsSpinner.getSelectedItemPosition();
+            FAKE_WIFI_SCAN_CONFIG.numApsChannelSix = chanSixNumApsSpinner.getSelectedItemPosition();
             Log.i(TAG, "Setting num Aps for Channel 6 to : " + chanSixNumApsSpinner.getSelectedItemPosition());
         }
 
-        if (chanElevenNumApsSpinner.getSelectedItemPosition() != FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.numApsChannelEleven) {
+        if (chanElevenNumApsSpinner.getSelectedItemPosition() != FAKE_WIFI_SCAN_CONFIG.numApsChannelEleven) {
             hasChanged = true;
-            FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.numApsChannelEleven = chanElevenNumApsSpinner.getSelectedItemPosition();
+            FAKE_WIFI_SCAN_CONFIG.numApsChannelEleven = chanElevenNumApsSpinner.getSelectedItemPosition();
             Log.i(TAG, "Setting num Aps for Channel 11 to : " + chanElevenNumApsSpinner.getSelectedItemPosition());
         }
 
         int zone = getRssiZone(chanOneRssiSpinner);
-        if (zone != FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.signalZoneChannelOne) {
+        if (zone != FAKE_WIFI_SCAN_CONFIG.signalZoneChannelOne) {
             hasChanged = true;
-            FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.signalZoneChannelOne = zone;
+            FAKE_WIFI_SCAN_CONFIG.signalZoneChannelOne = zone;
         }
 
         zone = getRssiZone(chanSixRssiSpinner);
-        if (zone != FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.signalZoneChannelSix) {
+        if (zone != FAKE_WIFI_SCAN_CONFIG.signalZoneChannelSix) {
             hasChanged = true;
-            FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.signalZoneChannelSix = zone;
+            FAKE_WIFI_SCAN_CONFIG.signalZoneChannelSix = zone;
         }
 
         zone = getRssiZone(chanElevenRssiSpinner);
-        if (zone != FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.signalZoneChannelEleven) {
+        if (zone != FAKE_WIFI_SCAN_CONFIG.signalZoneChannelEleven) {
             hasChanged = true;
-            FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.signalZoneChannelEleven = zone;
+            FAKE_WIFI_SCAN_CONFIG.signalZoneChannelEleven = zone;
         }
 
         zone = getRssiZone(mainApRssiSpinner);
-        if (zone != FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.signalZoneMainAp) {
+        if (zone != FAKE_WIFI_SCAN_CONFIG.signalZoneMainAp) {
             hasChanged = true;
-            FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.signalZoneMainAp = zone;
+            FAKE_WIFI_SCAN_CONFIG.signalZoneMainAp = zone;
         }
 
         int mainApSelectedChannel = mainApChannelSpinner.getSelectedItemPosition() + 1;
-        if (mainApSelectedChannel != FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.mainApChannelNumber) {
+        if (mainApSelectedChannel != FAKE_WIFI_SCAN_CONFIG.mainApChannelNumber) {
             hasChanged = true;
-            FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG.mainApChannelNumber = mainApSelectedChannel;
+            FAKE_WIFI_SCAN_CONFIG.mainApChannelNumber = mainApSelectedChannel;
         }
         return hasChanged;
     }

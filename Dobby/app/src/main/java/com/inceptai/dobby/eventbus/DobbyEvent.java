@@ -20,7 +20,8 @@ public class DobbyEvent {
             EventType.NETWORK_STATE_CHANGED, EventType.DHCP_INFO_AVAILABLE, EventType.WIFI_INTERNET_CONNECTIVITY_ONLINE,
             EventType.WIFI_INTERNET_CONNECTIVITY_OFFLINE, EventType.WIFI_CONNECTED, EventType.WIFI_NOT_CONNECTED,
             EventType.PING_STARTED, EventType.PING_INFO_AVAILABLE, EventType.PING_FAILED,
-            EventType.BWTEST_INFO_AVAILABLE, EventType.BWTEST_FAILED})
+            EventType.BWTEST_INFO_AVAILABLE, EventType.BWTEST_FAILED, EventType.HANGING_ON_DHCP,
+            EventType.HANGING_ON_AUTHENTICATING, EventType.HANGING_ON_SCANNING, EventType.FREQUENT_DISCONNECTIONS})
     public @interface EventType {
         //Unknown event type
         int NO_EVENT_RECEIVED = 0;
@@ -54,6 +55,12 @@ public class DobbyEvent {
         //Ping notifications
         int BWTEST_INFO_AVAILABLE = 18;
         int BWTEST_FAILED = 19;
+
+        //Wifi state problems
+        int HANGING_ON_DHCP = 20;
+        int HANGING_ON_AUTHENTICATING = 21;
+        int HANGING_ON_SCANNING = 22;
+        int FREQUENT_DISCONNECTIONS = 23;
     }
 
     @DobbyEvent.EventType
@@ -126,6 +133,15 @@ public class DobbyEvent {
             case EventType.BWTEST_FAILED:
                 return "BWTEST_FAILED";
 
+            //Wifi state problems
+            case EventType.HANGING_ON_DHCP:
+                return "HANGING_ON_DHCP";
+            case EventType.HANGING_ON_AUTHENTICATING:
+                return "HANGING_ON_AUTHENTICATING";
+            case EventType.HANGING_ON_SCANNING:
+                return "HANGING_ON_SCANNING";
+            case EventType.FREQUENT_DISCONNECTIONS:
+                return "FREQUENT_DISCONNECTIONS";
             default:
                 return "UNKNOWN EVENT TYPE";
         }
