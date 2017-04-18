@@ -6,10 +6,7 @@ import com.inceptai.dobby.wifi.WifiState;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.util.BitSet;
 import java.util.Set;
-
-import static com.inceptai.dobby.ai.InferenceMap.Condition.CONDITION_NONE_MAX;
 
 /**
  * Created by arunesh on 4/14/17.
@@ -58,12 +55,6 @@ public class InferenceMap {
         return null;
     }
 
-
-    // Condition Type: (wifi problem, connectivity problem, latency).
-    // Condition value:
-    // Possible conditions, with probabilities.
-    //
-
     /**
      *
      * @param wifiProblemMode
@@ -75,43 +66,79 @@ public class InferenceMap {
         }
 
         if (wifiProblemMode == WifiState.WifiLinkMode.FREQUENT_DISCONNECTIONS) {
-            int[] conditions = {Condition.WIFI_CHANNEL_BAD_SIGNAL,
-                    Condition.WIFI_CHANNEL_CONGESTION,
-                    Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE};
-            return new PossibleConditions(PossibleConditions.TYPE_INCLUSION, conditions);
+            PossibleConditions conditions = new PossibleConditions();
+            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
+            conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
+            conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE, 0.3);
+            return conditions;
+        }
+
+        if (wifiProblemMode == WifiState.WifiLinkMode.HANGING_ON_AUTHENTICATING) {
+            PossibleConditions conditions = new PossibleConditions();
+            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
+            conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
+            conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE, 0.3);
+            return conditions;
+        }
+
+        if (wifiProblemMode == WifiState.WifiLinkMode.HANGING_ON_DHCP) {
+            PossibleConditions conditions = new PossibleConditions();
+            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
+            conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
+            conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE, 0.3);
+            return conditions;
+        }
+
+        if (wifiProblemMode == WifiState.WifiLinkMode.HANGING_ON_SCANNING) {
+            PossibleConditions conditions = new PossibleConditions();
+            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
+            conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
+            conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE, 0.3);
+            return conditions;
+        }
+
+        if (wifiProblemMode == WifiState.WifiLinkMode.UNKNOWN) {
+            PossibleConditions conditions = new PossibleConditions();
+            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
+            conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
+            conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE, 0.3);
+            return conditions;
         }
 
         return PossibleConditions.NOOP_CONDITION;
     }
 
-    public static class PossibleConditions {
-        public static final int TYPE_EXCLUSION = 1;
-        public static final int TYPE_INCLUSION = 2;
-        public static final int TYPE_NOOP = 3;
-        public static final PossibleConditions NOOP_CONDITION = new PossibleConditions(TYPE_NOOP);
-
-        private int conditionType;
-
-        private BitSet bitSet = new BitSet((int) CONDITION_NONE_MAX);
-
-        PossibleConditions(int conditionType) {
-            this.conditionType = conditionType;
-            bitSet.clear();
+    public static String conditionString(@Condition int condition) {
+        switch (condition) {
+            case Condition.WIFI_CHANNEL_CONGESTION:
+                return "WIFI_CHANNEL_CONGESTION";
+            case Condition.WIFI_CHANNEL_BAD_SIGNAL:
+                return "WIFI_CHANNEL_BAD_SIGNAL";
+            case Condition.WIFI_INTERFACE_ON_PHONE_OFFLINE:
+                return "WIFI_INTERFACE_ON_PHONE_OFFLINE";
+            case Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE:
+                return "WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE";
+            case Condition.WIFI_INTERFACE_ON_PHONE_TURNED_OFF:
+                return "WIFI_INTERFACE_ON_PHONE_TURNED_OFF";
+            case Condition.WIFI_LINK_DHCP_ISSUE:
+                return "WIFI_LINK_DHCP_ISSUE";
+            case Condition.WIFI_LINK_ASSOCIATION_ISSUE:
+                return "WIFI_LINK_ASSOCIATION_ISSUE";
+            case Condition.WIFI_LINK_AUTH_ISSUE:
+                return "WIFI_LINK_AUTH_ISSUE";
+            case Condition.ROUTER_FAULT_WIFI_OK:
+                return "ROUTER_FAULT_WIFI_OK";
+            case Condition.ROUTER_WIFI_INTERFACE_FAULT:
+                return "ROUTER_WIFI_INTERFACE_FAULT";
+            case Condition.ROUTER_SOFTWARE_FAULT:
+                return "ROUTER_SOFTWARE_FAULT";
+            case Condition.ISP_INTERNET_SLOW_DNS_OK:
+                return "ISP_INTERNET_SLOW_DNS_OK";
+            case Condition.ISP_INTERNET_DOWN:
+                return "ISP_INTERNET_DOWN";
+            case Condition.CABLE_MODEM_FAULT:
+                return "CABLE_MODEM_FAULT";
         }
-
-        PossibleConditions(int conditionType, @Condition int[] conditions) {
-            this(conditionType);
-            setConditions(conditions);
-        }
-
-        void setCondition(@Condition int condition) {
-            bitSet.set(condition);
-        }
-
-        void setConditions(@Condition int[] conditions) {
-            for (int i : conditions) {
-                bitSet.set(i);
-            }
-        }
+        return "UNKNOWN VALUE";
     }
 }
