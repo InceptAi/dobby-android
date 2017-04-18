@@ -2,7 +2,9 @@ package com.inceptai.dobby.ai;
 
 import android.support.annotation.IntDef;
 
+import com.inceptai.dobby.connectivity.ConnectivityAnalyzer;
 import com.inceptai.dobby.model.PingStats;
+import com.inceptai.dobby.wifi.WifiState;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -106,8 +108,10 @@ public class DataInterpreter {
     }
 
     public static class WifiGrade {
-        @MetricType int wifiChannelAvailabilty;  /* based on congestion metric */
-        @MetricType int wifiSignal;
+        HashMap<Integer, Integer> wifiChannelAvailabiltyMap;  /* based on congestion metric */
+        @MetricType int primaryApSignal;
+        @ConnectivityAnalyzer.WifiConnectivityMode int wifiConnetivityMode;
+        @WifiState.WifiStateProblemMode int wifiProblemMode;
     }
 
     /**
@@ -164,6 +168,18 @@ public class DataInterpreter {
                 HTTP_LATENCY_ROUTER_STEPS_MS,
                 httpRouterStats.avgLatencyMs > 0.0);
         return  httpGrade;
+    }
+
+    public static WifiGrade interpret(HashMap<Integer, Double> contentionMetric,
+                                      int apRssi,
+                                      @WifiState.WifiStateProblemMode int wifiProblemMode,
+                                      @ConnectivityAnalyzer.WifiConnectivityMode int wifiConnectivityMode) {
+        WifiGrade wifiGrade = new WifiGrade();
+        wifiGrade.wifiChannelAvailabiltyMap = new HashMap<>();
+        wifiGrade.primaryApSignal = getGradeHigherIsBetter(apRssi, WIFI_RSSI_STEPS_MS, apRssi < 0);
+        wifiGrade.wifiConnetivityMode = wifiConnectivityMode;
+        wifiGrade.wifiProblemMode = wifiProblemMode;
+        return wifiGrade;
     }
 
     @MetricType

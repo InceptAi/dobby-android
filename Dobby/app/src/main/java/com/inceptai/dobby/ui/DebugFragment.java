@@ -136,7 +136,7 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
             addConsoleText("\nStarting Wifi scan...");
             startWifiScan();
         } else if (TAG_WIFI_STATS.equals(tag)) {
-            getWifiStats();
+            getWifiState();
         }
 
     }
@@ -205,8 +205,8 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
         }, threadpool.getUiThreadExecutor());
     }
 
-    private void getWifiStats() {
-        addConsoleText("\nWifi Stats:" + networkLayer.getWifiStats().toString());
+    private void getWifiState() {
+        addConsoleText("\nWifi Stats:" + networkLayer.getWifiState().toString());
     }
 
     private void startBandwidthTest(@BandwithTestCodes.BandwidthTestMode final int testMode) {
