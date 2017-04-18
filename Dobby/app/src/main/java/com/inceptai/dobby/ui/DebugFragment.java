@@ -71,7 +71,7 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
 
 
     public DebugFragment() {
-        // Required empty public constructor
+        Log.v(TAG, "Constructing DebugFragment " + this);
     }
 
     @Override
@@ -195,18 +195,18 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
             @Override
             public void run() {
                 try {
+                    Log.v(TAG, "Got wifi scan result");
                     addConsoleText("Wifi Scan:" + future.get().toString());
                 } catch (InterruptedException e) {
-                    Log.w(TAG, "Exception parsing " + e);
+                    Log.w(TAG, "InterruptedException parsing " + e);
                 } catch (ExecutionException e) {
-                    Log.w(TAG, "Exception parsing " + e);
+                    Log.w(TAG, "ExecutionException parsing " + e);
                 }
             }
         }, threadpool.getUiThreadExecutor());
     }
 
     private void getWifiState() {
-        //addConsoleText("\nWifi Stats:" + networkLayer.getWifiState().toString());
         addConsoleText("\nWifi Channel Stats:" + networkLayer.getChannelStats().toString());
     }
 

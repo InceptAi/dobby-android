@@ -20,6 +20,7 @@ import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.DobbyWifiInfo;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -33,8 +34,8 @@ public class WifiAnalyzer {
 
     private static final int WIFI_RECEIVER_UNREGISTERED = 0;
     private static final int WIFI_RECEIVER_REGISTERED = 1;
-    private static final boolean TRIGGER_WIFI_SCAN_ON_RSSI_CHANGE = true;
-    private static final int GAP_FOR_GETTING_DETAILED_NETWORK_STATE_STATS_MS = 200000;
+    private static final boolean TRIGGER_WIFI_SCAN_ON_RSSI_CHANGE = false;
+    private static final int MIN_WIFI_SCANS_NEEDED = 3;
 
     // Store application context to prevent leaks and crashes from an activity going out of scope.
     protected Context context;
@@ -50,6 +51,7 @@ public class WifiAnalyzer {
     protected DobbyEventBus eventBus;
     @WifiState.WifiLinkMode
     protected int wifiStateProblemMode;
+    protected List<ScanResult> combinedScanResult;
 
 
     protected WifiAnalyzer(Context context, WifiManager wifiManager, DobbyThreadpool threadpool, DobbyEventBus eventBus) {
@@ -65,6 +67,7 @@ public class WifiAnalyzer {
         wifiState.updateWifiStats(new DobbyWifiInfo(wifiManager.getConnectionInfo()), null);
         registerWifiStateReceiver();
         wifiStateProblemMode = WifiState.WifiLinkMode.NO_PROBLEM_DEFAULT_STATE;
+        combinedScanResult = new ArrayList<>();
     }
 
     /**
@@ -86,6 +89,9 @@ public class WifiAnalyzer {
      * @return An instance of a {@link ListenableFuture<List<ScanResult>>} or null on immediate failure.
      */
     public ListenableFuture<List<ScanResult>> startWifiScan() {
+        //Clearing out previous scan results
+        combinedScanResult.clear();
+
         if (wifiReceiverState != WIFI_RECEIVER_REGISTERED) {
             registerScanReceiver();
         }
@@ -130,44 +136,82 @@ public class WifiAnalyzer {
     }
 
     private class WifiReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context c, Intent intent) {
+        private int currentScans = 0;
+
+        public WifiReceiver() {
+        }
+
+        private void resetCurrentScans() {
+            currentScans = 0;
+        }
+
+        synchronized public void onScanReceive(Intent intent) {
             final Intent intentToProcess = intent;
+            currentScans++;
+            final boolean doScanAgain = (currentScans < MIN_WIFI_SCANS_NEEDED);
             threadpool.submit(new Runnable() {
                 @Override
                 public void run() {
-                    processWifiIntents(intentToProcess);
+                    List<ScanResult> wifiList = wifiManager.getScanResults();
+                    combinedScanResult.addAll(wifiList);
+                    printScanResults(wifiList);
+
+                    if (doScanAgain && wifiManager.startScan()) {
+                        Log.v(TAG, "Starting Wifi Scan again, currentScans: " + currentScans);
+                    } else {
+                        eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.WIFI_SCAN_AVAILABLE));
+                        updateWifiScanResults();
+                        Log.v(TAG, "Unregistering Scan Receiver");
+                        unregisterScanReceiver();
+                        resetCurrentScans();
+                    }
                 }
             });
         }
+
+        public void onWifiStateChange(Intent intent) {
+            final Intent intentToProcess = intent;
+            final String action = intent.getAction();
+            threadpool.submit(new Runnable() {
+                @Override
+                public void run() {
+                    processWifiStateRelatedIntents(intentToProcess);
+                }
+            });
+        }
+
+
+        @Override
+        public void onReceive(Context c, Intent intent) {
+            final Intent intentToProcess = intent;
+            final String action = intent.getAction();
+            if (action.equals(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)) {
+                onScanReceive(intent);
+            } else if (action.equals(WifiManager.RSSI_CHANGED_ACTION)
+                    || action.equals(WifiManager.WIFI_STATE_CHANGED_ACTION)
+                    || action.equals(WifiManager.NETWORK_STATE_CHANGED_ACTION)) {
+                onWifiStateChange(intent);
+            }
+        }
     }
 
-    private void processWifiIntents(Intent intent) {
-        final String action = intent.getAction();
-        if (action.equals(WifiManager.RSSI_CHANGED_ACTION)
-                || action.equals(WifiManager.WIFI_STATE_CHANGED_ACTION)
-                || action.equals(WifiManager.NETWORK_STATE_CHANGED_ACTION)) {
-            processWifiStateRelatedIntents(intent);
-        } else if (action.equals(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)) {
-            eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.WIFI_SCAN_AVAILABLE));
-            updateWifiScanResults();
-            unregisterScanReceiver();
+    private void printScanResults(List<ScanResult> scanResultList) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < scanResultList.size(); i++) {
+            sb.append(new Integer(i + 1).toString() + ".");
+            sb.append((scanResultList.get(i)).toString());
+            sb.append("\\n");
         }
+        Log.i(TAG, "Wifi scan result: " + sb.toString());
     }
 
     private void updateWifiScanResults() {
         StringBuilder sb = new StringBuilder();
-        List<ScanResult> wifiList = wifiManager.getScanResults();
-        for (int i = 0; i < wifiList.size(); i++) {
-            sb.append(new Integer(i + 1).toString() + ".");
-            sb.append((wifiList.get(i)).toString());
-            sb.append("\\n");
-        }
-        Log.i(TAG, "Wifi scan result: " + sb.toString());
+        wifiState.updateWifiStats(null, combinedScanResult);
         if (wifiScanFuture != null) {
-            wifiScanFuture.set(wifiList);
+            boolean setResult = wifiScanFuture.set(combinedScanResult);
+            Log.v(TAG, "Setting wifi scan future: return value: " + setResult);
         }
-        wifiState.updateWifiStats(null, wifiList);
         /*
         if (wifiList.size() == 0) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {

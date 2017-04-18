@@ -160,6 +160,7 @@ public class NetworkLayer {
 
     @Subscribe
     public void listen(DobbyEvent event) {
+        Log.v(TAG, "NL, Found Event: " + event.toString());
         if (event.getLastEventType() == DobbyEvent.EventType.DHCP_INFO_AVAILABLE) {
             ipLayerInfo = new IPLayerInfo(getWifiAnalyzerInstance().getDhcpInfo());
             if (ipLayerInfo != null) {
