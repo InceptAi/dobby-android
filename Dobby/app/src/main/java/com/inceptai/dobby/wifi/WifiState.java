@@ -45,11 +45,11 @@ public class WifiState {
     }
 
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({WifiStateProblemMode.NO_PROBLEM_DEFAULT_STATE, WifiStateProblemMode.HANGING_ON_DHCP,
-            WifiStateProblemMode.HANGING_ON_AUTHENTICATING, WifiStateProblemMode.HANGING_ON_SCANNING,
-            WifiStateProblemMode.FREQUENT_DISCONNECTIONS, WifiStateProblemMode.UNKNOWN,
-            WifiStateProblemMode.MAX_MODES})
-    public @interface WifiStateProblemMode {
+    @IntDef({WifiLinkMode.NO_PROBLEM_DEFAULT_STATE, WifiLinkMode.HANGING_ON_DHCP,
+            WifiLinkMode.HANGING_ON_AUTHENTICATING, WifiLinkMode.HANGING_ON_SCANNING,
+            WifiLinkMode.FREQUENT_DISCONNECTIONS, WifiLinkMode.UNKNOWN,
+            WifiLinkMode.MAX_MODES})
+    public @interface WifiLinkMode {
         int NO_PROBLEM_DEFAULT_STATE = 0;  // Connected and working normally.
         int HANGING_ON_DHCP = 1;
         int HANGING_ON_AUTHENTICATING = 2;
@@ -59,17 +59,17 @@ public class WifiState {
         int MAX_MODES = 6;
     }
 
-    public static String getWifiStatsModeName(@WifiStateProblemMode int mode) {
+    public static String getWifiStatsModeName(@WifiLinkMode int mode) {
         switch (mode) {
-            case WifiStateProblemMode.NO_PROBLEM_DEFAULT_STATE:
+            case WifiLinkMode.NO_PROBLEM_DEFAULT_STATE:
                 return "NO_PROBLEM_DEFAULT_STATE";
-            case WifiStateProblemMode.HANGING_ON_DHCP:
+            case WifiLinkMode.HANGING_ON_DHCP:
                 return "HANGING_ON_DHCP";
-            case WifiStateProblemMode.HANGING_ON_AUTHENTICATING:
+            case WifiLinkMode.HANGING_ON_AUTHENTICATING:
                 return "HANGING_ON_AUTHENTICATING";
-            case WifiStateProblemMode.HANGING_ON_SCANNING:
+            case WifiLinkMode.HANGING_ON_SCANNING:
                 return "HANGING_ON_SCANNING";
-            case WifiStateProblemMode.FREQUENT_DISCONNECTIONS:
+            case WifiLinkMode.FREQUENT_DISCONNECTIONS:
                 return "FREQUENT_DISCONNECTIONS";
             default:
                 return "Unknown";
@@ -92,13 +92,14 @@ public class WifiState {
     private HashMap<String, Integer> movingSignalAverage;
     private HashMap<String, Long> lastSeenSignalTimestamp;
 
-    @WifiStateProblemMode private int wifiProblemMode;
+    @WifiLinkMode
+    private int wifiProblemMode;
 
 
     public WifiState() {
         channelInfoMap = new HashMap<>();
         detailedWifiStateStats = new HashMap<>();
-        wifiProblemMode = WifiStateProblemMode.NO_PROBLEM_DEFAULT_STATE;
+        wifiProblemMode = WifiLinkMode.NO_PROBLEM_DEFAULT_STATE;
         lastWifiState = NetworkInfo.DetailedState.IDLE;
         lastWifiStateTimestampMs = 0;
         movingSignalAverage = new HashMap<>();
@@ -128,7 +129,7 @@ public class WifiState {
         return false;
     }
 
-    @WifiStateProblemMode
+    @WifiLinkMode
     public int getCurrentWifiProblemMode() {
         return wifiProblemMode;
     }
@@ -153,7 +154,7 @@ public class WifiState {
         }
     }
 
-    @WifiStateProblemMode
+    @WifiLinkMode
     private int updateWifiProblemMode() {
         long startTimeMs = getCurrentStateStartTimeMs();
         if (System.currentTimeMillis() - startTimeMs >= THRESHOLD_FOR_DECLARING_CONNECTION_SETUP_STATE_AS_HANGING_MS) {
@@ -161,24 +162,24 @@ public class WifiState {
             currentState.name();
             switch(currentState) {
                 case SCANNING:
-                    wifiProblemMode = WifiStateProblemMode.HANGING_ON_SCANNING;
+                    wifiProblemMode = WifiLinkMode.HANGING_ON_SCANNING;
                     break;
                 case AUTHENTICATING:
-                    wifiProblemMode = WifiStateProblemMode.HANGING_ON_AUTHENTICATING;
+                    wifiProblemMode = WifiLinkMode.HANGING_ON_AUTHENTICATING;
                     break;
                 case OBTAINING_IPADDR:
-                    wifiProblemMode = WifiStateProblemMode.HANGING_ON_DHCP;
+                    wifiProblemMode = WifiLinkMode.HANGING_ON_DHCP;
                     break;
             }
         } else if (getNumberOfTimesWifiInState(NetworkInfo.DetailedState.DISCONNECTED,
                 THRESHOLD_FOR_COUNTING_FREQUENT_STATE_CHANGES_MS) > THRESHOLD_FOR_FLAGGING_FREQUENT_STATE_CHANGES){
             //Check for frequenct disconnections
-            wifiProblemMode = WifiStateProblemMode.FREQUENT_DISCONNECTIONS;
+            wifiProblemMode = WifiLinkMode.FREQUENT_DISCONNECTIONS;
         }
         return wifiProblemMode;
     }
 
-    @WifiStateProblemMode
+    @WifiLinkMode
     synchronized protected int updateDetailedWifiStateInfo(NetworkInfo.DetailedState detailedWifiState, long timestampMs) {
         if (lastWifiState != detailedWifiState) {
             if (lastWifiStateTimestampMs != 0) {

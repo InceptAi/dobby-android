@@ -67,6 +67,10 @@ public class NetworkLayer {
         return getWifiAnalyzerInstance().getWifiState();
     }
 
+    public HashMap<Integer, WifiState.ChannelInfo> getChannelStats() {
+        return getWifiAnalyzerInstance().getChannelStats();
+    }
+
     public HashMap<Integer, Double> getChannelContention() {
         HashMap<Integer, Double> channelContention = new HashMap<>();
         WifiState wifiState = getWifiAnalyzerInstance().getWifiState();
@@ -76,9 +80,9 @@ public class NetworkLayer {
         return channelContention;
     }
 
-    @WifiState.WifiStateProblemMode
+    @WifiState.WifiLinkMode
     public int getWifiProblemMode() {
-        int problemMode = WifiState.WifiStateProblemMode.UNKNOWN;
+        int problemMode = WifiState.WifiLinkMode.UNKNOWN;
         WifiState wifiState = getWifiAnalyzerInstance().getWifiState();
         if (wifiState != null) {
             problemMode = wifiState.getCurrentWifiProblemMode();

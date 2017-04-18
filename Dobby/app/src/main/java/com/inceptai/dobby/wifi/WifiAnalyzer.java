@@ -48,7 +48,8 @@ public class WifiAnalyzer {
     protected boolean wifiEnabled;
     protected SettableFuture<List<ScanResult>> wifiScanFuture;
     protected DobbyEventBus eventBus;
-    @WifiState.WifiStateProblemMode protected int wifiStateProblemMode;
+    @WifiState.WifiLinkMode
+    protected int wifiStateProblemMode;
 
 
     protected WifiAnalyzer(Context context, WifiManager wifiManager, DobbyThreadpool threadpool, DobbyEventBus eventBus) {
@@ -63,7 +64,7 @@ public class WifiAnalyzer {
         wifiState = new WifiState();
         wifiState.updateWifiStats(new DobbyWifiInfo(wifiManager.getConnectionInfo()), null);
         registerWifiStateReceiver();
-        wifiStateProblemMode = WifiState.WifiStateProblemMode.NO_PROBLEM_DEFAULT_STATE;
+        wifiStateProblemMode = WifiState.WifiLinkMode.NO_PROBLEM_DEFAULT_STATE;
     }
 
     /**
@@ -195,19 +196,19 @@ public class WifiAnalyzer {
     }
 
     @DobbyEvent.EventType
-    protected int convertWifiStateProblemToDobbyEventType(@WifiState.WifiStateProblemMode int problemMode) {
+    protected int convertWifiStateProblemToDobbyEventType(@WifiState.WifiLinkMode int problemMode) {
         @DobbyEvent.EventType int eventTypeToBroadcast;
         switch (wifiStateProblemMode) {
-            case WifiState.WifiStateProblemMode.HANGING_ON_DHCP:
+            case WifiState.WifiLinkMode.HANGING_ON_DHCP:
                 eventTypeToBroadcast = DobbyEvent.EventType.HANGING_ON_DHCP;
                 break;
-            case WifiState.WifiStateProblemMode.HANGING_ON_AUTHENTICATING:
+            case WifiState.WifiLinkMode.HANGING_ON_AUTHENTICATING:
                 eventTypeToBroadcast = DobbyEvent.EventType.HANGING_ON_AUTHENTICATING;
                 break;
-            case WifiState.WifiStateProblemMode.HANGING_ON_SCANNING:
+            case WifiState.WifiLinkMode.HANGING_ON_SCANNING:
                 eventTypeToBroadcast = DobbyEvent.EventType.HANGING_ON_SCANNING;
                 break;
-            case WifiState.WifiStateProblemMode.FREQUENT_DISCONNECTIONS:
+            case WifiState.WifiLinkMode.FREQUENT_DISCONNECTIONS:
                 eventTypeToBroadcast = DobbyEvent.EventType.FREQUENT_DISCONNECTIONS;
                 break;
             default:
@@ -217,7 +218,7 @@ public class WifiAnalyzer {
     }
 
     protected void updateWifiStatsDetailedState(NetworkInfo.DetailedState detailedState) {
-        @WifiState.WifiStateProblemMode int problemMode = wifiState.updateDetailedWifiStateInfo(detailedState, System.currentTimeMillis());
+        @WifiState.WifiLinkMode int problemMode = wifiState.updateDetailedWifiStateInfo(detailedState, System.currentTimeMillis());
         if (wifiStateProblemMode != problemMode) {
             wifiStateProblemMode = problemMode;
             @DobbyEvent.EventType int eventTypeToBroadcast = convertWifiStateProblemToDobbyEventType(wifiStateProblemMode);

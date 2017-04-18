@@ -47,7 +47,8 @@ public class FakeWifiAnalyzer extends WifiAnalyzer {
         @WifiState.SignalStrengthZones public int signalZoneChannelOne, signalZoneChannelSix, signalZoneChannelEleven, signalZoneMainAp;
         public NetworkInfo.DetailedState lastDetailedState;
         public long lastDetailedStateStartTimestampMs;
-        @WifiState.WifiStateProblemMode public int fakeWifiProblemMode;
+        @WifiState.WifiLinkMode
+        public int fakeWifiProblemMode;
 
 
         public int mainApChannelNumber;
@@ -63,7 +64,7 @@ public class FakeWifiAnalyzer extends WifiAnalyzer {
             signalZoneMainAp = WifiState.SignalStrengthZones.MEDIUM;
             lastDetailedState = NetworkInfo.DetailedState.CONNECTED;
             lastDetailedStateStartTimestampMs = System.currentTimeMillis();
-            fakeWifiProblemMode = WifiState.WifiStateProblemMode.NO_PROBLEM_DEFAULT_STATE;
+            fakeWifiProblemMode = WifiState.WifiLinkMode.NO_PROBLEM_DEFAULT_STATE;
         }
     }
 
@@ -91,7 +92,7 @@ public class FakeWifiAnalyzer extends WifiAnalyzer {
 
     @Override
     protected void updateWifiStatsDetailedState(NetworkInfo.DetailedState detailedState) {
-        @WifiState.WifiStateProblemMode int problemMode = FAKE_WIFI_SCAN_CONFIG.fakeWifiProblemMode;
+        @WifiState.WifiLinkMode int problemMode = FAKE_WIFI_SCAN_CONFIG.fakeWifiProblemMode;
         wifiStateProblemMode = problemMode;
         @DobbyEvent.EventType int eventTypeToBroadcast = convertWifiStateProblemToDobbyEventType(wifiStateProblemMode);
         if (eventTypeToBroadcast != DobbyEvent.EventType.WIFI_STATE_UNKNOWN) {

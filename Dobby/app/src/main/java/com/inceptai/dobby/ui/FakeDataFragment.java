@@ -139,7 +139,7 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
         populateSpinnerWithConnectivityModes(connectivityModeSpinner, ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_ONLINE);
 
         wifiProblemStateSpinner = (Spinner) view.findViewById(R.id.wifiproblem_mode_selector);
-        populateSpinnerWithWifiProblemModes(wifiProblemStateSpinner, WifiState.WifiStateProblemMode.NO_PROBLEM_DEFAULT_STATE);
+        populateSpinnerWithWifiProblemModes(wifiProblemStateSpinner, WifiState.WifiLinkMode.NO_PROBLEM_DEFAULT_STATE);
 
         return view;
     }
@@ -184,10 +184,10 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
      * @param spinner
      * @param selection
      */
-    private void populateSpinnerWithWifiProblemModes(Spinner spinner, @WifiState.WifiStateProblemMode int selection) {
+    private void populateSpinnerWithWifiProblemModes(Spinner spinner, @WifiState.WifiLinkMode int selection) {
         ArrayList<String> modeList = new ArrayList<>();
-        for (@WifiState.WifiStateProblemMode int modeIndex = 0;
-             modeIndex < WifiState.WifiStateProblemMode.MAX_MODES; modeIndex++) {
+        for (@WifiState.WifiLinkMode int modeIndex = 0;
+             modeIndex < WifiState.WifiLinkMode.MAX_MODES; modeIndex++) {
             modeList.add(WifiState.getWifiStatsModeName(modeIndex));
         }
         ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_dropdown_item, modeList);
@@ -349,7 +349,7 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
 
     private boolean saveWifiProblemModeSettings() {
         boolean hasChanged = false;
-        @WifiState.WifiStateProblemMode int selectedMode = wifiProblemStateSpinner.getSelectedItemPosition();
+        @WifiState.WifiLinkMode int selectedMode = wifiProblemStateSpinner.getSelectedItemPosition();
         if (selectedMode != FAKE_WIFI_SCAN_CONFIG.fakeWifiProblemMode) {
             hasChanged = true;
             //noinspection ResourceType

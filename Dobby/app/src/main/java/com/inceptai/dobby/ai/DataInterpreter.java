@@ -111,7 +111,8 @@ public class DataInterpreter {
         HashMap<Integer, Integer> wifiChannelAvailabiltyMap;  /* based on congestion metric */
         @MetricType int primaryApSignal;
         @ConnectivityAnalyzer.WifiConnectivityMode int wifiConnetivityMode;
-        @WifiState.WifiStateProblemMode int wifiProblemMode;
+        @WifiState.WifiLinkMode
+        int wifiProblemMode;
     }
 
     /**
@@ -172,7 +173,7 @@ public class DataInterpreter {
 
     public static WifiGrade interpret(HashMap<Integer, Double> contentionMetric,
                                       int apRssi,
-                                      @WifiState.WifiStateProblemMode int wifiProblemMode,
+                                      @WifiState.WifiLinkMode int wifiProblemMode,
                                       @ConnectivityAnalyzer.WifiConnectivityMode int wifiConnectivityMode) {
         WifiGrade wifiGrade = new WifiGrade();
         wifiGrade.wifiChannelAvailabiltyMap = new HashMap<>();

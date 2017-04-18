@@ -59,12 +59,12 @@ public class InferenceMap {
      * @param wifiProblemMode
      * @return
      */
-    public static PossibleConditions possibleConditionsFor(@WifiState.WifiStateProblemMode int wifiProblemMode) {
-        if (wifiProblemMode == WifiState.WifiStateProblemMode.NO_PROBLEM_DEFAULT_STATE) {
+    public static PossibleConditions possibleConditionsFor(@WifiState.WifiLinkMode int wifiProblemMode) {
+        if (wifiProblemMode == WifiState.WifiLinkMode.NO_PROBLEM_DEFAULT_STATE) {
             return PossibleConditions.NOOP_CONDITION;
         }
 
-        if (wifiProblemMode == WifiState.WifiStateProblemMode.FREQUENT_DISCONNECTIONS) {
+        if (wifiProblemMode == WifiState.WifiLinkMode.FREQUENT_DISCONNECTIONS) {
             int[] conditions = {NetworkCondition.WIFI_CHANNEL_BAD_SIGNAL,
                     NetworkCondition.WIFI_CHANNEL_CONGESTION};
             return new PossibleConditions(PossibleConditions.TYPE_INCLUSION, conditions);
