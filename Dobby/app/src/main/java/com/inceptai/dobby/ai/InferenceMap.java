@@ -9,7 +9,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.BitSet;
 import java.util.Set;
 
-import static com.inceptai.dobby.ai.InferenceMap.NetworkCondition.CONDITION_NONE_MAX;
+import static com.inceptai.dobby.ai.InferenceMap.Condition.CONDITION_NONE_MAX;
 
 /**
  * Created by arunesh on 4/14/17.
@@ -17,12 +17,22 @@ import static com.inceptai.dobby.ai.InferenceMap.NetworkCondition.CONDITION_NONE
 
 public class InferenceMap {
 
-    @IntDef({NetworkCondition.WIFI_CHANNEL_CONGESTION, NetworkCondition.WIFI_CHANNEL_BAD_SIGNAL,
-            NetworkCondition.ROUTER_FAULT_WIFI_OK, NetworkCondition.ROUTER_WIFI_INTERFACE_FAULT,
-            NetworkCondition.ROUTER_SOFTWARE_FAULT, NetworkCondition.ISP_INTERNET_SLOW_DNS_OK,
-            NetworkCondition.ISP_INTERNET_DOWN, NetworkCondition.CABLE_MODEM_FAULT})
+    @IntDef({Condition.WIFI_CHANNEL_CONGESTION,
+            Condition.WIFI_CHANNEL_BAD_SIGNAL,
+            Condition.WIFI_INTERFACE_ON_PHONE_OFFLINE,
+            Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE,
+            Condition.WIFI_INTERFACE_ON_PHONE_TURNED_OFF,
+            Condition.WIFI_LINK_DHCP_ISSUE,
+            Condition.WIFI_LINK_ASSOCIATION_ISSUE,
+            Condition.WIFI_LINK_AUTH_ISSUE,
+            Condition.ROUTER_FAULT_WIFI_OK,
+            Condition.ROUTER_WIFI_INTERFACE_FAULT,
+            Condition.ROUTER_SOFTWARE_FAULT,
+            Condition.ISP_INTERNET_SLOW_DNS_OK,
+            Condition.ISP_INTERNET_DOWN,
+            Condition.CABLE_MODEM_FAULT})
     @Retention(RetentionPolicy.SOURCE)
-    public @interface NetworkCondition {
+    public @interface Condition {
         int WIFI_CHANNEL_CONGESTION = 10;
         int WIFI_CHANNEL_BAD_SIGNAL = 11;
         int WIFI_INTERFACE_ON_PHONE_OFFLINE = 12;
@@ -65,8 +75,9 @@ public class InferenceMap {
         }
 
         if (wifiProblemMode == WifiState.WifiStateProblemMode.FREQUENT_DISCONNECTIONS) {
-            int[] conditions = {NetworkCondition.WIFI_CHANNEL_BAD_SIGNAL,
-                    NetworkCondition.WIFI_CHANNEL_CONGESTION};
+            int[] conditions = {Condition.WIFI_CHANNEL_BAD_SIGNAL,
+                    Condition.WIFI_CHANNEL_CONGESTION,
+                    Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE};
             return new PossibleConditions(PossibleConditions.TYPE_INCLUSION, conditions);
         }
 
@@ -88,16 +99,16 @@ public class InferenceMap {
             bitSet.clear();
         }
 
-        PossibleConditions(int conditionType, @NetworkCondition  int[] conditions) {
+        PossibleConditions(int conditionType, @Condition int[] conditions) {
             this(conditionType);
             setConditions(conditions);
         }
 
-        void setCondition(@NetworkCondition int condition) {
+        void setCondition(@Condition int condition) {
             bitSet.set(condition);
         }
 
-        void setConditions(@NetworkCondition int[] conditions) {
+        void setConditions(@Condition int[] conditions) {
             for (int i : conditions) {
                 bitSet.set(i);
             }
