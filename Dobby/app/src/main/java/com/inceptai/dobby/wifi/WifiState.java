@@ -34,7 +34,6 @@ public class WifiState {
     private static final int THRESHOLD_FOR_COUNTING_FREQUENT_STATE_CHANGES_MS = 10000;
 
 
-
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({SignalStrengthZones.HIGH, SignalStrengthZones.MEDIUM,
             SignalStrengthZones.LOW, SignalStrengthZones.FRINGE})
@@ -90,6 +89,9 @@ public class WifiState {
     private HashMap<Integer, ChannelInfo> channelInfoMap;
     private HashMap<NetworkInfo.DetailedState, List<WifiStateInfo>> detailedWifiStateStats;
     private List<ScanResult> lastWifiScanResult;
+    private HashMap<String, Integer> movingSignalAverage;
+    private HashMap<String, Long> lastSeenSignalTimestamp;
+
     @WifiStateProblemMode private int wifiProblemMode;
 
 
@@ -99,6 +101,8 @@ public class WifiState {
         wifiProblemMode = WifiStateProblemMode.NO_PROBLEM_DEFAULT_STATE;
         lastWifiState = NetworkInfo.DetailedState.IDLE;
         lastWifiStateTimestampMs = 0;
+        movingSignalAverage = new HashMap<>();
+        lastSeenSignalTimestamp = new HashMap<>();
     }
 
     public void clearWifiConnectionInfo() {
@@ -118,7 +122,7 @@ public class WifiState {
             linkSignal = updatedSignal;
             //TODO -- reissue a scan request.
             //Recompute the contention metric here
-            updateChannelInfo(lastWifiScanResult);
+            updateInfoWithScanResult(lastWifiScanResult);
             return true;
         }
         return false;
@@ -129,7 +133,7 @@ public class WifiState {
         return wifiProblemMode;
     }
 
-    public HashMap<Integer, Double> getCurrentContentionMetric() {
+    public HashMap<Integer, Double> getContentionInformation() {
         HashMap<Integer, Double> channelMapToReturn = new HashMap<>();
         for (ChannelInfo channelInfo: channelInfoMap.values()) {
             channelMapToReturn.put(channelInfo.channelFrequency, channelInfo.contentionMetric);
@@ -263,7 +267,7 @@ public class WifiState {
             if (linkFrequency == 0) {
                 updateChannelFrequency(scanResultList);
             }
-            updateChannelInfo(scanResultList);
+            updateInfoWithScanResult(scanResultList);
         }
     }
 
@@ -278,8 +282,59 @@ public class WifiState {
         return toJson();
     }
 
-    private void updateChannelInfo(List<ScanResult> scanResultList) {
+
+    public HashMap<Integer, ChannelInfo> getChannelStats() {
+        final int GAP_FOR_SIMILAR_STRENGTH_DBM = 5;
+        final int GAP_FOR_OTHER_STRENGTHS_DBM = 10;
+        HashMap<Integer, ChannelInfo> infoToReturn = new HashMap<>();
+        for (Map.Entry<String, Integer> entry : movingSignalAverage.entrySet()) {
+            String freqBSSIDCombinedKey = entry.getKey();
+
+            Integer freq = Utils.parseIntWithDefault(0, freqBSSIDCombinedKey.split("-")[0]);
+            ChannelInfo channelInfo = infoToReturn.get(freq);
+            if (channelInfo == null) {
+                channelInfo = new ChannelInfo(freq);
+                infoToReturn.put(freq, channelInfo);
+            }
+
+            Integer signalValue = entry.getValue();
+            if (signalValue < linkSignal + GAP_FOR_SIMILAR_STRENGTH_DBM &&
+                    signalValue >= linkSignal - GAP_FOR_SIMILAR_STRENGTH_DBM) {
+                channelInfo.similarStrengthAPs++;
+            } else if (signalValue < linkSignal + GAP_FOR_SIMILAR_STRENGTH_DBM + GAP_FOR_OTHER_STRENGTHS_DBM &&
+                    signalValue >= linkSignal + GAP_FOR_SIMILAR_STRENGTH_DBM) {
+                channelInfo.higherStrengthAps++;
+            } else if (signalValue >= linkSignal + GAP_FOR_SIMILAR_STRENGTH_DBM + GAP_FOR_OTHER_STRENGTHS_DBM) {
+                channelInfo.highestStrengthAps++;
+            } else if (signalValue < linkSignal - GAP_FOR_SIMILAR_STRENGTH_DBM &&
+                    signalValue > linkSignal - GAP_FOR_SIMILAR_STRENGTH_DBM - GAP_FOR_OTHER_STRENGTHS_DBM) {
+                channelInfo.lowerStrengthAps++;
+            } else if (signalValue <= linkSignal - GAP_FOR_SIMILAR_STRENGTH_DBM - GAP_FOR_OTHER_STRENGTHS_DBM) {
+                channelInfo.lowestStrengthAps++;
+            }
+        }
+        return infoToReturn;
+    }
+
+
+    public int averageSignal(int currentSignal, int previousSignal, long currentSeen, long previousSeen, int maxAge) {
+        if (currentSeen == 0) {
+            currentSeen = System.currentTimeMillis();
+        }
+        long age = currentSeen - previousSeen;
+        if (previousSeen > 0 && age > 0 && age < maxAge/2) {
+            // Average the RSSI with previously seen instances of this scan result
+            double alpha = 0.5 - (double) age / (double) maxAge;
+            currentSignal = (int) ((double) currentSignal * (1 - alpha) + (double) previousSignal * alpha);
+        }
+        return currentSignal;
+    }
+
+
+    private void updateInfoWithScanResult(List<ScanResult> scanResultList) {
+        final int MAX_AGE_FOR_SIGNAL_UPDATING_MS = 40000;
         for (ScanResult scanResult : scanResultList) {
+            //Update the channel info stuff
             ChannelInfo channelInfo = channelInfoMap.get(scanResult.frequency);
             if (channelInfo == null) {
                 channelInfo = new ChannelInfo(scanResult.frequency);
@@ -287,9 +342,23 @@ public class WifiState {
             }
             channelInfo.numberAPs++;
             if (isAPStrong(scanResult.level)) {
-                channelInfo.numberStrongAPs++;
+                channelInfo.highestStrengthAps++;
             }
             channelInfo.contentionMetric = (channelInfo.contentionMetric * MOVING_AVERAGE_DECAY_FACTOR +  computeContention(scanResult) * (100 - MOVING_AVERAGE_DECAY_FACTOR)) / 100;
+
+            //Update the snr stuff
+            String keyForSignalUpdating = scanResult.frequency + "-" + scanResult.BSSID;
+            Integer signal = movingSignalAverage.get(keyForSignalUpdating);
+            long timestamp = lastSeenSignalTimestamp.get(keyForSignalUpdating);
+            if (signal == null) {
+                movingSignalAverage.put(keyForSignalUpdating, scanResult.level);
+                lastSeenSignalTimestamp.put(keyForSignalUpdating, System.currentTimeMillis());
+            } else {
+                long currentTimestamp = System.currentTimeMillis();
+                signal = averageSignal(scanResult.level, signal, currentTimestamp, timestamp, MAX_AGE_FOR_SIGNAL_UPDATING_MS);
+                movingSignalAverage.put(keyForSignalUpdating, signal);
+                lastSeenSignalTimestamp.put(keyForSignalUpdating, currentTimestamp);
+            }
         }
     }
 
@@ -356,7 +425,11 @@ public class WifiState {
     public class ChannelInfo {
         public int channelFrequency;
         public int numberAPs;
-        public int numberStrongAPs;
+        public int similarStrengthAPs;
+        public int higherStrengthAps;
+        public int highestStrengthAps;
+        public int lowerStrengthAps;
+        public int lowestStrengthAps;
         public double contentionMetric;
 
         public ChannelInfo(int channelFrequency) {

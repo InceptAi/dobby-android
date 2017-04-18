@@ -71,7 +71,7 @@ public class NetworkLayer {
         HashMap<Integer, Double> channelContention = new HashMap<>();
         WifiState wifiState = getWifiAnalyzerInstance().getWifiState();
         if (wifiState != null) {
-            channelContention = wifiState.getCurrentContentionMetric();
+            channelContention = wifiState.getContentionInformation();
         }
         return channelContention;
     }

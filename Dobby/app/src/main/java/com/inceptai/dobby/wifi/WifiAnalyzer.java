@@ -20,6 +20,7 @@ import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.DobbyWifiInfo;
 
+import java.util.HashMap;
 import java.util.List;
 
 import static com.inceptai.dobby.DobbyApplication.TAG;
@@ -100,6 +101,10 @@ public class WifiAnalyzer {
 
     public WifiState getWifiState() {
         return wifiState;
+    }
+
+    public HashMap<Integer, WifiState.ChannelInfo> getChannelStats() {
+        return wifiState.getChannelStats();
     }
 
     // Called in order to cleanup any held resources.
