@@ -204,14 +204,14 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
      * @param selection
      */
     private void populateSpinnerWithNumbers(Spinner spinner, int max, int selection, int offset) {
-        ArrayList<String> numberList = new ArrayList<>();
+        ArrayList<String> numberList = new ArrayList<>(max - offset);
         for (int i = 0; i < max - offset; i++) {
             numberList.add(String.valueOf(i + offset));
         }
         ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_dropdown_item, numberList);
         arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(arrayAdapter);
-        spinner.setSelection(selection, true);
+        spinner.setSelection(selection - offset, true);
     }
 
     private static void setRssiSelection(Spinner spinner, @WifiState.SignalStrengthZones int rssiZone) {
