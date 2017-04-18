@@ -158,7 +158,6 @@ public class WifiAnalyzer {
     private void updateWifiScanResults() {
         StringBuilder sb = new StringBuilder();
         List<ScanResult> wifiList = wifiManager.getScanResults();
-        wifiState.updateWifiStats(null, wifiList);
         for (int i = 0; i < wifiList.size(); i++) {
             sb.append(new Integer(i + 1).toString() + ".");
             sb.append((wifiList.get(i)).toString());
@@ -168,6 +167,18 @@ public class WifiAnalyzer {
         if (wifiScanFuture != null) {
             wifiScanFuture.set(wifiList);
         }
+        wifiState.updateWifiStats(null, wifiList);
+        /*
+        if (wifiList.size() == 0) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                Log.i(TAG, "isScanAlwaysAvailable: " + String.valueOf(wifiManager.isScanAlwaysAvailable()));
+                Log.i(TAG, "WifiInfo:" + wifiManager.getConnectionInfo().toString());
+                Log.i(TAG, "WifiState:" + wifiManager.getWifiState());
+                wifiManager.reconnect();
+                wifiManager.startScan();
+            }
+        }
+        */
     }
 
     private void registerWifiStateReceiver() {
