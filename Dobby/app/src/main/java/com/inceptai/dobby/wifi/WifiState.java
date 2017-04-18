@@ -30,6 +30,7 @@ public class WifiState {
     private static final int SNR_MAX_POSITIVE_GAP_SQ = SNR_MAX_POSITIVE_GAP * SNR_MAX_POSITIVE_GAP;
     private static final int MOVING_AVERAGE_DECAY_FACTOR = 20;
     private static final int THRESHOLD_FOR_DECLARING_CONNECTION_SETUP_STATE_AS_HANGING_MS = 10000;
+    private static final int THRESHOLD_FOR_DECLARING_CONNECTION_SETUP_AS_DONE_IF_CONNECTED_FOR_MS = 10000;
     private static final int THRESHOLD_FOR_FLAGGING_FREQUENT_STATE_CHANGES = 5;
     private static final int THRESHOLD_FOR_COUNTING_FREQUENT_STATE_CHANGES_MS = 10000;
 
@@ -99,7 +100,7 @@ public class WifiState {
     public WifiState() {
         channelInfoMap = new HashMap<>();
         detailedWifiStateStats = new HashMap<>();
-        wifiProblemMode = WifiLinkMode.NO_PROBLEM_DEFAULT_STATE;
+        wifiProblemMode = WifiLinkMode.UNKNOWN;
         lastWifiState = NetworkInfo.DetailedState.IDLE;
         lastWifiStateTimestampMs = 0;
         movingSignalAverage = new HashMap<>();
@@ -157,7 +158,8 @@ public class WifiState {
     @WifiLinkMode
     private int updateWifiProblemMode() {
         long startTimeMs = getCurrentStateStartTimeMs();
-        if (System.currentTimeMillis() - startTimeMs >= THRESHOLD_FOR_DECLARING_CONNECTION_SETUP_STATE_AS_HANGING_MS) {
+        long currentTimeMs = System.currentTimeMillis();
+        if (currentTimeMs - startTimeMs >= THRESHOLD_FOR_DECLARING_CONNECTION_SETUP_STATE_AS_HANGING_MS) {
             NetworkInfo.DetailedState currentState = getCurrentState();
             currentState.name();
             switch(currentState) {
@@ -175,6 +177,9 @@ public class WifiState {
                 THRESHOLD_FOR_COUNTING_FREQUENT_STATE_CHANGES_MS) > THRESHOLD_FOR_FLAGGING_FREQUENT_STATE_CHANGES){
             //Check for frequenct disconnections
             wifiProblemMode = WifiLinkMode.FREQUENT_DISCONNECTIONS;
+        } else if(getCurrentState() == NetworkInfo.DetailedState.CONNECTED &&
+                (currentTimeMs - getCurrentStateStartTimeMs() > THRESHOLD_FOR_DECLARING_CONNECTION_SETUP_AS_DONE_IF_CONNECTED_FOR_MS)) {
+            wifiProblemMode = WifiLinkMode.NO_PROBLEM_DEFAULT_STATE;
         }
         return wifiProblemMode;
     }
