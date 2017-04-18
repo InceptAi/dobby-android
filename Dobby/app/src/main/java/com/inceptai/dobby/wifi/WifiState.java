@@ -51,7 +51,7 @@ public class WifiState {
             WifiStateProblemMode.FREQUENT_DISCONNECTIONS, WifiStateProblemMode.UNKNOWN,
             WifiStateProblemMode.MAX_MODES})
     public @interface WifiStateProblemMode {
-        int NO_PROBLEM_DEFAULT_STATE = 0;
+        int NO_PROBLEM_DEFAULT_STATE = 0;  // Connected and working normally.
         int HANGING_ON_DHCP = 1;
         int HANGING_ON_AUTHENTICATING = 2;
         int HANGING_ON_SCANNING = 3;

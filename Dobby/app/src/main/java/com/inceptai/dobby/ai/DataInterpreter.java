@@ -177,6 +177,8 @@ public class DataInterpreter {
         WifiGrade wifiGrade = new WifiGrade();
         wifiGrade.wifiChannelAvailabiltyMap = new HashMap<>();
         wifiGrade.primaryApSignal = getGradeHigherIsBetter(apRssi, WIFI_RSSI_STEPS_MS, apRssi < 0);
+        wifiGrade.wifiConnetivityMode = wifiConnectivityMode;
+        wifiGrade.wifiProblemMode = wifiProblemMode;
         return wifiGrade;
     }
 
