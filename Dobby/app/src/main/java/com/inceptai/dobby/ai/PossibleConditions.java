@@ -1,8 +1,12 @@
 package com.inceptai.dobby.ai;
 
+import android.util.Log;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+
+import static com.inceptai.dobby.DobbyApplication.TAG;
 
 /**
  * Created by arunesh on 4/18/17.
@@ -38,11 +42,23 @@ public class PossibleConditions {
         return exclusionSet;
     }
 
+    HashMap<Integer, Double> inclusionMap() {
+        return inclusionMap;
+    }
+
     boolean isNoop() {
         return inclusionMap.isEmpty() && exclusionSet.isEmpty();
     }
 
     void mergeIn(PossibleConditions mergeFrom) {
-        inclusionMap.remove(mergeFrom.inclusionSet());
+        Log.i(TAG, "Removing conditions: " + InferenceMap.toString(mergeFrom.exclusionSet()));
+        inclusionMap.remove(mergeFrom.exclusionSet());
+        HashMap<Integer, Double> mergeMap = mergeFrom.inclusionMap();
+        for (int condition : mergeMap.keySet()) {
+            Double incumbentProb = inclusionMap.get(condition);
+            if (incumbentProb != null) {
+
+            }
+        }
     }
 }

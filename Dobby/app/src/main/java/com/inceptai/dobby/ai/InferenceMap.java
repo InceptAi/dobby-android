@@ -141,4 +141,13 @@ public class InferenceMap {
         }
         return "UNKNOWN VALUE";
     }
+
+    public static String toString(Set<Integer> conditions) {
+        StringBuilder builder = new StringBuilder("Conditions: ");
+        for (int condition : conditions) {
+            builder.append(conditionString(condition));
+            builder.append(" ");
+        }
+        return builder.toString();
+    }
 }
