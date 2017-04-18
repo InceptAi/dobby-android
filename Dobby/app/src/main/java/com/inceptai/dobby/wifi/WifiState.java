@@ -123,7 +123,7 @@ public class WifiState {
             linkSignal = updatedSignal;
             //TODO -- reissue a scan request.
             //Recompute the contention metric here
-            updateInfoWithScanResult(lastWifiScanResult);
+            //updateInfoWithScanResult(lastWifiScanResult);
             return true;
         }
         return false;
@@ -292,6 +292,13 @@ public class WifiState {
             String freqBSSIDCombinedKey = entry.getKey();
 
             Integer freq = Utils.parseIntWithDefault(0, freqBSSIDCombinedKey.split("-")[0]);
+            String BSSID = freqBSSIDCombinedKey.split("-")[1];
+
+            //If this is the primary AP, continue, we don't want to include it
+            if ((BSSID.equals(linkBSSID) || BSSID.equals(linkSSID))) {
+                continue;
+            }
+
             ChannelInfo channelInfo = infoToReturn.get(freq);
             if (channelInfo == null) {
                 channelInfo = new ChannelInfo(freq);
@@ -313,6 +320,7 @@ public class WifiState {
             } else if (signalValue <= linkSignal - GAP_FOR_SIMILAR_STRENGTH_DBM - GAP_FOR_OTHER_STRENGTHS_DBM) {
                 channelInfo.lowestStrengthAps++;
             }
+            channelInfo.numberAPs++;
         }
         return infoToReturn;
     }
@@ -350,7 +358,7 @@ public class WifiState {
             //Update the snr stuff
             String keyForSignalUpdating = scanResult.frequency + "-" + scanResult.BSSID;
             Integer signal = movingSignalAverage.get(keyForSignalUpdating);
-            long timestamp = lastSeenSignalTimestamp.get(keyForSignalUpdating);
+            Long timestamp = lastSeenSignalTimestamp.get(keyForSignalUpdating);
             if (signal == null) {
                 movingSignalAverage.put(keyForSignalUpdating, scanResult.level);
                 lastSeenSignalTimestamp.put(keyForSignalUpdating, System.currentTimeMillis());
@@ -435,6 +443,10 @@ public class WifiState {
 
         public ChannelInfo(int channelFrequency) {
             this.channelFrequency = channelFrequency;
+        }
+
+        public String toString() {
+            return toJson();
         }
 
         public String toJson() {

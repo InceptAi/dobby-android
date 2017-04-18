@@ -57,7 +57,7 @@ public class FakeWifiAnalyzer extends WifiAnalyzer {
         FakeWifiScanConfig() {
             numApsChannelOne = numApsChannelSix = numApsChannelEleven = 4;
             mainApChannelNumber = 6;
-            mainApSSID = "FAKE-AP";
+            mainApSSID = "FAKEAP";
             signalZoneChannelOne = WifiState.SignalStrengthZones.MEDIUM;
             signalZoneChannelEleven = WifiState.SignalStrengthZones.MEDIUM;
             signalZoneChannelSix = WifiState.SignalStrengthZones.MEDIUM;
@@ -122,7 +122,7 @@ public class FakeWifiAnalyzer extends WifiAnalyzer {
         for (int i = 0; i < FAKE_WIFI_SCAN_CONFIG.numApsChannelSix; i++) {
             list.add(getFakeScanResult(FAKE_WIFI_SCAN_CONFIG.signalZoneChannelSix, CHAN_6_FREQ));
         }
-        for (int i = 0; i < FAKE_WIFI_SCAN_CONFIG.numApsChannelOne; i++) {
+        for (int i = 0; i < FAKE_WIFI_SCAN_CONFIG.numApsChannelEleven; i++) {
             list.add(getFakeScanResult(FAKE_WIFI_SCAN_CONFIG.signalZoneChannelEleven, CHAN_11_FREQ));
         }
         //Add a scan result for the main AP.

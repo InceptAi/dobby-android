@@ -206,7 +206,7 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
     }
 
     private void getWifiState() {
-        addConsoleText("\nWifi Stats:" + networkLayer.getWifiState().toString());
+        //addConsoleText("\nWifi Stats:" + networkLayer.getWifiState().toString());
         addConsoleText("\nWifi Channel Stats:" + networkLayer.getChannelStats().toString());
     }
 
