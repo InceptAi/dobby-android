@@ -19,9 +19,9 @@ public class DataInterpreter {
 
     private static final double[] BW_DOWNLOAD_STEPS_MBPS = { /* higher is better */
             20.0, /* excellent */
-            8.0, /* good */
-            3.0, /* average */
-            0.05 /* poor */
+            15.0, /* good */
+            10.0, /* average */
+            5.0 /* poor */
     };
 
     private static final double[] BW_UPLOAD_STEPS_MBPS = { /* higher is better */
@@ -89,20 +89,64 @@ public class DataInterpreter {
 
 
     @IntDef({MetricType.EXCELLENT, MetricType.GOOD, MetricType.AVERAGE, MetricType.POOR,
-            MetricType.ABYSMAL, MetricType.UNKNOWN})
+            MetricType.NONFUNCTIONAL, MetricType.UNKNOWN})
     @Retention(RetentionPolicy.SOURCE)
     public @interface MetricType {
         int EXCELLENT = 0;
         int GOOD = 1;
         int AVERAGE = 2;
         int POOR = 3;
-        int ABYSMAL = 4;  /* all valid values that are POOR or worse */
+        int NONFUNCTIONAL = 4;  /* all valid values that are POOR or worse */
         int UNKNOWN = 5;  /* no valid result available */
     }
 
+    public static boolean isUnknown(@MetricType int metric) {
+        return (metric == MetricType.UNKNOWN);
+    }
+
+    public static boolean isGoodOrExcellent(@MetricType int metric) {
+        return (metric == MetricType.EXCELLENT || metric == MetricType.GOOD);
+    }
+
+    public static boolean isAverageOrPoor(@MetricType int metric) {
+        return (metric == MetricType.AVERAGE || metric == MetricType.POOR);
+    }
+
+    public static boolean isNonFunctional(@MetricType int metric) {
+        return (metric == MetricType.NONFUNCTIONAL);
+    }
+
+    public static boolean isGoodOrExcellent(@MetricType int[] metric) {
+        boolean allExcellent = true;
+        for (int index=0; index < metric.length; index++) {
+            allExcellent = allExcellent && (metric[index] == MetricType.EXCELLENT ||
+                    metric[index] == MetricType.GOOD);
+        }
+        return allExcellent;
+    }
+
+    public static boolean isAverageOrPoor(@MetricType int[] metric) {
+        boolean allPoor = true;
+        for (int index=0; index < metric.length; index++) {
+            allPoor = allPoor && (metric[index] == MetricType.AVERAGE ||
+                    metric[index] == MetricType.POOR);
+        }
+        return allPoor;
+    }
+
+    public static boolean isNonFunctional(@MetricType int[] metric) {
+        boolean allNonFunctional = true;
+        for (int index=0; index < metric.length; index++) {
+            allNonFunctional = allNonFunctional && (metric[index] == MetricType.AVERAGE ||
+                    metric[index] == MetricType.POOR);
+        }
+        return allNonFunctional;
+    }
+
+
     public static class BandwidthGrade {
-        @MetricType int uploadBandwidth;
-        @MetricType int downloadBandwidth;
+        @MetricType int uploadBandwidthMetric;
+        @MetricType int downloadBandwidthMetric;
         @MetricType int overallResult;
 
         double uploadMbps;
@@ -110,9 +154,9 @@ public class DataInterpreter {
     }
 
     public static class PingGrade {
-        @MetricType int externalServerLatency;
-        @MetricType int dnsServerLatency;
-        @MetricType int routerLatency;
+        @MetricType int externalServerLatencyMetric;
+        @MetricType int dnsServerLatencyMetric;
+        @MetricType int routerLatencyMetric;
     }
 
     /**
@@ -120,19 +164,19 @@ public class DataInterpreter {
      * or google.com, etc.
      */
     public static class HttpGrade {
-        @MetricType int httpDownloadLatency;
+        @MetricType int httpDownloadLatencyMetric;
     }
 
     public static class WifiGrade {
-        HashMap<Integer, Integer> wifiChannelOccupancy;  /* based on congestion metric */
-        @MetricType int primaryApSignal;
-        @MetricType int primaryApLinkSpeed;
-        @MetricType int primaryLinkChannelOccupancy;
+        HashMap<Integer, Integer> wifiChannelOccupancyMetric;  /* based on congestion metric */
+        @MetricType int primaryApSignalMetric;
+        @MetricType int primaryApLinkSpeedMetric;
+        @MetricType int primaryLinkChannelOccupancyMetric;
         @ConnectivityAnalyzer.WifiConnectivityMode int wifiConnectivityMode;
         @WifiState.WifiLinkMode int wifiProblemMode;
 
         public WifiGrade() {
-            wifiChannelOccupancy = new HashMap<>();
+            wifiChannelOccupancyMetric = new HashMap<>();
         }
     }
 
@@ -148,8 +192,8 @@ public class DataInterpreter {
         grade.uploadMbps = uploadMbps;
         grade.downloadMbps = downloadMbps;
 
-        grade.downloadBandwidth = getGradeHigherIsBetter(downloadMbps, BW_DOWNLOAD_STEPS_MBPS, downloadMbps > 0.0);
-        grade.uploadBandwidth = getGradeHigherIsBetter(uploadMbps, BW_UPLOAD_STEPS_MBPS, uploadMbps > 0.0);
+        grade.downloadBandwidthMetric = getGradeHigherIsBetter(downloadMbps, BW_DOWNLOAD_STEPS_MBPS, downloadMbps > 0.0);
+        grade.uploadBandwidthMetric = getGradeHigherIsBetter(uploadMbps, BW_UPLOAD_STEPS_MBPS, uploadMbps > 0.0);
 
         return grade;
     }
@@ -167,17 +211,17 @@ public class DataInterpreter {
         }
         avgExtenalServerLatency /= (double) count;
 
-        pingGrade.externalServerLatency = getGradeLowerIsBetter(
+        pingGrade.externalServerLatencyMetric = getGradeLowerIsBetter(
                 avgExtenalServerLatency,
                 PING_LATENCY_EXTSERVER_STEPS_MS,
                 avgExtenalServerLatency > 0.0);
 
-        pingGrade.dnsServerLatency = getGradeLowerIsBetter(
+        pingGrade.dnsServerLatencyMetric = getGradeLowerIsBetter(
                 primaryDnsStats.avgLatencyMs,
                 PING_LATENCY_DNS_STEPS_MS,
                 avgExtenalServerLatency > 0.0);
 
-        pingGrade.routerLatency = getGradeLowerIsBetter(routerStats.avgLatencyMs,
+        pingGrade.routerLatencyMetric = getGradeLowerIsBetter(routerStats.avgLatencyMs,
                 PING_LATENCY_ROUTER_STEPS_MS,
                 routerStats.avgLatencyMs > 0.0);
 
@@ -186,7 +230,7 @@ public class DataInterpreter {
 
     public static HttpGrade interpret(PingStats httpRouterStats) {
         HttpGrade httpGrade = new HttpGrade();
-        httpGrade.httpDownloadLatency = getGradeLowerIsBetter(httpRouterStats.avgLatencyMs,
+        httpGrade.httpDownloadLatencyMetric = getGradeLowerIsBetter(httpRouterStats.avgLatencyMs,
                 HTTP_LATENCY_ROUTER_STEPS_MS,
                 httpRouterStats.avgLatencyMs > 0.0);
         return  httpGrade;
@@ -201,19 +245,19 @@ public class DataInterpreter {
         WifiState.ChannelInfo primaryChannelInfo = wifiChannelInfo.get(linkInfo.getFrequency());
 
         int numStrongInterferingAps = computeStrongInterferingAps(primaryChannelInfo);
-        wifiGrade.primaryLinkChannelOccupancy = getGradeLowerIsBetter(numStrongInterferingAps,
+        wifiGrade.primaryLinkChannelOccupancyMetric = getGradeLowerIsBetter(numStrongInterferingAps,
                 WIFI_CHANNEL_OCCUPANCY_STEPS,
                 (linkInfo.getFrequency() > 0 && numStrongInterferingAps >= 0));
 
         //Compute metrics for all channels -- for later use
         for (WifiState.ChannelInfo channelInfo: wifiChannelInfo.values()) {
-            wifiGrade.wifiChannelOccupancy.put(channelInfo.channelFrequency,
+            wifiGrade.wifiChannelOccupancyMetric.put(channelInfo.channelFrequency,
                     computeStrongInterferingAps(channelInfo));
         }
 
-        wifiGrade.primaryApSignal = getGradeHigherIsBetter(linkInfo.getRssi(),
+        wifiGrade.primaryApSignalMetric = getGradeHigherIsBetter(linkInfo.getRssi(),
                 WIFI_RSSI_STEPS_DBM, linkInfo.getRssi() < 0);
-        wifiGrade.primaryApLinkSpeed = getGradeHigherIsBetter(linkInfo.getLinkSpeed(),
+        wifiGrade.primaryApLinkSpeedMetric = getGradeHigherIsBetter(linkInfo.getLinkSpeed(),
                 LINK_SPEED_STEPS_MBPS, linkInfo.getLinkSpeed() > 0);
 
         wifiGrade.wifiConnectivityMode = wifiConnectivityMode;
@@ -236,7 +280,7 @@ public class DataInterpreter {
         else if (value < steps[1]) return MetricType.GOOD;
         else if (value < steps[2]) return MetricType.AVERAGE;
         else if (value < steps[3]) return MetricType.POOR;
-        else return MetricType.ABYSMAL;
+        else return MetricType.NONFUNCTIONAL;
     }
 
     @MetricType
@@ -246,6 +290,6 @@ public class DataInterpreter {
         else if (value > steps[1]) return MetricType.GOOD;
         else if (value > steps[2]) return MetricType.AVERAGE;
         else if (value > steps[3]) return MetricType.POOR;
-        else return MetricType.ABYSMAL;
+        else return MetricType.NONFUNCTIONAL;
     }
 }
