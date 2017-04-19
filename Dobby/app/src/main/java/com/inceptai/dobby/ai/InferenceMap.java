@@ -2,6 +2,7 @@ package com.inceptai.dobby.ai;
 
 import android.support.annotation.IntDef;
 
+import com.inceptai.dobby.connectivity.ConnectivityAnalyzer;
 import com.inceptai.dobby.wifi.WifiState;
 
 import java.lang.annotation.Retention;
@@ -107,6 +108,60 @@ public class InferenceMap {
 
         return PossibleConditions.NOOP_CONDITION;
     }
+
+    /**
+     *
+     * @param wifiConnectivityMode
+     * @return
+     */
+    public static PossibleConditions possibleConditionsFor(@ConnectivityAnalyzer.WifiConnectivityMode int wifiConnectivityMode) {
+        if (wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_ONLINE) {
+            return PossibleConditions.NOOP_CONDITION;
+        }
+
+        if (wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_OFFLINE) {
+            PossibleConditions conditions = new PossibleConditions();
+            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
+            conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
+            conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE, 0.3);
+            return conditions;
+        }
+
+        if (wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL) {
+            PossibleConditions conditions = new PossibleConditions();
+            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
+            conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
+            conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE, 0.3);
+            return conditions;
+        }
+
+        if (wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.ON_AND_DISCONNECTED) {
+            PossibleConditions conditions = new PossibleConditions();
+            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
+            conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
+            conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE, 0.3);
+            return conditions;
+        }
+
+        if (wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.OFF) {
+            PossibleConditions conditions = new PossibleConditions();
+            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
+            conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
+            conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE, 0.3);
+            return conditions;
+        }
+
+        if (wifiConnectivityMode == WifiState.WifiLinkMode.UNKNOWN) {
+            PossibleConditions conditions = new PossibleConditions();
+            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
+            conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
+            conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE, 0.3);
+            return conditions;
+        }
+
+        return PossibleConditions.NOOP_CONDITION;
+    }
+
 
     public static String conditionString(@Condition int condition) {
         switch (condition) {
