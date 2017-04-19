@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.inject.Inject;
+
 import static com.inceptai.dobby.DobbyApplication.TAG;
 
 /**
@@ -13,9 +15,6 @@ import static com.inceptai.dobby.DobbyApplication.TAG;
  */
 
 public class PossibleConditions {
-    public static final int TYPE_EXCLUSION = 1;
-    public static final int TYPE_INCLUSION = 2;
-    public static final int TYPE_NOOP = 3;
     public static final PossibleConditions NOOP_CONDITION = new PossibleConditions();
 
     private HashMap<Integer, Double> inclusionMap;
@@ -26,8 +25,8 @@ public class PossibleConditions {
         exclusionSet = new HashSet<>();
     }
 
-    void include(@InferenceMap.Condition int condition, double probability) {
-        inclusionMap.put(condition, probability);
+    void include(@InferenceMap.Condition int condition, double weight) {
+        inclusionMap.put(condition, weight);
     }
 
     void exclude(@InferenceMap.Condition int condition) {
@@ -55,10 +54,32 @@ public class PossibleConditions {
         inclusionMap.remove(mergeFrom.exclusionSet());
         HashMap<Integer, Double> mergeMap = mergeFrom.inclusionMap();
         for (int condition : mergeMap.keySet()) {
-            Double incumbentProb = inclusionMap.get(condition);
-            if (incumbentProb != null) {
-
+            Double incumbentWeight = inclusionMap.get(condition);
+            Double totalWeight = mergeMap.get(condition);
+            if (incumbentWeight != null) {
+                totalWeight += incumbentWeight;
             }
+            inclusionMap.put(condition, totalWeight);
         }
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("PossibleConditions dump.\n");
+        builder.append("Exclusion conditions : " + exclusionSet.size() + "\n");
+        for (int condition : exclusionSet) {
+            builder.append("  Condition: "
+                    + InferenceMap.conditionString(condition)
+                    + "\n");
+        }
+        builder.append("Inclusion conditions: " + inclusionMap().size());
+        for (HashMap.Entry<Integer, Double> entry : inclusionMap.entrySet()) {
+            @InferenceMap.Condition
+            int condition = entry.getKey();
+            builder.append("  Condition: "
+            + InferenceMap.conditionString(condition) + ", weight: " + entry.getValue());
+        }
+        return builder.toString();
     }
 }
