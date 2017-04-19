@@ -25,6 +25,11 @@ import javax.inject.Singleton;
 import fr.bmartel.speedtest.model.SpeedTestError;
 
 import static com.inceptai.dobby.DobbyApplication.TAG;
+import static com.inceptai.dobby.speedtest.NewBandwidthAnalyzer.BandwidthTestException.BW_EXCEPTION_GETTING_BEST_SERVER_FAILED;
+import static com.inceptai.dobby.speedtest.NewBandwidthAnalyzer.BandwidthTestException.BW_EXCEPTION_GETTING_CONFIG_FAILED;
+import static com.inceptai.dobby.speedtest.NewBandwidthAnalyzer.BandwidthTestException.BW_EXCEPTION_GETTING_SERVER_INFORMATION_FAILED;
+import static com.inceptai.dobby.speedtest.NewBandwidthAnalyzer.BandwidthTestException.BW_EXCEPTION_TEST_ALREADY_RUNNING;
+import static com.inceptai.dobby.speedtest.NewBandwidthAnalyzer.BandwidthTestException.BW_TEST_STARTED_NO_EXCEPTION;
 
 /**
  * Class contains logic performing bandwidth tests.
@@ -65,11 +70,12 @@ public class NewBandwidthAnalyzer {
     private ResultsCallback resultsCallback;
 
     public static class BandwidthTestException extends Exception {
+        public static final int BW_TEST_STARTED_NO_EXCEPTION = 0;
         public static final int BW_EXCEPTION_TEST_ALREADY_RUNNING = 1;
         public static final int BW_EXCEPTION_GETTING_CONFIG_FAILED = 2;
         public static final int BW_EXCEPTION_GETTING_SERVER_INFORMATION_FAILED = 3;
         public static final int BW_EXCEPTION_GETTING_BEST_SERVER_FAILED = 4;
-        private int exceptionType = 0;
+        private int exceptionType = BW_TEST_STARTED_NO_EXCEPTION;
         public BandwidthTestException(int exceptionType) {
             this.exceptionType = exceptionType;
         }
@@ -146,13 +152,23 @@ public class NewBandwidthAnalyzer {
         this.resultsCallback = resultsCallback;
     }
 
-    public void startBandwidthTestSafely(@BandwidthTestMode int testMode) {
+    public int startBandwidthTestSafely(@BandwidthTestMode int testMode) {
+        int returnCode = BW_TEST_STARTED_NO_EXCEPTION;
         try {
             startBandwidthTest(testMode);
         } catch (BandwidthTestException e) {
-            Log.v(TAG, "Exception: " + e);
-            finishTests();
+            returnCode = e.exceptionType;
+            switch (e.exceptionType) {
+                case BW_EXCEPTION_GETTING_CONFIG_FAILED:
+                case BW_EXCEPTION_GETTING_BEST_SERVER_FAILED:
+                case BW_EXCEPTION_GETTING_SERVER_INFORMATION_FAILED:
+                    cancelBandwidthTests();
+                    break;
+                case BW_EXCEPTION_TEST_ALREADY_RUNNING:
+                    break;
+            }
         }
+        return returnCode;
     }
 
     public void cancelBandwidthTests() {
@@ -249,7 +265,7 @@ public class NewBandwidthAnalyzer {
                 });
             } else {
                 //Cleanup
-                finishTests();
+                markTestsAsStopped();
             }
         }
 
@@ -308,7 +324,7 @@ public class NewBandwidthAnalyzer {
 
     private void markTestsAsRunning() throws BandwidthTestException {
         if (!testsCurrentlyInactive()) {
-            throw new BandwidthTestException(BandwidthTestException.BW_EXCEPTION_TEST_ALREADY_RUNNING);
+            throw new BandwidthTestException(BW_EXCEPTION_TEST_ALREADY_RUNNING);
         }
         bandwidthAnalyzerState = BandwidthAnalyzerState.RUNNING;
     }
@@ -332,8 +348,7 @@ public class NewBandwidthAnalyzer {
     /**
      * start the speed test
      */
-    private void startBandwidthTest(@BandwidthTestMode int testMode) throws
-            BandwidthTestException {
+    private void startBandwidthTest(@BandwidthTestMode int testMode) throws BandwidthTestException {
         markTestsAsRunning();
         final String downloadMode = "http";
         this.testMode = testMode;
