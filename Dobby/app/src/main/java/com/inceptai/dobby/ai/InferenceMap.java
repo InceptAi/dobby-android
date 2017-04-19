@@ -51,8 +51,20 @@ public class InferenceMap {
      * Exhaustive list of problems:
      *
      */
-    public static Set<Integer> getPossibleConditionsFor(DataInterpreter.BandwidthGrade interpretation) {
-        return null;
+    public static PossibleConditions getPossibleConditionsFor(DataInterpreter.BandwidthGrade interpretation) {
+        return new PossibleConditions();
+    }
+
+    public static PossibleConditions getPossibleConditionsFor(DataInterpreter.WifiGrade wifiGrade) {
+        return new PossibleConditions();
+    }
+
+    public static PossibleConditions getPossibleConditionsFor(DataInterpreter.PingGrade pingGrade) {
+        return new PossibleConditions();
+    }
+
+    public static PossibleConditions getPossibleConditionsForHttpPing(DataInterpreter.PingGrade httpPingGrade) {
+        return new PossibleConditions();
     }
 
     /**
