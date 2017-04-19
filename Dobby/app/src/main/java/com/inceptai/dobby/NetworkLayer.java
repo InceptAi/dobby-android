@@ -13,6 +13,7 @@ import com.inceptai.dobby.model.DobbyWifiInfo;
 import com.inceptai.dobby.model.IPLayerInfo;
 import com.inceptai.dobby.model.PingStats;
 import com.inceptai.dobby.ping.PingAnalyzer;
+import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
 import com.inceptai.dobby.speedtest.NewBandwidthAnalyzer;
 import com.inceptai.dobby.connectivity.ConnectivityAnalyzer;
@@ -42,6 +43,9 @@ public class NetworkLayer {
     private DobbyThreadpool threadpool;
     private DobbyEventBus eventBus;
     private IPLayerInfo ipLayerInfo;
+
+    @Nullable
+    private BandwidthObserver bandwidthObserver;  // Represents any currently running b/w tests.
 
     @Inject
     NewBandwidthAnalyzer bandwidthAnalyzer;
@@ -132,11 +136,12 @@ public class NetworkLayer {
         return null;
     }
 
-    public boolean startBandwidthTest(NewBandwidthAnalyzer.ResultsCallback resultsCallback,
+    // TODO: remove this routine.
+    private boolean startBandwidthTest(NewBandwidthAnalyzer.ResultsCallback resultsCallback,
                                    @BandwithTestCodes.BandwidthTestMode int testMode) {
         if (getConnectivityAnalyzerInstance().isWifiOnline()) {
-            bandwidthAnalyzer.registerCallback(resultsCallback);
             Log.i(TAG, "NetworkLayer: Going to start bandwidth test.");
+            bandwidthAnalyzer.registerCallback(resultsCallback);
             bandwidthAnalyzer.startBandwidthTestSafely(testMode);
             return true;
         } else {
@@ -145,8 +150,25 @@ public class NetworkLayer {
         }
     }
 
-    public void cancelBandwidthTests() {
+    public synchronized BandwidthObserver startBandwidthTest(@BandwithTestCodes.BandwidthTestMode int mode) {
+        if (bandwidthObserver != null && bandwidthObserver.testsRunning()) {
+            // We have an already running bandwidth operation.
+            return bandwidthObserver;
+        }
+        bandwidthObserver = new BandwidthObserver(mode);
+        bandwidthAnalyzer.registerCallback(bandwidthObserver);
+        bandwidthAnalyzer.startBandwidthTestSafely(mode);
+        return bandwidthObserver;
+    }
+
+    public synchronized boolean areBandwidthTestsRunning() {
+        return bandwidthObserver != null && bandwidthObserver.testsRunning();
+    }
+
+    public synchronized void cancelBandwidthTests() {
         bandwidthAnalyzer.cancelBandwidthTests();
+        bandwidthObserver.onCancelled();
+        bandwidthObserver = null;
     }
 
     public HashMap<String, PingStats> getRecentIPLayerPingStats() {
@@ -159,7 +181,7 @@ public class NetworkLayer {
 
     public DobbyWifiInfo getLinkInfo() { return getWifiAnalyzerInstance().getLinkInfo(); }
 
-    //Process events from eventbus
+    // Process events from eventbus
     @Subscribe
     public void listen(DobbyEvent event) {
         Log.v(TAG, "NL, Found Event: " + event.toString());
@@ -184,6 +206,9 @@ public class NetworkLayer {
         }
         if (bandwidthAnalyzer != null) {
             bandwidthAnalyzer.cleanup();
+        }
+        if (bandwidthObserver != null) {
+            bandwidthObserver = null;
         }
     }
 }

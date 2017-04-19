@@ -25,6 +25,7 @@ import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.BandwidthStats;
 import com.inceptai.dobby.model.PingStats;
+import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
 import com.inceptai.dobby.speedtest.NewBandwidthAnalyzer;
 import com.inceptai.dobby.speedtest.ServerInformation;
@@ -61,6 +62,9 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
     private SwitchCompat downloadSwitchButton;
     private TextView consoleTv;
     private long bwDisplayTs;
+    private boolean scheduleFollowupBandwidthTest = false;
+    @BandwithTestCodes.BandwidthTestMode
+    private int followupBandwidthTestMode = BandwithTestCodes.BandwidthTestMode.IDLE;
 
     @Inject
     NetworkLayer networkLayer;
@@ -214,7 +218,12 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
         threadpool.submit(new Runnable() {
             @Override
             public void run() {
-                networkLayer.startBandwidthTest(DebugFragment.this, testMode);
+                BandwidthObserver observer = networkLayer.startBandwidthTest(testMode);
+                observer.registerCallback(DebugFragment.this);
+                if (observer.getTestMode() != testMode) {
+                    setFollupBandwidthTest(testMode);
+                    addConsoleText("Scheduled follow up test. Currently another test is running.");
+                }
             }
         });
     }
@@ -246,6 +255,9 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
     public void onTestFinished(@BandwithTestCodes.BandwidthTestMode int testMode, BandwidthStats stats) {
         addConsoleText("Bandwidth Test finished: " + stats.getPercentile90() / 1.0E6 + " Mbps.");
         bwDisplayTs = 0;
+        if (scheduleFollowupBandwidthTest) {
+            followupBandwidthTest();
+        }
     }
 
     @Override
@@ -262,10 +274,30 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
     public void onBandwidthTestError(@BandwithTestCodes.BandwidthTestMode int testMode, @BandwithTestCodes.BandwidthTestErrorCodes int errorCode, @Nullable String errorMessage) {
         String msg = Strings.isNullOrEmpty(errorMessage) ? "" : errorMessage;
         addConsoleText("Bandwidth test error, errorCode: " + errorCode + ",  " + msg);
+        if (scheduleFollowupBandwidthTest) {
+            followupBandwidthTest();
+        }
     }
 
     @Subscribe
     public void listen(DobbyEvent event) {
         addConsoleText("Found event on dobby event bus: " + event.toString());
+    }
+
+    private void setFollupBandwidthTest(@BandwithTestCodes.BandwidthTestMode int testMode) {
+        followupBandwidthTestMode = testMode;
+        scheduleFollowupBandwidthTest = true;
+    }
+
+    private void clearFollowupBandwidthTest() {
+        scheduleFollowupBandwidthTest = false;
+        followupBandwidthTestMode = BandwithTestCodes.BandwidthTestMode.IDLE;
+    }
+
+    private void followupBandwidthTest() {
+        if (!scheduleFollowupBandwidthTest) return;
+        BandwidthObserver observer = networkLayer.startBandwidthTest(followupBandwidthTestMode);
+        observer.registerCallback(DebugFragment.this);
+        clearFollowupBandwidthTest();
     }
 }
