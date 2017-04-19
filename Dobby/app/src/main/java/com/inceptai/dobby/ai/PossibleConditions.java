@@ -82,4 +82,14 @@ public class PossibleConditions {
         }
         return builder.toString();
     }
+
+    public void normalizeWeights() {
+        double sum = 0.0;
+        for (Double weight : inclusionMap.values()) {
+            sum += weight;
+        }
+        for (HashMap.Entry<Integer, Double> entry : inclusionMap.entrySet()) {
+            entry.setValue(entry.getValue() / sum);
+        }
+    }
 }
