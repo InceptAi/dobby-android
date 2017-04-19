@@ -52,21 +52,33 @@ public class InferenceMap {
      * Exhaustive list of problems:
      *
      */
-    public static Set<Integer> getPossibleConditionsFor(DataInterpreter.BandwidthGrade interpretation) {
-        return null;
+    public static PossibleConditions getPossibleConditionsFor(DataInterpreter.BandwidthGrade interpretation) {
+        return new PossibleConditions();
+    }
+
+    public static PossibleConditions getPossibleConditionsFor(DataInterpreter.WifiGrade wifiGrade) {
+        return new PossibleConditions();
+    }
+
+    public static PossibleConditions getPossibleConditionsFor(DataInterpreter.PingGrade pingGrade) {
+        return new PossibleConditions();
+    }
+
+    public static PossibleConditions getPossibleConditionsForHttpPing(DataInterpreter.PingGrade httpPingGrade) {
+        return new PossibleConditions();
     }
 
     /**
-     *
-     * @param wifiProblemMode
+     * Returns a PossibleConditions object for the given wifi link mode state.
+     * @param wifiLinkMode
      * @return
      */
-    public static PossibleConditions possibleConditionsFor(@WifiState.WifiLinkMode int wifiProblemMode) {
-        if (wifiProblemMode == WifiState.WifiLinkMode.NO_PROBLEM_DEFAULT_STATE) {
+    public static PossibleConditions possibleConditionsFor(@WifiState.WifiLinkMode int wifiLinkMode) {
+        if (wifiLinkMode == WifiState.WifiLinkMode.NO_PROBLEM_DEFAULT_STATE) {
             return PossibleConditions.NOOP_CONDITION;
         }
 
-        if (wifiProblemMode == WifiState.WifiLinkMode.FREQUENT_DISCONNECTIONS) {
+        if (wifiLinkMode == WifiState.WifiLinkMode.FREQUENT_DISCONNECTIONS) {
             PossibleConditions conditions = new PossibleConditions();
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
             conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
@@ -74,7 +86,7 @@ public class InferenceMap {
             return conditions;
         }
 
-        if (wifiProblemMode == WifiState.WifiLinkMode.HANGING_ON_AUTHENTICATING) {
+        if (wifiLinkMode == WifiState.WifiLinkMode.HANGING_ON_AUTHENTICATING) {
             PossibleConditions conditions = new PossibleConditions();
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
             conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
@@ -82,7 +94,7 @@ public class InferenceMap {
             return conditions;
         }
 
-        if (wifiProblemMode == WifiState.WifiLinkMode.HANGING_ON_DHCP) {
+        if (wifiLinkMode == WifiState.WifiLinkMode.HANGING_ON_DHCP) {
             PossibleConditions conditions = new PossibleConditions();
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
             conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
@@ -90,7 +102,7 @@ public class InferenceMap {
             return conditions;
         }
 
-        if (wifiProblemMode == WifiState.WifiLinkMode.HANGING_ON_SCANNING) {
+        if (wifiLinkMode == WifiState.WifiLinkMode.HANGING_ON_SCANNING) {
             PossibleConditions conditions = new PossibleConditions();
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
             conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
@@ -98,7 +110,7 @@ public class InferenceMap {
             return conditions;
         }
 
-        if (wifiProblemMode == WifiState.WifiLinkMode.UNKNOWN) {
+        if (wifiLinkMode == WifiState.WifiLinkMode.UNKNOWN) {
             PossibleConditions conditions = new PossibleConditions();
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
             conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);

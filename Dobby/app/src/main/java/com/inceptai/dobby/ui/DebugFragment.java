@@ -264,7 +264,6 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
         addConsoleText("Bandwidth test error, errorCode: " + errorCode + ",  " + msg);
     }
 
-
     @Subscribe
     public void listen(DobbyEvent event) {
         addConsoleText("Found event on dobby event bus: " + event.toString());
