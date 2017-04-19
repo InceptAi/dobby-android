@@ -26,9 +26,19 @@ public class InferenceMap {
             Condition.ROUTER_FAULT_WIFI_OK,
             Condition.ROUTER_WIFI_INTERFACE_FAULT,
             Condition.ROUTER_SOFTWARE_FAULT,
+            Condition.ROUTER_GOOD_SIGNAL_USING_SLOW_DATA_RATE,
             Condition.ISP_INTERNET_SLOW_DNS_OK,
             Condition.ISP_INTERNET_DOWN,
-            Condition.CABLE_MODEM_FAULT})
+            Condition.ISP_INTERNET_SLOW,
+            Condition.ISP_INTERNET_SLOW_DOWNLOAD,
+            Condition.ISP_INTERNET_SLOW_UPLOAD,
+            Condition.DNS_RESPONSE_SLOW,
+            Condition.DNS_SLOW_TO_REACH,
+            Condition.DNS_UNREACHABLE,
+            Condition.ISP_INTERNET_DOWN_DNS_OK,
+            Condition.CABLE_MODEM_FAULT,
+            Condition.CAPTIVE_PORTAL_NO_INTERNET,
+            Condition.REMOTE_SERVER_IS_SLOW_TO_RESPOND})
     @Retention(RetentionPolicy.SOURCE)
     public @interface Condition {
         int WIFI_CHANNEL_CONGESTION = 10;
@@ -42,136 +52,233 @@ public class InferenceMap {
         int ROUTER_FAULT_WIFI_OK = 20;
         int ROUTER_WIFI_INTERFACE_FAULT = 21;
         int ROUTER_SOFTWARE_FAULT = 22;
+        int ROUTER_GOOD_SIGNAL_USING_SLOW_DATA_RATE = 23;
         int ISP_INTERNET_SLOW_DNS_OK = 30;
         int ISP_INTERNET_DOWN = 31;
+        int ISP_INTERNET_SLOW = 32;
+        int ISP_INTERNET_SLOW_DOWNLOAD = 33;
+        int ISP_INTERNET_SLOW_UPLOAD = 34;
+        int DNS_RESPONSE_SLOW = 35;
+        int DNS_SLOW_TO_REACH = 36;
+        int DNS_UNREACHABLE = 37;
+        int ISP_INTERNET_DOWN_DNS_OK = 38;
         int CABLE_MODEM_FAULT = 40;
+        int CAPTIVE_PORTAL_NO_INTERNET = 50;
+        int REMOTE_SERVER_IS_SLOW_TO_RESPOND = 51;
         int CONDITION_NONE_MAX = 64;  // For bitset size purposes only.
     }
+
+    private static int[] WIFI_CONDITIONS = {
+        Condition.WIFI_CHANNEL_CONGESTION,
+        Condition.WIFI_CHANNEL_CONGESTION,
+        Condition.WIFI_CHANNEL_BAD_SIGNAL,
+        Condition.WIFI_INTERFACE_ON_PHONE_OFFLINE,
+        Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE,
+        Condition.WIFI_INTERFACE_ON_PHONE_TURNED_OFF,
+        Condition.WIFI_LINK_DHCP_ISSUE,
+        Condition.WIFI_LINK_ASSOCIATION_ISSUE,
+        Condition.WIFI_LINK_AUTH_ISSUE,
+        Condition.ROUTER_FAULT_WIFI_OK,
+        Condition.ROUTER_WIFI_INTERFACE_FAULT,
+        Condition.ROUTER_SOFTWARE_FAULT,
+        Condition.ROUTER_GOOD_SIGNAL_USING_SLOW_DATA_RATE
+    };
+
+    private static int[] ISP_CONDITIONS = {
+        Condition.ISP_INTERNET_SLOW_DNS_OK,
+        Condition.ISP_INTERNET_DOWN,
+        Condition.ISP_INTERNET_SLOW,
+        Condition.ISP_INTERNET_SLOW_DOWNLOAD,
+        Condition.ISP_INTERNET_SLOW_UPLOAD,
+        Condition.ISP_INTERNET_SLOW_DNS_OK,
+        Condition.ISP_INTERNET_DOWN_DNS_OK,
+        Condition.REMOTE_SERVER_IS_SLOW_TO_RESPOND
+    };
+
+    private static int[] DNS_CONDITIONS = {
+        Condition.DNS_RESPONSE_SLOW,
+        Condition.DNS_SLOW_TO_REACH,
+        Condition.DNS_UNREACHABLE,
+    };
+
+
+    private static int[] ROUTER_CONDITIONS = {
+        Condition.ROUTER_FAULT_WIFI_OK,
+        Condition.ROUTER_SOFTWARE_FAULT,
+        Condition.ROUTER_WIFI_INTERFACE_FAULT,
+    };
+
 
     /**
      * Exhaustive list of problems:
      *
      */
-    public static PossibleConditions getPossibleConditionsFor(DataInterpreter.BandwidthGrade interpretation) {
+    public static PossibleConditions getPossibleConditionsFor(DataInterpreter.BandwidthGrade bandwidthGrade) {
+        //Check if both download and upload are good
+        PossibleConditions conditions = new PossibleConditions();
+
+        if (DataInterpreter.isGoodOrExcellent(bandwidthGrade.downloadBandwidthMetric) &&
+                DataInterpreter.isGoodOrExcellent(bandwidthGrade.uploadBandwidthMetric)) {
+            conditions.exclude(ISP_CONDITIONS);
+            conditions.exclude(DNS_CONDITIONS);
+            //We can exclude WIFI CONDITIONS here but what about FREQUENCT DISCONNECTIONS etc.
+            //TODO: Decide whether to exclude wifi conditions here
+            conditions.exclude(WIFI_CONDITIONS);
+            return conditions;
+        }
+
+
+        if (DataInterpreter.isGoodOrExcellent(bandwidthGrade.downloadBandwidthMetric) &&
+                DataInterpreter.isAverageOrPoor(bandwidthGrade.uploadBandwidthMetric)) {
+            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
+            conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
+            conditions.include(Condition.ISP_INTERNET_SLOW_UPLOAD, 0.3);
+        } else if (DataInterpreter.isAverageOrPoor(bandwidthGrade.downloadBandwidthMetric) &&
+                DataInterpreter.isGoodOrExcellent(bandwidthGrade.uploadBandwidthMetric)) {
+            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
+            conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
+            conditions.include(Condition.ISP_INTERNET_SLOW_DOWNLOAD, 0.3);
+        } else if (DataInterpreter.isAverageOrPoor(bandwidthGrade.downloadBandwidthMetric) &&
+                DataInterpreter.isAverageOrPoor(bandwidthGrade.uploadBandwidthMetric)) {
+            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
+            conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
+            conditions.include(Condition.ISP_INTERNET_SLOW, 0.3);
+        } else if (DataInterpreter.isNonFunctional(bandwidthGrade.downloadBandwidthMetric) &&
+                DataInterpreter.isNonFunctional(bandwidthGrade.uploadBandwidthMetric)) {
+            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
+            conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
+            conditions.include(Condition.ISP_INTERNET_DOWN, 0.3);
+        }
         return new PossibleConditions();
     }
 
     public static PossibleConditions getPossibleConditionsFor(DataInterpreter.WifiGrade wifiGrade) {
+        //Check if both download and upload are good
+        PossibleConditions conditions = new PossibleConditions();
+        int[] allWifiMetrics = {wifiGrade.primaryApSignalMetric,
+                wifiGrade.primaryApLinkSpeedMetric, wifiGrade.primaryLinkChannelOccupancyMetric};
+
+
+        //All izz well -- from Three Idiots
+        if (DataInterpreter.isGoodOrExcellent(allWifiMetrics) &&
+                wifiGrade.wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_ONLINE &&
+                wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.NO_PROBLEM_DEFAULT_STATE) {
+            conditions.exclude(WIFI_CONDITIONS);
+            return conditions;
+        }
+
+        //Connectivity mode
+        if (wifiGrade.wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL) {
+            //Connected but offline -- we are getting 302 download google.com
+            conditions.include(Condition.CAPTIVE_PORTAL_NO_INTERNET, 1.0);
+        } else if (wifiGrade.wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_OFFLINE) {
+            //Connected but offline -- we can't download http://client3.google.com/204
+            conditions.include(Condition.ISP_INTERNET_DOWN, 0.5);
+            conditions.include(Condition.DNS_UNREACHABLE, 0.5);
+        }
+
+        //Wifi link stats
+        if (wifiGrade.wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.OFF) {
+            //Wifi is off. Need to turn it on.
+            conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_TURNED_OFF, 1.0);
+        } else if (DataInterpreter.isUnknown(wifiGrade.primaryApSignalMetric) ||
+                wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.HANGING_ON_SCANNING ||
+                wifiGrade.wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.ON_AND_DISCONNECTED) {
+            // Wifi is on but not connected to the router
+            //It could be that client Wifi interface is not connecting or user needs to issue explicit command to connect
+            conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE, 0.5);
+            //It could be that the right network is not showing up in the scans.
+            conditions.include(Condition.ROUTER_WIFI_INTERFACE_FAULT, 0.5);
+        } else if (DataInterpreter.isAverageOrPoor(wifiGrade.primaryApSignalMetric) && (DataInterpreter.isAverageOrPoor(wifiGrade.primaryLinkChannelOccupancyMetric))) {
+            //poor signal and high congestion
+            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 1.0);
+            conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 1.0);
+            if (wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.FREQUENT_DISCONNECTIONS ||
+                    wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.HANGING_ON_AUTHENTICATING ||
+                    wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.HANGING_ON_DHCP){
+                conditions.include(Condition.ROUTER_WIFI_INTERFACE_FAULT, 0.2);
+            }
+        } else if (DataInterpreter.isGoodOrExcellent(wifiGrade.primaryApSignalMetric)){
+            if (DataInterpreter.isAverageOrPoor(wifiGrade.primaryApLinkSpeedMetric)) {
+                conditions.include(Condition.ROUTER_GOOD_SIGNAL_USING_SLOW_DATA_RATE, 0.5);
+            }
+            if (DataInterpreter.isAverageOrPoor(wifiGrade.primaryLinkChannelOccupancyMetric)) {
+                conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
+            }
+            if (wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.FREQUENT_DISCONNECTIONS ||
+                    wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.HANGING_ON_AUTHENTICATING ||
+                    wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.HANGING_ON_DHCP){
+                conditions.include(Condition.ROUTER_WIFI_INTERFACE_FAULT, 1.0);
+            }
+        }
+
+        //Based on wifi problem mode
+        if (wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.FREQUENT_DISCONNECTIONS) {
+            conditions.include(Condition.WIFI_LINK_ASSOCIATION_ISSUE, 1.0);
+        } else if (wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.HANGING_ON_AUTHENTICATING) {
+            conditions.include(Condition.WIFI_LINK_AUTH_ISSUE, 1.0);
+        } else if (wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.HANGING_ON_DHCP) {
+            conditions.include(Condition.WIFI_LINK_DHCP_ISSUE, 1.0);
+        } else if (wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.UNKNOWN) {
+            conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE, 0.3);
+        }
+
         return new PossibleConditions();
     }
 
     public static PossibleConditions getPossibleConditionsFor(DataInterpreter.PingGrade pingGrade) {
+        PossibleConditions conditions = new PossibleConditions();
+
+        int[] allPingMetrics = {pingGrade.routerLatencyMetric, pingGrade.dnsServerLatencyMetric, pingGrade.externalServerLatencyMetric};
+        if (DataInterpreter.isGoodOrExcellent(allPingMetrics)) {
+            conditions.exclude(ROUTER_CONDITIONS);
+            conditions.exclude(DNS_CONDITIONS);
+            return PossibleConditions.NOOP_CONDITION;
+        }
+
+        //Router is quick
+        if (DataInterpreter.isGoodOrExcellent(pingGrade.routerLatencyMetric)) {
+            conditions.exclude(ROUTER_CONDITIONS);
+            if (DataInterpreter.isGoodOrExcellent(pingGrade.dnsServerLatencyMetric)) {
+                conditions.exclude(DNS_CONDITIONS);
+                //Good Router / dns latency but poor external server latency
+                if (DataInterpreter.isAverageOrPoor(pingGrade.externalServerLatencyMetric)) {
+                    conditions.include(Condition.DNS_RESPONSE_SLOW, 0.3);
+                    conditions.include(Condition.ISP_INTERNET_SLOW_DNS_OK, 0.3);
+                    conditions.include(Condition.REMOTE_SERVER_IS_SLOW_TO_RESPOND, 0.3);
+                } else if (DataInterpreter.isUnknown(pingGrade.externalServerLatencyMetric)) {
+                    conditions.include(Condition.ISP_INTERNET_DOWN_DNS_OK, 1.0);
+                }
+            } else if (DataInterpreter.isAverageOrPoor(pingGrade.dnsServerLatencyMetric)) {
+                //Good router / slow dns
+                conditions.include(Condition.DNS_SLOW_TO_REACH, 1.0);
+            } else {
+                conditions.include(Condition.DNS_UNREACHABLE, 1.0);
+            }
+        } else {
+            //Router is slow to respond to ping
+            conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.5);
+            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.5);
+        }
         return new PossibleConditions();
     }
 
     public static PossibleConditions getPossibleConditionsForHttpPing(DataInterpreter.PingGrade httpPingGrade) {
+        PossibleConditions conditions = new PossibleConditions();
+
+        if (DataInterpreter.isGoodOrExcellent(httpPingGrade.routerLatencyMetric)) {
+            conditions.exclude(ROUTER_CONDITIONS);
+            return conditions;
+        }
+
+        if (DataInterpreter.isAverageOrPoor(httpPingGrade.routerLatencyMetric) || DataInterpreter.isNonFunctional(httpPingGrade.routerLatencyMetric)) {
+            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
+            conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
+            conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.1);
+        } else if (DataInterpreter.isNonFunctional(httpPingGrade.routerLatencyMetric)) {
+            conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 1.0);
+        }
         return new PossibleConditions();
-    }
-
-    /**
-     * Returns a PossibleConditions object for the given wifi link mode state.
-     * @param wifiLinkMode
-     * @return
-     */
-    public static PossibleConditions possibleConditionsFor(@WifiState.WifiLinkMode int wifiLinkMode) {
-        if (wifiLinkMode == WifiState.WifiLinkMode.NO_PROBLEM_DEFAULT_STATE) {
-            return PossibleConditions.NOOP_CONDITION;
-        }
-
-        if (wifiLinkMode == WifiState.WifiLinkMode.FREQUENT_DISCONNECTIONS) {
-            PossibleConditions conditions = new PossibleConditions();
-            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
-            conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
-            conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE, 0.3);
-            return conditions;
-        }
-
-        if (wifiLinkMode == WifiState.WifiLinkMode.HANGING_ON_AUTHENTICATING) {
-            PossibleConditions conditions = new PossibleConditions();
-            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
-            conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
-            conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE, 0.3);
-            return conditions;
-        }
-
-        if (wifiLinkMode == WifiState.WifiLinkMode.HANGING_ON_DHCP) {
-            PossibleConditions conditions = new PossibleConditions();
-            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
-            conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
-            conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE, 0.3);
-            return conditions;
-        }
-
-        if (wifiLinkMode == WifiState.WifiLinkMode.HANGING_ON_SCANNING) {
-            PossibleConditions conditions = new PossibleConditions();
-            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
-            conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
-            conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE, 0.3);
-            return conditions;
-        }
-
-        if (wifiLinkMode == WifiState.WifiLinkMode.UNKNOWN) {
-            PossibleConditions conditions = new PossibleConditions();
-            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
-            conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
-            conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE, 0.3);
-            return conditions;
-        }
-
-        return PossibleConditions.NOOP_CONDITION;
-    }
-
-    /**
-     *
-     * @param wifiConnectivityMode
-     * @return
-     */
-    public static PossibleConditions possibleConditionsFor(@ConnectivityAnalyzer.WifiConnectivityMode int wifiConnectivityMode) {
-        if (wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_ONLINE) {
-            return PossibleConditions.NOOP_CONDITION;
-        }
-
-        if (wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_OFFLINE) {
-            PossibleConditions conditions = new PossibleConditions();
-            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
-            conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
-            conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE, 0.3);
-            return conditions;
-        }
-
-        if (wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL) {
-            PossibleConditions conditions = new PossibleConditions();
-            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
-            conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
-            conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE, 0.3);
-            return conditions;
-        }
-
-        if (wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.ON_AND_DISCONNECTED) {
-            PossibleConditions conditions = new PossibleConditions();
-            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
-            conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
-            conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE, 0.3);
-            return conditions;
-        }
-
-        if (wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.OFF) {
-            PossibleConditions conditions = new PossibleConditions();
-            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
-            conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
-            conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE, 0.3);
-            return conditions;
-        }
-
-        if (wifiConnectivityMode == WifiState.WifiLinkMode.UNKNOWN) {
-            PossibleConditions conditions = new PossibleConditions();
-            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
-            conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
-            conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE, 0.3);
-            return conditions;
-        }
-
-        return PossibleConditions.NOOP_CONDITION;
     }
 
 
