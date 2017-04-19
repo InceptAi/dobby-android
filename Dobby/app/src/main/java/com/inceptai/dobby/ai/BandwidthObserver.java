@@ -21,6 +21,7 @@ import static android.content.ContentValues.TAG;
 public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, RtDataSource<Float> {
     private InferenceEngine inferenceEngine;
     private HashSet<RtDataListener<Float>> listeners;
+    private boolean testsRunning = false;
 
     public BandwidthObserver(InferenceEngine inferenceEngine) {
         this.inferenceEngine = inferenceEngine;
@@ -56,6 +57,7 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
             listener.onClose();
         }
         listeners.clear();
+        testsRunning = false;
     }
 
     @Override

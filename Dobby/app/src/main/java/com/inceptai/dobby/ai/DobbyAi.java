@@ -52,12 +52,11 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     }
 
     @Override
-    public void onResult(final Result result) {
+    public void onResult(final Action action, final Result result) {
         // Thread switch (to release any Api.Ai threads).
         threadpool.submit(new Runnable() {
             @Override
             public void run() {
-                Action action = inferenceEngine.interpretApiAiResult(result);
                 takeAction(action);
             }
         });
@@ -112,22 +111,14 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 Log.i(TAG, "Exception while cancelling:" + e);
             }
         }
-    }
-
-    private void runBandwidthTest() {
-        BandwidthObserver observer = new BandwidthObserver(inferenceEngine);
-        responseCallback.showRtGraph(observer);
-        Log.i(TAG, "Going to start bandwidth test.");
-        try {
-            networkLayer.startBandwidthTest(observer,
-                    BandwithTestCodes.BandwidthTestMode.DOWNLOAD_AND_UPLOAD);
-        } catch (Exception e) {
-            Log.v(TAG, "Exception while starting bandwidth tests: " + e);
+        if (action.getAction() == Action.ActionType.ACTION_TYPE_DIAGNOSE_SLOW_INTERNET) {
+            Action newAction = inferenceEngine.addGoal(InferenceEngine.Goal.GOAL_DIAGNOSE_SLOW_INTERNET);
+            takeAction(newAction);
+            return;
         }
-    }
-
-    private void cancelBandwidthTest() throws Exception {
-        networkLayer.cancelBandwidthTests();
+        if (action.getAction() == Action.ActionType.ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS) {
+            // Run b/w, wifi and ping tests.
+        }
     }
 
     public void sendQuery(String text) {
@@ -138,5 +129,19 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         networkLayer.cleanup();
         inferenceEngine.cleanup();
         apiAiClient.cleanup();
+    }
+
+    private void runBandwidthTest() {
+        Log.i(TAG, "Going to start bandwidth test.");
+        BandwidthObserver observer = new BandwidthObserver(inferenceEngine);
+        responseCallback.showRtGraph(observer);
+        @BandwithTestCodes.BandwidthTestMode
+        int testMode = BandwithTestCodes.BandwidthTestMode.DOWNLOAD_AND_UPLOAD;
+        inferenceEngine.notifyBandwidthTestStart(testMode);
+        networkLayer.startBandwidthTest(observer, testMode);
+    }
+
+    private void cancelBandwidthTest() throws Exception {
+        networkLayer.cancelBandwidthTests();
     }
 }

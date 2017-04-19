@@ -149,7 +149,7 @@ public class NewBandwidthAnalyzer {
     public void startBandwidthTestSafely(@BandwidthTestMode int testMode) {
         try {
             startBandwidthTest(testMode);
-        } catch (Exception e) {
+        } catch (BandwidthTestException e) {
             Log.v(TAG, "Exception: " + e);
             finishTests();
         }

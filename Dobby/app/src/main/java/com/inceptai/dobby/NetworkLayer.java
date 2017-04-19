@@ -135,8 +135,8 @@ public class NetworkLayer {
     public boolean startBandwidthTest(NewBandwidthAnalyzer.ResultsCallback resultsCallback,
                                    @BandwithTestCodes.BandwidthTestMode int testMode) {
         if (getConnectivityAnalyzerInstance().isWifiOnline()) {
-            bandwidthAnalyzer.registerCallback(resultsCallback);
             Log.i(TAG, "NetworkLayer: Going to start bandwidth test.");
+            bandwidthAnalyzer.registerCallback(resultsCallback);
             bandwidthAnalyzer.startBandwidthTestSafely(testMode);
             return true;
         } else {
@@ -159,7 +159,7 @@ public class NetworkLayer {
 
     public DobbyWifiInfo getLinkInfo() { return getWifiAnalyzerInstance().getLinkInfo(); }
 
-    //Process events from eventbus
+    // Process events from eventbus
     @Subscribe
     public void listen(DobbyEvent event) {
         Log.v(TAG, "NL, Found Event: " + event.toString());
