@@ -38,6 +38,8 @@ public class InferenceEngine {
     private ScheduledFuture<?> bandwidthCheckFuture;
     private ActionListener actionListener;
     private long lastBandwidthUpdateTimestampMs = 0;
+    private MetricsDb metricsDb;
+    private PossibleConditions currentConditions = PossibleConditions.NOOP_CONDITION;
 
     public interface ActionListener {
         void takeAction(Action action);
@@ -58,6 +60,7 @@ public class InferenceEngine {
         bandwidthTestState = STATE_BANDWIDTH_TEST_NONE;
         this.scheduledExecutorService = scheduledExecutorService;
         this.actionListener = actionListener;
+        metricsDb = new MetricsDb();
     }
 
     public Action addGoal(@Goal int goal) {
@@ -77,7 +80,9 @@ public class InferenceEngine {
     // Bandwidth test notifications:
 
     public void notifyBandwidthTestStart(@BandwithTestCodes.BandwidthTestMode int testMode) {
-
+        if (testMode == BandwithTestCodes.BandwidthTestMode.UPLOAD) {
+            metricsDb.clearUploadMbps();
+        }
     }
 
     public void notifyBandwidthTestProgress(@BandwithTestCodes.BandwidthTestMode int testMode, double bandwidth) {
@@ -92,6 +97,16 @@ public class InferenceEngine {
                                           double bandwidth) {
         sendResponseOnlyAction(testModeToString(testMode) + " Overall Bandwidth = " + String.format("%.2f", bandwidth / 1000000) + " Mbps");
         lastBandwidthUpdateTimestampMs = 0;
+        if (testMode == BandwithTestCodes.BandwidthTestMode.UPLOAD) {
+            metricsDb.reportUploadMbps(bandwidth * 1.0e-6);
+        } else if (testMode == BandwithTestCodes.BandwidthTestMode.DOWNLOAD) {
+            metricsDb.reportDownloadMbps(bandwidth * 1.0e-6);
+        }
+        if (metricsDb.hasValidDownload() && metricsDb.hasValidUpload()) {
+            DataInterpreter.BandwidthGrade bandwidthGrade = DataInterpreter.interpret(metricsDb.getDownloadMbps(), metricsDb.getUploadMbps());
+            PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(bandwidthGrade);
+            //  TODO: Merge conditions with currentConditions.
+        }
     }
 
     public void cleanup() {

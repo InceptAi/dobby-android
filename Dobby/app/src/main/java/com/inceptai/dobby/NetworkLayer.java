@@ -136,6 +136,7 @@ public class NetworkLayer {
         return null;
     }
 
+    // TODO: remove this routine.
     private boolean startBandwidthTest(NewBandwidthAnalyzer.ResultsCallback resultsCallback,
                                    @BandwithTestCodes.BandwidthTestMode int testMode) {
         if (getConnectivityAnalyzerInstance().isWifiOnline()) {
