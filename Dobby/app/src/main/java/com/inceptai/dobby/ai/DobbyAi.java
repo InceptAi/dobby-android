@@ -5,6 +5,7 @@ import android.util.Log;
 
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.NetworkLayer;
+import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
 import com.inceptai.dobby.speedtest.SpeedTestTask;
 
@@ -133,12 +134,11 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
 
     private void runBandwidthTest() {
         Log.i(TAG, "Going to start bandwidth test.");
-        BandwidthObserver observer = new BandwidthObserver(inferenceEngine);
-        responseCallback.showRtGraph(observer);
         @BandwithTestCodes.BandwidthTestMode
         int testMode = BandwithTestCodes.BandwidthTestMode.DOWNLOAD_AND_UPLOAD;
-        inferenceEngine.notifyBandwidthTestStart(testMode);
-        networkLayer.startBandwidthTest(observer, testMode);
+        BandwidthObserver observer = networkLayer.startBandwidthTest(testMode);
+        observer.setInferenceEngine(inferenceEngine);
+        responseCallback.showRtGraph(observer);
     }
 
     private void cancelBandwidthTest() throws Exception {
