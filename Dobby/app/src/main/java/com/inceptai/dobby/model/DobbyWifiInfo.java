@@ -12,6 +12,7 @@ public class DobbyWifiInfo {
     private String mac;
     private int rssi;
     private int speed;
+    private int frequency;
 
     public DobbyWifiInfo(String bssid, String ssid, String mac, int rssi, int speed) {
         this.bssid = bssid;
@@ -19,6 +20,16 @@ public class DobbyWifiInfo {
         this.rssi = rssi;
         this.speed = speed;
         this.mac = mac;
+        this.frequency = 0;
+    }
+
+    public DobbyWifiInfo(String bssid, String ssid, String mac, int rssi, int speed, int frequency) {
+        this.bssid = bssid;
+        this.ssid = ssid;
+        this.rssi = rssi;
+        this.speed = speed;
+        this.mac = mac;
+        this.frequency = frequency;
     }
 
     public DobbyWifiInfo(WifiInfo info) {
@@ -49,4 +60,7 @@ public class DobbyWifiInfo {
         return mac;
     }
 
+    public int getFrequency() {
+        return frequency;
+    }
 }
