@@ -9,6 +9,7 @@ import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
+import com.inceptai.dobby.model.DobbyWifiInfo;
 import com.inceptai.dobby.model.IPLayerInfo;
 import com.inceptai.dobby.model.PingStats;
 import com.inceptai.dobby.ping.PingAnalyzer;
@@ -156,8 +157,9 @@ public class NetworkLayer {
         return ipLayerInfo;
     }
 
-    //Process events from eventbus
+    public DobbyWifiInfo getLinkInfo() { return getWifiAnalyzerInstance().getLinkInfo(); }
 
+    //Process events from eventbus
     @Subscribe
     public void listen(DobbyEvent event) {
         Log.v(TAG, "NL, Found Event: " + event.toString());

@@ -110,6 +110,8 @@ public class WifiAnalyzer {
         return wifiState;
     }
 
+    public DobbyWifiInfo getLinkInfo() { return wifiState.getLinkInfo(); }
+
     public HashMap<Integer, WifiState.ChannelInfo> getChannelStats() {
         return wifiState.getChannelStats();
     }

@@ -3,6 +3,7 @@ package com.inceptai.dobby.ai;
 import android.support.annotation.IntDef;
 
 import com.inceptai.dobby.connectivity.ConnectivityAnalyzer;
+import com.inceptai.dobby.model.DobbyWifiInfo;
 import com.inceptai.dobby.model.PingStats;
 import com.inceptai.dobby.wifi.WifiState;
 
@@ -58,19 +59,34 @@ public class DataInterpreter {
             100.0 /* poor */
     };
 
-    private static final double[] WIFI_RSSI_STEPS_MS = { /* higher is better */
+    private static final double[] WIFI_RSSI_STEPS_DBM = { /* higher is better */
             -50.0, /* excellent */
             -70.0, /* good */
             -88.0, /* average */
             -105.0 /* poor */
     };
 
-    private static final double[] WIFI_CONTENTION_STEPS_MS = { /* lower is better */
+    private static final double[] WIFI_CONTENTION_STEPS_LEVELS = { /* lower is better */
             0.2, /* excellent */
             0.4, /* good */
             0.7, /* average */
             0.9 /* poor */
     };
+
+    private static final double[] WIFI_CHANNEL_OCCUPANCY_STEPS = { /* lower is better */
+            0.0, /* excellent */
+            1.0, /* good */
+            2.0, /* average */
+            4.0 /* poor */
+    };
+
+    private static final double[] LINK_SPEED_STEPS_MBPS = { /* higher is better */
+            100, /* excellent */
+            50, /* good */
+            30, /* average */
+            10 /* poor */
+    };
+
 
     @IntDef({MetricType.EXCELLENT, MetricType.GOOD, MetricType.AVERAGE, MetricType.POOR,
             MetricType.ABYSMAL, MetricType.UNKNOWN})
@@ -108,11 +124,16 @@ public class DataInterpreter {
     }
 
     public static class WifiGrade {
-        HashMap<Integer, Integer> wifiChannelAvailabiltyMap;  /* based on congestion metric */
+        HashMap<Integer, Integer> wifiChannelOccupancy;  /* based on congestion metric */
         @MetricType int primaryApSignal;
-        @ConnectivityAnalyzer.WifiConnectivityMode int wifiConnetivityMode;
-        @WifiState.WifiLinkMode
-        int wifiProblemMode;
+        @MetricType int primaryApLinkSpeed;
+        @MetricType int primaryLinkChannelOccupancy;
+        @ConnectivityAnalyzer.WifiConnectivityMode int wifiConnectivityMode;
+        @WifiState.WifiLinkMode int wifiProblemMode;
+
+        public WifiGrade() {
+            wifiChannelOccupancy = new HashMap<>();
+        }
     }
 
     /**
@@ -171,16 +192,41 @@ public class DataInterpreter {
         return  httpGrade;
     }
 
-    public static WifiGrade interpret(HashMap<Integer, Double> contentionMetric,
-                                      int apRssi,
+    public static WifiGrade interpret(HashMap<Integer, WifiState.ChannelInfo> wifiChannelInfo,
+                                      DobbyWifiInfo linkInfo,
                                       @WifiState.WifiLinkMode int wifiProblemMode,
                                       @ConnectivityAnalyzer.WifiConnectivityMode int wifiConnectivityMode) {
         WifiGrade wifiGrade = new WifiGrade();
-        wifiGrade.wifiChannelAvailabiltyMap = new HashMap<>();
-        wifiGrade.primaryApSignal = getGradeHigherIsBetter(apRssi, WIFI_RSSI_STEPS_MS, apRssi < 0);
-        wifiGrade.wifiConnetivityMode = wifiConnectivityMode;
+        //Figure out the # of APs on primary channel
+        WifiState.ChannelInfo primaryChannelInfo = wifiChannelInfo.get(linkInfo.getFrequency());
+
+        int numStrongInterferingAps = computeStrongInterferingAps(primaryChannelInfo);
+        wifiGrade.primaryLinkChannelOccupancy = getGradeLowerIsBetter(numStrongInterferingAps,
+                WIFI_CHANNEL_OCCUPANCY_STEPS,
+                (linkInfo.getFrequency() > 0 && numStrongInterferingAps >= 0));
+
+        //Compute metrics for all channels -- for later use
+        for (WifiState.ChannelInfo channelInfo: wifiChannelInfo.values()) {
+            wifiGrade.wifiChannelOccupancy.put(channelInfo.channelFrequency,
+                    computeStrongInterferingAps(channelInfo));
+        }
+
+        wifiGrade.primaryApSignal = getGradeHigherIsBetter(linkInfo.getRssi(),
+                WIFI_RSSI_STEPS_DBM, linkInfo.getRssi() < 0);
+        wifiGrade.primaryApLinkSpeed = getGradeHigherIsBetter(linkInfo.getLinkSpeed(),
+                LINK_SPEED_STEPS_MBPS, linkInfo.getLinkSpeed() > 0);
+
+        wifiGrade.wifiConnectivityMode = wifiConnectivityMode;
         wifiGrade.wifiProblemMode = wifiProblemMode;
         return wifiGrade;
+    }
+
+    private static int computeStrongInterferingAps(WifiState.ChannelInfo channelInfo) {
+        if (channelInfo == null) {
+            return -1;
+        }
+        return channelInfo.similarStrengthAPs +
+                channelInfo.higherStrengthAps + channelInfo.highestStrengthAps;
     }
 
     @MetricType

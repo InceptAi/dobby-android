@@ -33,7 +33,7 @@ public class WifiState {
     private static final int THRESHOLD_FOR_DECLARING_CONNECTION_SETUP_AS_DONE_IF_CONNECTED_FOR_MS = 10000;
     private static final int THRESHOLD_FOR_FLAGGING_FREQUENT_STATE_CHANGES = 5;
     private static final int THRESHOLD_FOR_COUNTING_FREQUENT_STATE_CHANGES_MS = 10000;
-
+    private static final int MAX_AGE_FOR_SIGNAL_UPDATING_MS = 40000;
 
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({SignalStrengthZones.HIGH, SignalStrengthZones.MEDIUM,
@@ -89,7 +89,6 @@ public class WifiState {
     private long lastWifiStateTimestampMs;
     private HashMap<Integer, ChannelInfo> channelInfoMap;
     private HashMap<NetworkInfo.DetailedState, List<WifiStateInfo>> detailedWifiStateStats;
-    private List<ScanResult> lastWifiScanResult;
     private HashMap<String, Integer> movingSignalAverage;
     private HashMap<String, Long> lastSeenSignalTimestamp;
 
@@ -98,6 +97,8 @@ public class WifiState {
 
 
     public WifiState() {
+        linkBSSID = Utils.EMPTY_STRING;
+        linkSSID = Utils.EMPTY_STRING;
         channelInfoMap = new HashMap<>();
         detailedWifiStateStats = new HashMap<>();
         wifiProblemMode = WifiLinkMode.UNKNOWN;
@@ -108,8 +109,8 @@ public class WifiState {
     }
 
     public void clearWifiConnectionInfo() {
-        linkSSID = null;
-        linkBSSID = null;
+        linkSSID = Utils.EMPTY_STRING;
+        linkBSSID = Utils.EMPTY_STRING;
         linkFrequency = 0;
         linkSpeedMbps = 0;
         linkSignal = 0;
@@ -269,7 +270,6 @@ public class WifiState {
             linkSpeedMbps = wifiInfo.getLinkSpeed();
         }
         if (scanResultList != null) {
-            lastWifiScanResult = scanResultList;
             if (linkFrequency == 0) {
                 updateChannelFrequency(scanResultList);
             }
@@ -288,6 +288,10 @@ public class WifiState {
         return toJson();
     }
 
+    public DobbyWifiInfo getLinkInfo(){
+        return new DobbyWifiInfo(linkBSSID, linkSSID, macAddress,
+                linkSignal, linkSpeedMbps, linkFrequency);
+    }
 
     public HashMap<Integer, ChannelInfo> getChannelStats() {
         final int GAP_FOR_SIMILAR_STRENGTH_DBM = 5;
@@ -346,7 +350,6 @@ public class WifiState {
 
 
     private void updateInfoWithScanResult(List<ScanResult> scanResultList) {
-        final int MAX_AGE_FOR_SIGNAL_UPDATING_MS = 40000;
         for (ScanResult scanResult : scanResultList) {
             //Update the channel info stuff
             ChannelInfo channelInfo = channelInfoMap.get(scanResult.frequency);
@@ -399,7 +402,7 @@ public class WifiState {
     }
 
     private void updateChannelFrequency(List<ScanResult> scanResultList) {
-        if (linkSSID == null && linkBSSID == null) {
+        if (linkSSID.isEmpty() && linkBSSID.isEmpty()) {
             return;
         }
         for (ScanResult scanResult: scanResultList) {
@@ -411,7 +414,7 @@ public class WifiState {
     }
 
     private double computeContention(ScanResult scanResult) {
-        if ((linkBSSID == null && linkSSID == null) || // not initialized
+        if ((linkBSSID.isEmpty() && linkSSID.isEmpty()) || // not initialized
                 scanResult.BSSID.equals(linkBSSID) || // We don't want current AP to contribute to contention.
                 scanResult.SSID.equals(linkSSID) ) {
             return 0;
