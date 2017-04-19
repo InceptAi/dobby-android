@@ -215,7 +215,7 @@ public class PingAnalyzer {
 
 
     //Perform download tests with router
-    private void performGatewayDownloadTest() {
+    protected void performGatewayDownloadTest() {
         PingStats downloadLatencyStats = new PingStats(ipLayerInfo.gateway);
         if (ipLayerInfo.gateway == null || ipLayerInfo.gateway.equals("0.0.0.0")) {
             return;
@@ -232,7 +232,7 @@ public class PingAnalyzer {
                     latencyMeasurementsMs.add(Double.valueOf((double)System.currentTimeMillis() - startTime));
                 }
             } catch (Utils.HTTPReturnCodeException e) {
-                Log.v(TAG, "Error code: " + e.httpReturnCode);
+                Log.v(TAG, "HTTP Return code: " + e.httpReturnCode);
                 latencyMeasurementsMs.add(Double.valueOf((double)System.currentTimeMillis() - startTime));
             } catch (IOException e) {
                 String errorString = "Exception while performing latencyMs test: " + e;

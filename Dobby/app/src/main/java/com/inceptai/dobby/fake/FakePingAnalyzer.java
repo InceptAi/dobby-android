@@ -43,6 +43,8 @@ public class FakePingAnalyzer extends PingAnalyzer {
     @FakePingAnalyzer.PingStatsMode
     public static int pingStatsMode = PingStatsMode.DEFAULT_WORKING_STATE;
     private ListenableFuture<HashMap<String, PingStats>> fakePingResultsFuture;
+    private ListenableFuture<PingStats> fakeGatewayDownloadTestFuture;
+
     private Random random;
 
 
@@ -351,4 +353,44 @@ public class FakePingAnalyzer extends PingAnalyzer {
         }, PING_LATENCY_MS, TimeUnit.MILLISECONDS);
         return fakePingResultsFuture;
     }
+
+    public ListenableFuture<PingStats> scheduleRouterDownloadLatencyTestSafely() throws IllegalStateException {
+        if (fakeGatewayDownloadTestFuture != null && !fakeGatewayDownloadTestFuture.isDone()) {
+            AsyncFunction<PingStats, PingStats> redoDownloadLatencyTest = new
+                    AsyncFunction<PingStats, PingStats>() {
+                        @Override
+                        public ListenableFuture<PingStats> apply(PingStats input) throws Exception {
+                            return scheduleGatewayDownloadLatencyTest();
+                        }
+                    };
+            ListenableFuture<PingStats> newGatewayDownloadTestFuture = Futures.transformAsync(fakeGatewayDownloadTestFuture, redoDownloadLatencyTest);
+            return newGatewayDownloadTestFuture;
+        } else {
+            return scheduleGatewayDownloadLatencyTest();
+        }
+    }
+
+    private ListenableFuture<PingStats> scheduleGatewayDownloadLatencyTest() throws IllegalStateException {
+        fakeGatewayDownloadTestFuture = dobbyThreadpool.getListeningScheduledExecutorService().schedule(new Callable<PingStats>() {
+            @Override
+            public PingStats call() {
+                PingStats pingStats = generateFakeGatewayStats();
+                gatewayDownloadLatencyTestStats = pingStats;
+                Log.v(TAG, "FAKE GW server latency is : " + gatewayDownloadLatencyTestStats.toString());
+                return  pingStats;
+            }
+        }, PING_LATENCY_MS, TimeUnit.MILLISECONDS);
+        return fakeGatewayDownloadTestFuture;
+    }
+
+    private PingStats generateFakeGatewayStats() {
+        Log.v(TAG, "FAKE Generating fake gateway http latency for mode " + getPingStatsModeName(FakePingAnalyzer.pingStatsMode));
+        FakePingConfig fakePingConfig = new FakePingConfig(FakePingAnalyzer.pingStatsMode);
+        PingStats gatewayLatencyStats = generateIndividualPingStats(ipLayerInfo.gateway,
+                fakePingConfig.gatewayLatencyRangeMs, fakePingConfig.gatewayLossRangePercent);
+        gatewayLatencyStats.lossRatePercent = 0.0;
+        return gatewayLatencyStats;
+    }
+
+
 }
