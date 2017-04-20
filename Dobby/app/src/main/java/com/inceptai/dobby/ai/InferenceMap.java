@@ -282,19 +282,20 @@ public class InferenceMap {
         return new PossibleConditions();
     }
 
-    public static PossibleConditions getPossibleConditionsForHttpPing(DataInterpreter.PingGrade httpPingGrade) {
+    public static PossibleConditions getPossibleConditionsFor(DataInterpreter.HttpGrade httpGrade) {
         PossibleConditions conditions = new PossibleConditions();
 
-        if (DataInterpreter.isGoodOrExcellent(httpPingGrade.routerLatencyMetric)) {
+        if (DataInterpreter.isGoodOrExcellent(httpGrade.httpDownloadLatencyMetric)) {
             conditions.exclude(ROUTER_CONDITIONS); // TODO: Confirm this with Arunesh -- Should we be doing this ?
             return conditions;
         }
 
-        if (DataInterpreter.isAverageOrPoor(httpPingGrade.routerLatencyMetric) || DataInterpreter.isNonFunctional(httpPingGrade.routerLatencyMetric)) {
+        if (DataInterpreter.isAverageOrPoor(httpGrade.httpDownloadLatencyMetric)
+                || DataInterpreter.isNonFunctional(httpGrade.httpDownloadLatencyMetric)) {
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
             conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
             conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.1);
-        } else if (DataInterpreter.isNonFunctional(httpPingGrade.routerLatencyMetric)) {
+        } else if (DataInterpreter.isNonFunctional(httpGrade.httpDownloadLatencyMetric)) {
             conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 1.0);
         }
         return new PossibleConditions();

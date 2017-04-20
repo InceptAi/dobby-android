@@ -17,6 +17,7 @@ import java.util.HashMap;
  */
 
 public class DataInterpreter {
+    private static final long MAX_STALENESS_MS = 120 * 1000; // 120 seconds.
 
     private static final double[] BW_DOWNLOAD_STEPS_MBPS = { /* higher is better */
             20.0, /* excellent */
@@ -101,6 +102,10 @@ public class DataInterpreter {
         int UNKNOWN = 5;  /* no valid result available */
     }
 
+    private static boolean isFresh(long timestampMs) {
+        return (System.currentTimeMillis() - timestampMs < MAX_STALENESS_MS);
+    }
+
     public static boolean isUnknown(@MetricType int metric) {
         return (metric == MetricType.UNKNOWN);
     }
@@ -144,16 +149,19 @@ public class DataInterpreter {
         return allNonFunctional;
     }
 
-
     public static class BandwidthGrade {
         @MetricType int uploadBandwidthMetric;
         @MetricType int downloadBandwidthMetric;
-
-
+        long downloadUpdatedAtMs;
+        long uploadUpdatedAtMs;
         double uploadMbps;
         double downloadMbps;
         String isp;
         String externalIP;
+
+        public BandwidthGrade() {
+            //Set timestamp here
+        }
 
         @Override
         public String toString() {
@@ -162,16 +170,88 @@ public class DataInterpreter {
             builder.append("\n Download: " + metricTypeToString(downloadBandwidthMetric));
             return builder.toString();
         }
+
+        public void clearUpload() {
+            uploadMbps = -1.0;
+            uploadUpdatedAtMs = 0;
+        }
+
+        public void clearDownload() {
+            downloadMbps = -1.0;
+            downloadUpdatedAtMs = 0;
+        }
+
+        public void clear() {
+            clearUpload();
+            clearDownload();
+        }
+
+        public void reportUploadMbps(double uploadMbps){
+            this.uploadMbps = uploadMbps;
+            uploadUpdatedAtMs = System.currentTimeMillis();
+        }
+
+        public void reportDownloadMbps(double downloadMbps) {
+            this.downloadMbps = downloadMbps;
+            downloadUpdatedAtMs = System.currentTimeMillis();
+        }
+
+        public boolean hasValidUpload() {
+            return uploadMbps > 0.0 && isFresh(uploadUpdatedAtMs);
+        }
+
+        public boolean hasValidDownload() {
+            return downloadMbps > 0.0 && isFresh(downloadUpdatedAtMs);
+        }
+
+        public double getUploadMbps() {
+            return uploadMbps;
+        }
+
+        public double getDownloadMbps() {
+            return downloadMbps;
+        }
+
+        public void updateTimestamp() {
+            updateDownloadTimestamp();
+            updateUploadTimestamp();
+        }
+
+        public void updateUploadTimestamp() {
+            uploadUpdatedAtMs = System.currentTimeMillis();
+        }
+
+        public void updateDownloadTimestamp() {
+            downloadUpdatedAtMs = System.currentTimeMillis();
+        }
+
+        public void updateUploadInfo(double speedMbps, @MetricType int speedMetric) {
+            uploadBandwidthMetric = speedMetric;
+            uploadMbps = speedMbps;
+            updateUploadTimestamp();
+        }
+
+        public void updateDownloadInfo(double speedMbps, @MetricType int speedMetric) {
+            downloadBandwidthMetric = speedMetric;
+            downloadMbps = speedMbps;
+            updateDownloadTimestamp();
+        }
+
     }
+
 
     public static class PingGrade {
         @MetricType int externalServerLatencyMetric;
         @MetricType int dnsServerLatencyMetric;
         @MetricType int routerLatencyMetric;
         @MetricType int alternativeDnsMetric;
-
+        long updatedAtMs;
         String primaryDns;
         String alternativeDns;
+
+        public PingGrade() {
+            updatedAtMs = System.currentTimeMillis();
+        }
 
         @Override
         public String toString() {
@@ -183,6 +263,19 @@ public class DataInterpreter {
             metricTypeToString(alternativeDnsMetric));
             return builder.toString();
         }
+
+        public void clear() {
+            updatedAtMs = 0;
+        }
+
+        public boolean hasValidData() {
+            return updatedAtMs > 0.0 && isFresh(updatedAtMs);
+        }
+
+        public void updateTimestamp() {
+            updatedAtMs = System.currentTimeMillis();
+        }
+
     }
 
     /**
@@ -191,6 +284,23 @@ public class DataInterpreter {
      */
     public static class HttpGrade {
         @MetricType int httpDownloadLatencyMetric;
+        long updatedAtMs;
+
+        public HttpGrade() {
+            updatedAtMs = System.currentTimeMillis();
+        }
+
+        public void clear() {
+            updatedAtMs = 0;
+        }
+
+        public boolean hasValidData() {
+            return updatedAtMs > 0.0 && isFresh(updatedAtMs);
+        }
+
+        public void updateTimestamp() {
+            updatedAtMs = System.currentTimeMillis();
+        }
 
         @Override
         public String toString() {
@@ -205,6 +315,7 @@ public class DataInterpreter {
         @MetricType int primaryLinkChannelOccupancyMetric;
         @ConnectivityAnalyzer.WifiConnectivityMode int wifiConnectivityMode;
         @WifiState.WifiLinkMode int wifiProblemMode;
+        long updatedAtMs;
         String currentSSID;
         int currentChannel;
         int leastOccupiedChannel;
@@ -213,6 +324,7 @@ public class DataInterpreter {
 
         public WifiGrade() {
             wifiChannelOccupancyMetric = new HashMap<>();
+            updatedAtMs = System.currentTimeMillis();
         }
 
         @Override
@@ -224,6 +336,19 @@ public class DataInterpreter {
             builder.append("\nChannel map:" + wifiChannelOccupancyMetric.toString());
             return builder.toString();
         }
+
+        public void clear() {
+            updatedAtMs = 0;
+        }
+
+        public boolean hasValidData() {
+            return updatedAtMs > 0.0 && isFresh(updatedAtMs);
+        }
+
+        public void updateTimestamp() {
+            updatedAtMs = System.currentTimeMillis();
+        }
+
     }
 
     public static String metricTypeToString(@MetricType int metricType) {
