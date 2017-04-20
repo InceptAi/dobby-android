@@ -8,7 +8,6 @@ package com.inceptai.dobby.ai;
  * Stores network layer metrics and freshness etc for consumption by IE.
  */
 public class MetricsDb {
-
     private DataInterpreter.BandwidthGrade bandwidthGrade;
     private DataInterpreter.PingGrade pingGrade;
     private DataInterpreter.WifiGrade wifiGrade;
