@@ -9,10 +9,13 @@ package com.inceptai.dobby.ai;
  */
 public class MetricsDb {
     private static final long MAX_STALENESS_MS = 120 * 1000; // 120 seconds.
+
+    // Bandwidth stats.
     private double uploadMbps;
     private long uploadTimestampMs;
     private double downloadMbps;
     private long downloadTimestampMs;
+
 
     MetricsDb() {
         clearDownloadMbps();
