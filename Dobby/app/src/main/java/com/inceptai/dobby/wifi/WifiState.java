@@ -60,7 +60,7 @@ public class WifiState {
         int MAX_MODES = 6;
     }
 
-    public static String getWifiStatsModeName(@WifiLinkMode int mode) {
+    public static String wifiLinkModeToString(@WifiLinkMode int mode) {
         switch (mode) {
             case WifiLinkMode.NO_PROBLEM_DEFAULT_STATE:
                 return "NO_PROBLEM_DEFAULT_STATE";

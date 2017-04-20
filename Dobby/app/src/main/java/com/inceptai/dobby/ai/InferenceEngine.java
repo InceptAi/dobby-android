@@ -15,6 +15,7 @@ import com.inceptai.dobby.wifi.WifiState;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -88,9 +89,24 @@ public class InferenceEngine {
         DobbyWifiInfo wifiInfo = wifiState.getLinkInfo();
         DataInterpreter.WifiGrade wifiGrade = DataInterpreter.interpret(channelMap, wifiInfo, wifiLinkMode, wifiConnectivityMode);
         PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(wifiGrade);
+        currentConditions.mergeIn(conditions);
+        Log.i(TAG, "IE: " + wifiGrade.toString());
+        Log.i(TAG, " which gives conditions: " + conditions.toString());
+        Log.i(TAG, "After merging: " + currentConditions.toString());
     }
 
     public void notifyPingStats(HashMap<String, PingStats> pingStatsMap, IPLayerInfo ipLayerInfo) {
+        DataInterpreter.PingGrade pingGrade = DataInterpreter.interpret(pingStatsMap, ipLayerInfo);
+        PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(pingGrade);
+        currentConditions.mergeIn(conditions);
+        Log.i(TAG, "IE: " + pingGrade.toString());
+        Log.i(TAG, " which gives conditions: " + conditions.toString());
+        Log.i(TAG, "After merging: " + currentConditions.toString());
+    }
+
+    public List<String> getSuggestions() {
+        // Convert currentConditions into suggestions.
+        return null;
     }
 
     // Bandwidth test notifications:
@@ -121,7 +137,9 @@ public class InferenceEngine {
         if (metricsDb.hasValidDownload() && metricsDb.hasValidUpload()) {
             DataInterpreter.BandwidthGrade bandwidthGrade = DataInterpreter.interpret(metricsDb.getDownloadMbps(), metricsDb.getUploadMbps());
             PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(bandwidthGrade);
-            //  TODO: Merge conditions with currentConditions.
+            Log.i(TAG, "IE: " + bandwidthGrade.toString());
+            Log.i(TAG, " which gives conditions: " + conditions.toString());
+            Log.i(TAG, "After merging: " + currentConditions.toString());
         }
     }
 

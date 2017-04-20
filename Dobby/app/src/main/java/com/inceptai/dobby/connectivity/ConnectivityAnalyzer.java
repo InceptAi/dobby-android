@@ -99,7 +99,7 @@ public class ConnectivityAnalyzer {
         return null;
     }
 
-    public static String getConnecitivyStateName(@WifiConnectivityMode int mode) {
+    public static String connecitivyModeToString(@WifiConnectivityMode int mode) {
         switch (mode) {
             case CONNECTED_AND_ONLINE:
                 return "CONNECTED_AND_ONLINE";

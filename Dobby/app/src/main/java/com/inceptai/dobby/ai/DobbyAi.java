@@ -136,7 +136,9 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         wifiScan.getFuture().addListener(new Runnable() {
             @Override
             public void run() {
-                inferenceEngine.notifyWifiState(networkLayer.getWifiState());
+                inferenceEngine.notifyWifiState(networkLayer.getWifiState(),
+                        networkLayer.getWifiLinkMode(),
+                        networkLayer.getCurrentConnectivityMode());
             }
         }, threadpool.getExecutor());
 

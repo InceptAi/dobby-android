@@ -148,10 +148,17 @@ public class DataInterpreter {
     public static class BandwidthGrade {
         @MetricType int uploadBandwidthMetric;
         @MetricType int downloadBandwidthMetric;
-        @MetricType int overallResult;
 
         double uploadMbps;
         double downloadMbps;
+
+        @Override
+        public String toString() {
+            StringBuilder builder = new StringBuilder();
+            builder.append("Bandwidth Grade: Upload: " + metricTypeToString(uploadBandwidthMetric));
+            builder.append("\n Download: " + metricTypeToString(downloadBandwidthMetric));
+            return builder.toString();
+        }
     }
 
     public static class PingGrade {
@@ -159,6 +166,17 @@ public class DataInterpreter {
         @MetricType int dnsServerLatencyMetric;
         @MetricType int routerLatencyMetric;
         @MetricType int alternativeDnsMetric;
+
+        @Override
+        public String toString() {
+            StringBuilder builder = new StringBuilder();
+            builder.append("PingGrade: ExternalServer: " +
+            metricTypeToString(externalServerLatencyMetric) + " DnsServer: " +
+            metricTypeToString(dnsServerLatencyMetric) + " Router: " +
+            metricTypeToString(routerLatencyMetric) + " Alternative Dns: " +
+            metricTypeToString(alternativeDnsMetric));
+            return builder.toString();
+        }
     }
 
     /**
@@ -167,6 +185,11 @@ public class DataInterpreter {
      */
     public static class HttpGrade {
         @MetricType int httpDownloadLatencyMetric;
+
+        @Override
+        public String toString() {
+            return "HttpGrade: " + metricTypeToString(httpDownloadLatencyMetric);
+        }
     }
 
     public static class WifiGrade {
@@ -180,6 +203,33 @@ public class DataInterpreter {
         public WifiGrade() {
             wifiChannelOccupancyMetric = new HashMap<>();
         }
+
+        @Override
+        public String toString() {
+            StringBuilder builder = new StringBuilder();
+            builder.append("WifiGrade: Primary AP " + primaryApSignalMetric + ", " + primaryApLinkSpeedMetric + ", " + primaryLinkChannelOccupancyMetric);
+            builder.append("\nWifi connectivity mode: " + ConnectivityAnalyzer.connecitivyModeToString(wifiConnectivityMode));
+            builder.append("\nWifi link mode: " + WifiState.wifiLinkModeToString(wifiProblemMode));
+            builder.append("\nChannel map:" + wifiChannelOccupancyMetric.toString());
+            return builder.toString();
+        }
+    }
+
+    public static String metricTypeToString(@MetricType int metricType) {
+        switch(metricType) {
+            case MetricType.EXCELLENT:
+                return "EXCELLENT";
+            case MetricType.AVERAGE:
+                return "AVERAGE";
+            case MetricType.GOOD:
+                return "GOOD";
+            case MetricType.POOR:
+                return "POOR";
+            case MetricType.NONFUNCTIONAL:
+                return "NONFUNCTIONAL";
+
+        }
+        return "UNKNOWN";
     }
 
     /**

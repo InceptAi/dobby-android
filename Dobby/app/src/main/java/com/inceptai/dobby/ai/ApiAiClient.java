@@ -104,7 +104,9 @@ public class ApiAiClient implements AIListener {
         }
 
         @Action.ActionType int actionInt = Action.ActionType.ACTION_TYPE_NONE;
-        if (APIAI_ACTION_DIAGNOSE_SLOW_INTERNET.equals(action) || ApiAiClient.APIAI_PERFORM_BW_TEST_RETURN_RESULT.equals(action)) {
+        if (APIAI_ACTION_DIAGNOSE_SLOW_INTERNET.equals(action)) {
+            actionInt = Action.ActionType.ACTION_TYPE_DIAGNOSE_SLOW_INTERNET;
+        } else if (ApiAiClient.APIAI_PERFORM_BW_TEST_RETURN_RESULT.equals(action)) {
             actionInt = Action.ActionType.ACTION_TYPE_BANDWIDTH_TEST;
         } else if((action.contains("cancel") || action.contains("later") || action.contains("no")) && action.contains("test")) {
             actionInt = Action.ActionType.ACTION_TYPE_CANCEL_BANDWIDTH_TEST;
