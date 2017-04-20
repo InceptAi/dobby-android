@@ -9,8 +9,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Set;
 
-import lecho.lib.hellocharts.listener.ColumnChartOnValueSelectListener;
-
 /**
  * Created by arunesh on 4/14/17.
  */
@@ -71,7 +69,6 @@ public class InferenceMap {
     }
 
     private static int[] WIFI_CONDITIONS = {
-        Condition.WIFI_CHANNEL_CONGESTION,
         Condition.WIFI_CHANNEL_CONGESTION,
         Condition.WIFI_CHANNEL_BAD_SIGNAL,
         Condition.WIFI_INTERFACE_ON_PHONE_OFFLINE,
@@ -224,7 +221,6 @@ public class InferenceMap {
         } else if (wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.UNKNOWN) {
             conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE, 0.3);
         }
-
         return new PossibleConditions();
     }
 
@@ -247,15 +243,19 @@ public class InferenceMap {
                 if (DataInterpreter.isAverageOrPoor(pingGrade.externalServerLatencyMetric)) {
                     conditions.include(Condition.DNS_RESPONSE_SLOW, 0.3);
                     conditions.include(Condition.ISP_INTERNET_SLOW_DNS_OK, 0.3);
-                    conditions.include(Condition.REMOTE_SERVER_IS_SLOW_TO_RESPOND, 0.3);
+                    conditions.include(Condition.CABLE_MODEM_FAULT, 0.3);
+                    conditions.include(Condition.REMOTE_SERVER_IS_SLOW_TO_RESPOND, 0.1);
                 } else if (DataInterpreter.isUnknown(pingGrade.externalServerLatencyMetric)) {
                     conditions.include(Condition.ISP_INTERNET_DOWN_DNS_OK, 1.0);
+                    conditions.include(Condition.CABLE_MODEM_FAULT, 0.3);
                 }
             } else if (DataInterpreter.isAverageOrPoor(pingGrade.dnsServerLatencyMetric)) {
                 //Good router / slow dns
                 conditions.include(Condition.DNS_SLOW_TO_REACH, 1.0);
+                conditions.include(Condition.CABLE_MODEM_FAULT, 0.1);
             } else {
                 conditions.include(Condition.DNS_UNREACHABLE, 1.0);
+                conditions.include(Condition.CABLE_MODEM_FAULT, 0.1);
             }
         } else {
             //Router is slow to respond to ping
@@ -269,7 +269,7 @@ public class InferenceMap {
         PossibleConditions conditions = new PossibleConditions();
 
         if (DataInterpreter.isGoodOrExcellent(httpPingGrade.routerLatencyMetric)) {
-            conditions.exclude(ROUTER_CONDITIONS);
+            conditions.exclude(ROUTER_CONDITIONS); // TODO: Confirm this with Arunesh -- Should we be doing this ?
             return conditions;
         }
 
