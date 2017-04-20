@@ -2,6 +2,11 @@ package com.inceptai.dobby.ai;
 
 import android.util.Log;
 
+import com.google.common.collect.Collections2;
+import com.google.common.collect.Sets;
+import com.inceptai.dobby.DobbyThreadpool;
+
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -55,7 +60,7 @@ public class PossibleConditions {
 
     void mergeIn(PossibleConditions mergeFrom) {
         Log.i(TAG, "Removing conditions: " + InferenceMap.toString(mergeFrom.exclusionSet()));
-        inclusionMap.remove(mergeFrom.exclusionSet());
+        exclusionSet.addAll(mergeFrom.exclusionSet());
         HashMap<Integer, Double> mergeMap = mergeFrom.inclusionMap();
         for (int condition : mergeMap.keySet()) {
             Double incumbentWeight = inclusionMap.get(condition);
@@ -95,5 +100,13 @@ public class PossibleConditions {
         for (HashMap.Entry<Integer, Double> entry : inclusionMap.entrySet()) {
             entry.setValue(entry.getValue() / sum);
         }
+    }
+
+    public HashMap<Integer, Double> finalizeInference() {
+        HashMap<Integer, Double> inclusionCopy = new HashMap<Integer, Double>(inclusionMap);
+        for (Integer key : exclusionSet) {
+            inclusionCopy.remove(key);
+        }
+        return inclusionCopy;
     }
 }
