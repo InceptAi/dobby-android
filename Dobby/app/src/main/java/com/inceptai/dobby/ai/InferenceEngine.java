@@ -3,9 +3,12 @@ package com.inceptai.dobby.ai;
 import android.support.annotation.IntDef;
 import android.util.Log;
 
+import com.inceptai.dobby.connectivity.ConnectivityAnalyzer;
+import com.inceptai.dobby.model.DobbyWifiInfo;
 import com.inceptai.dobby.model.IPLayerInfo;
 import com.inceptai.dobby.model.PingStats;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
+import com.inceptai.dobby.ui.GraphData;
 import com.inceptai.dobby.utils.Utils;
 import com.inceptai.dobby.wifi.WifiState;
 
@@ -79,12 +82,15 @@ public class InferenceEngine {
         return testModeString;
     }
 
-    public void notifyWifiState(WifiState wifiState) {
-
+    public void notifyWifiState(WifiState wifiState, @WifiState.WifiLinkMode int wifiLinkMode,
+                                @ConnectivityAnalyzer.WifiConnectivityMode int wifiConnectivityMode) {
+        HashMap<Integer, WifiState.ChannelInfo> channelMap = wifiState.getChannelInfoMap();
+        DobbyWifiInfo wifiInfo = wifiState.getLinkInfo();
+        DataInterpreter.WifiGrade wifiGrade = DataInterpreter.interpret(channelMap, wifiInfo, wifiLinkMode, wifiConnectivityMode);
+        PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(wifiGrade);
     }
 
     public void notifyPingStats(HashMap<String, PingStats> pingStatsMap, IPLayerInfo ipLayerInfo) {
-
     }
 
     // Bandwidth test notifications:

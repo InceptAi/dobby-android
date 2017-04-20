@@ -113,7 +113,7 @@ public class WifiAnalyzer {
     public DobbyWifiInfo getLinkInfo() { return wifiState.getLinkInfo(); }
 
     public HashMap<Integer, WifiState.ChannelInfo> getChannelStats() {
-        return wifiState.getChannelStats();
+        return wifiState.getChannelInfoMap();
     }
 
     // Called in order to cleanup any held resources.
