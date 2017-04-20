@@ -3,7 +3,7 @@ package com.inceptai.dobby.speedtest;
 import android.support.annotation.Nullable;
 
 import com.inceptai.dobby.model.BandwidthStats;
-import com.inceptai.dobby.speedtest.BandwithTestCodes.BandwidthTestMode;
+import com.inceptai.dobby.speedtest.BandwithTestCodes.TestMode;
 
 import fr.bmartel.speedtest.SpeedTestSocket;
 import fr.bmartel.speedtest.model.SpeedTestError;
@@ -32,9 +32,9 @@ public class NewUploadAnalyzer {
      * Callback interface for results. More methods to follow.
      */
     public interface ResultsCallback {
-        void onFinish(@BandwidthTestMode int testMode, BandwidthStats bandwidthStats);
-        void onProgress(@BandwidthTestMode int testMode, double instantBandwidth);
-        void onError(@BandwidthTestMode int testMode, SpeedTestError speedTestError, String errorMessage);
+        void onFinish(@TestMode int testMode, BandwidthStats bandwidthStats);
+        void onProgress(@TestMode int testMode, double instantBandwidth);
+        void onError(@TestMode int testMode, SpeedTestError speedTestError, String errorMessage);
     }
 
     public NewUploadAnalyzer(SpeedTestConfig.UploadConfig config,
@@ -113,21 +113,21 @@ public class NewUploadAnalyzer {
         @Override
         public void onFinish(BandwidthStats stats) {
             if (resultsCallback != null) {
-                resultsCallback.onFinish(BandwidthTestMode.UPLOAD, stats);
+                resultsCallback.onFinish(BandwithTestCodes.TestMode.UPLOAD, stats);
             }
         }
 
         @Override
         public void onError(SpeedTestError speedTestError, String errorMessage) {
             if (resultsCallback != null) {
-                resultsCallback.onError(BandwidthTestMode.UPLOAD, speedTestError, errorMessage);
+                resultsCallback.onError(TestMode.UPLOAD, speedTestError, errorMessage);
             }
         }
 
         @Override
         public void onProgress(double instantBandwidth) {
             if (resultsCallback != null) {
-                resultsCallback.onProgress(BandwidthTestMode.UPLOAD, instantBandwidth);
+                resultsCallback.onProgress(TestMode.UPLOAD, instantBandwidth);
             }
         }
     }

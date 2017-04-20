@@ -3,6 +3,8 @@ package com.inceptai.dobby.speedtest;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 import com.inceptai.dobby.ai.InferenceEngine;
 import com.inceptai.dobby.ai.RtDataSource;
 import com.inceptai.dobby.model.BandwidthStats;
@@ -22,17 +24,20 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
     private HashSet<RtDataListener<Float>> listeners;
     private HashSet<NewBandwidthAnalyzer.ResultsCallback> resultsCallbacks;
     private boolean testsRunning = false;
-    @BandwithTestCodes.BandwidthTestExceptionErrorCodes
-    public int bandwidthTestState = BandwithTestCodes.BandwidthTestExceptionErrorCodes.UNKNOWN;
+    @BandwithTestCodes.ExceptionCodes
+    private int exceptionCode = BandwithTestCodes.ExceptionCodes.UNKNOWN;
+    private SettableFuture<BandwidthStats> operationFuture;
 
-    @BandwithTestCodes.BandwidthTestMode
+    @BandwithTestCodes.TestMode
     private int testMode;
 
-    public BandwidthObserver(@BandwithTestCodes.BandwidthTestMode int testMode) {
+    public BandwidthObserver(@BandwithTestCodes.TestMode int testMode,
+                             @BandwithTestCodes.ExceptionCodes int bandwidthErrorCode) {
         this.testMode = testMode;
         listeners = new HashSet<>();
         resultsCallbacks = new HashSet<>();
-        testsStarting();
+        testsStarting(bandwidthErrorCode);
+        operationFuture = SettableFuture.create();
     }
 
     public synchronized void setInferenceEngine(InferenceEngine inferenceEngine) {
@@ -56,16 +61,22 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
         resultsCallbacks.remove(callback);
     }
 
-    @BandwithTestCodes.BandwidthTestMode
+    public ListenableFuture<BandwidthStats> asFuture() {
+        return operationFuture;
+    }
+
+    @BandwithTestCodes.TestMode
     public int getTestMode() {
         return testMode;
     }
 
-    private synchronized void testsStarting() {
-        testsRunning = true;
-        if (inferenceEngine != null) {
-            inferenceEngine.notifyBandwidthTestStart(testMode);
-        }
+
+    public int exceptionCode() {
+        return exceptionCode;
+    }
+
+    public boolean startedNormally() {
+        return testsRunning && exceptionCode == BandwithTestCodes.ExceptionCodes.TEST_STARTED_NO_EXCEPTION;
     }
 
     // NewBandwidthAnalyzer.ResultsCallback overrides:
@@ -99,7 +110,7 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
     }
 
     @Override
-    public synchronized void onTestFinished(@BandwithTestCodes.BandwidthTestMode int testMode, BandwidthStats stats) {
+    public synchronized void onTestFinished(@BandwithTestCodes.TestMode int testMode, BandwidthStats stats) {
         Log.v(TAG, "BandwidthObserver onTestFinished");
         if (inferenceEngine != null) {
             inferenceEngine.notifyBandwidthTestResult(testMode, stats.getPercentile90());
@@ -108,15 +119,15 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
         for (RtDataListener<Float> listener : listeners) {
             listener.onClose();
         }
-        listeners.clear();
-        testsRunning = false;
+
         for (NewBandwidthAnalyzer.ResultsCallback callback : resultsCallbacks) {
             callback.onTestFinished(testMode, stats);
         }
+        testsDone(stats);
     }
 
     @Override
-    public synchronized void onTestProgress(@BandwithTestCodes.BandwidthTestMode int testMode, double instantBandwidth) {
+    public synchronized void onTestProgress(@BandwithTestCodes.TestMode int testMode, double instantBandwidth) {
         Log.v(TAG, "BandwidthObserver onTestProgress");
         if (inferenceEngine != null) {
             inferenceEngine.notifyBandwidthTestProgress(testMode, instantBandwidth);
@@ -128,18 +139,16 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
         for (NewBandwidthAnalyzer.ResultsCallback callback : resultsCallbacks) {
             callback.onTestProgress(testMode, instantBandwidth);
         }
-        testsRunning = false;
-        // resultsCallbacks.clear();
     }
 
     @Override
-    public synchronized void onBandwidthTestError(@BandwithTestCodes.BandwidthTestMode int testMode,
-                                     @BandwithTestCodes.BandwidthTestErrorCodes int errorCode,
+    public synchronized void onBandwidthTestError(@BandwithTestCodes.TestMode int testMode,
+                                     @BandwithTestCodes.ErrorCodes int errorCode,
                                      @Nullable String errorMessage) {
         for (NewBandwidthAnalyzer.ResultsCallback callback : resultsCallbacks) {
             callback.onBandwidthTestError(testMode, errorCode, errorMessage);
         }
-        testsRunning = false;
+        testsDone(BandwidthStats.EMPTY_STATS);
     }
 
     @Override
@@ -150,5 +159,24 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
     @Override
     public synchronized void unregisterListener(RtDataListener<Float> listener) {
         listeners.remove(listener);
+    }
+
+    private void testsDone(BandwidthStats stats) {
+        if (operationFuture != null) {
+            operationFuture.set(stats);
+        }
+        testsRunning = false;
+        listeners.clear();
+        resultsCallbacks.clear();
+    }
+
+    private synchronized void testsStarting(@BandwithTestCodes.ExceptionCodes int errorCode) {
+        if (errorCode != BandwithTestCodes.ExceptionCodes.TEST_STARTED_NO_EXCEPTION) {
+            return;
+        }
+        testsRunning = true;
+        if (inferenceEngine != null) {
+            inferenceEngine.notifyBandwidthTestStart(testMode);
+        }
     }
 }

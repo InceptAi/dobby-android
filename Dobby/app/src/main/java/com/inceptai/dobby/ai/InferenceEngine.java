@@ -3,16 +3,18 @@ package com.inceptai.dobby.ai;
 import android.support.annotation.IntDef;
 import android.util.Log;
 
+import com.inceptai.dobby.model.IPLayerInfo;
+import com.inceptai.dobby.model.PingStats;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
 import com.inceptai.dobby.utils.Utils;
+import com.inceptai.dobby.wifi.WifiState;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.HashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-
-import ai.api.model.Result;
 
 import static com.inceptai.dobby.DobbyApplication.TAG;
 
@@ -67,25 +69,33 @@ public class InferenceEngine {
         return new Action(Utils.EMPTY_STRING, Action.ActionType.ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS);
     }
 
-    private String testModeToString(@BandwithTestCodes.BandwidthTestMode int testMode) {
+    private String testModeToString(@BandwithTestCodes.TestMode int testMode) {
         String testModeString = "UNKNOWN";
-        if (testMode == BandwithTestCodes.BandwidthTestMode.DOWNLOAD) {
+        if (testMode == BandwithTestCodes.TestMode.DOWNLOAD) {
             testModeString = "DOWNLOAD";
-        } else if (testMode == BandwithTestCodes.BandwidthTestMode.UPLOAD) {
+        } else if (testMode == BandwithTestCodes.TestMode.UPLOAD) {
             testModeString = "UPLOAD";
         }
         return testModeString;
     }
 
+    public void notifyWifiState(WifiState wifiState) {
+
+    }
+
+    public void notifyPingStats(HashMap<String, PingStats> pingStatsMap, IPLayerInfo ipLayerInfo) {
+
+    }
+
     // Bandwidth test notifications:
 
-    public void notifyBandwidthTestStart(@BandwithTestCodes.BandwidthTestMode int testMode) {
-        if (testMode == BandwithTestCodes.BandwidthTestMode.UPLOAD) {
+    public void notifyBandwidthTestStart(@BandwithTestCodes.TestMode int testMode) {
+        if (testMode == BandwithTestCodes.TestMode.UPLOAD) {
             metricsDb.clearUploadMbps();
         }
     }
 
-    public void notifyBandwidthTestProgress(@BandwithTestCodes.BandwidthTestMode int testMode, double bandwidth) {
+    public void notifyBandwidthTestProgress(@BandwithTestCodes.TestMode int testMode, double bandwidth) {
         long currentTs = System.currentTimeMillis();
         if ((currentTs - lastBandwidthUpdateTimestampMs) > 500L) {
             sendResponseOnlyAction(testModeToString(testMode) + " Current Bandwidth: " + String.format("%.2f", bandwidth / 1000000) + " Mbps");
@@ -93,13 +103,13 @@ public class InferenceEngine {
         }
     }
 
-    public void notifyBandwidthTestResult(@BandwithTestCodes.BandwidthTestMode int testMode,
+    public void notifyBandwidthTestResult(@BandwithTestCodes.TestMode int testMode,
                                           double bandwidth) {
         sendResponseOnlyAction(testModeToString(testMode) + " Overall Bandwidth = " + String.format("%.2f", bandwidth / 1000000) + " Mbps");
         lastBandwidthUpdateTimestampMs = 0;
-        if (testMode == BandwithTestCodes.BandwidthTestMode.UPLOAD) {
+        if (testMode == BandwithTestCodes.TestMode.UPLOAD) {
             metricsDb.reportUploadMbps(bandwidth * 1.0e-6);
-        } else if (testMode == BandwithTestCodes.BandwidthTestMode.DOWNLOAD) {
+        } else if (testMode == BandwithTestCodes.TestMode.DOWNLOAD) {
             metricsDb.reportDownloadMbps(bandwidth * 1.0e-6);
         }
         if (metricsDb.hasValidDownload() && metricsDb.hasValidUpload()) {

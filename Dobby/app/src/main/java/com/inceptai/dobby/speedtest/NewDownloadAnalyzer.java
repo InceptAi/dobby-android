@@ -3,7 +3,7 @@ package com.inceptai.dobby.speedtest;
 import android.support.annotation.Nullable;
 
 import com.inceptai.dobby.model.BandwidthStats;
-import com.inceptai.dobby.speedtest.BandwithTestCodes.BandwidthTestMode;
+import com.inceptai.dobby.speedtest.BandwithTestCodes.TestMode;
 
 import fr.bmartel.speedtest.SpeedTestSocket;
 import fr.bmartel.speedtest.model.SpeedTestError;
@@ -30,9 +30,9 @@ public class NewDownloadAnalyzer {
      * Callback interface for results. More methods to follow.
      */
     public interface ResultsCallback {
-        void onFinish(@BandwidthTestMode int testMode, BandwidthStats bandwidthStats);
-        void onProgress(@BandwidthTestMode int testMode, double instantBandwidth);
-        void onError(@BandwidthTestMode int testMode, SpeedTestError speedTestError, String errorMessage);
+        void onFinish(@TestMode int testMode, BandwidthStats bandwidthStats);
+        void onProgress(@TestMode int testMode, double instantBandwidth);
+        void onError(@TestMode int testMode, SpeedTestError speedTestError, String errorMessage);
     }
 
     public NewDownloadAnalyzer(SpeedTestConfig.DownloadConfig config,
@@ -101,21 +101,21 @@ public class NewDownloadAnalyzer {
         @Override
         public void onFinish(BandwidthStats stats) {
             if (resultsCallback != null) {
-                resultsCallback.onFinish(BandwidthTestMode.DOWNLOAD, stats);
+                resultsCallback.onFinish(BandwithTestCodes.TestMode.DOWNLOAD, stats);
             }
         }
 
         @Override
         public void onError(SpeedTestError speedTestError, String errorMessage) {
             if (resultsCallback != null) {
-                resultsCallback.onError(BandwidthTestMode.DOWNLOAD, speedTestError, errorMessage);
+                resultsCallback.onError(TestMode.DOWNLOAD, speedTestError, errorMessage);
             }
         }
 
         @Override
         public void onProgress(double instantBandwidth) {
             if (resultsCallback != null) {
-                resultsCallback.onProgress(BandwidthTestMode.DOWNLOAD, instantBandwidth);
+                resultsCallback.onProgress(TestMode.DOWNLOAD, instantBandwidth);
             }
         }
     }
