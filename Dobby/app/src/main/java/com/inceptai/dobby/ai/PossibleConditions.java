@@ -6,8 +6,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.inject.Inject;
-
 import static com.inceptai.dobby.DobbyApplication.TAG;
 
 /**
@@ -31,6 +29,12 @@ public class PossibleConditions {
 
     void exclude(@InferenceMap.Condition int condition) {
         exclusionSet.add(condition);
+    }
+
+    void exclude(@InferenceMap.Condition int[] conditions) {
+        for (int index=0; index < conditions.length; index++) {
+            exclusionSet.add(conditions[index]);
+        }
     }
 
     Set<Integer> inclusionSet() {

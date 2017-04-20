@@ -7,6 +7,7 @@ import android.util.Log;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.inceptai.dobby.connectivity.ConnectivityAnalyzer;
 import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.DobbyWifiInfo;
@@ -16,7 +17,6 @@ import com.inceptai.dobby.ping.PingAnalyzer;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
 import com.inceptai.dobby.speedtest.NewBandwidthAnalyzer;
-import com.inceptai.dobby.connectivity.ConnectivityAnalyzer;
 import com.inceptai.dobby.wifi.WifiAnalyzer;
 import com.inceptai.dobby.wifi.WifiState;
 
@@ -26,9 +26,9 @@ import java.util.List;
 import javax.inject.Inject;
 
 import static com.inceptai.dobby.DobbyApplication.TAG;
+import static com.inceptai.dobby.connectivity.ConnectivityAnalyzerFactory.getConnecitivityAnalyzer;
 import static com.inceptai.dobby.ping.PingAnalyzerFactory.getPingAnalyzer;
 import static com.inceptai.dobby.wifi.WifiAnalyzerFactory.getWifiAnalyzer;
-import static com.inceptai.dobby.connectivity.ConnectivityAnalyzerFactory.getConnecitivityAnalyzer;
 
 /**
  * This class abstracts out the implementation details of all things 'network' related. The UI and
@@ -136,19 +136,6 @@ public class NetworkLayer {
         return null;
     }
 
-    // TODO: remove this routine.
-    private boolean startBandwidthTest(NewBandwidthAnalyzer.ResultsCallback resultsCallback,
-                                   @BandwithTestCodes.BandwidthTestMode int testMode) {
-        if (getConnectivityAnalyzerInstance().isWifiOnline()) {
-            Log.i(TAG, "NetworkLayer: Going to start bandwidth test.");
-            bandwidthAnalyzer.registerCallback(resultsCallback);
-            bandwidthAnalyzer.startBandwidthTestSafely(testMode);
-            return true;
-        } else {
-            Log.i(TAG, "NetworkLayer: Wifi is offline, so cannot run bandwidth tests");
-            return false;
-        }
-    }
 
     public synchronized BandwidthObserver startBandwidthTest(@BandwithTestCodes.BandwidthTestMode int mode) {
         if (bandwidthObserver != null && bandwidthObserver.testsRunning()) {
@@ -157,7 +144,13 @@ public class NetworkLayer {
         }
         bandwidthObserver = new BandwidthObserver(mode);
         bandwidthAnalyzer.registerCallback(bandwidthObserver);
-        bandwidthAnalyzer.startBandwidthTestSafely(mode);
+        if (getConnectivityAnalyzerInstance().isWifiOnline()) {
+            Log.i(TAG, "NetworkLayer: Going to start bandwidth test.");
+            bandwidthObserver.bandwidthTestState = bandwidthAnalyzer.startBandwidthTestSafely(mode);
+        } else {
+            Log.i(TAG, "NetworkLayer: Wifi is offline, so cannot run bandwidth tests");
+            bandwidthObserver.bandwidthTestState = BandwithTestCodes.BandwidthTestExceptionErrorCodes.NETWORK_OFFLINE;
+        }
         return bandwidthObserver;
     }
 

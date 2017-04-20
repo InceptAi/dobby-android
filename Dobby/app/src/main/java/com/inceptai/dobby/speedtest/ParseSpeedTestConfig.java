@@ -14,7 +14,7 @@ import java.io.InputStream;
 public class ParseSpeedTestConfig {
     private final String defaultConfigUrl = "www.speedtest.net/speedtest-config.php";
 
-    public final SpeedTestConfig speedTestConfig;
+    public SpeedTestConfig speedTestConfig;
 
     //Results callback
     private ResultsCallback resultsCallback;
@@ -81,6 +81,21 @@ public class ParseSpeedTestConfig {
         }
         return configToReturn;
     }
+
+    public String getClientISP() {
+        if (speedTestConfig != null && speedTestConfig.clientConfig != null) {
+            return speedTestConfig.clientConfig.isp;
+        }
+        return null;
+    }
+
+    public String getClientip() {
+        if (speedTestConfig != null && speedTestConfig.clientConfig != null) {
+            return speedTestConfig.clientConfig.ip;
+        }
+        return null;
+    }
+
 
 }
 
