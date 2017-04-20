@@ -4,6 +4,7 @@ import android.support.annotation.IntDef;
 
 import com.inceptai.dobby.connectivity.ConnectivityAnalyzer;
 import com.inceptai.dobby.model.DobbyWifiInfo;
+import com.inceptai.dobby.model.IPLayerInfo;
 import com.inceptai.dobby.model.PingStats;
 import com.inceptai.dobby.wifi.WifiState;
 
@@ -199,38 +200,63 @@ public class DataInterpreter {
         return grade;
     }
 
-    public static PingGrade interpret(HashMap<String, PingStats> externalServerStats,
-                                      PingStats alternativeDnsStats,
-                                      PingStats routerStats, PingStats primaryDnsStats) {
+    public static PingGrade interpret(HashMap<String, PingStats> pingStatsHashMap, IPLayerInfo ipLayerInfo) {
+        //Get external server stats
+        HashMap<String, PingStats> externalServerStats = new HashMap<>();
+        if (ipLayerInfo.referenceExternalAddress1 != null) {
+            externalServerStats.put(ipLayerInfo.referenceExternalAddress1, pingStatsHashMap.get(ipLayerInfo.referenceExternalAddress1));
+        }
+        if (ipLayerInfo.referenceExternalAddress2 != null) {
+            externalServerStats.put(ipLayerInfo.referenceExternalAddress2, pingStatsHashMap.get(ipLayerInfo.referenceExternalAddress2));
+        }
+
+        //Get alternative DNS stats
+        PingStats alternativeDnsStats1 = pingStatsHashMap.get(ipLayerInfo.publicDns1);
+        PingStats alternativeDnsStats2 = pingStatsHashMap.get(ipLayerInfo.publicDns2);
+        PingStats lowerAlternativeDnsStats = new PingStats(ipLayerInfo.publicDns1);
+        if (alternativeDnsStats1.avgLatencyMs > 0) {
+            lowerAlternativeDnsStats = alternativeDnsStats1;
+        }
+        if (alternativeDnsStats2.avgLatencyMs > 0) {
+            if (alternativeDnsStats1.avgLatencyMs < 0 || alternativeDnsStats2.avgLatencyMs < alternativeDnsStats1.avgLatencyMs) {
+                lowerAlternativeDnsStats = alternativeDnsStats2;
+            }
+        }
+
+        //Router stats
+        PingStats routerStats = pingStatsHashMap.get(ipLayerInfo.gateway);
+        //Primary DNS stats
+        PingStats primaryDnsStats = pingStatsHashMap.get(ipLayerInfo.dns1);
+
         PingGrade pingGrade = new PingGrade();
-        double avgExtenalServerLatency = 0.0;
+        double avgExternalServerLatency = 0.0;
         int count = 0;
         for(PingStats pingStats : externalServerStats.values()) {
             if (pingStats.avgLatencyMs > 0.0){
-                avgExtenalServerLatency += pingStats.avgLatencyMs;
+                avgExternalServerLatency += pingStats.avgLatencyMs;
                 count ++;
             }
         }
-        avgExtenalServerLatency /= (double) count;
+        avgExternalServerLatency /= (double) count;
 
         pingGrade.externalServerLatencyMetric = getGradeLowerIsBetter(
-                avgExtenalServerLatency,
+                avgExternalServerLatency,
                 PING_LATENCY_EXTSERVER_STEPS_MS,
-                avgExtenalServerLatency > 0.0);
+                avgExternalServerLatency > 0.0);
 
         pingGrade.dnsServerLatencyMetric = getGradeLowerIsBetter(
                 primaryDnsStats.avgLatencyMs,
                 PING_LATENCY_DNS_STEPS_MS,
-                avgExtenalServerLatency > 0.0);
+                primaryDnsStats.avgLatencyMs > 0.0);
 
         pingGrade.routerLatencyMetric = getGradeLowerIsBetter(routerStats.avgLatencyMs,
                 PING_LATENCY_ROUTER_STEPS_MS,
                 routerStats.avgLatencyMs > 0.0);
 
 
-        pingGrade.alternativeDnsMetric = getGradeLowerIsBetter(alternativeDnsStats.avgLatencyMs,
+        pingGrade.alternativeDnsMetric = getGradeLowerIsBetter(lowerAlternativeDnsStats.avgLatencyMs,
                 PING_LATENCY_ROUTER_STEPS_MS,
-                routerStats.avgLatencyMs > 0.0);
+                lowerAlternativeDnsStats.avgLatencyMs > 0.0);
 
         return pingGrade;
     }
