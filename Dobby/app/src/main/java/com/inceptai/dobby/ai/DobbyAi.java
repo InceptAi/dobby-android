@@ -5,7 +5,10 @@ import android.util.Log;
 
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.NetworkLayer;
+import com.inceptai.dobby.model.PingStats;
 import com.inceptai.dobby.speedtest.SpeedTestTask;
+
+import java.util.HashMap;
 
 import javax.inject.Inject;
 
@@ -63,22 +66,6 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
 
         Log.i(TAG, "Got response Action: " + result.toString());
         if (result.toString().contains("test")) {
-            //Vivek--testing best server code.
-            //WifiAnalyzer wifiAnalyzer = WifiAnalyzer.create(this.context, null);
-            //PingAnalyzer pingAnalyzer = new PingAnalyzer(null);
-            //PingAnalyzer.PingStats routerPingStats = pingAnalyzer.pingAndReturnStats("192.168.3.1");
-            //Log.v(TAG, routerPingStats.toJson());
-            //BandwidthAnalyzer bandwidthAnalyzer = BandwidthAnalyzer.create(null);
-            //bandwidthAnalyzer.startBandwidthTest(BandwithTestCodes.TestMode.DOWNLOAD_AND_UPLOAD);
-            /*
-            threadpool.submit(new Runnable() {
-                @Override
-                public void run() {
-                    speedTestSocket.startDownload("2.testdebit.info", "/fichiers/1Mo.dat");
-                }
-            });
-            speedTestTask.doInBackground();
-            */
         }
     }
 
@@ -142,8 +129,27 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         bwTest.post();
         ComposableOperation wifiScan = wifiScanOperation();
         bwTest.uponCompletion(wifiScan);
-        ComposableOperation ping = pingOperation();
+        final ComposableOperation<HashMap<String, PingStats>> ping = pingOperation();
         wifiScan.uponCompletion(ping);
+
+        // Wire up with IE.
+        wifiScan.getFuture().addListener(new Runnable() {
+            @Override
+            public void run() {
+                inferenceEngine.notifyWifiState(networkLayer.getWifiState());
+            }
+        }, threadpool.getExecutor());
+
+        ping.getFuture().addListener(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    inferenceEngine.notifyPingStats(ping.getFuture().get(), networkLayer.getIpLayerInfo());
+                } catch (Exception e) {
+                    Log.w(TAG, "Exception getting ping results");
+                }
+            }
+        }, threadpool.getExecutor());
     }
 
     private ComposableOperation wifiScanOperation() {
@@ -160,8 +166,8 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         };
     }
 
-    private ComposableOperation pingOperation() {
-        return new ComposableOperation(threadpool) {
+    private ComposableOperation<HashMap<String, PingStats>> pingOperation() {
+        return new ComposableOperation<HashMap<String, PingStats>>(threadpool) {
             @Override
             public void post() {
                 setFuture(networkLayer.startPing());

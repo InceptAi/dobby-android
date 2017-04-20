@@ -3,11 +3,15 @@ package com.inceptai.dobby.ai;
 import android.support.annotation.IntDef;
 import android.util.Log;
 
+import com.inceptai.dobby.model.IPLayerInfo;
+import com.inceptai.dobby.model.PingStats;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
 import com.inceptai.dobby.utils.Utils;
+import com.inceptai.dobby.wifi.WifiState;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.HashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -73,6 +77,14 @@ public class InferenceEngine {
             testModeString = "UPLOAD";
         }
         return testModeString;
+    }
+
+    public void notifyWifiState(WifiState wifiState) {
+
+    }
+
+    public void notifyPingStats(HashMap<String, PingStats> pingStatsMap, IPLayerInfo ipLayerInfo) {
+
     }
 
     // Bandwidth test notifications:
