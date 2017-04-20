@@ -9,6 +9,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Set;
 
+import static com.inceptai.dobby.ai.InferenceMap.Condition.ISP_INTERNET_DOWN;
+
 /**
  * Created by arunesh on 4/14/17.
  */
@@ -28,7 +30,7 @@ public class InferenceMap {
             Condition.ROUTER_SOFTWARE_FAULT,
             Condition.ROUTER_GOOD_SIGNAL_USING_SLOW_DATA_RATE,
             Condition.ISP_INTERNET_SLOW_DNS_OK,
-            Condition.ISP_INTERNET_DOWN,
+            ISP_INTERNET_DOWN,
             Condition.ISP_INTERNET_SLOW,
             Condition.ISP_INTERNET_SLOW_DOWNLOAD,
             Condition.ISP_INTERNET_SLOW_UPLOAD,
@@ -36,6 +38,7 @@ public class InferenceMap {
             Condition.DNS_SLOW_TO_REACH,
             Condition.DNS_UNREACHABLE,
             Condition.DNS_SLOW_FAST_ALTERNATIVE_AVAILABLE,
+            Condition.DNS_UNREACHABLE_ALTERNATIVE_WORKING,
             Condition.ISP_INTERNET_DOWN_DNS_OK,
             Condition.CABLE_MODEM_FAULT,
             Condition.CAPTIVE_PORTAL_NO_INTERNET,
@@ -63,8 +66,9 @@ public class InferenceMap {
         int DNS_SLOW_TO_REACH = 36;
         int DNS_UNREACHABLE = 37;
         int DNS_SLOW_FAST_ALTERNATIVE_AVAILABLE = 38;
-        int ISP_INTERNET_DOWN_DNS_OK = 39;
-        int CABLE_MODEM_FAULT = 40;
+        int DNS_UNREACHABLE_ALTERNATIVE_WORKING = 39;
+        int ISP_INTERNET_DOWN_DNS_OK = 40;
+        int CABLE_MODEM_FAULT = 41;
         int CAPTIVE_PORTAL_NO_INTERNET = 50;
         int REMOTE_SERVER_IS_SLOW_TO_RESPOND = 51;
         int CONDITION_NONE_MAX = 64;  // For bitset size purposes only.
@@ -87,7 +91,7 @@ public class InferenceMap {
 
     private static int[] ISP_CONDITIONS = {
         Condition.ISP_INTERNET_SLOW_DNS_OK,
-        Condition.ISP_INTERNET_DOWN,
+        ISP_INTERNET_DOWN,
         Condition.ISP_INTERNET_SLOW,
         Condition.ISP_INTERNET_SLOW_DOWNLOAD,
         Condition.ISP_INTERNET_SLOW_UPLOAD,
@@ -101,6 +105,7 @@ public class InferenceMap {
         Condition.DNS_SLOW_TO_REACH,
         Condition.DNS_UNREACHABLE,
         Condition.DNS_SLOW_FAST_ALTERNATIVE_AVAILABLE,
+        Condition.DNS_UNREACHABLE_ALTERNATIVE_WORKING
     };
 
 
@@ -149,7 +154,7 @@ public class InferenceMap {
                 DataInterpreter.isNonFunctional(bandwidthGrade.uploadBandwidthMetric)) {
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
             conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
-            conditions.include(Condition.ISP_INTERNET_DOWN, 0.3);
+            conditions.include(ISP_INTERNET_DOWN, 0.3);
         }
         return new PossibleConditions();
     }
@@ -175,7 +180,7 @@ public class InferenceMap {
             conditions.include(Condition.CAPTIVE_PORTAL_NO_INTERNET, 1.0);
         } else if (wifiGrade.wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_OFFLINE) {
             //Connected but offline -- we can't download http://client3.google.com/204
-            conditions.include(Condition.ISP_INTERNET_DOWN, 0.5);
+            conditions.include(ISP_INTERNET_DOWN, 0.5);
             conditions.include(Condition.DNS_UNREACHABLE, 0.5);
         }
 
@@ -265,6 +270,15 @@ public class InferenceMap {
             conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.5);
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.5);
         }
+
+        if ((DataInterpreter.isAverageOrPoor(pingGrade.dnsServerLatencyMetric) && DataInterpreter.isGoodOrExcellent(pingGrade.alternativeDnsMetric))) {
+            conditions.exclude(DNS_CONDITIONS);
+            conditions.include(Condition.DNS_SLOW_FAST_ALTERNATIVE_AVAILABLE, 1.0);
+        } else if ((DataInterpreter.isNonFunctional(pingGrade.dnsServerLatencyMetric) && !DataInterpreter.isNonFunctional(pingGrade.alternativeDnsMetric))) {
+            conditions.exclude(DNS_CONDITIONS);
+            conditions.include(Condition.DNS_UNREACHABLE_ALTERNATIVE_WORKING, 1.0);
+        }
+
         return new PossibleConditions();
     }
 
@@ -310,6 +324,28 @@ public class InferenceMap {
                 return "ROUTER_WIFI_INTERFACE_FAULT";
             case Condition.ROUTER_SOFTWARE_FAULT:
                 return "ROUTER_SOFTWARE_FAULT";
+            case Condition.ROUTER_GOOD_SIGNAL_USING_SLOW_DATA_RATE:
+                return "ROUTER_GOOD_SIGNAL_USING_SLOW_DATA_RATE";
+            case Condition.ISP_INTERNET_SLOW:
+                return "ISP_INTERNET_SLOW";
+            case Condition.ISP_INTERNET_SLOW_DOWNLOAD:
+                return "ISP_INTERNET_SLOW_DOWNLOAD";
+            case Condition.ISP_INTERNET_SLOW_UPLOAD:
+                return "ISP_INTERNET_SLOW_UPLOAD";
+            case Condition.DNS_RESPONSE_SLOW:
+                return "DNS_RESPONSE_SLOW";
+            case Condition.DNS_SLOW_TO_REACH:
+                return "DNS_SLOW_TO_REACH";
+            case Condition.DNS_UNREACHABLE:
+                return "DNS_UNREACHABLE";
+            case Condition.DNS_SLOW_FAST_ALTERNATIVE_AVAILABLE:
+                return "DNS_SLOW_FAST_ALTERNATIVE_AVAILABLE";
+            case Condition.DNS_UNREACHABLE_ALTERNATIVE_WORKING:
+                return "DNS_UNREACHABLE_ALTERNATIVE_WORKING";
+            case Condition.ISP_INTERNET_DOWN_DNS_OK:
+                return "ISP_INTERNET_DOWN_DNS_OK";
+            case Condition.CAPTIVE_PORTAL_NO_INTERNET:
+                return "CAPTIVE_PORTAL_NO_INTERNET";
             case Condition.ISP_INTERNET_SLOW_DNS_OK:
                 return "ISP_INTERNET_SLOW_DNS_OK";
             case Condition.ISP_INTERNET_DOWN:

@@ -5,6 +5,7 @@ import com.inceptai.dobby.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
+
 /**
  * Created by vivek on 4/19/17.
  */
@@ -17,11 +18,18 @@ public class SuggestionCreator {
 
     private static String MULTIPLE_CONDITIONS_PREFIX = "There a few things which can be causing problems for your network.";
 
-    public static String getSuggestionForConditions(@InferenceMap.Condition int[] conditionList, int listLength) {
+    public static String getSuggestionForConditions(@InferenceMap.Condition int[] conditionList,
+                                                    int listLength, int currentWifiChannel,
+                                                    int bestWifiChannel, int currentSignal,
+                                                    double downloadBandwidthMbps,
+                                                    double uploadBandwidthMbps, String isp,
+                                                    String currentWifiSSID, String alternateDNS) {
         List<String> suggestionList = new ArrayList<>();
         StringBuilder sb = new StringBuilder();
         for (int index=0; index < conditionList.length && index < listLength; index++) {
-            suggestionList.add(getSuggestionForCondition(conditionList[index]));
+            suggestionList.add(getSuggestionForCondition(conditionList[index], currentWifiChannel,
+                    bestWifiChannel, currentSignal, downloadBandwidthMbps, uploadBandwidthMbps,
+                    isp, currentWifiSSID, alternateDNS));
         }
         if (suggestionList.size() == 0) {
             sb.append(NO_CONDITION_MESSAGE);
@@ -38,19 +46,36 @@ public class SuggestionCreator {
         return sb.toString();
     }
 
-    public static String getSuggestionForCondition(@InferenceMap.Condition int condition) {
+    private static int convertSignalDbmToPercent(int signalDbm) {
+        final double MAX_SIGNAL_DBM = -30.0;
+        final double MIN_SIGNAL_DBM = -100.0;
+        double percent = ((double)signalDbm - MIN_SIGNAL_DBM) / (MAX_SIGNAL_DBM - MIN_SIGNAL_DBM);
+        if (percent > 100) {
+            percent = 100;
+        } else if (percent < 0) {
+            percent = 1;
+        }
+        return (int)percent;
+    }
+
+    public static String getSuggestionForCondition(@InferenceMap.Condition int condition,
+                                                   int currentWifiChannel, int bestWifiChannel,
+                                                   int currentSignal, double downloadBandwidthMbps,
+                                                   double uploadBandwidthMbps, String isp,
+                                                   String currentWifiSSID, String alternateDNS) {
         switch (condition) {
             case Condition.WIFI_CHANNEL_CONGESTION:
-                return "Your wifi is operating on channel {OWN_CHANNEL_PARAM} which is congested. " +
-                        "This means there a lot of other Wifi networks near " +
+                return "Your wifi is operating on channel " + currentWifiChannel + " " +
+                        "which is congested. +This means there a lot of other Wifi networks near " +
                         "you which are also operating on the same channel as yours. " +
                         "You can mitigate it by changing the channel on which your router is " +
-                        "operating. As per my current analysis, Channel {BEST_CHANNEL_PARAM} " +
+                        "operating. As per my current analysis, Channel " + bestWifiChannel + " " +
                         "could provide better results for your network.";
             case Condition.WIFI_CHANNEL_BAD_SIGNAL:
-                return "Your signal to your wireless router is very weak, this could lead to poor " +
-                        "speeds and bad experience in streaming etc. If you are close to your " +
-                        "router while doing this test (within 20ft), then your router is not " +
+                return "Your signal to your wireless router is very weak (about "
+                        + convertSignalDbmToPercent(currentSignal) + ") " +
+                        ", this could lead to poor speeds and bad experience in streaming etc. " +
+                        "If you are close to your router while doing this test (within 20ft), then your router is not " +
                         "providing enough signal. Make sure your router is not obstructed and if " +
                         "that doesn't help, you should try replacing the router. If you are " +
                         "actually far from your router during the test, then your router is not " +
@@ -96,46 +121,53 @@ public class SuggestionCreator {
                         "in your area";
             case Condition.ISP_INTERNET_SLOW:
                 return "Your wifi is fine but looks like your Internet service is really slow. " +
-                        "You are getting about {PARAM_DOWNLOAD} Mbps download and {PARAM_UPLOAD} " +
-                        "Mbps upload. If these speeds seem low as per your contract, you should " +
-                        "reach out to {PARAM_ISP} and see why you are getting such low speeds. " +
+                        "You are getting about " + downloadBandwidthMbps + " Mbps download and " +
+                        uploadBandwidthMbps + " Mbps upload. If these speeds seem low as per your " +
+                        "contract, you should reach out to " + isp + " and see why you are getting such low speeds. " +
                         "You should tell them that your wifi network latency is low but the " +
                         "latency to access Internet is very high.";
             case Condition.ISP_INTERNET_SLOW_DOWNLOAD:
                 return "Your wifi is fine but looks like your Internet download speed is very low " +
-                        "(around {PARAM_DOWNLOAD} Mbps), especially given you are getting a good " +
-                        "upload speed. Since most of the data consumed by streaming, browsing etc. " +
-                        "is download, you will experience slow Internet on your devices. " +
+                        "(around " + downloadBandwidthMbps + " Mbps), especially given you are getting a good " +
+                        "upload speed ( " + uploadBandwidthMbps + " Mbps. Since most of the data " +
+                        "consumed by streaming, browsing etc. is download, you will experience slow Internet on your devices. " +
                         "If these speeds seem low as per your contract, you should " +
-                        "reach out to {PARAM_ISP} and see why you are getting such low speeds. " +
+                        "reach out to " + isp + " and see why you are getting such low speeds. " +
                         "You should tell them that your wifi network latency is low but the " +
                         "download speed is very low (esp. compared to upload).";
             case Condition.ISP_INTERNET_SLOW_UPLOAD:
                 return "Your wifi is fine but looks like your Internet upload speed is very low " +
-                        "(around {PARAM_UPLOAD} Mbps), especially given you are getting a good " +
-                        "download speed (~{PARAM_DOWNLOAD} Mbps). You will have trouble uploading " +
+                        "(around " + uploadBandwidthMbps + " Mbps), especially given you are getting a good " +
+                        "download speed (~ " + downloadBandwidthMbps + "  Mbps). You will have trouble uploading " +
                         "content like posting photos, sending email attachments etc. " +
                         "If these speeds seem low as per your contract, you should " +
-                        "reach out to {PARAM_ISP} and see why you are getting such low speeds. " +
+                        "reach out to " + isp + "  and see why you are getting such low speeds. " +
                         "You should tell them that your wifi network latency is low but the " +
                         "upload speed is very low (esp. compared to download).";
             case Condition.DNS_RESPONSE_SLOW:
                 return "Your wifi network is fine but your current DNS server is acting slow to respond to queries, " +
                         "which can cause an initial lag during the load time of an app or a " +
-                        "webpage. You can change your DNS server with one of these listed here " +
-                        "and re-run the test. You can change your DNS settings in the router " +
-                        "settings page or in the app accompanying your wireless router.";
+                        "webpage. You can change your DNS server with " + alternateDNS +
+                        " and re-run the test. You can change your DNS settings just for your phone first and things should improve.";
             case Condition.DNS_SLOW_TO_REACH:
                 return "Your wifi network is fine but your current DNS server has a high latency, " +
                         "which can cause an initial lag during the load time of an app or a " +
-                        "webpage. You can change your DNS server with one of these listed here " +
-                        "and re-run the test. You can change your DNS settings in the router " +
-                        "settings page or in the app accompanying your wireless router.";
+                        "webpage.";
             case Condition.DNS_UNREACHABLE:
                 return "Your wifi network is fine but we are unable to reach your DNS server, which means you can't access " +
                         "the Internet on your phone and other devices. This could be because the DNS " +
+                        "server you have configured is down. Other DNS servers we tried were also down, " +
+                        "so maybe a wider problem. You can contact " + isp + " to see if they know anything about it.";
+            case Condition.DNS_SLOW_FAST_ALTERNATIVE_AVAILABLE:
+                return "Your wifi network is fine but your DNS is quite slow, esp. in comparison to " +
+                        "other public DNS we tested: " + alternateDNS +
+                        " We would recommend switching your DNS server on your phone first and " +
+                        "it should improve things. If it works well, change the setting on the router.";
+            case Condition.DNS_UNREACHABLE_ALTERNATIVE_WORKING:
+                return "Your wifi network is fine but we are unable to reach your DNS server, which means you can't access " +
+                        "the Internet on your phone and other devices. This could be because the DNS " +
                         "server you have configured is down. We would recommend changing your DNS " +
-                        "server to one of the following listed here and re-run the test to see " +
+                        "server to  " + alternateDNS + "and re-run the test to see " +
                         "if you get connectivity restored. You can change your DNS settings in the router " +
                         "settings page or in the app accompanying your wireless router.";
             case Condition.CABLE_MODEM_FAULT:
@@ -144,8 +176,8 @@ public class SuggestionCreator {
                         ". You should try resetting it to see if improves the performance. ";
             case Condition.CAPTIVE_PORTAL_NO_INTERNET:
                 return "You are behind a captive portal -- " +
-                        "basically the wifi you are connected to {WIFI_PARAM} is managed by s" +
-                        "omeone who restricts access unless you sign in. Currently you don't have " +
+                        "basically the wifi you are connected to " + currentWifiSSID + " is managed " +
+                        "by someone who restricts access unless you sign in. Currently you don't have " +
                         "access to it. Try launching a browser and it should redirect you to a " +
                         "login form. Once you are connected, you can re-run this test to see how " +
                         "your network is doing. ";
