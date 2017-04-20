@@ -8,7 +8,6 @@ import com.inceptai.dobby.model.DobbyWifiInfo;
 import com.inceptai.dobby.model.IPLayerInfo;
 import com.inceptai.dobby.model.PingStats;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
-import com.inceptai.dobby.ui.GraphData;
 import com.inceptai.dobby.utils.Utils;
 import com.inceptai.dobby.wifi.WifiState;
 
@@ -88,6 +87,7 @@ public class InferenceEngine {
         HashMap<Integer, WifiState.ChannelInfo> channelMap = wifiState.getChannelInfoMap();
         DobbyWifiInfo wifiInfo = wifiState.getLinkInfo();
         DataInterpreter.WifiGrade wifiGrade = DataInterpreter.interpret(channelMap, wifiInfo, wifiLinkMode, wifiConnectivityMode);
+        metricsDb.updateWifiGrade(wifiGrade);
         PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(wifiGrade);
         currentConditions.mergeIn(conditions);
         Log.i(TAG, "IE: " + wifiGrade.toString());
@@ -97,6 +97,7 @@ public class InferenceEngine {
 
     public void notifyPingStats(HashMap<String, PingStats> pingStatsMap, IPLayerInfo ipLayerInfo) {
         DataInterpreter.PingGrade pingGrade = DataInterpreter.interpret(pingStatsMap, ipLayerInfo);
+        metricsDb.updatePingGrade(pingGrade);
         PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(pingGrade);
         currentConditions.mergeIn(conditions);
         Log.i(TAG, "IE: " + pingGrade.toString());
@@ -104,8 +105,20 @@ public class InferenceEngine {
         Log.i(TAG, "After merging: " + currentConditions.toString());
     }
 
+    public void notifyGatewayHttpStats(PingStats gatewayHttpStats) {
+        DataInterpreter.HttpGrade httpGrade = DataInterpreter.interpret(gatewayHttpStats);
+        metricsDb.updateHttpGrade(httpGrade);
+        PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(httpGrade);
+        currentConditions.mergeIn(conditions);
+        Log.i(TAG, "IE: " + httpGrade.toString());
+        Log.i(TAG, " which gives conditions: " + conditions.toString());
+        Log.i(TAG, "After merging: " + currentConditions.toString());
+    }
+
+
     public List<String> getSuggestions() {
         // Convert currentConditions into suggestions.
+        //return SuggestionCreator.getSuggestionForConditions(currentConditions, currentConditions.);
         return null;
     }
 
@@ -113,7 +126,7 @@ public class InferenceEngine {
 
     public void notifyBandwidthTestStart(@BandwithTestCodes.TestMode int testMode) {
         if (testMode == BandwithTestCodes.TestMode.UPLOAD) {
-            metricsDb.clearUploadMbps();
+            metricsDb.clearUploadBandwidthGrade();
         }
     }
 
@@ -126,16 +139,21 @@ public class InferenceEngine {
     }
 
     public void notifyBandwidthTestResult(@BandwithTestCodes.TestMode int testMode,
-                                          double bandwidth) {
+                                          double bandwidth, String clientIsp, String clientExternalIp) {
         sendResponseOnlyAction(testModeToString(testMode) + " Overall Bandwidth = " + String.format("%.2f", bandwidth / 1000000) + " Mbps");
         lastBandwidthUpdateTimestampMs = 0;
         if (testMode == BandwithTestCodes.TestMode.UPLOAD) {
-            metricsDb.reportUploadMbps(bandwidth * 1.0e-6);
+            metricsDb.updateUploadBandwidthGrade(bandwidth * 1.0e-6, DataInterpreter.MetricType.UNKNOWN);
+            //metricsDb.reportUploadMbps(bandwidth * 1.0e-6);
         } else if (testMode == BandwithTestCodes.TestMode.DOWNLOAD) {
-            metricsDb.reportDownloadMbps(bandwidth * 1.0e-6);
+            metricsDb.updateDownloadBandwidthGrade(bandwidth * 1.0e-6, DataInterpreter.MetricType.UNKNOWN);
+            //metricsDb.reportDownloadMbps(bandwidth * 1.0e-6);
         }
         if (metricsDb.hasValidDownload() && metricsDb.hasValidUpload()) {
-            DataInterpreter.BandwidthGrade bandwidthGrade = DataInterpreter.interpret(metricsDb.getDownloadMbps(), metricsDb.getUploadMbps());
+            DataInterpreter.BandwidthGrade bandwidthGrade = DataInterpreter.interpret(
+                    metricsDb.getDownloadMbps(), metricsDb.getUploadMbps(), clientIsp, clientExternalIp);
+            //Update the bandwidth grade, overwriting earlier info.
+            metricsDb.updateBandwidthMetrics(bandwidthGrade.downloadBandwidthMetric, bandwidthGrade.uploadBandwidthMetric);
             PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(bandwidthGrade);
             Log.i(TAG, "IE: " + bandwidthGrade.toString());
             Log.i(TAG, " which gives conditions: " + conditions.toString());

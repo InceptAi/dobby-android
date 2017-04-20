@@ -8,58 +8,101 @@ package com.inceptai.dobby.ai;
  * Stores network layer metrics and freshness etc for consumption by IE.
  */
 public class MetricsDb {
-    private static final long MAX_STALENESS_MS = 120 * 1000; // 120 seconds.
-
-    // Bandwidth stats.
-    private double uploadMbps;
-    private long uploadTimestampMs;
-    private double downloadMbps;
-    private long downloadTimestampMs;
-
+    private DataInterpreter.BandwidthGrade bandwidthGrade;
+    private DataInterpreter.PingGrade pingGrade;
+    private DataInterpreter.WifiGrade wifiGrade;
+    private DataInterpreter.HttpGrade httpGrade;
 
     MetricsDb() {
-        clearDownloadMbps();
-        clearUploadMbps();
+        bandwidthGrade = new DataInterpreter.BandwidthGrade();
+        pingGrade = new DataInterpreter.PingGrade();
+        wifiGrade = new DataInterpreter.WifiGrade();
+        httpGrade = new DataInterpreter.HttpGrade();
+    }
+
+    public void clearBandwidthGrade() {
+        bandwidthGrade.clear();
+    }
+
+    public void clearUploadBandwidthGrade() {
+        bandwidthGrade.clearUpload();
+    }
+
+    public void clearDownloadBandwidthGrade() {
+        bandwidthGrade.clearDownload();
+    }
+
+    public void clearWifiGrade() {
+        wifiGrade.clear();
+    }
+
+    public void clearPingGrade() {
+        pingGrade.clear();
+    }
+
+    public void clearHttpGrade() {
+        httpGrade.clear();
+    }
+
+    public void updateBandwidthMetrics(@DataInterpreter.MetricType int downloadMetric,
+                                       @DataInterpreter.MetricType int uploadMetric) {
+        updateDownloadMetric(downloadMetric);
+        updateUploadMetric(uploadMetric);
+    }
+
+    public void updateDownloadMetric(@DataInterpreter.MetricType int metric) {
+        bandwidthGrade.downloadBandwidthMetric = metric;
+    }
+
+    public void updateUploadMetric(@DataInterpreter.MetricType int metric) {
+        bandwidthGrade.uploadBandwidthMetric = metric;
     }
 
 
-    public void clearUploadMbps() {
-        uploadMbps = -1.0;
-        uploadTimestampMs = 0;
+
+    public void updateBandwidthGrade(DataInterpreter.BandwidthGrade bandwidthGrade) {
+        this.bandwidthGrade = bandwidthGrade;
+        this.bandwidthGrade.updateTimestamp();
     }
 
-    public void clearDownloadMbps() {
-        downloadMbps = -1.0;
-        downloadTimestampMs = 0;
+    public void updateUploadBandwidthGrade(double uploadMbps, @DataInterpreter.MetricType int uploadMetric) {
+        this.bandwidthGrade.updateUploadInfo(uploadMbps, uploadMetric);
     }
 
-    public void reportUploadMbps(double uploadMbps){
-        this.uploadMbps = uploadMbps;
-        uploadTimestampMs = System.currentTimeMillis();
+    public void updateDownloadBandwidthGrade(double uploadMbps, @DataInterpreter.MetricType int uploadMetric) {
+        this.bandwidthGrade.updateDownloadInfo(uploadMbps, uploadMetric);
     }
 
-    public void reportDownloadMbps(double downloadMbps) {
-        this.downloadMbps = downloadMbps;
-        downloadTimestampMs = System.currentTimeMillis();
-    }
 
     public boolean hasValidUpload() {
-        return uploadMbps > 0.0 && isFresh(uploadTimestampMs);
+        return bandwidthGrade.hasValidUpload();
     }
 
     public boolean hasValidDownload() {
-        return downloadMbps > 0.0 && isFresh(downloadTimestampMs);
-    }
-
-    private static boolean isFresh(long timestampMs) {
-        return (System.currentTimeMillis() - timestampMs < MAX_STALENESS_MS);
-    }
-
-    public double getUploadMbps() {
-        return uploadMbps;
+        return bandwidthGrade.hasValidDownload();
     }
 
     public double getDownloadMbps() {
-        return downloadMbps;
+        return bandwidthGrade.getDownloadMbps();
     }
+
+    public double getUploadMbps() {
+        return bandwidthGrade.getUploadMbps();
+    }
+
+    public void updateWifiGrade(DataInterpreter.WifiGrade wifiGrade) {
+        this.wifiGrade = wifiGrade;
+        this.wifiGrade.updateTimestamp();
+    }
+
+    public void updateHttpGrade(DataInterpreter.HttpGrade httpGrade) {
+        this.httpGrade = httpGrade;
+        this.httpGrade.updateTimestamp();
+    }
+
+    public void updatePingGrade(DataInterpreter.PingGrade pingGrade) {
+        this.pingGrade = pingGrade;
+        this.pingGrade.updateTimestamp();
+    }
+
 }

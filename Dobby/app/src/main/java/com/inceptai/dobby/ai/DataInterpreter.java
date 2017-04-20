@@ -17,6 +17,7 @@ import java.util.HashMap;
  */
 
 public class DataInterpreter {
+    private static final long MAX_STALENESS_MS = 120 * 1000; // 120 seconds.
 
     private static final double[] BW_DOWNLOAD_STEPS_MBPS = { /* higher is better */
             20.0, /* excellent */
@@ -101,6 +102,10 @@ public class DataInterpreter {
         int UNKNOWN = 5;  /* no valid result available */
     }
 
+    private static boolean isFresh(long timestampMs) {
+        return (System.currentTimeMillis() - timestampMs < MAX_STALENESS_MS);
+    }
+
     public static boolean isUnknown(@MetricType int metric) {
         return (metric == MetricType.UNKNOWN);
     }
@@ -144,13 +149,19 @@ public class DataInterpreter {
         return allNonFunctional;
     }
 
-
     public static class BandwidthGrade {
         @MetricType int uploadBandwidthMetric;
         @MetricType int downloadBandwidthMetric;
-
+        long downloadUpdatedAtMs;
+        long uploadUpdatedAtMs;
         double uploadMbps;
         double downloadMbps;
+        String isp;
+        String externalIP;
+
+        public BandwidthGrade() {
+            //Set timestamp here
+        }
 
         @Override
         public String toString() {
@@ -159,13 +170,88 @@ public class DataInterpreter {
             builder.append("\n Download: " + metricTypeToString(downloadBandwidthMetric));
             return builder.toString();
         }
+
+        public void clearUpload() {
+            uploadMbps = -1.0;
+            uploadUpdatedAtMs = 0;
+        }
+
+        public void clearDownload() {
+            downloadMbps = -1.0;
+            downloadUpdatedAtMs = 0;
+        }
+
+        public void clear() {
+            clearUpload();
+            clearDownload();
+        }
+
+        public void reportUploadMbps(double uploadMbps){
+            this.uploadMbps = uploadMbps;
+            uploadUpdatedAtMs = System.currentTimeMillis();
+        }
+
+        public void reportDownloadMbps(double downloadMbps) {
+            this.downloadMbps = downloadMbps;
+            downloadUpdatedAtMs = System.currentTimeMillis();
+        }
+
+        public boolean hasValidUpload() {
+            return uploadMbps > 0.0 && isFresh(uploadUpdatedAtMs);
+        }
+
+        public boolean hasValidDownload() {
+            return downloadMbps > 0.0 && isFresh(downloadUpdatedAtMs);
+        }
+
+        public double getUploadMbps() {
+            return uploadMbps;
+        }
+
+        public double getDownloadMbps() {
+            return downloadMbps;
+        }
+
+        public void updateTimestamp() {
+            updateDownloadTimestamp();
+            updateUploadTimestamp();
+        }
+
+        public void updateUploadTimestamp() {
+            uploadUpdatedAtMs = System.currentTimeMillis();
+        }
+
+        public void updateDownloadTimestamp() {
+            downloadUpdatedAtMs = System.currentTimeMillis();
+        }
+
+        public void updateUploadInfo(double speedMbps, @MetricType int speedMetric) {
+            uploadBandwidthMetric = speedMetric;
+            uploadMbps = speedMbps;
+            updateUploadTimestamp();
+        }
+
+        public void updateDownloadInfo(double speedMbps, @MetricType int speedMetric) {
+            downloadBandwidthMetric = speedMetric;
+            downloadMbps = speedMbps;
+            updateDownloadTimestamp();
+        }
+
     }
+
 
     public static class PingGrade {
         @MetricType int externalServerLatencyMetric;
         @MetricType int dnsServerLatencyMetric;
         @MetricType int routerLatencyMetric;
         @MetricType int alternativeDnsMetric;
+        long updatedAtMs;
+        String primaryDns;
+        String alternativeDns;
+
+        public PingGrade() {
+            updatedAtMs = System.currentTimeMillis();
+        }
 
         @Override
         public String toString() {
@@ -177,6 +263,19 @@ public class DataInterpreter {
             metricTypeToString(alternativeDnsMetric));
             return builder.toString();
         }
+
+        public void clear() {
+            updatedAtMs = 0;
+        }
+
+        public boolean hasValidData() {
+            return updatedAtMs > 0.0 && isFresh(updatedAtMs);
+        }
+
+        public void updateTimestamp() {
+            updatedAtMs = System.currentTimeMillis();
+        }
+
     }
 
     /**
@@ -185,6 +284,23 @@ public class DataInterpreter {
      */
     public static class HttpGrade {
         @MetricType int httpDownloadLatencyMetric;
+        long updatedAtMs;
+
+        public HttpGrade() {
+            updatedAtMs = System.currentTimeMillis();
+        }
+
+        public void clear() {
+            updatedAtMs = 0;
+        }
+
+        public boolean hasValidData() {
+            return updatedAtMs > 0.0 && isFresh(updatedAtMs);
+        }
+
+        public void updateTimestamp() {
+            updatedAtMs = System.currentTimeMillis();
+        }
 
         @Override
         public String toString() {
@@ -199,9 +315,16 @@ public class DataInterpreter {
         @MetricType int primaryLinkChannelOccupancyMetric;
         @ConnectivityAnalyzer.WifiConnectivityMode int wifiConnectivityMode;
         @WifiState.WifiLinkMode int wifiProblemMode;
+        long updatedAtMs;
+        String currentSSID;
+        int currentChannel;
+        int leastOccupiedChannel;
+        int currentChannelAPs;
+        int leastOccupiedChannelAPs;
 
         public WifiGrade() {
             wifiChannelOccupancyMetric = new HashMap<>();
+            updatedAtMs = System.currentTimeMillis();
         }
 
         @Override
@@ -213,6 +336,19 @@ public class DataInterpreter {
             builder.append("\nChannel map:" + wifiChannelOccupancyMetric.toString());
             return builder.toString();
         }
+
+        public void clear() {
+            updatedAtMs = 0;
+        }
+
+        public boolean hasValidData() {
+            return updatedAtMs > 0.0 && isFresh(updatedAtMs);
+        }
+
+        public void updateTimestamp() {
+            updatedAtMs = System.currentTimeMillis();
+        }
+
     }
 
     public static String metricTypeToString(@MetricType int metricType) {
@@ -238,7 +374,7 @@ public class DataInterpreter {
      * @param downloadMbps Bandwidth in Mbps or -1 if failed.
      * @return
      */
-    public static BandwidthGrade interpret(double uploadMbps, double downloadMbps) {
+    public static BandwidthGrade interpret(double uploadMbps, double downloadMbps, String isp, String externalClientIp) {
         BandwidthGrade grade = new BandwidthGrade();
 
         grade.uploadMbps = uploadMbps;
@@ -247,11 +383,16 @@ public class DataInterpreter {
         grade.downloadBandwidthMetric = getGradeHigherIsBetter(downloadMbps, BW_DOWNLOAD_STEPS_MBPS, downloadMbps > 0.0);
         grade.uploadBandwidthMetric = getGradeHigherIsBetter(uploadMbps, BW_UPLOAD_STEPS_MBPS, uploadMbps > 0.0);
 
+        grade.isp = isp;
+        grade.externalIP = externalClientIp;
+
         return grade;
     }
 
     public static PingGrade interpret(HashMap<String, PingStats> pingStatsHashMap, IPLayerInfo ipLayerInfo) {
+        PingGrade pingGrade = new PingGrade();
         //Get external server stats
+        pingGrade.primaryDns = ipLayerInfo.dns1;
         HashMap<String, PingStats> externalServerStats = new HashMap<>();
         if (ipLayerInfo.referenceExternalAddress1 != null) {
             externalServerStats.put(ipLayerInfo.referenceExternalAddress1, pingStatsHashMap.get(ipLayerInfo.referenceExternalAddress1));
@@ -266,10 +407,12 @@ public class DataInterpreter {
         PingStats lowerAlternativeDnsStats = new PingStats(ipLayerInfo.publicDns1);
         if (alternativeDnsStats1.avgLatencyMs > 0) {
             lowerAlternativeDnsStats = alternativeDnsStats1;
+            pingGrade.alternativeDns = ipLayerInfo.publicDns1;
         }
         if (alternativeDnsStats2.avgLatencyMs > 0) {
             if (alternativeDnsStats1.avgLatencyMs < 0 || alternativeDnsStats2.avgLatencyMs < alternativeDnsStats1.avgLatencyMs) {
                 lowerAlternativeDnsStats = alternativeDnsStats2;
+                pingGrade.alternativeDns = ipLayerInfo.publicDns2;
             }
         }
 
@@ -278,7 +421,6 @@ public class DataInterpreter {
         //Primary DNS stats
         PingStats primaryDnsStats = pingStatsHashMap.get(ipLayerInfo.dns1);
 
-        PingGrade pingGrade = new PingGrade();
         double avgExternalServerLatency = 0.0;
         int count = 0;
         for(PingStats pingStats : externalServerStats.values()) {
@@ -308,6 +450,7 @@ public class DataInterpreter {
                 PING_LATENCY_ROUTER_STEPS_MS,
                 lowerAlternativeDnsStats.avgLatencyMs > 0.0);
 
+
         return pingGrade;
     }
 
@@ -328,14 +471,21 @@ public class DataInterpreter {
         WifiState.ChannelInfo primaryChannelInfo = wifiChannelInfo.get(linkInfo.getFrequency());
 
         int numStrongInterferingAps = computeStrongInterferingAps(primaryChannelInfo);
+        wifiGrade.currentChannelAPs = numStrongInterferingAps;
         wifiGrade.primaryLinkChannelOccupancyMetric = getGradeLowerIsBetter(numStrongInterferingAps,
                 WIFI_CHANNEL_OCCUPANCY_STEPS,
                 (linkInfo.getFrequency() > 0 && numStrongInterferingAps >= 0));
 
         //Compute metrics for all channels -- for later use
+        int leastOccupiedChannel = 0;
+        int minOccupancyAPs = Integer.MAX_VALUE;
         for (WifiState.ChannelInfo channelInfo: wifiChannelInfo.values()) {
+            int occupancy = computeStrongInterferingAps(channelInfo);
+            if (occupancy < minOccupancyAPs) {
+                leastOccupiedChannel = channelInfo.channelFrequency;
+            }
             wifiGrade.wifiChannelOccupancyMetric.put(channelInfo.channelFrequency,
-                    computeStrongInterferingAps(channelInfo));
+                    occupancy);
         }
 
         wifiGrade.primaryApSignalMetric = getGradeHigherIsBetter(linkInfo.getRssi(),
@@ -345,6 +495,10 @@ public class DataInterpreter {
 
         wifiGrade.wifiConnectivityMode = wifiConnectivityMode;
         wifiGrade.wifiProblemMode = wifiProblemMode;
+        wifiGrade.currentSSID = linkInfo.getSSID();
+        wifiGrade.currentChannel = linkInfo.getFrequency();
+        wifiGrade.leastOccupiedChannel = leastOccupiedChannel;
+        wifiGrade.leastOccupiedChannelAPs = minOccupancyAPs;
         return wifiGrade;
     }
 
