@@ -126,7 +126,7 @@ public class InferenceEngine {
     }
 
     public void notifyBandwidthTestResult(@BandwithTestCodes.TestMode int testMode,
-                                          double bandwidth) {
+                                          double bandwidth, String clientIsp, String clientExternalIp) {
         sendResponseOnlyAction(testModeToString(testMode) + " Overall Bandwidth = " + String.format("%.2f", bandwidth / 1000000) + " Mbps");
         lastBandwidthUpdateTimestampMs = 0;
         if (testMode == BandwithTestCodes.TestMode.UPLOAD) {
@@ -135,7 +135,7 @@ public class InferenceEngine {
             metricsDb.reportDownloadMbps(bandwidth * 1.0e-6);
         }
         if (metricsDb.hasValidDownload() && metricsDb.hasValidUpload()) {
-            DataInterpreter.BandwidthGrade bandwidthGrade = DataInterpreter.interpret(metricsDb.getDownloadMbps(), metricsDb.getUploadMbps());
+            DataInterpreter.BandwidthGrade bandwidthGrade = DataInterpreter.interpret(metricsDb.getDownloadMbps(), metricsDb.getUploadMbps(), clientIsp, clientExternalIp);
             PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(bandwidthGrade);
             Log.i(TAG, "IE: " + bandwidthGrade.toString());
             Log.i(TAG, " which gives conditions: " + conditions.toString());

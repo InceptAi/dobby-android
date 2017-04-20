@@ -8,6 +8,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import com.inceptai.dobby.ai.InferenceEngine;
 import com.inceptai.dobby.ai.RtDataSource;
 import com.inceptai.dobby.model.BandwidthStats;
+import com.inceptai.dobby.utils.Utils;
 
 import java.util.HashSet;
 import java.util.List;
@@ -27,6 +28,8 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
     @BandwithTestCodes.ExceptionCodes
     private int exceptionCode = BandwithTestCodes.ExceptionCodes.UNKNOWN;
     private SettableFuture<BandwidthStats> operationFuture;
+    private String clientIsp = Utils.EMPTY_STRING;
+    private String clientExternalIp = Utils.EMPTY_STRING;
 
     @BandwithTestCodes.TestMode
     private int testMode;
@@ -83,6 +86,11 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
 
     @Override
     public synchronized void onConfigFetch(SpeedTestConfig config) {
+        //Set client info
+        if (config != null && config.clientConfig != null) {
+            clientIsp = config.clientConfig.isp;
+            clientExternalIp = config.clientConfig.ip;
+        }
         for (NewBandwidthAnalyzer.ResultsCallback callback : resultsCallbacks) {
             callback.onConfigFetch(config);
         }
@@ -113,7 +121,7 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
     public synchronized void onTestFinished(@BandwithTestCodes.TestMode int testMode, BandwidthStats stats) {
         Log.v(TAG, "BandwidthObserver onTestFinished");
         if (inferenceEngine != null) {
-            inferenceEngine.notifyBandwidthTestResult(testMode, stats.getPercentile90());
+            inferenceEngine.notifyBandwidthTestResult(testMode, stats.getPercentile90(), clientIsp, clientExternalIp);
         }
 
         for (RtDataListener<Float> listener : listeners) {
