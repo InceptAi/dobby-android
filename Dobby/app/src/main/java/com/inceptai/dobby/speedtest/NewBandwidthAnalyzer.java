@@ -12,8 +12,8 @@ import com.google.common.base.Preconditions;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.BandwidthStats;
-import com.inceptai.dobby.speedtest.BandwithTestCodes.BandwidthTestErrorCodes;
-import com.inceptai.dobby.speedtest.BandwithTestCodes.BandwidthTestMode;
+import com.inceptai.dobby.speedtest.BandwithTestCodes.ErrorCodes;
+import com.inceptai.dobby.speedtest.BandwithTestCodes.TestMode;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -59,30 +59,30 @@ public class NewBandwidthAnalyzer {
 
     private BandwidthTestListener bandwidthTestListener;
 
-    @BandwidthTestMode
+    @BandwithTestCodes.TestMode
     private int testMode;
     //Callbacks
     private ResultsCallback resultsCallback;
 
     public static class BandwidthTestException extends Exception {
-        @BandwithTestCodes.BandwidthTestExceptionErrorCodes
-        private int exceptionType = BandwithTestCodes.BandwidthTestExceptionErrorCodes.UNKNOWN;
-        public BandwidthTestException(@BandwithTestCodes.BandwidthTestExceptionErrorCodes int exceptionType) {
+        @BandwithTestCodes.ExceptionCodes
+        private int exceptionType = BandwithTestCodes.ExceptionCodes.UNKNOWN;
+        public BandwidthTestException(@BandwithTestCodes.ExceptionCodes int exceptionType) {
             this.exceptionType = exceptionType;
         }
 
         @Override
         public String toString() {
             switch(exceptionType) {
-                case BandwithTestCodes.BandwidthTestExceptionErrorCodes.TEST_STARTED_NO_EXCEPTION:
+                case BandwithTestCodes.ExceptionCodes.TEST_STARTED_NO_EXCEPTION:
                     return "BW Test already running";
-                case BandwithTestCodes.BandwidthTestExceptionErrorCodes.GETTING_CONFIG_FAILED:
+                case BandwithTestCodes.ExceptionCodes.GETTING_CONFIG_FAILED:
                     return "BW Test getting config failed";
-                case BandwithTestCodes.BandwidthTestExceptionErrorCodes.GETTING_SERVER_INFORMATION_FAILED:
+                case BandwithTestCodes.ExceptionCodes.GETTING_SERVER_INFORMATION_FAILED:
                     return "BW Test getting servers failed";
-                case BandwithTestCodes.BandwidthTestExceptionErrorCodes.GETTING_BEST_SERVER_FAILED:
+                case BandwithTestCodes.ExceptionCodes.GETTING_BEST_SERVER_FAILED:
                     return "BW Test getting best server failed";
-                case BandwithTestCodes.BandwidthTestExceptionErrorCodes.TEST_ALREADY_RUNNING:
+                case BandwithTestCodes.ExceptionCodes.TEST_ALREADY_RUNNING:
                     return "BW Test is already running, can't start another one yet";
                 default:
                     return "Unknown BW Test Error";
@@ -105,19 +105,19 @@ public class NewBandwidthAnalyzer {
         void onBestServerSelected(ServerInformation.ServerDetails bestServer);
 
         //Test callbacks
-        void onTestFinished(@BandwidthTestMode int testMode, BandwidthStats stats);
-        void onTestProgress(@BandwidthTestMode int testMode, double instantBandwidth);
+        void onTestFinished(@BandwithTestCodes.TestMode int testMode, BandwidthStats stats);
+        void onTestProgress(@BandwithTestCodes.TestMode int testMode, double instantBandwidth);
 
         //Error callback
-        void onBandwidthTestError(@BandwidthTestMode int testMode,
-                                  @BandwidthTestErrorCodes int errorCode,
+        void onBandwidthTestError(@BandwithTestCodes.TestMode int testMode,
+                                  @ErrorCodes int errorCode,
                                   @Nullable String errorMessage);
     }
 
     @Inject
     public NewBandwidthAnalyzer(DobbyThreadpool dobbyThreadpool, DobbyEventBus eventBus) {
         this.bandwidthTestListener = new BandwidthTestListener();
-        this.testMode = BandwidthTestMode.IDLE;
+        this.testMode = BandwithTestCodes.TestMode.IDLE;
         this.eventBus = eventBus;
         this.parseSpeedTestConfig = new ParseSpeedTestConfig(this.bandwidthTestListener);
         this.parseServerInformation = new ParseServerInformation(this.bandwidthTestListener);
@@ -145,17 +145,17 @@ public class NewBandwidthAnalyzer {
         this.resultsCallback = resultsCallback;
     }
 
-    @BandwithTestCodes.BandwidthTestExceptionErrorCodes
-    public int startBandwidthTestSafely(@BandwidthTestMode int testMode) {
-        int returnCode = BandwithTestCodes.BandwidthTestExceptionErrorCodes.TEST_STARTED_NO_EXCEPTION;
+    @BandwithTestCodes.ExceptionCodes
+    public int startBandwidthTestSafely(@BandwithTestCodes.TestMode int testMode) {
+        int returnCode = BandwithTestCodes.ExceptionCodes.TEST_STARTED_NO_EXCEPTION;
         try {
             startBandwidthTest(testMode);
         } catch (BandwidthTestException e) {
             returnCode = e.exceptionType;
             switch (e.exceptionType) {
-                case BandwithTestCodes.BandwidthTestExceptionErrorCodes.GETTING_CONFIG_FAILED:
-                case BandwithTestCodes.BandwidthTestExceptionErrorCodes.GETTING_SERVER_INFORMATION_FAILED:
-                case BandwithTestCodes.BandwidthTestExceptionErrorCodes.GETTING_BEST_SERVER_FAILED:
+                case BandwithTestCodes.ExceptionCodes.GETTING_CONFIG_FAILED:
+                case BandwithTestCodes.ExceptionCodes.GETTING_SERVER_INFORMATION_FAILED:
+                case BandwithTestCodes.ExceptionCodes.GETTING_BEST_SERVER_FAILED:
                     cancelBandwidthTests();
                     break;
             }
@@ -196,8 +196,8 @@ public class NewBandwidthAnalyzer {
         public void onConfigFetchError(String error) {
             Log.v(TAG, "Speed test config fetched error: " + error);
             if (resultsCallback != null) {
-                resultsCallback.onBandwidthTestError(BandwidthTestMode.CONFIG_FETCH,
-                        BandwidthTestErrorCodes.ERROR_FETCHING_CONFIG,
+                resultsCallback.onBandwidthTestError(BandwithTestCodes.TestMode.CONFIG_FETCH,
+                        ErrorCodes.ERROR_FETCHING_CONFIG,
                         error);
             }
         }
@@ -209,8 +209,8 @@ public class NewBandwidthAnalyzer {
                 if (serverInformation != null && serverInformation.serverList.size() > 0) {
                     resultsCallback.onServerInformationFetch(serverInformation);
                 } else {
-                    resultsCallback.onBandwidthTestError(BandwidthTestMode.SERVER_FETCH,
-                            BandwidthTestErrorCodes.ERROR_FETCHING_SERVER_INFO,
+                    resultsCallback.onBandwidthTestError(BandwithTestCodes.TestMode.SERVER_FETCH,
+                            ErrorCodes.ERROR_FETCHING_SERVER_INFO,
                             "Server information returned empty");
                 }
             }
@@ -218,8 +218,8 @@ public class NewBandwidthAnalyzer {
 
         public void onServerInformationFetchError(String error) {
             if (resultsCallback != null) {
-                resultsCallback.onBandwidthTestError(BandwidthTestMode.SERVER_FETCH,
-                        BandwidthTestErrorCodes.ERROR_FETCHING_SERVER_INFO,
+                resultsCallback.onBandwidthTestError(BandwithTestCodes.TestMode.SERVER_FETCH,
+                        ErrorCodes.ERROR_FETCHING_SERVER_INFO,
                         error);
             }
         }
@@ -232,8 +232,8 @@ public class NewBandwidthAnalyzer {
 
         public void onBestServerSelectionError(String error) {
             if (resultsCallback != null)
-                resultsCallback.onBandwidthTestError(BandwidthTestMode.SERVER_FETCH,
-                        BandwidthTestErrorCodes.ERROR_SELECTING_BEST_SERVER, error);
+                resultsCallback.onBandwidthTestError(BandwithTestCodes.TestMode.SERVER_FETCH,
+                        ErrorCodes.ERROR_SELECTING_BEST_SERVER, error);
         }
 
         public void onClosestServersSelected(List<ServerInformation.ServerDetails> closestServers) {
@@ -242,13 +242,13 @@ public class NewBandwidthAnalyzer {
         }
 
         @Override
-        public void onFinish(@BandwidthTestMode int callbackTestMode, BandwidthStats bandwidthStats) {
+        public void onFinish(@BandwithTestCodes.TestMode int callbackTestMode, BandwidthStats bandwidthStats) {
             Log.v(TAG, "NewBandwidthAnalyzer  onFinish");
             if (resultsCallback != null) {
                 resultsCallback.onTestFinished(callbackTestMode, bandwidthStats);
             }
             //Do we need to do upload here ?
-            if (callbackTestMode == BandwidthTestMode.DOWNLOAD && testMode == BandwidthTestMode.DOWNLOAD_AND_UPLOAD) {
+            if (callbackTestMode == BandwithTestCodes.TestMode.DOWNLOAD && testMode == BandwithTestCodes.TestMode.DOWNLOAD_AND_UPLOAD) {
                 dobbyThreadpool.submit(new Runnable() {
                     @Override
                     public void run() {
@@ -262,7 +262,7 @@ public class NewBandwidthAnalyzer {
         }
 
         @Override
-        public void onProgress(@BandwidthTestMode int callbackTestMode, double instantBandwidth) {
+        public void onProgress(@BandwithTestCodes.TestMode int callbackTestMode, double instantBandwidth) {
             Log.v(TAG, "NewBandwidthAnalyzer  onProgress");
             if (resultsCallback != null) {
                 resultsCallback.onTestProgress(callbackTestMode, instantBandwidth);
@@ -270,7 +270,7 @@ public class NewBandwidthAnalyzer {
         }
 
         @Override
-        public void onError(@BandwidthTestMode int callbackTestMode, SpeedTestError speedTestError, String errorMessage) {
+        public void onError(@BandwithTestCodes.TestMode int callbackTestMode, SpeedTestError speedTestError, String errorMessage) {
             if (resultsCallback != null) {
                 resultsCallback.onBandwidthTestError(callbackTestMode,
                         convertToBandwidthTestCodes(speedTestError), errorMessage);
@@ -316,7 +316,7 @@ public class NewBandwidthAnalyzer {
 
     private void markTestsAsRunning() throws BandwidthTestException {
         if (!testsCurrentlyInactive()) {
-            throw new BandwidthTestException(BandwithTestCodes.BandwidthTestExceptionErrorCodes.TEST_ALREADY_RUNNING);
+            throw new BandwidthTestException(BandwithTestCodes.ExceptionCodes.TEST_ALREADY_RUNNING);
         }
         bandwidthAnalyzerState = BandwidthAnalyzerState.RUNNING;
     }
@@ -340,7 +340,7 @@ public class NewBandwidthAnalyzer {
     /**
      * start the speed test
      */
-    private void startBandwidthTest(@BandwidthTestMode int testMode) throws BandwidthTestException {
+    private void startBandwidthTest(@BandwithTestCodes.TestMode int testMode) throws BandwidthTestException {
         markTestsAsRunning();
         final String downloadMode = "http";
         this.testMode = testMode;
@@ -348,55 +348,55 @@ public class NewBandwidthAnalyzer {
         speedTestConfig = parseSpeedTestConfig.getConfig(downloadMode);
         if (speedTestConfig == null) {
             if (resultsCallback != null) {
-                resultsCallback.onBandwidthTestError(BandwidthTestMode.CONFIG_FETCH,
-                        BandwidthTestErrorCodes.ERROR_FETCHING_CONFIG,
+                resultsCallback.onBandwidthTestError(BandwithTestCodes.TestMode.CONFIG_FETCH,
+                        ErrorCodes.ERROR_FETCHING_CONFIG,
                         "Config fetch returned null");
             }
-            throw new BandwidthTestException(BandwithTestCodes.BandwidthTestExceptionErrorCodes.GETTING_CONFIG_FAILED);
+            throw new BandwidthTestException(BandwithTestCodes.ExceptionCodes.GETTING_CONFIG_FAILED);
         }
         ServerInformation info = parseServerInformation.getServerInfo();
         if (info == null) {
             if (resultsCallback != null) {
-                resultsCallback.onBandwidthTestError(BandwidthTestMode.SERVER_FETCH,
-                        BandwidthTestErrorCodes.ERROR_FETCHING_SERVER_INFO,
+                resultsCallback.onBandwidthTestError(BandwithTestCodes.TestMode.SERVER_FETCH,
+                        ErrorCodes.ERROR_FETCHING_SERVER_INFO,
                         "Server info fetch returned null");
             }
-            throw new BandwidthTestException(BandwithTestCodes.BandwidthTestExceptionErrorCodes.GETTING_SERVER_INFORMATION_FAILED);
+            throw new BandwidthTestException(BandwithTestCodes.ExceptionCodes.GETTING_SERVER_INFORMATION_FAILED);
         }
 
         bestServer = getBestServer(speedTestConfig, info);
         if (bestServer == null) {
             if (resultsCallback != null) {
-                resultsCallback.onBandwidthTestError(BandwidthTestMode.SERVER_FETCH,
-                        BandwidthTestErrorCodes.ERROR_SELECTING_BEST_SERVER,
+                resultsCallback.onBandwidthTestError(BandwithTestCodes.TestMode.SERVER_FETCH,
+                        ErrorCodes.ERROR_SELECTING_BEST_SERVER,
                         "best server returned as null");
             }
-            throw new BandwidthTestException(BandwithTestCodes.BandwidthTestExceptionErrorCodes.GETTING_BEST_SERVER_FAILED);
+            throw new BandwidthTestException(BandwithTestCodes.ExceptionCodes.GETTING_BEST_SERVER_FAILED);
         }
 
-        if (testMode == BandwidthTestMode.DOWNLOAD_AND_UPLOAD || testMode == BandwidthTestMode.DOWNLOAD) {
+        if (testMode == TestMode.DOWNLOAD_AND_UPLOAD || testMode == BandwithTestCodes.TestMode.DOWNLOAD) {
             performDownload();
         }
-        if (testMode == BandwidthTestMode.UPLOAD) {
+        if (testMode == BandwithTestCodes.TestMode.UPLOAD) {
             performUpload();
         }
     }
 
-    @BandwidthTestErrorCodes
+    @ErrorCodes
     private int convertToBandwidthTestCodes(SpeedTestError error) {
-        int errorCodeToReturn = BandwidthTestErrorCodes.ERROR_UNKNOWN;
+        int errorCodeToReturn = ErrorCodes.ERROR_UNKNOWN;
         switch (error) {
             case INVALID_HTTP_RESPONSE:
-                errorCodeToReturn = BandwidthTestErrorCodes.ERROR_INVALID_HTTP_RESPONSE;
+                errorCodeToReturn = ErrorCodes.ERROR_INVALID_HTTP_RESPONSE;
                 break;
             case SOCKET_ERROR:
-                errorCodeToReturn = BandwidthTestErrorCodes.ERROR_SOCKET_ERROR;
+                errorCodeToReturn = ErrorCodes.ERROR_SOCKET_ERROR;
                 break;
             case SOCKET_TIMEOUT:
-                errorCodeToReturn = BandwidthTestErrorCodes.ERROR_SOCKET_TIMEOUT;
+                errorCodeToReturn = ErrorCodes.ERROR_SOCKET_TIMEOUT;
                 break;
             case CONNECTION_ERROR:
-                errorCodeToReturn = BandwidthTestErrorCodes.ERROR_CONNECTION_ERROR;
+                errorCodeToReturn = ErrorCodes.ERROR_CONNECTION_ERROR;
                 break;
         }
         return errorCodeToReturn;

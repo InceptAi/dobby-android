@@ -2,10 +2,13 @@ package com.inceptai.dobby.ai;
 
 import android.util.Log;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.NetworkLayer;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
+
+import java.util.List;
 
 import static com.inceptai.dobby.DobbyApplication.TAG;
 
@@ -19,6 +22,7 @@ public class BandwidthOperation extends ComposableOperation {
     private NetworkLayer networkLayer;
     private InferenceEngine inferenceEngine;
     private DobbyAi.ResponseCallback responseCallback;
+    private ListenableFuture<?> future;
 
     public BandwidthOperation(DobbyThreadpool threadpool, NetworkLayer networkLayer,
                               InferenceEngine inferenceEngine, DobbyAi.ResponseCallback responseCallback) {
@@ -35,12 +39,19 @@ public class BandwidthOperation extends ComposableOperation {
     }
 
     @Override
-    protected void performOperation() {
+    public void post() {
         Log.i(TAG, "Going to start bandwidth test.");
-        @BandwithTestCodes.BandwidthTestMode
-        int testMode = BandwithTestCodes.BandwidthTestMode.DOWNLOAD_AND_UPLOAD;
+        @BandwithTestCodes.TestMode
+        int testMode = BandwithTestCodes.TestMode.DOWNLOAD_AND_UPLOAD;
         BandwidthObserver observer = networkLayer.startBandwidthTest(testMode);
+        if (!observer.startedNormally()) {
+            Log.v(TAG, "Bandwidth tests did not start normally: " + observer.exceptionCode());
+            return;
+        }
+        Log.v(TAG, "Started bw test successfully");
         observer.setInferenceEngine(inferenceEngine);
         responseCallback.showRtGraph(observer);
+        future = observer.asFuture();
+        setFuture(future);
     }
 }

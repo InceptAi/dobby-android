@@ -10,39 +10,44 @@ import com.inceptai.dobby.DobbyThreadpool;
 public abstract class ComposableOperation {
 
     private DobbyThreadpool threadpool;
-    private ListenableFuture<?> future;
+    private ComposableOperation uponCompletion;
 
     ComposableOperation(DobbyThreadpool threadpool) {
         this.threadpool = threadpool;
     }
 
-    public void post() {
-        future = threadpool.getListeningExecutorService().submit(new Runnable() {
-            @Override
-            public void run() {
-                performOperation();
-            }
-        });
-    }
-
-    protected abstract void performOperation();
-
+    public abstract void post();
     protected abstract String getName();
 
-    protected ListenableFuture<?> getFuture() {
-        return future;
+    public void uponCompletion(ComposableOperation operation) {
+        uponCompletion = operation;
     }
 
-    public void postAfter(ComposableOperation operation) {
-        if (operation.getFuture().isDone()) {
-            post();
-        } else {
-            operation.getFuture().addListener(new Runnable() {
-                @Override
-                public void run() {
-                    post();
+    /**
+     * Derived class should set the Future object as soon as it has one.
+     * @param future
+     */
+    protected void setFuture(ListenableFuture<?> future) {
+        future.addListener(new Runnable() {
+            @Override
+            public void run() {
+                if (uponCompletion != null) {
+                    uponCompletion.post();
                 }
-            }, threadpool.getExecutor());
-        }
+            }
+        }, threadpool.getExecutor());
     }
+
+//    public void postAfter(ComposableOperation operation) {
+//        if (operation.getFuture().isDone()) {
+//            post();
+//        } else {
+//            operation.getFuture().addListener(new Runnable() {
+//                @Override
+//                public void run() {
+//                    post();
+//                }
+//            }, threadpool.getExecutor());
+//        }
+//    }
 }

@@ -7,8 +7,8 @@ package com.inceptai.dobby.speedtest;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.inceptai.dobby.speedtest.BandwithTestCodes.BandwidthTestErrorCodes;
-import com.inceptai.dobby.speedtest.BandwithTestCodes.BandwidthTestMode;
+import com.inceptai.dobby.speedtest.BandwithTestCodes.ErrorCodes;
+import com.inceptai.dobby.speedtest.BandwithTestCodes.TestMode;
 
 import java.util.List;
 
@@ -30,9 +30,9 @@ public class BandwidthAnalyzer {
 
     private BandwidthTestListener bandwidthTestListener;
 
-    @BandwidthTestMode
+    @TestMode
     private int testMode;
-    @BandwidthTestMode
+    @TestMode
     private int currentlyTestingMode;
     // Callbacks
     private ResultsCallback resultsCallback;
@@ -43,8 +43,8 @@ public class BandwidthAnalyzer {
     public interface ResultsCallback {
 
         //Error callback
-        void onBandwidthTestError(@BandwidthTestMode int testMode,
-                                  @BandwidthTestErrorCodes int errorCode,
+        void onBandwidthTestError(@TestMode int testMode,
+                                  @ErrorCodes int errorCode,
                                   @Nullable  String errorMessage);
 
         //Config callbacks
@@ -57,17 +57,17 @@ public class BandwidthAnalyzer {
         void onBestServerSelected(ServerInformation.ServerDetails bestServer);
 
         //Test callbacks
-        void onTestFinished(@BandwidthTestMode int testMode, SpeedTestReport report);
-        void onTestProgress(@BandwidthTestMode int testMode, float percent, SpeedTestReport report);
-        void onTestRepeatIntervalReport(@BandwidthTestMode int testMode, SpeedTestReport report);
-        void onRepeatTestFinished(@BandwidthTestMode int testMode, SpeedTestReport report);
+        void onTestFinished(@TestMode int testMode, SpeedTestReport report);
+        void onTestProgress(@TestMode int testMode, float percent, SpeedTestReport report);
+        void onTestRepeatIntervalReport(@TestMode int testMode, SpeedTestReport report);
+        void onRepeatTestFinished(@TestMode int testMode, SpeedTestReport report);
     }
 
     private BandwidthAnalyzer(@Nullable ResultsCallback resultsCallback) {
         this.bandwidthTestListener = new BandwidthTestListener();
         this.resultsCallback = resultsCallback;
-        this.testMode = BandwidthTestMode.IDLE;
-        this.currentlyTestingMode = BandwidthTestMode.IDLE;
+        this.testMode = TestMode.IDLE;
+        this.currentlyTestingMode = TestMode.IDLE;
 
         this.parseSpeedTestConfig = new ParseSpeedTestConfig(this.bandwidthTestListener);
         this.parseServerInformation = new ParseServerInformation(this.bandwidthTestListener);
@@ -89,13 +89,13 @@ public class BandwidthAnalyzer {
     }
 
     private void performDownload() {
-        currentlyTestingMode = BandwidthTestMode.DOWNLOAD;
+        currentlyTestingMode = TestMode.DOWNLOAD;
         DownloadAnalyzer downloadAnalyzer = new DownloadAnalyzer(speedTestConfig.downloadConfig, bestServer, bandwidthTestListener);
         downloadAnalyzer.downloadTestWithOneThread();
     }
 
     private void performUpload() {
-        currentlyTestingMode = BandwidthTestMode.UPLOAD;
+        currentlyTestingMode = TestMode.UPLOAD;
         UploadAnalyzer uploadAnalyzer = new UploadAnalyzer(speedTestConfig.uploadConfig, bestServer, bandwidthTestListener);
         uploadAnalyzer.uploadTestWithOneThread();
     }
@@ -109,15 +109,15 @@ public class BandwidthAnalyzer {
     /**
      * start the speed test
      */
-    public void startBandwidthTest(@BandwidthTestMode int testMode) {
+    public void startBandwidthTest(@TestMode int testMode) {
         final String downloadMode = "http";
         this.testMode = testMode;
         //Get config
         speedTestConfig = parseSpeedTestConfig.getConfig(downloadMode);
         if (speedTestConfig == null) {
             if (resultsCallback != null) {
-                resultsCallback.onBandwidthTestError(BandwidthTestMode.CONFIG_FETCH,
-                        BandwidthTestErrorCodes.ERROR_FETCHING_CONFIG,
+                resultsCallback.onBandwidthTestError(TestMode.CONFIG_FETCH,
+                        ErrorCodes.ERROR_FETCHING_CONFIG,
                         "Config fetch returned null");
             }
             return;
@@ -125,8 +125,8 @@ public class BandwidthAnalyzer {
         ServerInformation info = parseServerInformation.getServerInfo();
         if (info == null) {
             if (resultsCallback != null) {
-                resultsCallback.onBandwidthTestError(BandwidthTestMode.SERVER_FETCH,
-                        BandwidthTestErrorCodes.ERROR_FETCHING_SERVER_INFO,
+                resultsCallback.onBandwidthTestError(TestMode.SERVER_FETCH,
+                        ErrorCodes.ERROR_FETCHING_SERVER_INFO,
                         "Server info fetch returned null");
             }
             return;
@@ -135,36 +135,36 @@ public class BandwidthAnalyzer {
         bestServer = getBestServer(speedTestConfig, info);
         if (bestServer == null) {
             if (resultsCallback != null) {
-                resultsCallback.onBandwidthTestError(BandwidthTestMode.SERVER_FETCH,
-                        BandwidthTestErrorCodes.ERROR_SELECTING_BEST_SERVER,
+                resultsCallback.onBandwidthTestError(TestMode.SERVER_FETCH,
+                        ErrorCodes.ERROR_SELECTING_BEST_SERVER,
                         "best server returned as null");
             }
             return;
         }
 
-        if (testMode == BandwidthTestMode.DOWNLOAD_AND_UPLOAD || testMode == BandwidthTestMode.DOWNLOAD) {
+        if (testMode == TestMode.DOWNLOAD_AND_UPLOAD || testMode == TestMode.DOWNLOAD) {
             performDownload();
         }
-        if (testMode == BandwidthTestMode.UPLOAD) {
+        if (testMode == TestMode.UPLOAD) {
             performUpload();
         }
     }
 
-    @BandwidthTestErrorCodes
+    @ErrorCodes
     private int convertToBandwidthTestCodes(SpeedTestError error) {
-        int errorCodeToReturn = BandwidthTestErrorCodes.ERROR_UNKNOWN;
+        int errorCodeToReturn = ErrorCodes.ERROR_UNKNOWN;
         switch (error) {
             case INVALID_HTTP_RESPONSE:
-                errorCodeToReturn = BandwidthTestErrorCodes.ERROR_INVALID_HTTP_RESPONSE;
+                errorCodeToReturn = ErrorCodes.ERROR_INVALID_HTTP_RESPONSE;
                 break;
             case SOCKET_ERROR:
-                errorCodeToReturn = BandwidthTestErrorCodes.ERROR_SOCKET_ERROR;
+                errorCodeToReturn = ErrorCodes.ERROR_SOCKET_ERROR;
                 break;
             case SOCKET_TIMEOUT:
-                errorCodeToReturn = BandwidthTestErrorCodes.ERROR_SOCKET_TIMEOUT;
+                errorCodeToReturn = ErrorCodes.ERROR_SOCKET_TIMEOUT;
                 break;
             case CONNECTION_ERROR:
-                errorCodeToReturn = BandwidthTestErrorCodes.ERROR_CONNECTION_ERROR;
+                errorCodeToReturn = ErrorCodes.ERROR_CONNECTION_ERROR;
                 break;
         }
         return errorCodeToReturn;
@@ -193,8 +193,8 @@ public class BandwidthAnalyzer {
                 if (serverInformation != null && serverInformation.serverList.size() > 0) {
                     resultsCallback.onServerInformationFetch(serverInformation);
                 } else {
-                    resultsCallback.onBandwidthTestError(BandwidthTestMode.SERVER_FETCH,
-                            BandwidthTestErrorCodes.ERROR_FETCHING_SERVER_INFO,
+                    resultsCallback.onBandwidthTestError(TestMode.SERVER_FETCH,
+                            ErrorCodes.ERROR_FETCHING_SERVER_INFO,
                             "Server information returned empty");
                 }
             }
@@ -202,8 +202,8 @@ public class BandwidthAnalyzer {
 
         public void onServerInformationFetchError(String error) {
             if (resultsCallback != null) {
-                resultsCallback.onBandwidthTestError(BandwidthTestMode.SERVER_FETCH,
-                        BandwidthTestErrorCodes.ERROR_FETCHING_SERVER_INFO,
+                resultsCallback.onBandwidthTestError(TestMode.SERVER_FETCH,
+                        ErrorCodes.ERROR_FETCHING_SERVER_INFO,
                         error);            }
         }
 
@@ -215,8 +215,8 @@ public class BandwidthAnalyzer {
 
         public void onBestServerSelectionError(String error) {
             if (resultsCallback != null)
-                resultsCallback.onBandwidthTestError(BandwidthTestMode.SERVER_FETCH,
-                        BandwidthTestErrorCodes.ERROR_SELECTING_BEST_SERVER, error);
+                resultsCallback.onBandwidthTestError(TestMode.SERVER_FETCH,
+                        ErrorCodes.ERROR_SELECTING_BEST_SERVER, error);
         }
 
         public void onClosestServersSelected(List<ServerInformation.ServerDetails> closestServers) {
@@ -233,7 +233,7 @@ public class BandwidthAnalyzer {
         //Download callbacks
         public void onDownloadFinished(SpeedTestReport report) {
             if (resultsCallback != null) {
-                resultsCallback.onTestFinished(BandwidthTestMode.DOWNLOAD, report);
+                resultsCallback.onTestFinished(TestMode.DOWNLOAD, report);
             }
         }
 
@@ -242,7 +242,7 @@ public class BandwidthAnalyzer {
             Log.v("speedtest", "[DL PROGRESS] progress : " + percent + "%");
             Log.v("speedtest", "[DL PROGRESS] rate in bit/s   : " + report.getTransferRateBit());
             if (resultsCallback != null) {
-                resultsCallback.onTestProgress(BandwidthTestMode.DOWNLOAD, percent, report);
+                resultsCallback.onTestProgress(TestMode.DOWNLOAD, percent, report);
             }
         }
 
@@ -250,7 +250,7 @@ public class BandwidthAnalyzer {
             Log.v("speedtest", "[DL ERROR] : " + speedTestError.name());
             Log.v("speedtest", "[DL ERROR MESG] : " + errorMessage);
             if (resultsCallback != null) {
-                resultsCallback.onBandwidthTestError(BandwidthTestMode.DOWNLOAD,
+                resultsCallback.onBandwidthTestError(TestMode.DOWNLOAD,
                         convertToBandwidthTestCodes(speedTestError), errorMessage);
             }
         }
@@ -260,7 +260,7 @@ public class BandwidthAnalyzer {
             // called to notify download progress
             //Log.v("speedtest", "[DL PROGRESS] rate in bit/s   : " + report.getTransferRateBit());
             if (resultsCallback != null) {
-                resultsCallback.onTestRepeatIntervalReport(BandwidthTestMode.DOWNLOAD, report);
+                resultsCallback.onTestRepeatIntervalReport(TestMode.DOWNLOAD, report);
             }
         }
 
@@ -269,10 +269,10 @@ public class BandwidthAnalyzer {
             // called to notify download progress
             Log.v("speedtest", "[DL PROGRESS] rate in bit/s   : " + report.getTransferRateBit());
             if (resultsCallback != null) {
-                resultsCallback.onRepeatTestFinished(BandwidthTestMode.DOWNLOAD, report);
+                resultsCallback.onRepeatTestFinished(TestMode.DOWNLOAD, report);
             }
             //Do we need to do upload here ?
-            if (testMode == BandwidthTestMode.DOWNLOAD_AND_UPLOAD) {
+            if (testMode == TestMode.DOWNLOAD_AND_UPLOAD) {
                 performUpload();
             } else {
                 //Cleanup
@@ -286,7 +286,7 @@ public class BandwidthAnalyzer {
             // called when an upload is finished
             Log.v("speedtest", "[UL FINISHED] rate in bit/s   : " + report.getTransferRateBit());
             if (resultsCallback != null) {
-                resultsCallback.onTestFinished(BandwidthTestMode.UPLOAD, report);
+                resultsCallback.onTestFinished(TestMode.UPLOAD, report);
             }
         }
 
@@ -294,7 +294,7 @@ public class BandwidthAnalyzer {
             Log.v("speedtest", "[UL ERROR] : " + speedTestError.name());
             Log.v("speedtest", "[UL ERROR] mesg : " + errorMessage);
             if (resultsCallback != null) {
-                resultsCallback.onBandwidthTestError(BandwidthTestMode.UPLOAD,
+                resultsCallback.onBandwidthTestError(TestMode.UPLOAD,
                         convertToBandwidthTestCodes(speedTestError), errorMessage);
             }
         }
@@ -304,13 +304,13 @@ public class BandwidthAnalyzer {
             Log.v("speedtest", "[UL PROGRESS] progress : " + percent + "%");
             Log.v("speedtest", "[UL PROGRESS] rate in bit/s   : " + report.getTransferRateBit());
             if (resultsCallback != null) {
-                resultsCallback.onTestProgress(BandwidthTestMode.UPLOAD, percent, report);
+                resultsCallback.onTestProgress(TestMode.UPLOAD, percent, report);
             }
         }
 
         public void onUploadRepeatIntervalReport(final SpeedTestReport report) {
             if (resultsCallback != null) {
-                resultsCallback.onTestRepeatIntervalReport(BandwidthTestMode.UPLOAD, report);
+                resultsCallback.onTestRepeatIntervalReport(TestMode.UPLOAD, report);
             }
         }
 
@@ -319,7 +319,7 @@ public class BandwidthAnalyzer {
             // called to notify upload progress
             Log.v("speedtest", "[UL PROGRESS] rate in bit/s   : " + report.getTransferRateBit());
             if (resultsCallback != null) {
-                resultsCallback.onRepeatTestFinished(BandwidthTestMode.UPLOAD, report);
+                resultsCallback.onRepeatTestFinished(TestMode.UPLOAD, report);
             }
             //Done with all the tests
             //Cleanup

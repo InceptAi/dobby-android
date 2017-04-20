@@ -69,7 +69,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             //PingAnalyzer.PingStats routerPingStats = pingAnalyzer.pingAndReturnStats("192.168.3.1");
             //Log.v(TAG, routerPingStats.toJson());
             //BandwidthAnalyzer bandwidthAnalyzer = BandwidthAnalyzer.create(null);
-            //bandwidthAnalyzer.startBandwidthTest(BandwithTestCodes.BandwidthTestMode.DOWNLOAD_AND_UPLOAD);
+            //bandwidthAnalyzer.startBandwidthTest(BandwithTestCodes.TestMode.DOWNLOAD_AND_UPLOAD);
             /*
             threadpool.submit(new Runnable() {
                 @Override
@@ -116,7 +116,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             return;
         }
         if (action.getAction() == Action.ActionType.ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS) {
-            // Run b/w, wifi and ping tests.
+            postAllOperations();
         }
     }
 
@@ -134,33 +134,44 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         BandwidthOperation operation = new BandwidthOperation(threadpool, networkLayer,
                 inferenceEngine, responseCallback);
         operation.post();
-//
-//        Log.i(TAG, "Going to start bandwidth test.");
-//        @BandwithTestCodes.BandwidthTestMode
-//        int testMode = BandwithTestCodes.BandwidthTestMode.DOWNLOAD_AND_UPLOAD;
-//        BandwidthObserver observer = networkLayer.startBandwidthTest(testMode);
-//        observer.setInferenceEngine(inferenceEngine);
-//        responseCallback.showRtGraph(observer);
+    }
+
+    private void postAllOperations() {
+        BandwidthOperation bwTest = new BandwidthOperation(threadpool, networkLayer,
+                inferenceEngine, responseCallback);
+        bwTest.post();
+        ComposableOperation wifiScan = wifiScanOperation();
+        bwTest.uponCompletion(wifiScan);
+        ComposableOperation ping = pingOperation();
+        wifiScan.uponCompletion(ping);
     }
 
     private ComposableOperation wifiScanOperation() {
-        return null;
+        return new ComposableOperation(threadpool) {
+            @Override
+            public void post() {
+                setFuture(networkLayer.wifiScan());
+            }
+
+            @Override
+            protected String getName() {
+                return "Wifi Scan operation";
+            }
+        };
     }
 
-    private void runBandwidthTest() {
-        Log.i(TAG, "Going to start bandwidth test.");
-        @BandwithTestCodes.BandwidthTestMode
-        int testMode = BandwithTestCodes.BandwidthTestMode.DOWNLOAD_AND_UPLOAD;
-        BandwidthObserver observer = networkLayer.startBandwidthTest(testMode);
-        if (observer.bandwidthTestState == BandwithTestCodes.BandwidthTestExceptionErrorCodes.TEST_STARTED_NO_EXCEPTION) {
-            Log.v(TAG, "Started bw test successfully");
-        } else if (observer.bandwidthTestState == BandwithTestCodes.BandwidthTestExceptionErrorCodes.TEST_ALREADY_RUNNING) {
-            Log.v(TAG, "BW test already running.");
-        } else {
-            Log.v(TAG, "Error while starting bandwidth tests: " + observer.bandwidthTestState);
-        }
-        observer.setInferenceEngine(inferenceEngine);
-        responseCallback.showRtGraph(observer);
+    private ComposableOperation pingOperation() {
+        return new ComposableOperation(threadpool) {
+            @Override
+            public void post() {
+                setFuture(networkLayer.startPing());
+            }
+
+            @Override
+            protected String getName() {
+                return "Ping Operation";
+            }
+        };
     }
 
     private void cancelBandwidthTest() throws Exception {
