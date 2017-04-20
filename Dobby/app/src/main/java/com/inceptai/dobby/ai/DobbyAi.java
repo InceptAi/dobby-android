@@ -137,6 +137,13 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         @BandwithTestCodes.BandwidthTestMode
         int testMode = BandwithTestCodes.BandwidthTestMode.DOWNLOAD_AND_UPLOAD;
         BandwidthObserver observer = networkLayer.startBandwidthTest(testMode);
+        if (observer.bandwidthTestState == BandwithTestCodes.BandwidthTestExceptionErrorCodes.TEST_STARTED_NO_EXCEPTION) {
+            Log.v(TAG, "Started bw test successfully");
+        } else if (observer.bandwidthTestState == BandwithTestCodes.BandwidthTestExceptionErrorCodes.TEST_ALREADY_RUNNING) {
+            Log.v(TAG, "BW test already running.");
+        } else {
+            Log.v(TAG, "Error while starting bandwidth tests: " + observer.bandwidthTestState);
+        }
         observer.setInferenceEngine(inferenceEngine);
         responseCallback.showRtGraph(observer);
     }

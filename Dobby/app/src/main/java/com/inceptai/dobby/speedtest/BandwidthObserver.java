@@ -22,6 +22,8 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
     private HashSet<RtDataListener<Float>> listeners;
     private HashSet<NewBandwidthAnalyzer.ResultsCallback> resultsCallbacks;
     private boolean testsRunning = false;
+    @BandwithTestCodes.BandwidthTestExceptionErrorCodes
+    public int bandwidthTestState = BandwithTestCodes.BandwidthTestExceptionErrorCodes.UNKNOWN;
 
     @BandwithTestCodes.BandwidthTestMode
     private int testMode;

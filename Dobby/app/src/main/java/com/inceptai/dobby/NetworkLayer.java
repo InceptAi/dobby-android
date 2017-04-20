@@ -28,7 +28,6 @@ import javax.inject.Inject;
 import static com.inceptai.dobby.DobbyApplication.TAG;
 import static com.inceptai.dobby.connectivity.ConnectivityAnalyzerFactory.getConnecitivityAnalyzer;
 import static com.inceptai.dobby.ping.PingAnalyzerFactory.getPingAnalyzer;
-import static com.inceptai.dobby.speedtest.NewBandwidthAnalyzer.BandwidthTestException.BW_TEST_STARTED_NO_EXCEPTION;
 import static com.inceptai.dobby.wifi.WifiAnalyzerFactory.getWifiAnalyzer;
 
 /**
@@ -137,18 +136,6 @@ public class NetworkLayer {
         return null;
     }
 
-    // TODO: remove this routine.
-    private boolean startBandwidthTest(NewBandwidthAnalyzer.ResultsCallback resultsCallback,
-                                   @BandwithTestCodes.BandwidthTestMode int testMode) {
-        if (getConnectivityAnalyzerInstance().isWifiOnline()) {
-            Log.i(TAG, "NetworkLayer: Going to start bandwidth test.");
-            bandwidthAnalyzer.registerCallback(resultsCallback);
-            return (bandwidthAnalyzer.startBandwidthTestSafely(testMode) == BW_TEST_STARTED_NO_EXCEPTION);
-        } else {
-            Log.i(TAG, "NetworkLayer: Wifi is offline, so cannot run bandwidth tests");
-            return false;
-        }
-    }
 
     public synchronized BandwidthObserver startBandwidthTest(@BandwithTestCodes.BandwidthTestMode int mode) {
         if (bandwidthObserver != null && bandwidthObserver.testsRunning()) {
@@ -157,12 +144,14 @@ public class NetworkLayer {
         }
         bandwidthObserver = new BandwidthObserver(mode);
         bandwidthAnalyzer.registerCallback(bandwidthObserver);
-        if (bandwidthAnalyzer.startBandwidthTestSafely(mode) == BW_TEST_STARTED_NO_EXCEPTION) {
-            return bandwidthObserver;
+        if (getConnectivityAnalyzerInstance().isWifiOnline()) {
+            Log.i(TAG, "NetworkLayer: Going to start bandwidth test.");
+            bandwidthObserver.bandwidthTestState = bandwidthAnalyzer.startBandwidthTestSafely(mode);
         } else {
-            //Error while starting bandwidth tests with bandwidthAnalyzer
-            return null;
+            Log.i(TAG, "NetworkLayer: Wifi is offline, so cannot run bandwidth tests");
+            bandwidthObserver.bandwidthTestState = BandwithTestCodes.BandwidthTestExceptionErrorCodes.NETWORK_OFFLINE;
         }
+        return bandwidthObserver;
     }
 
     public synchronized boolean areBandwidthTestsRunning() {

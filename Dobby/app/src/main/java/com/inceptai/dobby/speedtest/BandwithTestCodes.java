@@ -44,4 +44,23 @@ public class BandwithTestCodes {
         int ERROR_CONNECTION_ERROR = 10;
         int ERROR_TEST_INTERRUPTED = 11;
     }
+
+
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef({BandwidthTestExceptionErrorCodes.TEST_STARTED_NO_EXCEPTION,
+            BandwidthTestExceptionErrorCodes.TEST_ALREADY_RUNNING,
+            BandwidthTestExceptionErrorCodes.GETTING_CONFIG_FAILED,
+            BandwidthTestExceptionErrorCodes.GETTING_SERVER_INFORMATION_FAILED,
+            BandwidthTestExceptionErrorCodes.GETTING_BEST_SERVER_FAILED,
+            BandwidthTestExceptionErrorCodes.NETWORK_OFFLINE,
+            BandwidthTestExceptionErrorCodes.UNKNOWN})
+    public @interface BandwidthTestExceptionErrorCodes {
+        int TEST_STARTED_NO_EXCEPTION = 0;
+        int TEST_ALREADY_RUNNING = 1;
+        int GETTING_CONFIG_FAILED = 2;
+        int GETTING_SERVER_INFORMATION_FAILED = 3;
+        int GETTING_BEST_SERVER_FAILED = 4;
+        int NETWORK_OFFLINE = 5;
+        int UNKNOWN = 6;
+    }
 }
