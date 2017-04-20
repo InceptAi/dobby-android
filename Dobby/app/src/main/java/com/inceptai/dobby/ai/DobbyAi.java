@@ -5,8 +5,6 @@ import android.util.Log;
 
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.NetworkLayer;
-import com.inceptai.dobby.speedtest.BandwidthObserver;
-import com.inceptai.dobby.speedtest.BandwithTestCodes;
 import com.inceptai.dobby.speedtest.SpeedTestTask;
 
 import javax.inject.Inject;
@@ -101,7 +99,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
 
         if (action.getAction() == Action.ActionType.ACTION_TYPE_BANDWIDTH_TEST) {
             Log.i(TAG, "Starting ACTION BANDWIDTH TEST.");
-            runBandwidthTest();
+            postBandwidthTestOperation();
         }
 
         if (action.getAction() == Action.ActionType.ACTION_TYPE_CANCEL_BANDWIDTH_TEST) {
@@ -132,13 +130,21 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         apiAiClient.cleanup();
     }
 
-    private void runBandwidthTest() {
-        Log.i(TAG, "Going to start bandwidth test.");
-        @BandwithTestCodes.BandwidthTestMode
-        int testMode = BandwithTestCodes.BandwidthTestMode.DOWNLOAD_AND_UPLOAD;
-        BandwidthObserver observer = networkLayer.startBandwidthTest(testMode);
-        observer.setInferenceEngine(inferenceEngine);
-        responseCallback.showRtGraph(observer);
+    private void postBandwidthTestOperation() {
+        BandwidthOperation operation = new BandwidthOperation(threadpool, networkLayer,
+                inferenceEngine, responseCallback);
+        operation.post();
+//
+//        Log.i(TAG, "Going to start bandwidth test.");
+//        @BandwithTestCodes.BandwidthTestMode
+//        int testMode = BandwithTestCodes.BandwidthTestMode.DOWNLOAD_AND_UPLOAD;
+//        BandwidthObserver observer = networkLayer.startBandwidthTest(testMode);
+//        observer.setInferenceEngine(inferenceEngine);
+//        responseCallback.showRtGraph(observer);
+    }
+
+    private ComposableOperation wifiScanOperation() {
+        return null;
     }
 
     private void cancelBandwidthTest() throws Exception {
