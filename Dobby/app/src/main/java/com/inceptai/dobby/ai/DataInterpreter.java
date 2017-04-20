@@ -316,11 +316,13 @@ public class DataInterpreter {
         @ConnectivityAnalyzer.WifiConnectivityMode int wifiConnectivityMode;
         @WifiState.WifiLinkMode int wifiProblemMode;
         long updatedAtMs;
-        String currentSSID;
-        int currentChannel;
+        String primaryApSsid;
+        int primaryApChannel;
         int leastOccupiedChannel;
-        int currentChannelAPs;
-        int leastOccupiedChannelAPs;
+        int primaryApChannelInterferingAps;
+        int leastOccupiedChannelAps;
+        int primaryApSignal;
+
 
         public WifiGrade() {
             wifiChannelOccupancyMetric = new HashMap<>();
@@ -471,7 +473,7 @@ public class DataInterpreter {
         WifiState.ChannelInfo primaryChannelInfo = wifiChannelInfo.get(linkInfo.getFrequency());
 
         int numStrongInterferingAps = computeStrongInterferingAps(primaryChannelInfo);
-        wifiGrade.currentChannelAPs = numStrongInterferingAps;
+        wifiGrade.primaryApChannelInterferingAps = numStrongInterferingAps;
         wifiGrade.primaryLinkChannelOccupancyMetric = getGradeLowerIsBetter(numStrongInterferingAps,
                 WIFI_CHANNEL_OCCUPANCY_STEPS,
                 (linkInfo.getFrequency() > 0 && numStrongInterferingAps >= 0));
@@ -495,10 +497,11 @@ public class DataInterpreter {
 
         wifiGrade.wifiConnectivityMode = wifiConnectivityMode;
         wifiGrade.wifiProblemMode = wifiProblemMode;
-        wifiGrade.currentSSID = linkInfo.getSSID();
-        wifiGrade.currentChannel = linkInfo.getFrequency();
+        wifiGrade.primaryApSsid = linkInfo.getSSID();
+        wifiGrade.primaryApChannel = linkInfo.getFrequency();
         wifiGrade.leastOccupiedChannel = leastOccupiedChannel;
-        wifiGrade.leastOccupiedChannelAPs = minOccupancyAPs;
+        wifiGrade.leastOccupiedChannelAps = minOccupancyAPs;
+        wifiGrade.primaryApSignal = linkInfo.getRssi();
         return wifiGrade;
     }
 
