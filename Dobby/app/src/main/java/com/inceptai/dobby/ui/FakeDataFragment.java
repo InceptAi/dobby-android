@@ -171,7 +171,7 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
         ArrayList<String> modeList = new ArrayList<>();
         for (@ConnectivityAnalyzer.WifiConnectivityMode int modeIndex = 0;
              modeIndex < ConnectivityAnalyzer.WifiConnectivityMode.MAX_MODES; modeIndex++) {
-            modeList.add(ConnectivityAnalyzer.getConnecitivyStateName(modeIndex));
+            modeList.add(ConnectivityAnalyzer.connecitivyModeToString(modeIndex));
         }
         ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_dropdown_item, modeList);
         arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -188,7 +188,7 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
         ArrayList<String> modeList = new ArrayList<>();
         for (@WifiState.WifiLinkMode int modeIndex = 0;
              modeIndex < WifiState.WifiLinkMode.MAX_MODES; modeIndex++) {
-            modeList.add(WifiState.getWifiStatsModeName(modeIndex));
+            modeList.add(WifiState.wifiLinkModeToString(modeIndex));
         }
         ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_dropdown_item, modeList);
         arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -355,7 +355,7 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
             //noinspection ResourceType
             FAKE_WIFI_SCAN_CONFIG.fakeWifiProblemMode = selectedMode;
             Log.i(TAG, "FAKE Setting Wifi Problem mode to : " +
-                    WifiState.getWifiStatsModeName(selectedMode));
+                    WifiState.wifiLinkModeToString(selectedMode));
         }
         return hasChanged;
     }
@@ -368,7 +368,7 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
             //noinspection ResourceType
             setFakeWifiConnectivityMode(selectedMode);
             Log.i(TAG, "FAKE Setting Connectivity mode to : " +
-                    ConnectivityAnalyzer.getConnecitivyStateName(fakeWifiConnectivityMode));
+                    ConnectivityAnalyzer.connecitivyModeToString(fakeWifiConnectivityMode));
         }
         return hasChanged;
     }

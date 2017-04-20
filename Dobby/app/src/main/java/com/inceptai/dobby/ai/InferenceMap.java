@@ -300,7 +300,6 @@ public class InferenceMap {
         return new PossibleConditions();
     }
 
-
     public static String conditionString(@Condition int condition) {
         switch (condition) {
             case Condition.WIFI_CHANNEL_CONGESTION:

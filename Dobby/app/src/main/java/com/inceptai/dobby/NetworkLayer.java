@@ -86,7 +86,7 @@ public class NetworkLayer {
     }
 
     @WifiState.WifiLinkMode
-    public int getWifiProblemMode() {
+    public int getWifiLinkMode() {
         int problemMode = WifiState.WifiLinkMode.UNKNOWN;
         WifiState wifiState = getWifiAnalyzerInstance().getWifiState();
         if (wifiState != null) {
