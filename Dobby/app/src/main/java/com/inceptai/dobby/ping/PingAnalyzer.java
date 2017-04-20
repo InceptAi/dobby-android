@@ -74,8 +74,8 @@ public class PingAnalyzer {
                 new PingStats(ipLayerInfo.referenceExternalAddress2));
         ipLayerPingStats.put(ipLayerInfo.publicDns1,
                 new PingStats(ipLayerInfo.publicDns1));
-        ipLayerPingStats.put(ipLayerInfo.getPublicDns2,
-                new PingStats(ipLayerInfo.getPublicDns2));
+        ipLayerPingStats.put(ipLayerInfo.publicDns2,
+                new PingStats(ipLayerInfo.publicDns2));
     }
 
     /**
@@ -144,7 +144,7 @@ public class PingAnalyzer {
         pingsInFlight.clear();
         String[] addressList = {ipLayerInfo.gateway, ipLayerInfo.dns1,ipLayerInfo.dns2,
                 ipLayerInfo.referenceExternalAddress1, ipLayerInfo.referenceExternalAddress2,
-                ipLayerInfo.publicDns1, ipLayerInfo.getPublicDns2};
+                ipLayerInfo.publicDns1, ipLayerInfo.publicDns2};
         for (String address: addressList) {
             pingsInFlight.put(address, true);
         }

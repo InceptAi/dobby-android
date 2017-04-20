@@ -35,6 +35,7 @@ public class InferenceMap {
             Condition.DNS_RESPONSE_SLOW,
             Condition.DNS_SLOW_TO_REACH,
             Condition.DNS_UNREACHABLE,
+            Condition.DNS_SLOW_FAST_ALTERNATIVE_AVAILABLE,
             Condition.ISP_INTERNET_DOWN_DNS_OK,
             Condition.CABLE_MODEM_FAULT,
             Condition.CAPTIVE_PORTAL_NO_INTERNET,
@@ -61,7 +62,8 @@ public class InferenceMap {
         int DNS_RESPONSE_SLOW = 35;
         int DNS_SLOW_TO_REACH = 36;
         int DNS_UNREACHABLE = 37;
-        int ISP_INTERNET_DOWN_DNS_OK = 38;
+        int DNS_SLOW_FAST_ALTERNATIVE_AVAILABLE = 38;
+        int ISP_INTERNET_DOWN_DNS_OK = 39;
         int CABLE_MODEM_FAULT = 40;
         int CAPTIVE_PORTAL_NO_INTERNET = 50;
         int REMOTE_SERVER_IS_SLOW_TO_RESPOND = 51;
@@ -98,6 +100,7 @@ public class InferenceMap {
         Condition.DNS_RESPONSE_SLOW,
         Condition.DNS_SLOW_TO_REACH,
         Condition.DNS_UNREACHABLE,
+        Condition.DNS_SLOW_FAST_ALTERNATIVE_AVAILABLE,
     };
 
 

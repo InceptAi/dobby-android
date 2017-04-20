@@ -15,6 +15,9 @@ public class IPLayerInfo {
     public static final String LEVEL3_SECONDARY_DNS_SERVER = "209.244.0.4";
     public static final String GOOGLE_PRIMARY_DNS_SERVER = "8.8.8.8";
     public static final String GOOGLE_SECONDARY_DNS_SERVER = "8.8.4.4";
+    public static final String VERISIGN_PRIMARY_DNS_SERVER = "64.6.64.6";
+    public static final String VERISIGN_SECONDARY_DNS_SERVER = "64.6.65.6";
+
 
 
     public String dns1;
@@ -27,7 +30,7 @@ public class IPLayerInfo {
     public String referenceExternalAddress1;
     public String referenceExternalAddress2;
     public String publicDns1;
-    public String getPublicDns2;
+    public String publicDns2;
 
     private void initialize(DhcpInfo dhcpInfo,
                        String referenceExternalAddress1,
@@ -42,7 +45,12 @@ public class IPLayerInfo {
         this.referenceExternalAddress1 = referenceExternalAddress1;
         this.referenceExternalAddress2 = referenceExternalAddress2;
         publicDns1 = LEVEL3_PRIMARY_DNS_SERVER;
-        getPublicDns2 = GOOGLE_PRIMARY_DNS_SERVER;
+        publicDns2 = GOOGLE_PRIMARY_DNS_SERVER;
+        if (publicDns1.equals(this.dns1)) {
+            publicDns1 = VERISIGN_PRIMARY_DNS_SERVER;
+        } else if (publicDns2.equals(this.dns1)) {
+            publicDns2 = VERISIGN_PRIMARY_DNS_SERVER;
+        }
     }
 
     public IPLayerInfo(DhcpInfo dhcpInfo,

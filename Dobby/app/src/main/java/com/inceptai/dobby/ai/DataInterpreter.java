@@ -157,6 +157,7 @@ public class DataInterpreter {
         @MetricType int externalServerLatencyMetric;
         @MetricType int dnsServerLatencyMetric;
         @MetricType int routerLatencyMetric;
+        @MetricType int alternativeDnsMetric;
     }
 
     /**
@@ -199,6 +200,7 @@ public class DataInterpreter {
     }
 
     public static PingGrade interpret(HashMap<String, PingStats> externalServerStats,
+                                      PingStats alternativeDnsStats,
                                       PingStats routerStats, PingStats primaryDnsStats) {
         PingGrade pingGrade = new PingGrade();
         double avgExtenalServerLatency = 0.0;
@@ -222,6 +224,11 @@ public class DataInterpreter {
                 avgExtenalServerLatency > 0.0);
 
         pingGrade.routerLatencyMetric = getGradeLowerIsBetter(routerStats.avgLatencyMs,
+                PING_LATENCY_ROUTER_STEPS_MS,
+                routerStats.avgLatencyMs > 0.0);
+
+
+        pingGrade.alternativeDnsMetric = getGradeLowerIsBetter(alternativeDnsStats.avgLatencyMs,
                 PING_LATENCY_ROUTER_STEPS_MS,
                 routerStats.avgLatencyMs > 0.0);
 
