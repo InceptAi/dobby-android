@@ -21,6 +21,7 @@ import android.widget.Toast;
 
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.ai.RtDataSource;
+import com.inceptai.dobby.speedtest.BandwithTestCodes;
 import com.inceptai.dobby.utils.Utils;
 
 import java.util.LinkedList;
@@ -219,7 +220,7 @@ public class ChatFragment extends Fragment implements Handler.Callback {
     private void addRtGraph(RtDataSource<Float, Integer> rtDataSource) {
         Log.i(TAG, "Adding GRAPH entry.");
         ChatEntry entry = new ChatEntry(Utils.EMPTY_STRING, ChatEntry.RT_GRAPH);
-        entry.addGraph(new GraphData<Float, Integer>(rtDataSource));
+        entry.addGraph(new GraphData<Float, Integer>(rtDataSource, BandwithTestCodes.TestMode.DOWNLOAD));
         recyclerViewAdapter.addEntryAtBottom(entry);
         chatRv.scrollToPosition(recyclerViewAdapter.getItemCount() - 1);
     }

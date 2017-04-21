@@ -22,7 +22,8 @@ import static com.inceptai.dobby.DobbyApplication.TAG;
 public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, RtDataSource<Float, Integer> {
     @Nullable
     private InferenceEngine inferenceEngine;
-    private HashSet<RtDataListener<Float>> listeners;
+    private HashSet<RtDataListener<Float>> listenersUpload;
+    private HashSet<RtDataListener<Float>> listenersDownload;
     private HashSet<NewBandwidthAnalyzer.ResultsCallback> resultsCallbacks;
     private boolean testsRunning = false;
     @BandwithTestCodes.ExceptionCodes
@@ -40,7 +41,8 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
     public BandwidthObserver(@BandwithTestCodes.TestMode int testMode,
                              @BandwithTestCodes.ExceptionCodes int bandwidthErrorCode) {
         this.testModeRequested = testMode;
-        listeners = new HashSet<>();
+        listenersUpload = new HashSet<>();
+        listenersDownload = new HashSet<>();
         resultsCallbacks = new HashSet<>();
         exceptionCode = bandwidthErrorCode;
         testsStarting(bandwidthErrorCode);
@@ -130,7 +132,8 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
             inferenceEngine.notifyBandwidthTestResult(testMode, stats.getPercentile90(), clientIsp, clientExternalIp);
         }
 
-        for (RtDataListener<Float> listener : listeners) {
+        HashSet<RtDataListener<Float>> listenerSet = testMode == BandwithTestCodes.TestMode.UPLOAD ? listenersUpload : listenersDownload;
+        for (RtDataListener<Float> listener : listenerSet) {
             listener.onClose();
         }
 
@@ -155,7 +158,8 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
             inferenceEngine.notifyBandwidthTestProgress(testMode, instantBandwidth);
         }
 
-        for (RtDataListener<Float> listener : listeners) {
+        HashSet<RtDataListener<Float>> listenerSet = testMode == BandwithTestCodes.TestMode.UPLOAD ? listenersUpload : listenersDownload;
+        for (RtDataListener<Float> listener : listenerSet) {
             listener.onUpdate((float) (instantBandwidth / 1.0E6));
         }
         for (NewBandwidthAnalyzer.ResultsCallback callback : resultsCallbacks) {
@@ -170,17 +174,32 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
         for (NewBandwidthAnalyzer.ResultsCallback callback : resultsCallbacks) {
             callback.onBandwidthTestError(testMode, errorCode, errorMessage);
         }
+
+        for (RtDataListener<Float> listener : listenersDownload) {
+            listener.onClose();
+        }
+
+        for (RtDataListener<Float> listener : listenersUpload) {
+            listener.onClose();
+        }
+
+
         testsDone();
     }
 
     @Override
     public synchronized void registerListener(RtDataListener<Float> listener, Integer sourceType) {
-        listeners.add(listener);
+        if (sourceType == BandwithTestCodes.TestMode.UPLOAD) {
+            listenersUpload.add(listener);
+        } else if (sourceType == BandwithTestCodes.TestMode.DOWNLOAD) {
+            listenersDownload.add(listener);
+        }
     }
 
     @Override
     public synchronized void unregisterListener(RtDataListener<Float> listener) {
-        listeners.remove(listener);
+        listenersUpload.remove(listener);
+        listenersDownload.remove(listener);
     }
 
     private void testsDone() {
@@ -188,7 +207,8 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
             operationFuture.set(result);
         }
         testsRunning = false;
-        listeners.clear();
+        listenersUpload.clear();
+        listenersDownload.clear();
         resultsCallbacks.clear();
         exceptionCode = BandwithTestCodes.ExceptionCodes.UNKNOWN;
     }

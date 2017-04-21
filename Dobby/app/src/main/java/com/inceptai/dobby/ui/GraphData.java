@@ -29,9 +29,9 @@ public class GraphData<T, U> implements RtDataSource.RtDataListener<T> {
         dataPoints = new LinkedList<>();
     }
 
-    GraphData(RtDataSource<T, U> rtDataSource) {
+    GraphData(RtDataSource<T, U> rtDataSource, U sourceType) {
         dataPoints = new LinkedList<>();
-        // rtDataSource.registerListener(this, );
+        rtDataSource.registerListener(this, sourceType);
         this.rtDataSource = rtDataSource;
     }
 
