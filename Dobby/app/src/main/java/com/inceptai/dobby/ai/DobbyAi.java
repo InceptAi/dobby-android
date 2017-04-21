@@ -130,22 +130,23 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     }
 
     private void postBandwidthTestOperation() {
-        ComposableOperation<BandwidthResult> operation = bandwidthOperation();
+        ComposableOperation operation = bandwidthOperation();
         operation.post();
     }
 
     private void postAllOperations() {
-        ComposableOperation<BandwidthResult> bwTest = bandwidthOperation();
+        ComposableOperation bwTest = bandwidthOperation();
         bwTest.post();
         ComposableOperation wifiScan = wifiScanOperation();
         bwTest.uponCompletion(wifiScan);
-        final ComposableOperation<HashMap<String, PingStats>> ping = pingOperation();
+        final ComposableOperation ping = pingOperation();
         wifiScan.uponCompletion(ping);
 
         // Wire up with IE.
         wifiScan.getFuture().addListener(new Runnable() {
             @Override
             public void run() {
+                // Handle failed wifi scan using OperationResult.
                 inferenceEngine.notifyWifiState(networkLayer.getWifiState(),
                         networkLayer.getWifiLinkMode(),
                         networkLayer.getCurrentConnectivityMode());
@@ -156,7 +157,13 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             @Override
             public void run() {
                 try {
-                    inferenceEngine.notifyPingStats(ping.getFuture().get(), networkLayer.getIpLayerInfo());
+                    HashMap<String, PingStats> payload = (HashMap<String, PingStats>) ping.getFuture().get().getPayload();
+                    if (payload != null) {
+                        inferenceEngine.notifyPingStats(payload, networkLayer.getIpLayerInfo());
+                    } else {
+                        // Error.
+                        Log.i(TAG, "Error starting ping.");
+                    }
                 } catch (Exception e) {
                     e.printStackTrace(System.out);
                     Log.w(TAG, "Exception getting ping results: " + e.getStackTrace().toString());
@@ -179,8 +186,8 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         };
     }
 
-    private ComposableOperation<HashMap<String, PingStats>> pingOperation() {
-        return new ComposableOperation<HashMap<String, PingStats>>(threadpool) {
+    private ComposableOperation pingOperation() {
+        return new ComposableOperation(threadpool) {
             @Override
             public void post() {
                 setFuture(networkLayer.startPing());
@@ -193,8 +200,8 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         };
     }
 
-    private ComposableOperation<BandwidthResult> bandwidthOperation() {
-        return new ComposableOperation<BandwidthResult>(threadpool) {
+    private ComposableOperation bandwidthOperation() {
+        return new ComposableOperation(threadpool) {
             @Override
             public void post() {
                 setFuture(startBandwidthTest());
@@ -213,10 +220,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         int testMode = BandwithTestCodes.TestMode.DOWNLOAD_AND_UPLOAD;
         BandwidthObserver observer = networkLayer.startBandwidthTest(testMode);
         if (observer == null) {
-            BandwidthResult result = new BandwidthResult(testMode);
-            SettableFuture future = SettableFuture.create();
-            future.set(result);
-            return future;
+            return null;
         }
         observer.setInferenceEngine(inferenceEngine);
         responseCallback.showRtGraph(observer);
