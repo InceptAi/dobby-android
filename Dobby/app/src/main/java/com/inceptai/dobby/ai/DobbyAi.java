@@ -10,6 +10,7 @@ import com.inceptai.dobby.NetworkLayer;
 import com.inceptai.dobby.model.BandwidthStats;
 import com.inceptai.dobby.model.PingStats;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
+import com.inceptai.dobby.speedtest.BandwidthResult;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
 import com.inceptai.dobby.utils.DobbyLog;
 
@@ -33,7 +34,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     private ApiAiClient apiAiClient;
     private ResponseCallback responseCallback;
     private InferenceEngine inferenceEngine;
-    private boolean useApiAi = false;
+    private boolean useApiAi = false; // We do not use ApiAi for the WifiDoc app.
 
     @Inject
     NetworkLayer networkLayer;
@@ -135,7 +136,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     }
 
     private void postAllOperations() {
-        ComposableOperation<BandwidthStats> bwTest = bandwidthOperation();
+        ComposableOperation<BandwidthResult> bwTest = bandwidthOperation();
         bwTest.post();
         ComposableOperation wifiScan = wifiScanOperation();
         bwTest.uponCompletion(wifiScan);
@@ -192,8 +193,8 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         };
     }
 
-    private ComposableOperation<BandwidthStats> bandwidthOperation() {
-        return new ComposableOperation<BandwidthStats>(threadpool) {
+    private ComposableOperation<BandwidthResult> bandwidthOperation() {
+        return new ComposableOperation<BandwidthResult>(threadpool) {
             @Override
             public void post() {
                 setFuture(startBandwidthTest());
@@ -206,7 +207,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         };
     }
 
-    private ListenableFuture<BandwidthStats> startBandwidthTest() {
+    private ListenableFuture<BandwidthResult> startBandwidthTest() {
         Log.i(TAG, "Going to start bandwidth test.");
         @BandwithTestCodes.TestMode
         int testMode = BandwithTestCodes.TestMode.DOWNLOAD_AND_UPLOAD;

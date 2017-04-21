@@ -27,20 +27,25 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
     private boolean testsRunning = false;
     @BandwithTestCodes.ExceptionCodes
     private int exceptionCode = BandwithTestCodes.ExceptionCodes.UNKNOWN;
-    private SettableFuture<BandwidthStats> operationFuture;
+    private SettableFuture<BandwidthResult> operationFuture;
     private String clientIsp = Utils.EMPTY_STRING;
     private String clientExternalIp = Utils.EMPTY_STRING;
+    private BandwidthResult result;
 
     @BandwithTestCodes.TestMode
-    private int testMode;
+    private int testModeRequested;
+
+    @BandwithTestCodes.TestMode private int testsDone;
 
     public BandwidthObserver(@BandwithTestCodes.TestMode int testMode,
                              @BandwithTestCodes.ExceptionCodes int bandwidthErrorCode) {
-        this.testMode = testMode;
+        this.testModeRequested = testMode;
         listeners = new HashSet<>();
         resultsCallbacks = new HashSet<>();
         testsStarting(bandwidthErrorCode);
         operationFuture = SettableFuture.create();
+        result = new BandwidthResult(testMode);
+        testsDone = BandwithTestCodes.TestMode.IDLE;
     }
 
     public synchronized void setInferenceEngine(InferenceEngine inferenceEngine) {
@@ -64,13 +69,13 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
         resultsCallbacks.remove(callback);
     }
 
-    public ListenableFuture<BandwidthStats> asFuture() {
+    public ListenableFuture<BandwidthResult> asFuture() {
         return operationFuture;
     }
 
     @BandwithTestCodes.TestMode
-    public int getTestMode() {
-        return testMode;
+    public int getTestModeRequested() {
+        return testModeRequested;
     }
 
 
@@ -131,7 +136,15 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
         for (NewBandwidthAnalyzer.ResultsCallback callback : resultsCallbacks) {
             callback.onTestFinished(testMode, stats);
         }
-        testsDone(stats);
+        if (testMode == BandwithTestCodes.TestMode.UPLOAD) {
+            result.setUploadStats(stats);
+        } else if (testMode == BandwithTestCodes.TestMode.DOWNLOAD) {
+            result.setDownloadStats(stats);
+        }
+
+        if (areTestsDone(testMode)) {
+            testsDone();
+        }
     }
 
     @Override
@@ -156,7 +169,7 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
         for (NewBandwidthAnalyzer.ResultsCallback callback : resultsCallbacks) {
             callback.onBandwidthTestError(testMode, errorCode, errorMessage);
         }
-        testsDone(BandwidthStats.EMPTY_STATS);
+        testsDone();
     }
 
     @Override
@@ -169,9 +182,9 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
         listeners.remove(listener);
     }
 
-    private void testsDone(BandwidthStats stats) {
+    private void testsDone() {
         if (operationFuture != null) {
-            operationFuture.set(stats);
+            operationFuture.set(result);
         }
         testsRunning = false;
         listeners.clear();
@@ -184,7 +197,23 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
         }
         testsRunning = true;
         if (inferenceEngine != null) {
-            inferenceEngine.notifyBandwidthTestStart(testMode);
+            inferenceEngine.notifyBandwidthTestStart(testModeRequested);
         }
+    }
+
+    private boolean areTestsDone(@BandwithTestCodes.TestMode int testModeDone) {
+        if (testsDone == BandwithTestCodes.TestMode.IDLE) {
+            testsDone = testModeDone;
+            return testsDone == testModeRequested;
+        }
+
+        if (testsDone == BandwithTestCodes.TestMode.UPLOAD && testModeDone == BandwithTestCodes.TestMode.DOWNLOAD) {
+            testsDone = BandwithTestCodes.TestMode.DOWNLOAD_AND_UPLOAD;
+        }
+
+        if (testsDone == BandwithTestCodes.TestMode.DOWNLOAD && testModeDone == BandwithTestCodes.TestMode.UPLOAD) {
+            testsDone = BandwithTestCodes.TestMode.DOWNLOAD_AND_UPLOAD;
+        }
+        return testsDone == testModeRequested;
     }
 }

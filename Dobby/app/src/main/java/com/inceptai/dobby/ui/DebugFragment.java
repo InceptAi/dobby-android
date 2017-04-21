@@ -220,7 +220,7 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
             public void run() {
                 BandwidthObserver observer = networkLayer.startBandwidthTest(testMode);
                 observer.registerCallback(DebugFragment.this);
-                if (observer.getTestMode() != testMode) {
+                if (observer.getTestModeRequested() != testMode) {
                     setFollupBandwidthTest(testMode);
                     addConsoleText("Scheduled follow up test. Currently another test is running.");
                 }

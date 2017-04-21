@@ -204,7 +204,7 @@ public class NewBandwidthAnalyzer {
 
         // Server information callbacks
         public void onServerInformationFetch(ServerInformation serverInformation) {
-            Log.v(TAG, "Speed test server informatio fetched, num servers:" + serverInformation.serverList.size());
+            Log.v(TAG, "Speed test server information fetched, num servers:" + serverInformation.serverList.size());
             if (resultsCallback != null) {
                 if (serverInformation != null && serverInformation.serverList.size() > 0) {
                     resultsCallback.onServerInformationFetch(serverInformation);
@@ -243,7 +243,7 @@ public class NewBandwidthAnalyzer {
 
         @Override
         public void onFinish(@BandwithTestCodes.TestMode int callbackTestMode, BandwidthStats bandwidthStats) {
-            Log.v(TAG, "NewBandwidthAnalyzer  onFinish");
+            Log.v(TAG, "NewBandwidthAnalyzer onFinish");
             if (resultsCallback != null) {
                 resultsCallback.onTestFinished(callbackTestMode, bandwidthStats);
             }
@@ -263,7 +263,7 @@ public class NewBandwidthAnalyzer {
 
         @Override
         public void onProgress(@BandwithTestCodes.TestMode int callbackTestMode, double instantBandwidth) {
-            Log.v(TAG, "NewBandwidthAnalyzer  onProgress");
+            Log.v(TAG, "NewBandwidthAnalyzer onProgress");
             if (resultsCallback != null) {
                 resultsCallback.onTestProgress(callbackTestMode, instantBandwidth);
             }
@@ -284,7 +284,7 @@ public class NewBandwidthAnalyzer {
         return serverSelector.getBestServer();
     }
 
-    private void  performDownload() {
+    private void performDownload() {
         if (downloadAnalyzer == null) {
             downloadAnalyzer = new NewDownloadAnalyzer(speedTestConfig.downloadConfig,
                     bestServer, bandwidthTestListener);
