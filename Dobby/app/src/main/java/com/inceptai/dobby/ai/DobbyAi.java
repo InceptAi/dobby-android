@@ -130,8 +130,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     }
 
     private void postBandwidthTestOperation() {
-        BandwidthOperation operation = new BandwidthOperation(threadpool, networkLayer,
-                inferenceEngine, responseCallback);
+        ComposableOperation<BandwidthResult> operation = bandwidthOperation();
         operation.post();
     }
 
