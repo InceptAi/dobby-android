@@ -536,12 +536,13 @@ public class DataInterpreter {
                 (linkInfo.getFrequency() > 0 && numStrongInterferingAps >= 0));
 
         //Compute metrics for all channels -- for later use
-        int leastOccupiedChannel = 0;
-        int minOccupancyAPs = Integer.MAX_VALUE;
+        int leastOccupiedChannel = wifiGrade.primaryApChannel;
+        int minOccupancyAPs = wifiGrade.primaryApChannelInterferingAps;
         for (WifiState.ChannelInfo channelInfo: wifiChannelInfo.values()) {
             int occupancy = computeStrongInterferingAps(channelInfo);
             if (occupancy < minOccupancyAPs) {
                 leastOccupiedChannel = channelInfo.channelFrequency;
+                minOccupancyAPs = occupancy;
             }
             wifiGrade.wifiChannelOccupancyMetric.put(channelInfo.channelFrequency,
                     occupancy);

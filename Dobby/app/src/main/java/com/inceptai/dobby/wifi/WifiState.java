@@ -179,6 +179,10 @@ public class WifiState {
         return wifiProblemMode;
     }
 
+    public void setCurrentWifiProblemMode(@WifiLinkMode int problemMode) {
+        wifiProblemMode = problemMode;
+    }
+
     public HashMap<Integer, Double> getContentionInformation() {
         HashMap<Integer, Double> channelMapToReturn = new HashMap<>();
         for (ChannelInfo channelInfo: channelInfoMap.values()) {
