@@ -38,6 +38,7 @@ import static com.inceptai.dobby.wifi.WifiAnalyzerFactory.getWifiAnalyzer;
 public class NetworkLayer {
     public static final int MIN_TIME_GAP_TO_RETRIGGER_PING_MS = 10000; //10sec
     public static final int MIN_PKT_LOSS_RATE_TO_RETRIGGER_PING_PERCENT = 50;
+    public static final int MIN_CHECKS_CONNECTIIVITY = 3;
 
     private Context context;
     private DobbyThreadpool threadpool;
@@ -62,6 +63,7 @@ public class NetworkLayer {
             ipLayerInfo = new IPLayerInfo(getWifiAnalyzerInstance().getDhcpInfo());
         }
         eventBus.registerListener(this);
+        getConnectivityAnalyzerInstance().rescheduleConnectivityTest(MIN_CHECKS_CONNECTIIVITY);
     }
 
     public ListenableFuture<List<ScanResult>> wifiScan() {
