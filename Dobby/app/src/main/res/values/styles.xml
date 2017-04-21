@@ -15,6 +15,12 @@
         <item name="colorAccent">@color/orangeLight</item>
     </style>
 
+    <style name="AppThemeOrangeLight" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/orangeMediumLight1</item>
+        <item name="colorPrimaryDark">@color/orangeMedium</item>
+        <item name="colorAccent">@color/orangeLighter</item>
+    </style>
 
     <style name="AppTheme.NoActionBar">
         <item name="windowActionBar">false</item>

@@ -21,7 +21,8 @@ public class DobbyEvent {
             EventType.WIFI_INTERNET_CONNECTIVITY_OFFLINE, EventType.WIFI_CONNECTED, EventType.WIFI_NOT_CONNECTED,
             EventType.PING_STARTED, EventType.PING_INFO_AVAILABLE, EventType.PING_FAILED,
             EventType.BWTEST_INFO_AVAILABLE, EventType.BWTEST_FAILED, EventType.HANGING_ON_DHCP,
-            EventType.HANGING_ON_AUTHENTICATING, EventType.HANGING_ON_SCANNING, EventType.FREQUENT_DISCONNECTIONS})
+            EventType.HANGING_ON_AUTHENTICATING, EventType.HANGING_ON_SCANNING, EventType.FREQUENT_DISCONNECTIONS,
+            EventType.BANDWIDTH_TEST_STARTING})
     public @interface EventType {
         //Unknown event type
         int NO_EVENT_RECEIVED = 0;
@@ -61,17 +62,30 @@ public class DobbyEvent {
         int HANGING_ON_AUTHENTICATING = 21;
         int HANGING_ON_SCANNING = 22;
         int FREQUENT_DISCONNECTIONS = 23;
+
+        // Bandwidth event with payload to listen in.
+        // Payload type: BandwidthObserver.
+        int BANDWIDTH_TEST_STARTING = 24;
     }
 
     @DobbyEvent.EventType
     private int eventType;
     private long lastEventTimestampMs;
     private int eventCount;
+    private Object payload;
 
     public DobbyEvent(@EventType int eventType) {
         this.eventType = eventType;
         lastEventTimestampMs = System.currentTimeMillis();
         eventCount = 0;
+    }
+
+    public void setPayload(Object payload) {
+        this.payload = payload;
+    }
+
+    public Object getPayload() {
+        return payload;
     }
 
     public long getLastEventTimestampMs(){

@@ -20,20 +20,16 @@ import android.view.ViewGroup;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.utils.Utils;
 
-import static com.inceptai.dobby.DobbyApplication.TAG;
-
 public class WifiDocMainFragment extends Fragment implements View.OnClickListener {
     public static final String TAG = "WifiDocMainFragment";
     private static final int PERMISSION_COARSE_LOCATION_REQUEST_CODE = 101;
     private static final String ARG_PARAM1 = "param1";
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
-
     private OnFragmentInteractionListener mListener;
 
-    FloatingActionButton mainFab;
+    private FloatingActionButton mainFab;
+    private CircularGauge cirularGauge;
+    private String mParam1;
 
     public WifiDocMainFragment() {
         // Required empty public constructor
@@ -61,6 +57,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_wifi_doc_main, container, false);
         mainFab = (FloatingActionButton) view.findViewById(R.id.main_fab_button);
+        cirularGauge = (CircularGauge) view.findViewById(R.id.bw_gauge);
         requestPermissions();
         return view;
     }
