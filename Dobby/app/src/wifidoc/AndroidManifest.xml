@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.inceptai.dobby">
 
     <application
@@ -8,7 +9,9 @@
         android:label="@string/wifidoc_app_name"
         android:supportsRtl="true"
         android:name=".DobbyApplication"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppThemeOrange"
+        tools:replace="android:theme"
+        >
         <activity android:name=".ui.WifiDocActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

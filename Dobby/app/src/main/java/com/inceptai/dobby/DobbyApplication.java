@@ -14,6 +14,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class DobbyApplication extends Application {
     public static final String TAG = "Dobby";
+    public static final String DOBBY_FLAVOR = "dobby";
+    public static final String WIFIDOC_FLAVOR = "wifidoc";
     public static final AtomicBoolean USE_FAKES = new AtomicBoolean(false);
 
     private ProdComponent prodComponent;
@@ -27,5 +29,13 @@ public class DobbyApplication extends Application {
 
     public ProdComponent getProdComponent() {
         return prodComponent;
+    }
+
+    public static boolean isDobbyFlavor() {
+        return BuildConfig.FLAVOR.equals(DOBBY_FLAVOR);
+    }
+
+    public static boolean isWifiDocFlavor() {
+        return BuildConfig.FLAVOR.equals(WIFIDOC_FLAVOR);
     }
 }

@@ -1,0 +1,25 @@
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.inceptai.dobby.ui.WifiDocActivity">
+
+    <!--
+     There is a crash if you use android:backgroundTing in the FAB xml. Use app:backgroundTint.
+     -->
+
+    <android.support.design.widget.FloatingActionButton
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:id="@+id/main_fab_button"
+        android:src="@mipmap/wifi_meter"
+        app:backgroundTint="@color/orangeMedium"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:elevation="4dp"
+        app:rippleColor="@color/orangeLight"
+        android:clickable="true"
+        app:layout_constraintLeft_toLeftOf="parent" />
+
+</android.support.constraint.ConstraintLayout>
