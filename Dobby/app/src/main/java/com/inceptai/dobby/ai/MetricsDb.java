@@ -105,4 +105,33 @@ public class MetricsDb {
         this.pingGrade.updateTimestamp();
     }
 
+    public SuggestionCreator.SuggestionCreatorParams getParamsForSuggestions() {
+        SuggestionCreator.SuggestionCreatorParams params = new SuggestionCreator.SuggestionCreatorParams();
+
+        if (wifiGrade.hasValidData()) {
+            params.currentSignal = wifiGrade.primaryApSignal;
+            params.currentWifiChannel = wifiGrade.primaryApChannel;
+            params.currentWifiSSID = wifiGrade.primaryApSsid;
+            params.bestWifiChannel = wifiGrade.leastOccupiedChannel;
+        }
+
+        if (pingGrade.hasValidData()) {
+            params.alternateDNS = pingGrade.alternativeDns;
+        }
+
+        if (bandwidthGrade.hasValidDownload()) {
+            params.downloadBandwidthMbps = bandwidthGrade.downloadMbps;
+        }
+
+        if (bandwidthGrade.hasValidUpload()) {
+            params.uploadBandwidthMbps = bandwidthGrade.uploadMbps;
+        }
+
+        if (bandwidthGrade.hasValidUpload() || bandwidthGrade.hasValidDownload()) {
+            params.isp = bandwidthGrade.isp;
+        }
+
+        return params;
+    }
+
 }

@@ -14,7 +14,6 @@ import com.inceptai.dobby.wifi.WifiState;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.HashMap;
-import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -116,10 +115,10 @@ public class InferenceEngine {
     }
 
 
-    public List<String> getSuggestions() {
+    public String getSuggestions() {
         // Convert currentConditions into suggestions.
-        //return SuggestionCreator.getSuggestionForConditions(currentConditions, currentConditions.);
-        return null;
+        int[] conditions = {InferenceMap.Condition.CAPTIVE_PORTAL_NO_INTERNET};
+        return SuggestionCreator.getSuggestionForConditions(conditions, conditions.length, metricsDb.getParamsForSuggestions());
     }
 
     // Bandwidth test notifications:
