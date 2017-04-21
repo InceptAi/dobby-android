@@ -111,7 +111,7 @@ public class NetworkLayer {
         return getWifiAnalyzer(context, threadpool, eventBus);
     }
 
-    private ConnectivityAnalyzer getConnectivityAnalyzerInstance() {
+    public ConnectivityAnalyzer getConnectivityAnalyzerInstance() {
         return getConnecitivityAnalyzer(context, threadpool, eventBus);
     }
 
@@ -143,10 +143,11 @@ public class NetworkLayer {
         }
 
         if (!getConnectivityAnalyzerInstance().isWifiOnline()) {
-            return new BandwidthObserver(mode, BandwithTestCodes.ExceptionCodes.NETWORK_OFFLINE);
+            //TODO: Always check if bandwidth analyzer is null
+            return null;
         }
 
-        bandwidthObserver = new BandwidthObserver(mode, BandwithTestCodes.ExceptionCodes.ATTEMPTING_TO_START);
+        bandwidthObserver = new BandwidthObserver(mode);
         bandwidthAnalyzer.registerCallback(bandwidthObserver);
         threadpool.submit(new Runnable() {
             @Override
@@ -192,7 +193,8 @@ public class NetworkLayer {
             if (getPingAnalyzerInstance().checkIfShouldRedoPingStats(MIN_TIME_GAP_TO_RETRIGGER_PING_MS, MIN_PKT_LOSS_RATE_TO_RETRIGGER_PING_PERCENT)) {
                 startPing();
             }
-        } else if (event.getEventType() == DobbyEvent.EventType.PING_INFO_AVAILABLE || event.getEventType() == DobbyEvent.EventType.PING_FAILED) {
+        } else if (event.getLastEventType() == DobbyEvent.EventType.PING_INFO_AVAILABLE || event.getLastEventType() == DobbyEvent.EventType.PING_FAILED) {
+            //TODO: Do we need to autotrigger gatewayDownloadLatencyTest here ??
             startGatewayDownloadLatencyTest();
         }
     }

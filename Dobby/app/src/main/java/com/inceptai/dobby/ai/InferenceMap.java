@@ -136,11 +136,11 @@ public class InferenceMap {
 
 
         if (DataInterpreter.isGoodOrExcellent(bandwidthGrade.getDownloadBandwidthMetric()) &&
-                DataInterpreter.isAverageOrPoor(bandwidthGrade.getUploadBandwidthMetric())) {
+                DataInterpreter.isAverageOrPoorOrNonFunctional(bandwidthGrade.getUploadBandwidthMetric())) {
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
             conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
             conditions.include(Condition.ISP_INTERNET_SLOW_UPLOAD, 0.3);
-        } else if (DataInterpreter.isAverageOrPoor(bandwidthGrade.getDownloadBandwidthMetric()) &&
+        } else if (DataInterpreter.isAverageOrPoorOrNonFunctional(bandwidthGrade.getDownloadBandwidthMetric()) &&
                 DataInterpreter.isGoodOrExcellent(bandwidthGrade.getUploadBandwidthMetric())) {
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
             conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
@@ -156,7 +156,7 @@ public class InferenceMap {
             conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
             conditions.include(ISP_INTERNET_DOWN, 0.3);
         }
-        return new PossibleConditions();
+        return conditions;
     }
 
     public static PossibleConditions getPossibleConditionsFor(DataInterpreter.WifiGrade wifiGrade) {
@@ -182,13 +182,13 @@ public class InferenceMap {
             //Connected but offline -- we can't download http://client3.google.com/204
             conditions.include(ISP_INTERNET_DOWN, 0.5);
             conditions.include(Condition.DNS_UNREACHABLE, 0.5);
-        }
-
-        //Wifi link stats
-        if (wifiGrade.wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.OFF) {
+        } else if (wifiGrade.wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.OFF) {
             //Wifi is off. Need to turn it on.
             conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_TURNED_OFF, 1.0);
-        } else if (DataInterpreter.isUnknown(wifiGrade.primaryApSignalMetric) ||
+        }
+
+        //Wifi signal
+        if (DataInterpreter.isUnknown(wifiGrade.primaryApSignalMetric) ||
                 wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.HANGING_ON_SCANNING ||
                 wifiGrade.wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.ON_AND_DISCONNECTED) {
             // Wifi is on but not connected to the router
@@ -196,20 +196,22 @@ public class InferenceMap {
             conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE, 0.5);
             //It could be that the right network is not showing up in the scans.
             conditions.include(Condition.ROUTER_WIFI_INTERFACE_FAULT, 0.5);
-        } else if (DataInterpreter.isAverageOrPoor(wifiGrade.primaryApSignalMetric) && (DataInterpreter.isAverageOrPoor(wifiGrade.primaryLinkChannelOccupancyMetric))) {
+        }  else if (DataInterpreter.isAverageOrPoorOrNonFunctional(wifiGrade.primaryApSignalMetric)) {
             //poor signal and high congestion
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 1.0);
-            conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 1.0);
+            if (DataInterpreter.isAverageOrPoorOrNonFunctional(wifiGrade.primaryLinkChannelOccupancyMetric)) {
+                conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 1.0);
+            }
             if (wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.FREQUENT_DISCONNECTIONS ||
                     wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.HANGING_ON_AUTHENTICATING ||
                     wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.HANGING_ON_DHCP){
                 conditions.include(Condition.ROUTER_WIFI_INTERFACE_FAULT, 0.2);
             }
         } else if (DataInterpreter.isGoodOrExcellent(wifiGrade.primaryApSignalMetric)){
-            if (DataInterpreter.isAverageOrPoor(wifiGrade.primaryApLinkSpeedMetric)) {
+            if (DataInterpreter.isAverageOrPoorOrNonFunctional(wifiGrade.primaryApLinkSpeedMetric)) {
                 conditions.include(Condition.ROUTER_GOOD_SIGNAL_USING_SLOW_DATA_RATE, 0.5);
             }
-            if (DataInterpreter.isAverageOrPoor(wifiGrade.primaryLinkChannelOccupancyMetric)) {
+            if (DataInterpreter.isAverageOrPoorOrNonFunctional(wifiGrade.primaryLinkChannelOccupancyMetric)) {
                 conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
             }
             if (wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.FREQUENT_DISCONNECTIONS ||
@@ -229,7 +231,7 @@ public class InferenceMap {
         } else if (wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.UNKNOWN) {
             conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE, 0.3);
         }
-        return new PossibleConditions();
+        return conditions;
     }
 
     public static PossibleConditions getPossibleConditionsFor(DataInterpreter.PingGrade pingGrade) {
@@ -257,7 +259,7 @@ public class InferenceMap {
                     conditions.include(Condition.ISP_INTERNET_DOWN_DNS_OK, 1.0);
                     conditions.include(Condition.CABLE_MODEM_FAULT, 0.3);
                 }
-            } else if (DataInterpreter.isAverageOrPoor(pingGrade.dnsServerLatencyMetric)) {
+            } else if (DataInterpreter.isAverageOrPoorOrNonFunctional(pingGrade.dnsServerLatencyMetric)) {
                 //Good router / slow dns
                 conditions.include(Condition.DNS_SLOW_TO_REACH, 1.0);
                 conditions.include(Condition.CABLE_MODEM_FAULT, 0.1);
@@ -271,15 +273,12 @@ public class InferenceMap {
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.5);
         }
 
-        if ((DataInterpreter.isAverageOrPoor(pingGrade.dnsServerLatencyMetric) && DataInterpreter.isGoodOrExcellent(pingGrade.alternativeDnsMetric))) {
+        if ((DataInterpreter.isAverageOrPoorOrNonFunctional(pingGrade.dnsServerLatencyMetric) && !DataInterpreter.isAverageOrPoorOrNonFunctional(pingGrade.alternativeDnsMetric))) {
             conditions.exclude(DNS_CONDITIONS);
             conditions.include(Condition.DNS_SLOW_FAST_ALTERNATIVE_AVAILABLE, 1.0);
-        } else if ((DataInterpreter.isNonFunctional(pingGrade.dnsServerLatencyMetric) && !DataInterpreter.isNonFunctional(pingGrade.alternativeDnsMetric))) {
-            conditions.exclude(DNS_CONDITIONS);
-            conditions.include(Condition.DNS_UNREACHABLE_ALTERNATIVE_WORKING, 1.0);
         }
 
-        return new PossibleConditions();
+        return conditions;
     }
 
     public static PossibleConditions getPossibleConditionsFor(DataInterpreter.HttpGrade httpGrade) {
@@ -290,15 +289,14 @@ public class InferenceMap {
             return conditions;
         }
 
-        if (DataInterpreter.isAverageOrPoor(httpGrade.httpDownloadLatencyMetric)
-                || DataInterpreter.isNonFunctional(httpGrade.httpDownloadLatencyMetric)) {
+        if (DataInterpreter.isAverageOrPoor(httpGrade.httpDownloadLatencyMetric)) {
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
             conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
             conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.1);
         } else if (DataInterpreter.isNonFunctional(httpGrade.httpDownloadLatencyMetric)) {
             conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 1.0);
         }
-        return new PossibleConditions();
+        return conditions;
     }
 
     public static String conditionString(@Condition int condition) {

@@ -4,10 +4,10 @@ import android.content.Context;
 import android.util.Log;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.NetworkLayer;
-import com.inceptai.dobby.model.BandwidthStats;
 import com.inceptai.dobby.model.PingStats;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.speedtest.BandwidthResult;
@@ -158,7 +158,8 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 try {
                     inferenceEngine.notifyPingStats(ping.getFuture().get(), networkLayer.getIpLayerInfo());
                 } catch (Exception e) {
-                    Log.w(TAG, "Exception getting ping results");
+                    e.printStackTrace(System.out);
+                    Log.w(TAG, "Exception getting ping results: " + e.getStackTrace().toString());
                 }
             }
         }, threadpool.getExecutor());
@@ -211,11 +212,12 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         @BandwithTestCodes.TestMode
         int testMode = BandwithTestCodes.TestMode.DOWNLOAD_AND_UPLOAD;
         BandwidthObserver observer = networkLayer.startBandwidthTest(testMode);
-        if (!observer.startedNormally()) {
-            Log.v(TAG, "Bandwidth tests did not start normally: " + observer.exceptionCode());
-            return observer.asFuture();
+        if (observer == null) {
+            BandwidthResult result = new BandwidthResult(testMode);
+            SettableFuture future = SettableFuture.create();
+            future.set(result);
+            return future;
         }
-        Log.v(TAG, "Started bw test successfully");
         observer.setInferenceEngine(inferenceEngine);
         responseCallback.showRtGraph(observer);
         return observer.asFuture();

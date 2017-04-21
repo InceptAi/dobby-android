@@ -123,6 +123,10 @@ public class DataInterpreter {
         return (metric == MetricType.NONFUNCTIONAL);
     }
 
+    public static boolean isAverageOrPoorOrNonFunctional(@MetricType int metric) {
+        return (metric == MetricType.AVERAGE || metric == MetricType.POOR || metric == MetricType.NONFUNCTIONAL);
+    }
+
     public static boolean isGoodOrExcellent(@MetricType int[] metric) {
         boolean allExcellent = true;
         for (int index=0; index < metric.length; index++) {
@@ -536,12 +540,13 @@ public class DataInterpreter {
                 (linkInfo.getFrequency() > 0 && numStrongInterferingAps >= 0));
 
         //Compute metrics for all channels -- for later use
-        int leastOccupiedChannel = 0;
-        int minOccupancyAPs = Integer.MAX_VALUE;
+        int leastOccupiedChannel = wifiGrade.primaryApChannel;
+        int minOccupancyAPs = wifiGrade.primaryApChannelInterferingAps;
         for (WifiState.ChannelInfo channelInfo: wifiChannelInfo.values()) {
             int occupancy = computeStrongInterferingAps(channelInfo);
             if (occupancy < minOccupancyAPs) {
                 leastOccupiedChannel = channelInfo.channelFrequency;
+                minOccupancyAPs = occupancy;
             }
             wifiGrade.wifiChannelOccupancyMetric.put(channelInfo.channelFrequency,
                     occupancy);

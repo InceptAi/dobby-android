@@ -211,6 +211,10 @@ public class ConnectivityAnalyzer {
         return wifiConnectivityMode;
     }
 
+    public void setWifiConnectivityMode(@WifiConnectivityMode int mode) {
+        wifiConnectivityMode = mode;
+    }
+
     synchronized public boolean isWifiOnline() {
         return (wifiConnectivityMode == CONNECTED_AND_ONLINE);
     }

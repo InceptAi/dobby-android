@@ -49,8 +49,6 @@ public class WifiAnalyzer {
     protected boolean wifiEnabled;
     protected SettableFuture<List<ScanResult>> wifiScanFuture;
     protected DobbyEventBus eventBus;
-    @WifiState.WifiLinkMode
-    protected int wifiStateProblemMode;
     protected List<ScanResult> combinedScanResult;
 
 
@@ -66,7 +64,6 @@ public class WifiAnalyzer {
         wifiState = new WifiState();
         wifiState.updateWifiStats(new DobbyWifiInfo(wifiManager.getConnectionInfo()), null);
         registerWifiStateReceiver();
-        wifiStateProblemMode = WifiState.WifiLinkMode.NO_PROBLEM_DEFAULT_STATE;
         combinedScanResult = new ArrayList<>();
     }
 
@@ -255,7 +252,7 @@ public class WifiAnalyzer {
     @DobbyEvent.EventType
     protected int convertWifiStateProblemToDobbyEventType(@WifiState.WifiLinkMode int problemMode) {
         @DobbyEvent.EventType int eventTypeToBroadcast;
-        switch (wifiStateProblemMode) {
+        switch (problemMode) {
             case WifiState.WifiLinkMode.HANGING_ON_DHCP:
                 eventTypeToBroadcast = DobbyEvent.EventType.HANGING_ON_DHCP;
                 break;
@@ -275,10 +272,10 @@ public class WifiAnalyzer {
     }
 
     protected void updateWifiStatsDetailedState(NetworkInfo.DetailedState detailedState) {
-        @WifiState.WifiLinkMode int problemMode = wifiState.updateDetailedWifiStateInfo(detailedState, System.currentTimeMillis());
-        if (wifiStateProblemMode != problemMode) {
-            wifiStateProblemMode = problemMode;
-            @DobbyEvent.EventType int eventTypeToBroadcast = convertWifiStateProblemToDobbyEventType(wifiStateProblemMode);
+        @WifiState.WifiLinkMode int oldProblemMode = wifiState.getCurrentWifiProblemMode();
+        @WifiState.WifiLinkMode int newProblemMode = wifiState.updateDetailedWifiStateInfo(detailedState, System.currentTimeMillis());
+        if (oldProblemMode != newProblemMode) {
+            @DobbyEvent.EventType int eventTypeToBroadcast = convertWifiStateProblemToDobbyEventType(newProblemMode);
             if (eventTypeToBroadcast != DobbyEvent.EventType.WIFI_STATE_UNKNOWN) {
                 eventBus.postEvent(new DobbyEvent(eventTypeToBroadcast));
             }

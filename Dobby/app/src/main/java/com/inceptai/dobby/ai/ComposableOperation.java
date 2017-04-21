@@ -1,5 +1,6 @@
 package com.inceptai.dobby.ai;
 
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -30,7 +31,11 @@ public abstract class ComposableOperation<T> {
         uponCompletion = operation;
     }
 
-    protected void setFuture(final ListenableFuture<T> future) {
+    protected void setFuture(@Nullable final ListenableFuture<T> future) {
+        if (future == null) {
+            setResult(null);
+            return;
+        }
         future.addListener(new Runnable() {
             @Override
             public void run() {

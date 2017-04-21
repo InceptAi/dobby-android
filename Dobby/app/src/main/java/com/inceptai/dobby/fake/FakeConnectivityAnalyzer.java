@@ -46,4 +46,5 @@ public class FakeConnectivityAnalyzer extends ConnectivityAnalyzer {
     public int performConnectivityAndPortalTest(NetworkInfo activeNetwork) {
         return fakeWifiConnectivityMode;
     }
+
 }

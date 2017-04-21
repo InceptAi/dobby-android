@@ -33,6 +33,7 @@ public class FakeWifiAnalyzer extends WifiAnalyzer {
     private static final long SCAN_LATENCY_MS = 5000;
     public static final FakeWifiScanConfig FAKE_WIFI_SCAN_CONFIG = new FakeWifiScanConfig();
 
+    private static final int DEFAULT_LINK_SPEED_MBPS = 36;
     private static final int CHAN_1_FREQ = 2412;
     private static final int CHAN_6_FREQ = 2437;
     private static final int CHAN_11_FREQ = 2462;
@@ -72,7 +73,7 @@ public class FakeWifiAnalyzer extends WifiAnalyzer {
                             DobbyThreadpool threadpool, DobbyEventBus eventBus) {
         super(context, wifiManager, threadpool, eventBus);
         wifiState.updateWifiStats(generateFakeWifiInfo(), null);
-        wifiStateProblemMode = FAKE_WIFI_SCAN_CONFIG.fakeWifiProblemMode;
+        wifiState.setCurrentWifiProblemMode(FAKE_WIFI_SCAN_CONFIG.fakeWifiProblemMode);
     }
 
     /**
@@ -93,8 +94,8 @@ public class FakeWifiAnalyzer extends WifiAnalyzer {
     @Override
     protected void updateWifiStatsDetailedState(NetworkInfo.DetailedState detailedState) {
         @WifiState.WifiLinkMode int problemMode = FAKE_WIFI_SCAN_CONFIG.fakeWifiProblemMode;
-        wifiStateProblemMode = problemMode;
-        @DobbyEvent.EventType int eventTypeToBroadcast = convertWifiStateProblemToDobbyEventType(wifiStateProblemMode);
+        wifiState.setCurrentWifiProblemMode(problemMode);
+        @DobbyEvent.EventType int eventTypeToBroadcast = convertWifiStateProblemToDobbyEventType(problemMode);
         if (eventTypeToBroadcast != DobbyEvent.EventType.WIFI_STATE_UNKNOWN) {
             eventBus.postEvent(new DobbyEvent(eventTypeToBroadcast));
         }
@@ -204,7 +205,7 @@ public class FakeWifiAnalyzer extends WifiAnalyzer {
 
 
     public DobbyWifiInfo generateFakeWifiInfo() {
-        final int linkSpeedMbps = 36;
+        final int linkSpeedMbps = DEFAULT_LINK_SPEED_MBPS;
         return new DobbyWifiInfo(FAKE_WIFI_SCAN_CONFIG.mainApSSID, FAKE_WIFI_SCAN_CONFIG.mainApSSID,
                 randomBssid(), getLevel(FAKE_WIFI_SCAN_CONFIG.signalZoneMainAp), linkSpeedMbps);
     }

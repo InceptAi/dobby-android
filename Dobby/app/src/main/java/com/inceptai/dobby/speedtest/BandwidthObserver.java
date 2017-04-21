@@ -26,8 +26,6 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
     private HashSet<RtDataListener<Float>> listenersDownload;
     private HashSet<NewBandwidthAnalyzer.ResultsCallback> resultsCallbacks;
     private boolean testsRunning = false;
-    @BandwithTestCodes.ExceptionCodes
-    private int exceptionCode = BandwithTestCodes.ExceptionCodes.UNKNOWN;
     private SettableFuture<BandwidthResult> operationFuture;
     private String clientIsp = Utils.EMPTY_STRING;
     private String clientExternalIp = Utils.EMPTY_STRING;
@@ -38,14 +36,12 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
 
     @BandwithTestCodes.TestMode private int testsDone;
 
-    public BandwidthObserver(@BandwithTestCodes.TestMode int testMode,
-                             @BandwithTestCodes.ExceptionCodes int bandwidthErrorCode) {
+    public BandwidthObserver(@BandwithTestCodes.TestMode int testMode) {
         this.testModeRequested = testMode;
         listenersUpload = new HashSet<>();
         listenersDownload = new HashSet<>();
         resultsCallbacks = new HashSet<>();
-        exceptionCode = bandwidthErrorCode;
-        testsStarting(bandwidthErrorCode);
+        markTestsAsRunning();
         operationFuture = SettableFuture.create();
         result = new BandwidthResult(testMode);
         testsDone = BandwithTestCodes.TestMode.IDLE;
@@ -57,7 +53,7 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
 
     public synchronized void onCancelled() {
         // Tests cancelled.
-        testsRunning = false;
+        testsDone();
     }
 
     public synchronized boolean testsRunning() {
@@ -79,15 +75,6 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
     @BandwithTestCodes.TestMode
     public int getTestModeRequested() {
         return testModeRequested;
-    }
-
-
-    public int exceptionCode() {
-        return exceptionCode;
-    }
-
-    public boolean startedNormally() {
-        return testsRunning && exceptionCode == BandwithTestCodes.ExceptionCodes.TEST_STARTED_NO_EXCEPTION;
     }
 
     // NewBandwidthAnalyzer.ResultsCallback overrides:
@@ -171,6 +158,7 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
     public synchronized void onBandwidthTestError(@BandwithTestCodes.TestMode int testMode,
                                      @BandwithTestCodes.ErrorCodes int errorCode,
                                      @Nullable String errorMessage) {
+        //TODO: Inform the inference engine that we encountered an error during bandwidth tests.
         for (NewBandwidthAnalyzer.ResultsCallback callback : resultsCallbacks) {
             callback.onBandwidthTestError(testMode, errorCode, errorMessage);
         }
@@ -210,13 +198,9 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
         listenersUpload.clear();
         listenersDownload.clear();
         resultsCallbacks.clear();
-        exceptionCode = BandwithTestCodes.ExceptionCodes.UNKNOWN;
     }
 
-    private synchronized void testsStarting(@BandwithTestCodes.ExceptionCodes int errorCode) {
-        if (errorCode != BandwithTestCodes.ExceptionCodes.TEST_STARTED_NO_EXCEPTION) {
-            return;
-        }
+    private synchronized void markTestsAsRunning() {
         testsRunning = true;
         if (inferenceEngine != null) {
             inferenceEngine.notifyBandwidthTestStart(testModeRequested);
