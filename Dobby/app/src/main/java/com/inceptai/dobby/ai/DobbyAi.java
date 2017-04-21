@@ -6,7 +6,6 @@ import android.util.Log;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.NetworkLayer;
 import com.inceptai.dobby.model.PingStats;
-import com.inceptai.dobby.speedtest.SpeedTestTask;
 
 import java.util.HashMap;
 
@@ -27,7 +26,6 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     private DobbyThreadpool threadpool;
     private ApiAiClient apiAiClient;
     private ResponseCallback responseCallback;
-    private SpeedTestTask speedTestTask;
     private InferenceEngine inferenceEngine;
 
     @Inject
@@ -44,7 +42,6 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         this.threadpool = threadpool;
         apiAiClient = new ApiAiClient(context, threadpool);
         apiAiClient.connect();
-        speedTestTask = new SpeedTestTask();
         inferenceEngine = new InferenceEngine(threadpool.getScheduledExecutorService(), this);
     }
 

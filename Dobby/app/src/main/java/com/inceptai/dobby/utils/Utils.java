@@ -2,10 +2,16 @@ package com.inceptai.dobby.utils;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 
 import com.google.common.net.InetAddresses;
 import com.google.gson.Gson;
+import com.inceptai.dobby.R;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -19,6 +25,8 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+
+import static com.inceptai.dobby.DobbyApplication.TAG;
 
 /**
  * Utils class.
@@ -41,6 +49,26 @@ public class Utils {
         public HTTPReturnCodeException(int httpReturnCode) {
             this.httpReturnCode = httpReturnCode;
         }
+    }
+
+    public static Fragment setupFragment(AppCompatActivity appCompatActivity, Class fragmentClass, String tag, int resourceId) {
+
+        // Insert the fragment by replacing any existing fragment
+        FragmentManager fragmentManager = appCompatActivity.getSupportFragmentManager();
+        Fragment existingFragment = fragmentManager.findFragmentByTag(tag);
+        if (existingFragment == null) {
+            try {
+                existingFragment = (Fragment) fragmentClass.newInstance();
+            } catch (Exception e) {
+                Log.e(TAG, "Unable to create fragment: " + fragmentClass.getCanonicalName());
+                return null;
+            }
+        }
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.replace(resourceId, existingFragment, tag);
+        fragmentTransaction.addToBackStack(null);
+        fragmentTransaction.commit();
+        return existingFragment;
     }
 
     public static class PercentileStats {
