@@ -114,7 +114,7 @@ public class NetworkLayer {
         return getWifiAnalyzer(context, threadpool, eventBus);
     }
 
-    private ConnectivityAnalyzer getConnectivityAnalyzerInstance() {
+    public ConnectivityAnalyzer getConnectivityAnalyzerInstance() {
         return getConnecitivityAnalyzer(context, threadpool, eventBus);
     }
 
@@ -146,10 +146,11 @@ public class NetworkLayer {
         }
 
         if (!getConnectivityAnalyzerInstance().isWifiOnline()) {
-            return new BandwidthObserver(mode, BandwithTestCodes.ExceptionCodes.NETWORK_OFFLINE);
+            //TODO: Always check if bandwidth analyzer is null
+            return null;
         }
 
-        bandwidthObserver = new BandwidthObserver(mode, BandwithTestCodes.ExceptionCodes.ATTEMPTING_TO_START);
+        bandwidthObserver = new BandwidthObserver(mode);
         bandwidthAnalyzer.registerCallback(bandwidthObserver);
         threadpool.submit(new Runnable() {
             @Override
