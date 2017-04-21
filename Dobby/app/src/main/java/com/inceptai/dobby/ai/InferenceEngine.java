@@ -95,6 +95,9 @@ public class InferenceEngine {
     }
 
     public void notifyPingStats(HashMap<String, PingStats> pingStatsMap, IPLayerInfo ipLayerInfo) {
+        if (pingStatsMap == null || ipLayerInfo == null) {
+            return;
+        }
         DataInterpreter.PingGrade pingGrade = DataInterpreter.interpret(pingStatsMap, ipLayerInfo);
         metricsDb.updatePingGrade(pingGrade);
         PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(pingGrade);

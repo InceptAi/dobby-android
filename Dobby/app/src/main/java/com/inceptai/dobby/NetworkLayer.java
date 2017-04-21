@@ -196,6 +196,7 @@ public class NetworkLayer {
                 startPing();
             }
         } else if (event.getLastEventType() == DobbyEvent.EventType.PING_INFO_AVAILABLE || event.getLastEventType() == DobbyEvent.EventType.PING_FAILED) {
+            //TODO: Do we need to autotrigger gatewayDownloadLatencyTest here ??
             startGatewayDownloadLatencyTest();
         }
     }

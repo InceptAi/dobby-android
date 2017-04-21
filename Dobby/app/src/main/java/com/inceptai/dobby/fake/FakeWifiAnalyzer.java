@@ -33,6 +33,7 @@ public class FakeWifiAnalyzer extends WifiAnalyzer {
     private static final long SCAN_LATENCY_MS = 5000;
     public static final FakeWifiScanConfig FAKE_WIFI_SCAN_CONFIG = new FakeWifiScanConfig();
 
+    private static final int DEFAULT_LINK_SPEED_MBPS = 36;
     private static final int CHAN_1_FREQ = 2412;
     private static final int CHAN_6_FREQ = 2437;
     private static final int CHAN_11_FREQ = 2462;
@@ -204,7 +205,7 @@ public class FakeWifiAnalyzer extends WifiAnalyzer {
 
 
     public DobbyWifiInfo generateFakeWifiInfo() {
-        final int linkSpeedMbps = 36;
+        final int linkSpeedMbps = DEFAULT_LINK_SPEED_MBPS;
         return new DobbyWifiInfo(FAKE_WIFI_SCAN_CONFIG.mainApSSID, FAKE_WIFI_SCAN_CONFIG.mainApSSID,
                 randomBssid(), getLevel(FAKE_WIFI_SCAN_CONFIG.signalZoneMainAp), linkSpeedMbps);
     }

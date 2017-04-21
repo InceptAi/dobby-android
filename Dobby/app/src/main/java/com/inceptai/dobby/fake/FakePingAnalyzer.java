@@ -61,6 +61,10 @@ public class FakePingAnalyzer extends PingAnalyzer {
                 new PingStats(ipLayerInfo.referenceExternalAddress1));
         ipLayerPingStats.put(ipLayerInfo.referenceExternalAddress2,
                 new PingStats(ipLayerInfo.referenceExternalAddress2));
+        ipLayerPingStats.put(ipLayerInfo.publicDns1,
+                new PingStats(ipLayerInfo.publicDns1));
+        ipLayerPingStats.put(ipLayerInfo.publicDns2,
+                new PingStats(ipLayerInfo.publicDns2));
     }
 
     /**
@@ -138,9 +142,11 @@ public class FakePingAnalyzer extends PingAnalyzer {
 
 
         @FakePingConfig.LatencyRangeMs public static int gatewayLatencyRangeMs, dns1LatencyRangeMs,
-                dns2LatencyRangeMs, externalServer1LatencyRangeMs, externalServer2LatencyRangeMs;
+                dns2LatencyRangeMs, externalServer1LatencyRangeMs, externalServer2LatencyRangeMs,
+                publicDns1LatencyRangeMs, publicDns2LatencyRangeMs;
         @FakePingConfig.LossRangePercent public static int gatewayLossRangePercent, dns1LossRangePercent,
-                dns2LossRangePercent, externalServer1LossRangePercent, externalServer2LossRangePercent;
+                dns2LossRangePercent, externalServer1LossRangePercent, externalServer2LossRangePercent,
+                publicDns1LossRangePercent, publicDns2LossRangePercent;
 
         private static void InitializeToWorkingState() {
             gatewayLatencyRangeMs = LatencyRangeMs.VERY_LOW;
@@ -148,12 +154,16 @@ public class FakePingAnalyzer extends PingAnalyzer {
             dns2LatencyRangeMs = LatencyRangeMs.VERY_LOW;
             externalServer1LatencyRangeMs = LatencyRangeMs.LOW;
             externalServer2LatencyRangeMs = LatencyRangeMs.LOW;
+            publicDns1LatencyRangeMs = LatencyRangeMs.LOW;
+            publicDns2LatencyRangeMs = LatencyRangeMs.LOW;
 
             gatewayLossRangePercent = LossRangePercent.LOW;
             dns1LossRangePercent = LossRangePercent.LOW;
             dns2LossRangePercent = LossRangePercent.LOW;
             externalServer1LossRangePercent = LossRangePercent.LOW;
             externalServer2LossRangePercent = LossRangePercent.LOW;
+            publicDns1LossRangePercent = LossRangePercent.LOW;
+            publicDns2LossRangePercent = LossRangePercent.LOW;
         }
 
         private static void InitializeAllLatenciesToUndefined() {
@@ -162,6 +172,8 @@ public class FakePingAnalyzer extends PingAnalyzer {
             dns2LatencyRangeMs = LatencyRangeMs.UNDEFINED;
             externalServer1LatencyRangeMs = LatencyRangeMs.UNDEFINED;
             externalServer2LatencyRangeMs = LatencyRangeMs.UNDEFINED;
+            publicDns1LatencyRangeMs = LatencyRangeMs.UNDEFINED;
+            publicDns2LatencyRangeMs = LatencyRangeMs.UNDEFINED;
         }
 
         private static void InitializeAllLossRatesPercentToUnreachable() {
@@ -170,6 +182,8 @@ public class FakePingAnalyzer extends PingAnalyzer {
             dns2LossRangePercent = LossRangePercent.UNREACHABLE;
             externalServer1LossRangePercent = LossRangePercent.UNREACHABLE;
             externalServer2LossRangePercent = LossRangePercent.UNREACHABLE;
+            publicDns1LossRangePercent = LossRangePercent.UNREACHABLE;
+            publicDns2LossRangePercent = LossRangePercent.UNREACHABLE;
         }
 
         FakePingConfig(@PingStatsMode int mode) {
@@ -200,6 +214,8 @@ public class FakePingAnalyzer extends PingAnalyzer {
                     dns2LatencyRangeMs = LatencyRangeMs.HIGH;
                     externalServer1LatencyRangeMs = LatencyRangeMs.HIGH;
                     externalServer2LatencyRangeMs = LatencyRangeMs.HIGH;
+                    publicDns1LatencyRangeMs = LatencyRangeMs.LOW;
+                    publicDns2LatencyRangeMs = LatencyRangeMs.MEDIUM;
                     break;
                 case PingStatsMode.EXTERNAL_SERVER_UNREACHABLE:
                     externalServer1LatencyRangeMs = LatencyRangeMs.UNDEFINED;
@@ -309,12 +325,17 @@ public class FakePingAnalyzer extends PingAnalyzer {
                 fakePingConfig.externalServer1LatencyRangeMs, fakePingConfig.externalServer1LossRangePercent);
         PingStats externalServer2PingStats = generateIndividualPingStats(ipLayerInfo.referenceExternalAddress2,
                 fakePingConfig.externalServer2LatencyRangeMs, fakePingConfig.externalServer2LossRangePercent);
-
+        PingStats publicDns1PingStats = generateIndividualPingStats(ipLayerInfo.publicDns1,
+                fakePingConfig.publicDns1LatencyRangeMs, fakePingConfig.publicDns1LossRangePercent);
+        PingStats publicDns2PingStats = generateIndividualPingStats(ipLayerInfo.publicDns2,
+                fakePingConfig.publicDns2LatencyRangeMs, fakePingConfig.publicDns2LossRangePercent);
         pingStatsHashMap.put(ipLayerInfo.gateway, gatewayPingStats);
         pingStatsHashMap.put(ipLayerInfo.dns1, dns1PingStats);
         pingStatsHashMap.put(ipLayerInfo.dns2, dns2PingStats);
         pingStatsHashMap.put(ipLayerInfo.referenceExternalAddress1, externalServer1PingStats);
         pingStatsHashMap.put(ipLayerInfo.referenceExternalAddress2, externalServer2PingStats);
+        pingStatsHashMap.put(ipLayerInfo.publicDns1, publicDns1PingStats);
+        pingStatsHashMap.put(ipLayerInfo.publicDns2, publicDns2PingStats);
         return pingStatsHashMap;
     }
 

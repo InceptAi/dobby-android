@@ -123,6 +123,10 @@ public class DataInterpreter {
         return (metric == MetricType.NONFUNCTIONAL);
     }
 
+    public static boolean isAverageOrPoorOrNonFunctional(@MetricType int metric) {
+        return (metric == MetricType.AVERAGE || metric == MetricType.POOR || metric == MetricType.NONFUNCTIONAL);
+    }
+
     public static boolean isGoodOrExcellent(@MetricType int[] metric) {
         boolean allExcellent = true;
         for (int index=0; index < metric.length; index++) {
