@@ -356,6 +356,9 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
             FAKE_WIFI_SCAN_CONFIG.fakeWifiProblemMode = selectedMode;
             Log.i(TAG, "FAKE Setting Wifi Problem mode to : " +
                     WifiState.wifiLinkModeToString(selectedMode));
+            if (networkLayer != null) {
+                networkLayer.getWifiAnalyzerInstance().getWifiState().setCurrentWifiProblemMode(selectedMode);
+            }
         }
         return hasChanged;
     }
@@ -369,6 +372,9 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
             setFakeWifiConnectivityMode(selectedMode);
             Log.i(TAG, "FAKE Setting Connectivity mode to : " +
                     ConnectivityAnalyzer.connecitivyModeToString(fakeWifiConnectivityMode));
+            if (networkLayer != null) {
+                networkLayer.getConnectivityAnalyzerInstance().setWifiConnectivityMode(fakeWifiConnectivityMode);
+            }
         }
         return hasChanged;
     }

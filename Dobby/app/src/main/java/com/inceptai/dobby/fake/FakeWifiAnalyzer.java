@@ -72,7 +72,7 @@ public class FakeWifiAnalyzer extends WifiAnalyzer {
                             DobbyThreadpool threadpool, DobbyEventBus eventBus) {
         super(context, wifiManager, threadpool, eventBus);
         wifiState.updateWifiStats(generateFakeWifiInfo(), null);
-        wifiStateProblemMode = FAKE_WIFI_SCAN_CONFIG.fakeWifiProblemMode;
+        wifiState.setCurrentWifiProblemMode(FAKE_WIFI_SCAN_CONFIG.fakeWifiProblemMode);
     }
 
     /**
@@ -93,8 +93,8 @@ public class FakeWifiAnalyzer extends WifiAnalyzer {
     @Override
     protected void updateWifiStatsDetailedState(NetworkInfo.DetailedState detailedState) {
         @WifiState.WifiLinkMode int problemMode = FAKE_WIFI_SCAN_CONFIG.fakeWifiProblemMode;
-        wifiStateProblemMode = problemMode;
-        @DobbyEvent.EventType int eventTypeToBroadcast = convertWifiStateProblemToDobbyEventType(wifiStateProblemMode);
+        wifiState.setCurrentWifiProblemMode(problemMode);
+        @DobbyEvent.EventType int eventTypeToBroadcast = convertWifiStateProblemToDobbyEventType(problemMode);
         if (eventTypeToBroadcast != DobbyEvent.EventType.WIFI_STATE_UNKNOWN) {
             eventBus.postEvent(new DobbyEvent(eventTypeToBroadcast));
         }
