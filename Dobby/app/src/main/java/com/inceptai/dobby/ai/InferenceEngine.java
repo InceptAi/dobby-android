@@ -89,9 +89,9 @@ public class InferenceEngine {
         metricsDb.updateWifiGrade(wifiGrade);
         PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(wifiGrade);
         currentConditions.mergeIn(conditions);
-        Log.i(TAG, "IE: " + wifiGrade.toString());
-        Log.i(TAG, " which gives conditions: " + conditions.toString());
-        Log.i(TAG, "After merging: " + currentConditions.toString());
+        Log.i(TAG, "InferenceEngine Wifi Grade: " + wifiGrade.toString());
+        Log.i(TAG, "InferenceEngine which gives conditions: " + conditions.toString());
+        Log.i(TAG, "InferenceEngine After merging: " + currentConditions.toString());
     }
 
     public void notifyPingStats(HashMap<String, PingStats> pingStatsMap, IPLayerInfo ipLayerInfo) {
@@ -99,9 +99,9 @@ public class InferenceEngine {
         metricsDb.updatePingGrade(pingGrade);
         PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(pingGrade);
         currentConditions.mergeIn(conditions);
-        Log.i(TAG, "IE: " + pingGrade.toString());
-        Log.i(TAG, " which gives conditions: " + conditions.toString());
-        Log.i(TAG, "After merging: " + currentConditions.toString());
+        Log.i(TAG, "InferenceEngine Ping Grade: " + pingGrade.toString());
+        Log.i(TAG, "InferenceEngine which gives conditions: " + conditions.toString());
+        Log.i(TAG, "InferenceEngine After merging: " + currentConditions.toString());
     }
 
     public void notifyGatewayHttpStats(PingStats gatewayHttpStats) {
@@ -109,16 +109,18 @@ public class InferenceEngine {
         metricsDb.updateHttpGrade(httpGrade);
         PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(httpGrade);
         currentConditions.mergeIn(conditions);
-        Log.i(TAG, "IE: " + httpGrade.toString());
-        Log.i(TAG, " which gives conditions: " + conditions.toString());
-        Log.i(TAG, "After merging: " + currentConditions.toString());
+        Log.i(TAG, "InferenceEngine httpGrade: " + httpGrade.toString());
+        Log.i(TAG, "InferenceEngine which gives conditions: " + conditions.toString());
+        Log.i(TAG, "InferenceEngine After merging: " + currentConditions.toString());
     }
 
 
     public String getSuggestions() {
         // Convert currentConditions into suggestions.
-        int[] conditions = {InferenceMap.Condition.CAPTIVE_PORTAL_NO_INTERNET};
-        return SuggestionCreator.getSuggestionForConditions(conditions, conditions.length, metricsDb.getParamsForSuggestions());
+        //Set<Integer> conditions = currentConditions.finalizeInference().keySet();
+        //Integer[] conditionArray = conditions.toArray(new Integer[conditions.size()]);
+        Integer[] conditionArray = {InferenceMap.Condition.CAPTIVE_PORTAL_NO_INTERNET};
+        return SuggestionCreator.getSuggestionForConditions(conditionArray, conditionArray.length, metricsDb.getParamsForSuggestions());
     }
 
     // Bandwidth test notifications:
@@ -126,6 +128,8 @@ public class InferenceEngine {
     public void notifyBandwidthTestStart(@BandwithTestCodes.TestMode int testMode) {
         if (testMode == BandwithTestCodes.TestMode.UPLOAD) {
             metricsDb.clearUploadBandwidthGrade();
+        } else if (testMode == BandwithTestCodes.TestMode.DOWNLOAD) {
+            metricsDb.clearDownloadBandwidthGrade();
         }
     }
 
@@ -152,11 +156,11 @@ public class InferenceEngine {
             DataInterpreter.BandwidthGrade bandwidthGrade = DataInterpreter.interpret(
                     metricsDb.getDownloadMbps(), metricsDb.getUploadMbps(), clientIsp, clientExternalIp);
             //Update the bandwidth grade, overwriting earlier info.
-            metricsDb.updateBandwidthMetrics(bandwidthGrade.downloadBandwidthMetric, bandwidthGrade.uploadBandwidthMetric);
+            metricsDb.updateBandwidthMetric(bandwidthGrade.getDownloadBandwidthMetric(), bandwidthGrade.getUploadBandwidthMetric());
             PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(bandwidthGrade);
-            Log.i(TAG, "IE: " + bandwidthGrade.toString());
-            Log.i(TAG, " which gives conditions: " + conditions.toString());
-            Log.i(TAG, "After merging: " + currentConditions.toString());
+            Log.i(TAG, "InferenceEngine bandwidthGrade: " + bandwidthGrade.toString());
+            Log.i(TAG, "InferenceEngine which gives conditions: " + conditions.toString());
+            Log.i(TAG, "InferenceEngine After merging: " + currentConditions.toString());
         }
     }
 

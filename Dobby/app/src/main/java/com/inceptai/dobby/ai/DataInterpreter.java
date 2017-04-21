@@ -2,6 +2,7 @@ package com.inceptai.dobby.ai;
 
 import android.support.annotation.IntDef;
 
+import com.google.gson.Gson;
 import com.inceptai.dobby.connectivity.ConnectivityAnalyzer;
 import com.inceptai.dobby.model.DobbyWifiInfo;
 import com.inceptai.dobby.model.IPLayerInfo;
@@ -150,17 +151,31 @@ public class DataInterpreter {
     }
 
     public static class BandwidthGrade {
-        @MetricType int uploadBandwidthMetric;
-        @MetricType int downloadBandwidthMetric;
-        long downloadUpdatedAtMs;
-        long uploadUpdatedAtMs;
-        double uploadMbps;
-        double downloadMbps;
-        String isp;
-        String externalIP;
+        private @MetricType int uploadBandwidthMetric;
+        private @MetricType int downloadBandwidthMetric;
+        private long downloadUpdatedAtMs;
+        private long uploadUpdatedAtMs;
+        private double uploadMbps;
+        private double downloadMbps;
+        public String isp;
+        public String externalIP;
 
         public BandwidthGrade() {
             //Set timestamp here
+        }
+
+        public double getDownloadBandwidth() {
+            return downloadMbps;
+        }
+
+        public double getUploadBandwidth() {
+            return uploadMbps;
+        }
+
+        public String toJson() {
+            Gson gson = new Gson();
+            String json = gson.toJson(this);
+            return json;
         }
 
         @Override
@@ -168,6 +183,12 @@ public class DataInterpreter {
             StringBuilder builder = new StringBuilder();
             builder.append("Bandwidth Grade: Upload: " + metricTypeToString(uploadBandwidthMetric));
             builder.append("\n Download: " + metricTypeToString(downloadBandwidthMetric));
+            builder.append("\n Download BW: " + downloadMbps);
+            builder.append("\n Upload BW: " + uploadMbps);
+            builder.append("\n Download Updated: " + downloadUpdatedAtMs);
+            builder.append("\n Upload Updated: " + downloadUpdatedAtMs);
+            builder.append("\n isp : " + isp);
+            builder.append("\n external IP: " + externalIP);
             return builder.toString();
         }
 
@@ -184,16 +205,6 @@ public class DataInterpreter {
         public void clear() {
             clearUpload();
             clearDownload();
-        }
-
-        public void reportUploadMbps(double uploadMbps){
-            this.uploadMbps = uploadMbps;
-            uploadUpdatedAtMs = System.currentTimeMillis();
-        }
-
-        public void reportDownloadMbps(double downloadMbps) {
-            this.downloadMbps = downloadMbps;
-            downloadUpdatedAtMs = System.currentTimeMillis();
         }
 
         public boolean hasValidUpload() {
@@ -237,6 +248,26 @@ public class DataInterpreter {
             updateDownloadTimestamp();
         }
 
+        @MetricType
+        public int getDownloadBandwidthMetric() {
+            return downloadBandwidthMetric;
+        }
+
+        @MetricType
+        public int getUploadBandwidthMetric() {
+            return uploadBandwidthMetric;
+        }
+
+        public void updateUploadMetric(@MetricType int speedMetric) {
+            //Not updating timestamp here
+            uploadBandwidthMetric = speedMetric;
+        }
+
+        public void updateDownloadMetric(@MetricType int speedMetric) {
+            //Not updating timestamp here
+            downloadBandwidthMetric = speedMetric;
+        }
+
     }
 
 
@@ -251,6 +282,12 @@ public class DataInterpreter {
 
         public PingGrade() {
             updatedAtMs = System.currentTimeMillis();
+        }
+
+        public String toJson() {
+            Gson gson = new Gson();
+            String json = gson.toJson(this);
+            return json;
         }
 
         @Override
@@ -302,6 +339,12 @@ public class DataInterpreter {
             updatedAtMs = System.currentTimeMillis();
         }
 
+        public String toJson() {
+            Gson gson = new Gson();
+            String json = gson.toJson(this);
+            return json;
+        }
+
         @Override
         public String toString() {
             return "HttpGrade: " + metricTypeToString(httpDownloadLatencyMetric);
@@ -329,13 +372,28 @@ public class DataInterpreter {
             updatedAtMs = System.currentTimeMillis();
         }
 
+        public String toJson() {
+            Gson gson = new Gson();
+            String json = gson.toJson(this);
+            return json;
+        }
+
         @Override
         public String toString() {
             StringBuilder builder = new StringBuilder();
-            builder.append("WifiGrade: Primary AP " + primaryApSignalMetric + ", " + primaryApLinkSpeedMetric + ", " + primaryLinkChannelOccupancyMetric);
+            builder.append("WifiGrade: Primary AP signalMetric" +
+                    metricTypeToString(primaryApSignalMetric) +
+                    ", SpeedMetric: " + metricTypeToString(primaryApLinkSpeedMetric) +
+                    ", channelOccupancy: " +
+                    metricTypeToString(primaryLinkChannelOccupancyMetric));
             builder.append("\nWifi connectivity mode: " + ConnectivityAnalyzer.connecitivyModeToString(wifiConnectivityMode));
             builder.append("\nWifi link mode: " + WifiState.wifiLinkModeToString(wifiProblemMode));
             builder.append("\nChannel map:" + wifiChannelOccupancyMetric.toString());
+            builder.append("\n primaryApChannel:" + primaryApChannel);
+            builder.append("\n primaryApSignal:" + primaryApSignal);
+            builder.append("\n leastOccupiedChannel:" + leastOccupiedChannel);
+            builder.append("\n primaryApChannelAps:" + primaryApChannelInterferingAps);
+            builder.append("\n leastOccupiedChannelAps:" + leastOccupiedChannelAps);
             return builder.toString();
         }
 
@@ -378,16 +436,12 @@ public class DataInterpreter {
      */
     public static BandwidthGrade interpret(double uploadMbps, double downloadMbps, String isp, String externalClientIp) {
         BandwidthGrade grade = new BandwidthGrade();
-
-        grade.uploadMbps = uploadMbps;
-        grade.downloadMbps = downloadMbps;
-
-        grade.downloadBandwidthMetric = getGradeHigherIsBetter(downloadMbps, BW_DOWNLOAD_STEPS_MBPS, downloadMbps > 0.0);
-        grade.uploadBandwidthMetric = getGradeHigherIsBetter(uploadMbps, BW_UPLOAD_STEPS_MBPS, uploadMbps > 0.0);
-
+        @MetricType int downloadMetric = getGradeHigherIsBetter(downloadMbps, BW_DOWNLOAD_STEPS_MBPS, downloadMbps > 0.0);
+        @MetricType int uploadMetric = getGradeHigherIsBetter(uploadMbps, BW_UPLOAD_STEPS_MBPS, uploadMbps > 0.0);
+        grade.updateUploadInfo(uploadMbps, uploadMetric);
+        grade.updateDownloadInfo(downloadMbps, downloadMetric);
         grade.isp = isp;
         grade.externalIP = externalClientIp;
-
         return grade;
     }
 
@@ -397,10 +451,12 @@ public class DataInterpreter {
         pingGrade.primaryDns = ipLayerInfo.dns1;
         HashMap<String, PingStats> externalServerStats = new HashMap<>();
         if (ipLayerInfo.referenceExternalAddress1 != null) {
-            externalServerStats.put(ipLayerInfo.referenceExternalAddress1, pingStatsHashMap.get(ipLayerInfo.referenceExternalAddress1));
+            externalServerStats.put(ipLayerInfo.referenceExternalAddress1,
+                    pingStatsHashMap.get(ipLayerInfo.referenceExternalAddress1));
         }
         if (ipLayerInfo.referenceExternalAddress2 != null) {
-            externalServerStats.put(ipLayerInfo.referenceExternalAddress2, pingStatsHashMap.get(ipLayerInfo.referenceExternalAddress2));
+            externalServerStats.put(ipLayerInfo.referenceExternalAddress2,
+                    pingStatsHashMap.get(ipLayerInfo.referenceExternalAddress2));
         }
 
         //Get alternative DNS stats
@@ -412,7 +468,8 @@ public class DataInterpreter {
             pingGrade.alternativeDns = ipLayerInfo.publicDns1;
         }
         if (alternativeDnsStats2.avgLatencyMs > 0) {
-            if (alternativeDnsStats1.avgLatencyMs < 0 || alternativeDnsStats2.avgLatencyMs < alternativeDnsStats1.avgLatencyMs) {
+            if (alternativeDnsStats1.avgLatencyMs < 0 ||
+                    alternativeDnsStats2.avgLatencyMs < alternativeDnsStats1.avgLatencyMs) {
                 lowerAlternativeDnsStats = alternativeDnsStats2;
                 pingGrade.alternativeDns = ipLayerInfo.publicDns2;
             }

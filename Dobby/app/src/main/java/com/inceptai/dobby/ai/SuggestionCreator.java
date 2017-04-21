@@ -40,7 +40,7 @@ public class SuggestionCreator {
 
     private static String MULTIPLE_CONDITIONS_PREFIX = "There a few things which can be causing problems for your network.";
 
-    public static String getSuggestionForConditions(@InferenceMap.Condition int[] conditionList,
+    public static String getSuggestionForConditions(Integer[] conditionList,
                                                     int listLength, SuggestionCreatorParams params) {
         List<String> suggestionList = new ArrayList<>();
         StringBuilder sb = new StringBuilder();

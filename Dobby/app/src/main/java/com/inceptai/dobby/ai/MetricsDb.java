@@ -44,18 +44,18 @@ public class MetricsDb {
         httpGrade.clear();
     }
 
-    public void updateBandwidthMetrics(@DataInterpreter.MetricType int downloadMetric,
-                                       @DataInterpreter.MetricType int uploadMetric) {
+    public void updateBandwidthMetric(@DataInterpreter.MetricType int downloadMetric,
+                                      @DataInterpreter.MetricType int uploadMetric) {
         updateDownloadMetric(downloadMetric);
         updateUploadMetric(uploadMetric);
     }
 
     public void updateDownloadMetric(@DataInterpreter.MetricType int metric) {
-        bandwidthGrade.downloadBandwidthMetric = metric;
+        bandwidthGrade.updateDownloadMetric(metric);
     }
 
     public void updateUploadMetric(@DataInterpreter.MetricType int metric) {
-        bandwidthGrade.uploadBandwidthMetric = metric;
+        bandwidthGrade.updateUploadMetric(metric);
     }
 
 
@@ -120,11 +120,11 @@ public class MetricsDb {
         }
 
         if (bandwidthGrade.hasValidDownload()) {
-            params.downloadBandwidthMbps = bandwidthGrade.downloadMbps;
+            params.downloadBandwidthMbps = bandwidthGrade.getDownloadMbps();
         }
 
         if (bandwidthGrade.hasValidUpload()) {
-            params.uploadBandwidthMbps = bandwidthGrade.uploadMbps;
+            params.uploadBandwidthMbps = bandwidthGrade.getUploadMbps();
         }
 
         if (bandwidthGrade.hasValidUpload() || bandwidthGrade.hasValidDownload()) {

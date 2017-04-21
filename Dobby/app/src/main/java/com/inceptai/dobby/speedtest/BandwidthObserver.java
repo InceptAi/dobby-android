@@ -39,6 +39,7 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
         this.testMode = testMode;
         listeners = new HashSet<>();
         resultsCallbacks = new HashSet<>();
+        exceptionCode = bandwidthErrorCode;
         testsStarting(bandwidthErrorCode);
         operationFuture = SettableFuture.create();
     }
@@ -176,6 +177,7 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
         testsRunning = false;
         listeners.clear();
         resultsCallbacks.clear();
+        exceptionCode = BandwithTestCodes.ExceptionCodes.UNKNOWN;
     }
 
     private synchronized void testsStarting(@BandwithTestCodes.ExceptionCodes int errorCode) {

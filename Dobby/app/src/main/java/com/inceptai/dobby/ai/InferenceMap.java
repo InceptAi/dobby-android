@@ -124,10 +124,10 @@ public class InferenceMap {
         //Check if both download and upload are good
         PossibleConditions conditions = new PossibleConditions();
 
-        if (DataInterpreter.isGoodOrExcellent(bandwidthGrade.downloadBandwidthMetric) &&
-                DataInterpreter.isGoodOrExcellent(bandwidthGrade.uploadBandwidthMetric)) {
+        if (DataInterpreter.isGoodOrExcellent(bandwidthGrade.getDownloadBandwidthMetric()) &&
+                DataInterpreter.isGoodOrExcellent(bandwidthGrade.getUploadBandwidthMetric())) {
             conditions.exclude(ISP_CONDITIONS);
-            conditions.exclude(DNS_CONDITIONS);
+            //conditions.exclude(DNS_CONDITIONS);
             //We can exclude WIFI CONDITIONS here but what about FREQUENCT DISCONNECTIONS etc.
             //TODO: Decide whether to exclude wifi conditions here
             conditions.exclude(WIFI_CONDITIONS);
@@ -135,23 +135,23 @@ public class InferenceMap {
         }
 
 
-        if (DataInterpreter.isGoodOrExcellent(bandwidthGrade.downloadBandwidthMetric) &&
-                DataInterpreter.isAverageOrPoor(bandwidthGrade.uploadBandwidthMetric)) {
+        if (DataInterpreter.isGoodOrExcellent(bandwidthGrade.getDownloadBandwidthMetric()) &&
+                DataInterpreter.isAverageOrPoor(bandwidthGrade.getUploadBandwidthMetric())) {
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
             conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
             conditions.include(Condition.ISP_INTERNET_SLOW_UPLOAD, 0.3);
-        } else if (DataInterpreter.isAverageOrPoor(bandwidthGrade.downloadBandwidthMetric) &&
-                DataInterpreter.isGoodOrExcellent(bandwidthGrade.uploadBandwidthMetric)) {
+        } else if (DataInterpreter.isAverageOrPoor(bandwidthGrade.getDownloadBandwidthMetric()) &&
+                DataInterpreter.isGoodOrExcellent(bandwidthGrade.getUploadBandwidthMetric())) {
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
             conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
             conditions.include(Condition.ISP_INTERNET_SLOW_DOWNLOAD, 0.3);
-        } else if (DataInterpreter.isAverageOrPoor(bandwidthGrade.downloadBandwidthMetric) &&
-                DataInterpreter.isAverageOrPoor(bandwidthGrade.uploadBandwidthMetric)) {
+        } else if (DataInterpreter.isAverageOrPoor(bandwidthGrade.getDownloadBandwidthMetric()) &&
+                DataInterpreter.isAverageOrPoor(bandwidthGrade.getUploadBandwidthMetric())) {
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
             conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
             conditions.include(Condition.ISP_INTERNET_SLOW, 0.3);
-        } else if (DataInterpreter.isNonFunctional(bandwidthGrade.downloadBandwidthMetric) &&
-                DataInterpreter.isNonFunctional(bandwidthGrade.uploadBandwidthMetric)) {
+        } else if (DataInterpreter.isNonFunctional(bandwidthGrade.getDownloadBandwidthMetric()) &&
+                DataInterpreter.isNonFunctional(bandwidthGrade.getUploadBandwidthMetric())) {
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
             conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
             conditions.include(ISP_INTERNET_DOWN, 0.3);
