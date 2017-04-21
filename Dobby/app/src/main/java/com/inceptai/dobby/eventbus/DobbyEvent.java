@@ -93,7 +93,7 @@ public class DobbyEvent {
     }
 
     @EventType
-    public int getLastEventType(){
+    public int getEventType(){
         return eventType;
     }
 

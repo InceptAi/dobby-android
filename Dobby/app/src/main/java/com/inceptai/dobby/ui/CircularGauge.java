@@ -23,21 +23,40 @@ import com.inceptai.dobby.R;
 public class CircularGauge extends View {
     private static final int DEFAULT_LONG_POINTER_SIZE = 1;
 
-    private Paint mPaint;
-    private float mStrokeWidth;
-    private int mStrokeColor;
+
+    private Paint mPaint;        /* The Paint object to be used for the arc */
+    private float mStrokeWidth;  /* Goes into the Paint object */
+    private int mStrokeColor;    /* Goes into the Paint object */
+
     private RectF mRect;
-    private String mStrokeCap;
+    private String mStrokeCap;   /* How the stroke's ending should be */
+
+    /**
+     * The starting angle for the arc. The angles are counted clockwise AND they start at zero
+     * being the 3'O Clock hand. Thus, 180 would be 9'O Clock.
+     */
     private int mStartAngle;
-    private int mSweepAngle;
-    private int mStartValue;
-    private int mEndValue;
-    private int mValue;
-    private double mPointAngle;
-    private int mPoint;
+    private int mSweepAngle;    /* Relative span for the arc */
+
+    private int mStartValue;    /* Starting value in the value namespace */
+    private int mEndValue;      /* Max value for the setValue() input */
+    private int mValue;         /* Current value being shown */
+
+    /**
+     * Angle for one unit of value. Used to convert the given input value into angles.
+     */
+    private double mAnglePerUnitValue;
+
+    /**
+     * Current value shown in angle (converted using start angle, and angle per unit value).
+     */
+    private int mCurrentValueInAngle;
+
     private int mPointSize;
+
     private int mPointStartColor;
     private int mPointEndColor;
+
     private int mDividerColor;
     private int mDividerSize;
     private int mDividerStepAngle;
@@ -78,7 +97,7 @@ public class CircularGauge extends View {
         setDividerDrawLast(a.getBoolean(R.styleable.CircularGauge_gaugeDividerDrawLast, true));
 
         // calculating one point sweep
-        mPointAngle = ((double) Math.abs(mSweepAngle) / (mEndValue - mStartValue));
+        mAnglePerUnitValue = ((double) Math.abs(mSweepAngle) / (mEndValue - mStartValue));
 
         // calculating divider step
         if (dividerSize > 0) {
@@ -95,7 +114,7 @@ public class CircularGauge extends View {
     }
 
     private void init() {
-        //main Paint
+        // main Paint
         mPaint = new Paint();
         mPaint.setColor(mStrokeColor);
         mPaint.setStrokeWidth(mStrokeWidth);
@@ -111,7 +130,7 @@ public class CircularGauge extends View {
         mRect = new RectF();
 
         mValue = mStartValue;
-        mPoint = mStartAngle;
+        mCurrentValueInAngle = mStartAngle;
     }
     
     @Override
@@ -121,9 +140,7 @@ public class CircularGauge extends View {
         float size = getWidth()<getHeight() ? getWidth() : getHeight();
         float width = size - (2*padding);
         float height = size - (2*padding);
-//        float radius = (width > height ? width/2 : height/2);
         float radius = (width < height ? width/2 : height/2);
-
 
 
         float rectLeft = (getWidth() - (2*padding))/2 - radius + padding;
@@ -138,19 +155,18 @@ public class CircularGauge extends View {
         canvas.drawArc(mRect, mStartAngle, mSweepAngle, false, mPaint);
         mPaint.setColor(mPointStartColor);
         mPaint.setShader(new LinearGradient(getWidth(), getHeight(), 0, 0, mPointEndColor, mPointStartColor, Shader.TileMode.CLAMP));
-        if (mPointSize>0) {//if size of pointer is defined
-            if (mPoint > mStartAngle + mPointSize/2) {
-                canvas.drawArc(mRect, mPoint - mPointSize/2, mPointSize, false, mPaint);
+        if (mPointSize > 0) { // if size of pointer is defined
+            if (mCurrentValueInAngle > mStartAngle + mPointSize/2) {
+                canvas.drawArc(mRect, mCurrentValueInAngle - mPointSize/2, mPointSize, false, mPaint);
             }
-            else { //to avoid excedding start/zero point
-                canvas.drawArc(mRect, mPoint, mPointSize, false, mPaint);
+            else { // to avoid exceeding start/zero point
+                canvas.drawArc(mRect, mCurrentValueInAngle, mPointSize, false, mPaint);
             }
-        }
-        else { //draw from start point to value point (long pointer)
-            if (mValue==mStartValue) //use non-zero default value for start point (to avoid lack of pointer for start/zero value)
+        } else { // draw from start point to value point (long pointer)
+            if (mValue == mStartValue) // use non-zero default value for start point (to avoid lack of pointer for start/zero value)
                 canvas.drawArc(mRect, mStartAngle, DEFAULT_LONG_POINTER_SIZE, false, mPaint);
             else
-                canvas.drawArc(mRect, mStartAngle, mPoint - mStartAngle, false, mPaint);
+                canvas.drawArc(mRect, mStartAngle, mCurrentValueInAngle - mStartAngle, false, mPaint);
         }
 
         if (mDividerSize > 0) {
@@ -167,7 +183,7 @@ public class CircularGauge extends View {
 
     public void setValue(int value) {
         mValue = value;
-        mPoint = (int) (mStartAngle + (mValue-mStartValue) * mPointAngle);
+        mCurrentValueInAngle = (int) (mStartAngle + (mValue - mStartValue) * mAnglePerUnitValue);
         invalidate();
     }
 

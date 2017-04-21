@@ -69,7 +69,16 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
 
     @Override
     public void onMainButtonClick() {
-        dobbyAi.takeAction(new Action(Utils.EMPTY_STRING,
-                Action.ActionType.ACTION_TYPE_DIAGNOSE_SLOW_INTERNET));
+        threadpool.submit(new Runnable() {
+            @Override
+            public void run() {
+                dobbyAi.takeAction(new Action(Utils.EMPTY_STRING,
+                        Action.ActionType.ACTION_TYPE_DIAGNOSE_SLOW_INTERNET));
+            }
+        });
+    }
+
+    public DobbyEventBus getEventBus() {
+        return eventBus;
     }
 }
