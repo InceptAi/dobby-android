@@ -12,6 +12,7 @@ import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.NetworkLayer;
 import com.inceptai.dobby.R;
+import com.inceptai.dobby.ai.Action;
 import com.inceptai.dobby.ai.DobbyAi;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.utils.Utils;
@@ -68,5 +69,7 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
 
     @Override
     public void onMainButtonClick() {
+        dobbyAi.takeAction(new Action(Utils.EMPTY_STRING,
+                Action.ActionType.ACTION_TYPE_DIAGNOSE_SLOW_INTERNET));
     }
 }

@@ -3,9 +3,15 @@ package com.inceptai.dobby.ai;
 import android.content.Context;
 import android.util.Log;
 
+import com.google.common.util.concurrent.ListenableFuture;
+import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.NetworkLayer;
+import com.inceptai.dobby.model.BandwidthStats;
 import com.inceptai.dobby.model.PingStats;
+import com.inceptai.dobby.speedtest.BandwidthObserver;
+import com.inceptai.dobby.speedtest.BandwithTestCodes;
+import com.inceptai.dobby.utils.DobbyLog;
 
 import java.util.HashMap;
 
@@ -27,6 +33,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     private ApiAiClient apiAiClient;
     private ResponseCallback responseCallback;
     private InferenceEngine inferenceEngine;
+    private boolean useApiAi = false;
 
     @Inject
     NetworkLayer networkLayer;
@@ -40,11 +47,12 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     public DobbyAi(Context context, DobbyThreadpool threadpool) {
         this.context = context;
         this.threadpool = threadpool;
-        apiAiClient = new ApiAiClient(context, threadpool);
-        apiAiClient.connect();
+        useApiAi = DobbyApplication.isDobbyFlavor();
         inferenceEngine = new InferenceEngine(threadpool.getScheduledExecutorService(), this);
+        if (useApiAi) {
+            initApiAiClient();
+        }
     }
-
 
     public void setResponseCallback(ResponseCallback responseCallback) {
         this.responseCallback = responseCallback;
@@ -105,13 +113,19 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     }
 
     public void sendQuery(String text) {
-        apiAiClient.sendTextQuery(text, this);
+        if (useApiAi) {
+            apiAiClient.sendTextQuery(text, this);
+        } else {
+            DobbyLog.w("Ignoring text query for Wifi doc version :" + text);
+        }
     }
 
     public void cleanup() {
         networkLayer.cleanup();
         inferenceEngine.cleanup();
-        apiAiClient.cleanup();
+        if (useApiAi) {
+            apiAiClient.cleanup();
+        }
     }
 
     private void postBandwidthTestOperation() {
@@ -121,8 +135,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     }
 
     private void postAllOperations() {
-        BandwidthOperation bwTest = new BandwidthOperation(threadpool, networkLayer,
-                inferenceEngine, responseCallback);
+        ComposableOperation<BandwidthStats> bwTest = bandwidthOperation();
         bwTest.post();
         ComposableOperation wifiScan = wifiScanOperation();
         bwTest.uponCompletion(wifiScan);
@@ -179,7 +192,41 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         };
     }
 
+    private ComposableOperation<BandwidthStats> bandwidthOperation() {
+        return new ComposableOperation<BandwidthStats>(threadpool) {
+            @Override
+            public void post() {
+                setFuture(startBandwidthTest());
+            }
+
+            @Override
+            protected String getName() {
+                return "Bandwidth test operation";
+            }
+        };
+    }
+
+    private ListenableFuture<BandwidthStats> startBandwidthTest() {
+        Log.i(TAG, "Going to start bandwidth test.");
+        @BandwithTestCodes.TestMode
+        int testMode = BandwithTestCodes.TestMode.DOWNLOAD_AND_UPLOAD;
+        BandwidthObserver observer = networkLayer.startBandwidthTest(testMode);
+        if (!observer.startedNormally()) {
+            Log.v(TAG, "Bandwidth tests did not start normally: " + observer.exceptionCode());
+            return observer.asFuture();
+        }
+        Log.v(TAG, "Started bw test successfully");
+        observer.setInferenceEngine(inferenceEngine);
+        responseCallback.showRtGraph(observer);
+        return observer.asFuture();
+    }
+
     private void cancelBandwidthTest() throws Exception {
         networkLayer.cancelBandwidthTests();
+    }
+
+    private void initApiAiClient() {
+        apiAiClient = new ApiAiClient(context, threadpool);
+        apiAiClient.connect();
     }
 }

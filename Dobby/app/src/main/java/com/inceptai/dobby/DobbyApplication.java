@@ -31,11 +31,11 @@ public class DobbyApplication extends Application {
         return prodComponent;
     }
 
-    public boolean isDobbyFlavor() {
+    public static boolean isDobbyFlavor() {
         return BuildConfig.FLAVOR.equals(DOBBY_FLAVOR);
     }
 
-    public boolean isWifiDocFlavor() {
+    public static boolean isWifiDocFlavor() {
         return BuildConfig.FLAVOR.equals(WIFIDOC_FLAVOR);
     }
 }
