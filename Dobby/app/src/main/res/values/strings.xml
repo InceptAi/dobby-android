@@ -40,6 +40,8 @@
     <string name="fake_connectivity_setting">Connectivity Mode Settings</string>
     <string name="fake_wifi_problem_setting">Wifi Problem Mode Setting</string>
     <string name="fake_wifi_problem_mode_selector">Wifi Problem Mode Settings</string>
+    <string name="ping_latency">PING LATENCY</string>
+    <string name="wifi_quality">WIFI QUALITY</string>
     <string-array name="rssi_level_array">
         <item>High</item>
         <item>Medium</item>
