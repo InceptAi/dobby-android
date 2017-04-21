@@ -137,7 +137,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     private void postAllOperations() {
         ComposableOperation bwTest = bandwidthOperation();
         bwTest.post();
-        ComposableOperation wifiScan = wifiScanOperation();
+        final ComposableOperation wifiScan = wifiScanOperation();
         bwTest.uponCompletion(wifiScan);
         final ComposableOperation ping = pingOperation();
         wifiScan.uponCompletion(ping);
@@ -157,7 +157,8 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             @Override
             public void run() {
                 try {
-                    HashMap<String, PingStats> payload = (HashMap<String, PingStats>) ping.getFuture().get().getPayload();
+                    OperationResult result = ping.getFuture().get();
+                    HashMap<String, PingStats> payload = (HashMap<String, PingStats>) result.getPayload();
                     if (payload != null) {
                         inferenceEngine.notifyPingStats(payload, networkLayer.getIpLayerInfo());
                     } else {
