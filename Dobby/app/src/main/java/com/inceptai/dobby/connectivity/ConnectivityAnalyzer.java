@@ -178,7 +178,6 @@ public class ConnectivityAnalyzer {
         Log.v(TAG, "active network is not null, activeNetwork:" + activeNetwork.toString());
         boolean isWifiConnectionOnline = false;
         try {
-            //isWifiConnectionOnline = performConnectivityTest(activeNetwork);
             currentWifiMode = performConnectivityAndPortalTest(activeNetwork);
             isWifiConnectionOnline = currentWifiMode == CONNECTED_AND_ONLINE;
         } catch (IllegalStateException e) {
@@ -197,7 +196,7 @@ public class ConnectivityAnalyzer {
         }
     }
 
-    synchronized protected void rescheduleConnectivityTest(final int scheduleCount) {
+    synchronized public void rescheduleConnectivityTest(final int scheduleCount) {
         threadpool.getScheduledExecutorService().schedule(new Runnable() {
             @Override
             public void run() {
