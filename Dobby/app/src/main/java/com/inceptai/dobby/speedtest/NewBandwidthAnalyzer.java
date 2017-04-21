@@ -145,22 +145,12 @@ public class NewBandwidthAnalyzer {
         this.resultsCallback = resultsCallback;
     }
 
-    @BandwithTestCodes.ExceptionCodes
-    public int startBandwidthTestSafely(@BandwithTestCodes.TestMode int testMode) {
-        int returnCode = BandwithTestCodes.ExceptionCodes.TEST_STARTED_NO_EXCEPTION;
+    public void startBandwidthTestSync(@TestMode int testMode) {
         try {
             startBandwidthTest(testMode);
-        } catch (BandwidthTestException e) {
-            returnCode = e.exceptionType;
-            switch (e.exceptionType) {
-                case BandwithTestCodes.ExceptionCodes.GETTING_CONFIG_FAILED:
-                case BandwithTestCodes.ExceptionCodes.GETTING_SERVER_INFORMATION_FAILED:
-                case BandwithTestCodes.ExceptionCodes.GETTING_BEST_SERVER_FAILED:
-                    cancelBandwidthTests();
-                    break;
-            }
+        } catch(Exception e) {
+            Log.i(TAG, "Exception starting bandwidth test." + e);
         }
-        return returnCode;
     }
 
     public void cancelBandwidthTests() {

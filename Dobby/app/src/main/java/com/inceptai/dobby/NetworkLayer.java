@@ -139,22 +139,24 @@ public class NetworkLayer {
     }
 
 
-    public synchronized BandwidthObserver startBandwidthTest(@BandwithTestCodes.TestMode int mode) {
+    public synchronized BandwidthObserver startBandwidthTest(final @BandwithTestCodes.TestMode int mode) {
         if (bandwidthObserver != null && bandwidthObserver.testsRunning()) {
             // We have an already running bandwidth operation.
             return bandwidthObserver;
         }
 
-        @BandwithTestCodes.ExceptionCodes int errorCode;
-        if (getConnectivityAnalyzerInstance().isWifiOnline()) {
-            Log.i(TAG, "NetworkLayer: Going to start bandwidth test.");
-            errorCode = bandwidthAnalyzer.startBandwidthTestSafely(mode);
-        } else {
-            Log.i(TAG, "NetworkLayer: Wifi is offline, so cannot run bandwidth tests");
-            errorCode = BandwithTestCodes.ExceptionCodes.NETWORK_OFFLINE;
+        if (!getConnectivityAnalyzerInstance().isWifiOnline()) {
+            return new BandwidthObserver(mode, BandwithTestCodes.ExceptionCodes.NETWORK_OFFLINE);
         }
-        bandwidthObserver = new BandwidthObserver(mode, errorCode);
+
+        bandwidthObserver = new BandwidthObserver(mode, BandwithTestCodes.ExceptionCodes.ATTEMPTING_TO_START);
         bandwidthAnalyzer.registerCallback(bandwidthObserver);
+        threadpool.submit(new Runnable() {
+            @Override
+            public void run() {
+                bandwidthAnalyzer.startBandwidthTestSync(mode);
+            }
+        });
         return bandwidthObserver;
     }
 

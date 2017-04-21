@@ -15,10 +15,10 @@ import static com.inceptai.dobby.DobbyApplication.TAG;
 /**
  * Represents the data behind a (real-time) graph.
  */
-public class GraphData<T> implements RtDataSource.RtDataListener<T> {
+public class GraphData<T, U> implements RtDataSource.RtDataListener<T> {
 
     private LinkedList<T> dataPoints;
-    private RtDataSource<T> rtDataSource;
+    private RtDataSource<T, U> rtDataSource;
     private DataUpdateListener listener;
 
     public interface DataUpdateListener {
@@ -29,9 +29,9 @@ public class GraphData<T> implements RtDataSource.RtDataListener<T> {
         dataPoints = new LinkedList<>();
     }
 
-    GraphData(RtDataSource<T> rtDataSource) {
+    GraphData(RtDataSource<T, U> rtDataSource) {
         dataPoints = new LinkedList<>();
-        rtDataSource.registerListener(this);
+        // rtDataSource.registerListener(this, );
         this.rtDataSource = rtDataSource;
     }
 
@@ -61,7 +61,7 @@ public class GraphData<T> implements RtDataSource.RtDataListener<T> {
         dataPoints.add(dataPoint);
     }
 
-    public RtDataSource<T> getDataSource() {
+    public RtDataSource<T, U> getDataSource() {
         return rtDataSource;
     }
 

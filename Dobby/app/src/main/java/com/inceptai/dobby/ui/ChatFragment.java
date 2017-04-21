@@ -195,7 +195,7 @@ public class ChatFragment extends Fragment implements Handler.Callback {
         Message.obtain(handler, MSG_SHOW_DOBBY_CHAT, text).sendToTarget();
     }
 
-    public void showRtGraph(RtDataSource<Float> rtDataSource) {
+    public void showRtGraph(RtDataSource<Float, Integer> rtDataSource) {
         Message.obtain(handler, MSG_SHOW_RT_GRAPH, rtDataSource).sendToTarget();
     }
 
@@ -208,7 +208,7 @@ public class ChatFragment extends Fragment implements Handler.Callback {
                 addDobbyChat(text);
                 break;
             case MSG_SHOW_RT_GRAPH:
-                RtDataSource<Integer> rtDataSource = (RtDataSource<Integer>) msg.obj;
+                RtDataSource<Float, Integer> rtDataSource = (RtDataSource<Float, Integer>) msg.obj;
                 addRtGraph(rtDataSource);
                 break;
 
@@ -216,10 +216,10 @@ public class ChatFragment extends Fragment implements Handler.Callback {
         return false;
     }
 
-    private void addRtGraph(RtDataSource<Integer> rtDataSource) {
+    private void addRtGraph(RtDataSource<Float, Integer> rtDataSource) {
         Log.i(TAG, "Adding GRAPH entry.");
         ChatEntry entry = new ChatEntry(Utils.EMPTY_STRING, ChatEntry.RT_GRAPH);
-        entry.addGraph(new GraphData(rtDataSource));
+        entry.addGraph(new GraphData<Float, Integer>(rtDataSource));
         recyclerViewAdapter.addEntryAtBottom(entry);
         chatRv.scrollToPosition(recyclerViewAdapter.getItemCount() - 1);
     }

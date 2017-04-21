@@ -19,7 +19,7 @@ import static com.inceptai.dobby.DobbyApplication.TAG;
  * Created by arunesh on 4/6/17.
  */
 
-public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, RtDataSource<Float> {
+public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, RtDataSource<Float, Integer> {
     @Nullable
     private InferenceEngine inferenceEngine;
     private HashSet<RtDataListener<Float>> listeners;
@@ -174,7 +174,7 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
     }
 
     @Override
-    public synchronized void registerListener(RtDataListener<Float> listener) {
+    public synchronized void registerListener(RtDataListener<Float> listener, Integer sourceType) {
         listeners.add(listener);
     }
 

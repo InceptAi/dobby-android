@@ -190,7 +190,7 @@ public class MainActivity extends AppCompatActivity
 
     // From DobbyAi.ResponseCallback interface.
     @Override
-    public void showRtGraph(RtDataSource<Float> rtDataSource) {
+    public void showRtGraph(RtDataSource<Float, Integer> rtDataSource) {
         chatFragment.showRtGraph(rtDataSource);
     }
 

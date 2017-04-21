@@ -4,7 +4,7 @@ package com.inceptai.dobby.ai;
  * Created by arunesh on 4/7/17.
  */
 
-public interface RtDataSource<T> {
+public interface RtDataSource<T, U> {
 
     /**
      * Listener for a data item update.
@@ -25,7 +25,7 @@ public interface RtDataSource<T> {
         void onClose();
     }
 
-    void registerListener(RtDataListener<T> listener);
+    void registerListener(RtDataListener<T> listener, U sourceType);
 
     void unregisterListener(RtDataListener<T> listener);
 }

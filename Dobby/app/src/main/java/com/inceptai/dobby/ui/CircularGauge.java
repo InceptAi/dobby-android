@@ -20,7 +20,7 @@ import com.inceptai.dobby.R;
  * Created by arunesh on 4/20/17.
  */
 
-public class CircularGuage extends View {
+public class CircularGauge extends View {
     private static final int DEFAULT_LONG_POINTER_SIZE = 1;
 
     private Paint mPaint;
@@ -44,11 +44,11 @@ public class CircularGuage extends View {
     private int mDividersCount;
     private boolean mDividerDrawFirst;
     private boolean mDividerDrawLast;
-    public CircularGuage(Context context) {
+    public CircularGauge(Context context) {
         super(context);
     }
 
-    public CircularGuage(Context context, @Nullable AttributeSet attrs) {
+    public CircularGauge(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.CircularGauge, 0, 0);
 
@@ -90,7 +90,7 @@ public class CircularGuage extends View {
         init();
     }
 
-    public CircularGuage(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+    public CircularGauge(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
     }
 

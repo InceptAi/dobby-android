@@ -53,6 +53,7 @@ public class BandwithTestCodes {
             ExceptionCodes.GETTING_SERVER_INFORMATION_FAILED,
             ExceptionCodes.GETTING_BEST_SERVER_FAILED,
             ExceptionCodes.NETWORK_OFFLINE,
+            ExceptionCodes.ATTEMPTING_TO_START,
             ExceptionCodes.UNKNOWN})
     public @interface ExceptionCodes {
         int TEST_STARTED_NO_EXCEPTION = 0;
@@ -62,5 +63,6 @@ public class BandwithTestCodes {
         int GETTING_BEST_SERVER_FAILED = 4;
         int NETWORK_OFFLINE = 5;
         int UNKNOWN = 6;
+        int ATTEMPTING_TO_START = 7;
     }
 }

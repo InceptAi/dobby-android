@@ -42,7 +42,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
 
     public interface ResponseCallback {
         void showResponse(String text);
-        void showRtGraph(RtDataSource<Float> rtDataSource);
+        void showRtGraph(RtDataSource<Float, Integer> rtDataSource);
     }
 
     public DobbyAi(Context context, DobbyThreadpool threadpool) {

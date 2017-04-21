@@ -19,7 +19,7 @@ public class ChatEntry {
     private static int UNKNOWN = -1;
     private String text;
     private int entryType = UNKNOWN;
-    private GraphData<Float> graphData;
+    private GraphData<Float, Integer> graphData;
 
 
     public ChatEntry(String text, int entryType) {
@@ -27,7 +27,7 @@ public class ChatEntry {
         this.entryType = entryType;
     }
 
-    public void addGraph(GraphData<Float> graphData) {
+    public void addGraph(GraphData<Float, Integer> graphData) {
         this.graphData = graphData;
     }
 
@@ -39,7 +39,7 @@ public class ChatEntry {
         return entryType;
     }
 
-    public GraphData<Float> getGraphData() {
+    public GraphData<Float, Integer> getGraphData() {
         return graphData;
     }
 }
