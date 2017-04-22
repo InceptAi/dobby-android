@@ -2,13 +2,13 @@ package com.inceptai.dobby.ai;
 
 import android.util.Log;
 
-import com.google.common.collect.Collections2;
-import com.google.common.collect.Sets;
-import com.inceptai.dobby.DobbyThreadpool;
+import com.inceptai.dobby.utils.Utils;
 
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static com.inceptai.dobby.DobbyApplication.TAG;
@@ -109,4 +109,25 @@ public class PossibleConditions {
         }
         return inclusionCopy;
     }
+
+    public HashMap<Integer, Double> sortConditions() {
+        Map<Integer, Double> sortedHashMap = Utils.sortHashMapByValueDescending(inclusionMap);
+        return (HashMap)sortedHashMap;
+    }
+
+    public List<Integer> getTopConditions(int maxConditionsToReturn, double maxGap) {
+        List<Integer> topConditionsList = new ArrayList<>();
+        Map<Integer, Double> sortedHashMap = Utils.sortHashMapByValueDescending(finalizeInference());
+        double maxWeight = 0;
+        for (HashMap.Entry<Integer, Double> entry : sortedHashMap.entrySet()) {
+            if (maxWeight == 0) {
+                maxWeight = entry.getValue();
+            }
+            if (maxWeight - entry.getValue() < maxGap && topConditionsList.size() <= maxConditionsToReturn) {
+                topConditionsList.add(entry.getKey());
+            }
+        }
+        return topConditionsList;
+    }
+
 }

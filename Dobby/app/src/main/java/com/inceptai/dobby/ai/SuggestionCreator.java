@@ -40,12 +40,13 @@ public class SuggestionCreator {
 
     private static String MULTIPLE_CONDITIONS_PREFIX = "There a few things which can be causing problems for your network.";
 
-    public static String getSuggestionForConditions(Integer[] conditionList,
-                                                    int listLength, SuggestionCreatorParams params) {
+    public static String getSuggestionForConditions(List<Integer> conditionList,
+                                                    SuggestionCreatorParams params) {
         List<String> suggestionList = new ArrayList<>();
         StringBuilder sb = new StringBuilder();
-        for (int index=0; index < conditionList.length && index < listLength; index++) {
-            suggestionList.add(getSuggestionForCondition(conditionList[index], params));
+        for (int index=0; index < conditionList.size(); index++) {
+            @Condition int condition  = conditionList.get(index);
+            suggestionList.add(getSuggestionForCondition(condition, params));
         }
         if (suggestionList.size() == 0) {
             sb.append(NO_CONDITION_MESSAGE);
@@ -53,10 +54,14 @@ public class SuggestionCreator {
             sb.append(suggestionList.get(0));
         } else {
             //Multiple conditions
-            sb.append(MULTIPLE_CONDITIONS_PREFIX + "\n");
+            sb.append(MULTIPLE_CONDITIONS_PREFIX);
+            sb.append("\n");
             int index = 1;
             for(String suggestion: suggestionList) {
-                sb.append(index + ". " + suggestion + "\n");
+                sb.append(index);
+                sb.append(". ");
+                sb.append(suggestion);
+                sb.append("\n");
                 index++;
             }
         }
