@@ -227,9 +227,8 @@ public class InferenceMap {
             conditions.include(Condition.WIFI_LINK_AUTH_ISSUE, 1.0);
         } else if (wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.HANGING_ON_DHCP) {
             conditions.include(Condition.WIFI_LINK_DHCP_ISSUE, 1.0);
-        } else if (wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.UNKNOWN) {
-            conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE, 0.3);
         }
+
         return conditions;
     }
 
