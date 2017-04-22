@@ -107,6 +107,10 @@ public class InferenceEngine {
         Log.i(TAG, "InferenceEngine Ping Grade: " + pingGrade.toString());
         Log.i(TAG, "InferenceEngine which gives conditions: " + conditions.toString());
         Log.i(TAG, "InferenceEngine After merging: " + currentConditions.toString());
+
+        //TODO: Remove this hack.
+        String suggestions = getSuggestions();
+        sendResponseOnlyAction(suggestions);
         return pingGrade;
     }
 
