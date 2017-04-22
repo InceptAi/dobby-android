@@ -19,19 +19,24 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.google.common.eventbus.Subscribe;
 import com.inceptai.dobby.R;
+import com.inceptai.dobby.ai.DataInterpreter;
 import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.BandwidthStats;
+import com.inceptai.dobby.model.PingStats;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
 import com.inceptai.dobby.speedtest.NewBandwidthAnalyzer;
 import com.inceptai.dobby.speedtest.ServerInformation;
 import com.inceptai.dobby.speedtest.SpeedTestConfig;
 import com.inceptai.dobby.utils.Utils;
+import com.inceptai.dobby.wifi.WifiState;
 
+import java.util.HashMap;
 import java.util.List;
 
 public class WifiDocMainFragment extends Fragment implements View.OnClickListener, NewBandwidthAnalyzer.ResultsCallback, Handler.Callback{
@@ -39,15 +44,20 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private static final int PERMISSION_COARSE_LOCATION_REQUEST_CODE = 101;
     private static final String ARG_PARAM1 = "param1";
     private static final int MSG_UPDATED_CIRCULAR_GAUGE = 1001;
+    private static final int MSG_WIFI_SCAN_AVAILABLE = 1002;
+    private static final int MSG_PING_AVAILABLE = 1003;
 
     private OnFragmentInteractionListener mListener;
 
     private FloatingActionButton mainFab;
-    private CircularGauge cirularGauge;
+    private CircularGauge circularGauge;
     private String mParam1;
     private DobbyEventBus eventBus;
     private BandwidthObserver bandwidthObserver;
     private Handler handler;
+    private TextView gaugeTv;
+    private TextView pingTv;
+    private TextView wifiTv;
 
     public WifiDocMainFragment() {
         // Required empty public constructor
@@ -77,12 +87,14 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         View view = inflater.inflate(R.layout.fragment_wifi_doc_main, container, false);
         mainFab = (FloatingActionButton) view.findViewById(R.id.main_fab_button);
         mainFab.setOnClickListener(this);
-        cirularGauge = (CircularGauge) view.findViewById(R.id.bw_gauge);
+        circularGauge = (CircularGauge) view.findViewById(R.id.bw_gauge);
+        gaugeTv = (TextView) view.findViewById(R.id.gauge_tv);
+        pingTv = (TextView) view.findViewById(R.id.ping_tv);
+        wifiTv = (TextView) view.findViewById(R.id.wifi_quality_tv);
         requestPermissions();
         return view;
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {
         if (mListener != null) {
             mListener.onFragmentInteraction(uri);
@@ -166,6 +178,10 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         if (event.getEventType() == DobbyEvent.EventType.BANDWIDTH_TEST_STARTING) {
             bandwidthObserver = (BandwidthObserver) event.getPayload();
             bandwidthObserver.registerCallback(this);
+        } else if (event.getEventType() == DobbyEvent.EventType.WIFI_SCAN_AVAILABLE) {
+            Message.obtain(handler, MSG_WIFI_SCAN_AVAILABLE, event.getPayload()).sendToTarget();
+        } else if (event.getEventType() == DobbyEvent.EventType.PING_INFO_AVAILABLE) {
+            Message.obtain(handler, MSG_PING_AVAILABLE, event.getPayload()).sendToTarget();
         }
     }
 
@@ -208,9 +224,49 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     public boolean handleMessage(Message msg) {
         switch(msg.what) {
             case MSG_UPDATED_CIRCULAR_GAUGE:
-                cirularGauge.setValue(msg.arg1);
+                circularGauge.setValue(msg.arg1);
+                gaugeTv.setText(String.valueOf(msg.arg1));
+                break;
+            case MSG_WIFI_SCAN_AVAILABLE:
+                showWifiResults((DataInterpreter.WifiGrade) msg.obj);
+                break;
+            case MSG_PING_AVAILABLE:
+                showPingResults((DataInterpreter.PingGrade) msg.obj);
                 break;
         }
         return false;
+    }
+
+    private void showWifiResults(DataInterpreter.WifiGrade wifiGrade) {
+        switch (wifiGrade.getPrimaryApSignalMetric()) {
+            case DataInterpreter.MetricType.GOOD:
+                break;
+            case DataInterpreter.MetricType.AVERAGE:
+                break;
+            case DataInterpreter.MetricType.EXCELLENT:
+                break;
+            case DataInterpreter.MetricType.POOR:
+                break;
+            case DataInterpreter.MetricType.UNKNOWN:
+                break;
+
+        }
+    }
+
+    private void showPingResults(DataInterpreter.PingGrade pingGrade) {
+        if (pingGrade == null) return;
+        switch (pingGrade.getRouterLatencyMetric()) {
+            case DataInterpreter.MetricType.GOOD:
+                break;
+            case DataInterpreter.MetricType.AVERAGE:
+                break;
+            case DataInterpreter.MetricType.EXCELLENT:
+                break;
+            case DataInterpreter.MetricType.POOR:
+                break;
+            case DataInterpreter.MetricType.UNKNOWN:
+                break;
+
+        }
     }
 }

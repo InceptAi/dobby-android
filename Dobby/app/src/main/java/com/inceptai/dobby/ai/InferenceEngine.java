@@ -4,6 +4,7 @@ import android.support.annotation.IntDef;
 import android.util.Log;
 
 import com.inceptai.dobby.connectivity.ConnectivityAnalyzer;
+import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.model.DobbyWifiInfo;
 import com.inceptai.dobby.model.IPLayerInfo;
 import com.inceptai.dobby.model.PingStats;
@@ -81,8 +82,8 @@ public class InferenceEngine {
         return testModeString;
     }
 
-    public void notifyWifiState(WifiState wifiState, @WifiState.WifiLinkMode int wifiLinkMode,
-                                @ConnectivityAnalyzer.WifiConnectivityMode int wifiConnectivityMode) {
+    public DataInterpreter.WifiGrade notifyWifiState(WifiState wifiState, @WifiState.WifiLinkMode int wifiLinkMode,
+                                                     @ConnectivityAnalyzer.WifiConnectivityMode int wifiConnectivityMode) {
         HashMap<Integer, WifiState.ChannelInfo> channelMap = wifiState.getChannelInfoMap();
         DobbyWifiInfo wifiInfo = wifiState.getLinkInfo();
         DataInterpreter.WifiGrade wifiGrade = DataInterpreter.interpret(channelMap, wifiInfo, wifiLinkMode, wifiConnectivityMode);
@@ -92,11 +93,12 @@ public class InferenceEngine {
         Log.i(TAG, "InferenceEngine Wifi Grade: " + wifiGrade.toString());
         Log.i(TAG, "InferenceEngine which gives conditions: " + conditions.toString());
         Log.i(TAG, "InferenceEngine After merging: " + currentConditions.toString());
+        return wifiGrade;
     }
 
-    public void notifyPingStats(HashMap<String, PingStats> pingStatsMap, IPLayerInfo ipLayerInfo) {
+    public DataInterpreter.PingGrade notifyPingStats(HashMap<String, PingStats> pingStatsMap, IPLayerInfo ipLayerInfo) {
         if (pingStatsMap == null || ipLayerInfo == null) {
-            return;
+            return null;
         }
         DataInterpreter.PingGrade pingGrade = DataInterpreter.interpret(pingStatsMap, ipLayerInfo);
         metricsDb.updatePingGrade(pingGrade);
@@ -105,6 +107,7 @@ public class InferenceEngine {
         Log.i(TAG, "InferenceEngine Ping Grade: " + pingGrade.toString());
         Log.i(TAG, "InferenceEngine which gives conditions: " + conditions.toString());
         Log.i(TAG, "InferenceEngine After merging: " + currentConditions.toString());
+        return pingGrade;
     }
 
     public void notifyGatewayHttpStats(PingStats gatewayHttpStats) {

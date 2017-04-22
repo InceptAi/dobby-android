@@ -94,6 +94,7 @@ public class WifiAnalyzer {
         }
         if (wifiManager.startScan()) {
             wifiScanFuture = SettableFuture.create();
+            eventBus.postEvent(DobbyEvent.EventType.WIFI_SCAN_STARTING);
             return wifiScanFuture;
         }
         return null;
@@ -158,7 +159,6 @@ public class WifiAnalyzer {
                     if (doScanAgain && wifiManager.startScan()) {
                         Log.v(TAG, "Starting Wifi Scan again, currentScans: " + currentScans);
                     } else {
-                        eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.WIFI_SCAN_AVAILABLE));
                         updateWifiScanResults();
                         Log.v(TAG, "Unregistering Scan Receiver");
                         unregisterScanReceiver();

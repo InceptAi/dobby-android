@@ -317,6 +317,11 @@ public class DataInterpreter {
             updatedAtMs = System.currentTimeMillis();
         }
 
+        @MetricType
+        public int getRouterLatencyMetric() {
+            return routerLatencyMetric;
+        }
+
     }
 
     /**
@@ -413,6 +418,10 @@ public class DataInterpreter {
             updatedAtMs = System.currentTimeMillis();
         }
 
+        @MetricType
+        public int getPrimaryApSignalMetric() {
+            return primaryApSignalMetric;
+        }
     }
 
     public static String metricTypeToString(@MetricType int metricType) {

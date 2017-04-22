@@ -8,4 +8,7 @@
     <color name="orangeMediumLight1">#ff944d</color>
     <color name="orangeLight">#ffb380</color>
     <color name="orangeLighter">#ffe0cc</color>
+    <color name="basicGreen">#33cc33</color>
+    <color name="basicRed">#ff0000</color>
+    <color name="basicYellow">#e6e600</color>
 </resources>

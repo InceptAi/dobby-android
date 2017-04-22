@@ -8,6 +8,8 @@ import com.google.common.util.concurrent.SettableFuture;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.NetworkLayer;
+import com.inceptai.dobby.eventbus.DobbyEvent;
+import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.PingStats;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.speedtest.BandwidthResult;
@@ -38,6 +40,8 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
 
     @Inject
     NetworkLayer networkLayer;
+    @Inject
+    DobbyEventBus eventBus;
 
 
     public interface ResponseCallback {
@@ -147,9 +151,10 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             @Override
             public void run() {
                 // Handle failed wifi scan using OperationResult.
-                inferenceEngine.notifyWifiState(networkLayer.getWifiState(),
+                DataInterpreter.WifiGrade wifiGrade = inferenceEngine.notifyWifiState(networkLayer.getWifiState(),
                         networkLayer.getWifiLinkMode(),
                         networkLayer.getCurrentConnectivityMode());
+                eventBus.postEvent(DobbyEvent.EventType.WIFI_SCAN_AVAILABLE, wifiGrade);
             }
         }, threadpool.getExecutor());
 
@@ -160,7 +165,10 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                     OperationResult result = ping.getFuture().get();
                     HashMap<String, PingStats> payload = (HashMap<String, PingStats>) result.getPayload();
                     if (payload != null) {
-                        inferenceEngine.notifyPingStats(payload, networkLayer.getIpLayerInfo());
+                        DataInterpreter.PingGrade pingGrade = inferenceEngine.notifyPingStats(payload, networkLayer.getIpLayerInfo());
+                        if (pingGrade != null) {
+                            eventBus.postEvent(DobbyEvent.EventType.PING_INFO_AVAILABLE, pingGrade);
+                        }
                     } else {
                         // Error.
                         Log.i(TAG, "Error starting ping.");

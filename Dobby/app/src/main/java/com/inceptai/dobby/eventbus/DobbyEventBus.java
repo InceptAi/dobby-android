@@ -28,4 +28,16 @@ public class DobbyEventBus {
     public void postEvent(DobbyEvent event) {
         eventBus.post(event);
     }
+
+    /**
+     * For empty payload.
+     * @param eventType
+     */
+    public void postEvent(@DobbyEvent.EventType int eventType) {
+        postEvent(new DobbyEvent(eventType));
+    }
+
+    public void postEvent(@DobbyEvent.EventType int eventType, Object payload) {
+        postEvent(new DobbyEvent(eventType, payload));
+    }
 }
