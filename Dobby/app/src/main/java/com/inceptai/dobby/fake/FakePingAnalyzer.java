@@ -25,7 +25,9 @@ import java.util.concurrent.TimeUnit;
 import static com.inceptai.dobby.DobbyApplication.TAG;
 import static com.inceptai.dobby.fake.FakePingAnalyzer.PingStatsMode.DEFAULT_WORKING_STATE;
 import static com.inceptai.dobby.fake.FakePingAnalyzer.PingStatsMode.DNS_SLOW;
+import static com.inceptai.dobby.fake.FakePingAnalyzer.PingStatsMode.DNS_SLOW_ALTERNATIVE_FAST;
 import static com.inceptai.dobby.fake.FakePingAnalyzer.PingStatsMode.DNS_UNREACHABLE;
+import static com.inceptai.dobby.fake.FakePingAnalyzer.PingStatsMode.DNS_UNREACHABLE_ALTERNATIVE_AVAILABLE;
 import static com.inceptai.dobby.fake.FakePingAnalyzer.PingStatsMode.EXTERNAL_SERVER_SLOW;
 import static com.inceptai.dobby.fake.FakePingAnalyzer.PingStatsMode.EXTERNAL_SERVER_UNREACHABLE;
 import static com.inceptai.dobby.fake.FakePingAnalyzer.PingStatsMode.GATEWAY_SLOW;
@@ -85,7 +87,8 @@ public class FakePingAnalyzer extends PingAnalyzer {
     @IntDef({PingStatsMode.DEFAULT_WORKING_STATE, PingStatsMode.GATEWAY_UNREACHABLE,
             PingStatsMode.GATEWAY_SLOW, PingStatsMode.EXTERNAL_SERVER_UNREACHABLE,
             PingStatsMode.EXTERNAL_SERVER_SLOW, PingStatsMode.DNS_UNREACHABLE,
-            PingStatsMode.DNS_SLOW, PingStatsMode.MAX_STATES})
+            PingStatsMode.DNS_SLOW, PingStatsMode.DNS_UNREACHABLE_ALTERNATIVE_AVAILABLE,
+            PingStatsMode.DNS_SLOW_ALTERNATIVE_FAST, PingStatsMode.MAX_STATES})
     public @interface PingStatsMode {
         int DEFAULT_WORKING_STATE = 0;
         int GATEWAY_UNREACHABLE = 1;
@@ -94,7 +97,9 @@ public class FakePingAnalyzer extends PingAnalyzer {
         int EXTERNAL_SERVER_SLOW = 4;
         int DNS_UNREACHABLE = 5;
         int DNS_SLOW = 6;
-        int MAX_STATES = 7;
+        int DNS_UNREACHABLE_ALTERNATIVE_AVAILABLE = 7;
+        int DNS_SLOW_ALTERNATIVE_FAST = 8;
+        int MAX_STATES = 9;
     }
 
     public static String getPingStatsModeName(@PingStatsMode int mode) {
@@ -113,6 +118,10 @@ public class FakePingAnalyzer extends PingAnalyzer {
                 return "DNS unreachable";
             case DNS_SLOW:
                 return "DNS slow";
+            case DNS_UNREACHABLE_ALTERNATIVE_AVAILABLE:
+                return "DNS_UNREACHABLE_ALTERNATIVE_AVAILABLE";
+            case DNS_SLOW_ALTERNATIVE_FAST:
+                return "DNS_SLOW_ALTERNATIVE_FAST";
             default:
                 return "Unknown";
         }
@@ -214,8 +223,8 @@ public class FakePingAnalyzer extends PingAnalyzer {
                     dns2LatencyRangeMs = LatencyRangeMs.HIGH;
                     externalServer1LatencyRangeMs = LatencyRangeMs.HIGH;
                     externalServer2LatencyRangeMs = LatencyRangeMs.HIGH;
-                    publicDns1LatencyRangeMs = LatencyRangeMs.LOW;
-                    publicDns2LatencyRangeMs = LatencyRangeMs.MEDIUM;
+                    publicDns1LatencyRangeMs = LatencyRangeMs.HIGH;
+                    publicDns2LatencyRangeMs = LatencyRangeMs.HIGH;
                     break;
                 case PingStatsMode.EXTERNAL_SERVER_UNREACHABLE:
                     externalServer1LatencyRangeMs = LatencyRangeMs.UNDEFINED;
@@ -228,6 +237,27 @@ public class FakePingAnalyzer extends PingAnalyzer {
                     externalServer2LatencyRangeMs = LatencyRangeMs.VERY_HIGH;
                     externalServer1LossRangePercent = LossRangePercent.HIGH;
                     externalServer2LossRangePercent = LossRangePercent.HIGH;
+                    break;
+                case PingStatsMode.DNS_SLOW_ALTERNATIVE_FAST:
+                    gatewayLatencyRangeMs = LatencyRangeMs.LOW;
+                    dns1LatencyRangeMs = LatencyRangeMs.HIGH;
+                    dns2LatencyRangeMs = LatencyRangeMs.HIGH;
+                    externalServer1LatencyRangeMs = LatencyRangeMs.HIGH;
+                    externalServer2LatencyRangeMs = LatencyRangeMs.HIGH;
+                    publicDns1LatencyRangeMs = LatencyRangeMs.VERY_LOW;
+                    publicDns2LatencyRangeMs = LatencyRangeMs.VERY_LOW;
+                    publicDns1LossRangePercent = LossRangePercent.LOW;
+                    publicDns2LossRangePercent = LossRangePercent.LOW;
+                    break;
+                case PingStatsMode.DNS_UNREACHABLE_ALTERNATIVE_AVAILABLE:
+                    InitializeAllLatenciesToUndefined();
+                    gatewayLatencyRangeMs = LatencyRangeMs.LOW;
+                    InitializeAllLossRatesPercentToUnreachable();
+                    gatewayLossRangePercent = LossRangePercent.LOW;
+                    publicDns1LatencyRangeMs = LatencyRangeMs.LOW;
+                    publicDns2LatencyRangeMs = LatencyRangeMs.MEDIUM;
+                    publicDns1LossRangePercent = LossRangePercent.LOW;
+                    publicDns2LossRangePercent = LossRangePercent.LOW;
                     break;
                 default:
                     break;

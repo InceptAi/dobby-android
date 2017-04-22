@@ -30,7 +30,7 @@ public class InferenceMap {
             Condition.ROUTER_SOFTWARE_FAULT,
             Condition.ROUTER_GOOD_SIGNAL_USING_SLOW_DATA_RATE,
             Condition.ISP_INTERNET_SLOW_DNS_OK,
-            ISP_INTERNET_DOWN,
+            Condition.ISP_INTERNET_DOWN,
             Condition.ISP_INTERNET_SLOW,
             Condition.ISP_INTERNET_SLOW_DOWNLOAD,
             Condition.ISP_INTERNET_SLOW_UPLOAD,
@@ -90,8 +90,7 @@ public class InferenceMap {
     };
 
     private static int[] ISP_CONDITIONS = {
-        Condition.ISP_INTERNET_SLOW_DNS_OK,
-        ISP_INTERNET_DOWN,
+        Condition.ISP_INTERNET_DOWN,
         Condition.ISP_INTERNET_SLOW,
         Condition.ISP_INTERNET_SLOW_DOWNLOAD,
         Condition.ISP_INTERNET_SLOW_UPLOAD,
@@ -130,7 +129,7 @@ public class InferenceMap {
             //conditions.exclude(DNS_CONDITIONS);
             //We can exclude WIFI CONDITIONS here but what about FREQUENCT DISCONNECTIONS etc.
             //TODO: Decide whether to exclude wifi conditions here
-            conditions.exclude(WIFI_CONDITIONS);
+            //conditions.exclude(WIFI_CONDITIONS);
             return conditions;
         }
 
@@ -150,7 +149,7 @@ public class InferenceMap {
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
             conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
             conditions.include(Condition.ISP_INTERNET_SLOW, 0.3);
-        } else if (DataInterpreter.isNonFunctional(bandwidthGrade.getDownloadBandwidthMetric()) &&
+        } else if (DataInterpreter.isNonFunctional(bandwidthGrade.getDownloadBandwidthMetric()) ||
                 DataInterpreter.isNonFunctional(bandwidthGrade.getUploadBandwidthMetric())) {
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
             conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
@@ -205,7 +204,7 @@ public class InferenceMap {
             if (wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.FREQUENT_DISCONNECTIONS ||
                     wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.HANGING_ON_AUTHENTICATING ||
                     wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.HANGING_ON_DHCP){
-                conditions.include(Condition.ROUTER_WIFI_INTERFACE_FAULT, 0.2);
+                conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.2);
             }
         } else if (DataInterpreter.isGoodOrExcellent(wifiGrade.primaryApSignalMetric)){
             if (DataInterpreter.isAverageOrPoorOrNonFunctional(wifiGrade.primaryApLinkSpeedMetric)) {
@@ -217,7 +216,7 @@ public class InferenceMap {
             if (wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.FREQUENT_DISCONNECTIONS ||
                     wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.HANGING_ON_AUTHENTICATING ||
                     wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.HANGING_ON_DHCP){
-                conditions.include(Condition.ROUTER_WIFI_INTERFACE_FAULT, 1.0);
+                conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 1.0);
             }
         }
 
@@ -239,24 +238,25 @@ public class InferenceMap {
 
         int[] allPingMetrics = {pingGrade.routerLatencyMetric, pingGrade.dnsServerLatencyMetric, pingGrade.externalServerLatencyMetric};
         if (DataInterpreter.isGoodOrExcellent(allPingMetrics)) {
-            conditions.exclude(ROUTER_CONDITIONS);
+            //conditions.exclude(ROUTER_CONDITIONS);
             conditions.exclude(DNS_CONDITIONS);
-            return PossibleConditions.NOOP_CONDITION;
+            return conditions;
         }
 
         //Router is quick
         if (DataInterpreter.isGoodOrExcellent(pingGrade.routerLatencyMetric)) {
-            conditions.exclude(ROUTER_CONDITIONS);
+            //conditions.exclude(ROUTER_CONDITIONS);
             if (DataInterpreter.isGoodOrExcellent(pingGrade.dnsServerLatencyMetric)) {
+
                 conditions.exclude(DNS_CONDITIONS);
+
                 //Good Router / dns latency but poor external server latency
-                if (DataInterpreter.isAverageOrPoor(pingGrade.externalServerLatencyMetric)) {
-                    conditions.include(Condition.DNS_RESPONSE_SLOW, 0.3);
+                if (DataInterpreter.isAverageOrPoorOrNonFunctional(pingGrade.externalServerLatencyMetric)) {
                     conditions.include(Condition.ISP_INTERNET_SLOW_DNS_OK, 0.3);
                     conditions.include(Condition.CABLE_MODEM_FAULT, 0.3);
                     conditions.include(Condition.REMOTE_SERVER_IS_SLOW_TO_RESPOND, 0.1);
                 } else if (DataInterpreter.isUnknown(pingGrade.externalServerLatencyMetric)) {
-                    conditions.include(Condition.ISP_INTERNET_DOWN_DNS_OK, 1.0);
+                    conditions.include(Condition.ISP_INTERNET_DOWN_DNS_OK, 0.7);
                     conditions.include(Condition.CABLE_MODEM_FAULT, 0.3);
                 }
             } else if (DataInterpreter.isAverageOrPoorOrNonFunctional(pingGrade.dnsServerLatencyMetric)) {
@@ -267,15 +267,28 @@ public class InferenceMap {
                 conditions.include(Condition.DNS_UNREACHABLE, 1.0);
                 conditions.include(Condition.CABLE_MODEM_FAULT, 0.1);
             }
+        } else if (DataInterpreter.isAverage(pingGrade.routerLatencyMetric)){
+            //Router has average latency to respond to ping
+            if (DataInterpreter.isPoorOrNonFunctional(pingGrade.dnsServerLatencyMetric)) {
+                //Good router / slow dns
+                conditions.include(Condition.DNS_SLOW_TO_REACH, 1.0);
+            } else if (DataInterpreter.isUnknown(pingGrade.dnsServerLatencyMetric)) {
+                conditions.include(Condition.DNS_UNREACHABLE, 1.0);
+            }
         } else {
             //Router is slow to respond to ping
-            conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.5);
-            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.5);
+            conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
+            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
+            conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.3);
+            if (DataInterpreter.isUnknown(pingGrade.dnsServerLatencyMetric)) {
+                conditions.include(Condition.DNS_UNREACHABLE, 1.0);
+            }
         }
 
-        if ((DataInterpreter.isAverageOrPoorOrNonFunctional(pingGrade.dnsServerLatencyMetric) && !DataInterpreter.isAverageOrPoorOrNonFunctional(pingGrade.alternativeDnsMetric))) {
-            conditions.exclude(DNS_CONDITIONS);
+        if ((!DataInterpreter.isGoodOrExcellent(pingGrade.dnsServerLatencyMetric) && DataInterpreter.isGoodOrExcellent(pingGrade.alternativeDnsMetric))) {
             conditions.include(Condition.DNS_SLOW_FAST_ALTERNATIVE_AVAILABLE, 1.0);
+        } else if ((DataInterpreter.isNonFunctionalOrUnknown(pingGrade.dnsServerLatencyMetric) && !DataInterpreter.isNonFunctionalOrUnknown(pingGrade.alternativeDnsMetric))) {
+            conditions.include(Condition.DNS_UNREACHABLE_ALTERNATIVE_WORKING, 1.0);
         }
 
         return conditions;
@@ -285,7 +298,7 @@ public class InferenceMap {
         PossibleConditions conditions = new PossibleConditions();
 
         if (DataInterpreter.isGoodOrExcellent(httpGrade.httpDownloadLatencyMetric)) {
-            conditions.exclude(ROUTER_CONDITIONS); // TODO: Confirm this with Arunesh -- Should we be doing this ?
+            conditions.exclude(Condition.WIFI_CHANNEL_BAD_SIGNAL); // TODO: Confirm this with Arunesh -- Should we be doing this ?
             return conditions;
         }
 
@@ -351,6 +364,8 @@ public class InferenceMap {
                 return "ISP_INTERNET_DOWN";
             case Condition.CABLE_MODEM_FAULT:
                 return "CABLE_MODEM_FAULT";
+            case Condition.REMOTE_SERVER_IS_SLOW_TO_RESPOND:
+                return "REMOTE_SERVER_IS_SLOW_TO_RESPOND";
         }
         return "UNKNOWN VALUE";
     }
