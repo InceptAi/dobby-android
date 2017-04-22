@@ -8,15 +8,16 @@ import com.google.common.util.concurrent.SettableFuture;
 import com.inceptai.dobby.DobbyThreadpool;
 
 import static com.inceptai.dobby.DobbyApplication.TAG;
+import static com.inceptai.dobby.ai.OperationResult.SUCCESS;
 
 /**
  * Created by arunesh on 4/19/17.
  */
 
-public abstract class ComposableOperation<T> {
+public abstract class ComposableOperation {
     private DobbyThreadpool threadpool;
     private ComposableOperation uponCompletion;
-    private SettableFuture<T> settableFuture;
+    private SettableFuture<OperationResult> settableFuture;
 
     ComposableOperation(DobbyThreadpool threadpool) {
         this.threadpool = threadpool;
@@ -31,16 +32,16 @@ public abstract class ComposableOperation<T> {
         uponCompletion = operation;
     }
 
-    protected void setFuture(@Nullable final ListenableFuture<T> future) {
+    protected void setFuture(@Nullable final ListenableFuture<?> future) {
         if (future == null) {
-            setResult(null);
+            setResult(new OperationResult(OperationResult.FAILED_TO_START));
             return;
         }
         future.addListener(new Runnable() {
             @Override
             public void run() {
                 try {
-                    setResult(future.get());
+                    setResult(new OperationResult(SUCCESS, future.get()));
                 } catch (Exception e) {
                     Log.w(TAG, "Exception getting result for:" + getName());
                 }
@@ -48,11 +49,11 @@ public abstract class ComposableOperation<T> {
         }, threadpool.getExecutor());
     }
 
-    private void setResult(T result) {
+    protected void setResult(OperationResult result) {
         settableFuture.set(result);
     }
 
-    public ListenableFuture<T> getFuture() {
+    public ListenableFuture<OperationResult> getFuture() {
         return settableFuture;
     }
 

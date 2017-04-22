@@ -106,9 +106,6 @@ public class NetworkLayer {
         return problemMode;
     }
 
-    private PingAnalyzer getPingAnalyzerInstance() {
-        return getPingAnalyzer(ipLayerInfo, threadpool, eventBus);
-    }
 
     public WifiAnalyzer getWifiAnalyzerInstance() {
         return getWifiAnalyzer(context, threadpool, eventBus);
@@ -158,6 +155,7 @@ public class NetworkLayer {
                 bandwidthAnalyzer.startBandwidthTestSync(mode);
             }
         });
+        sendBandwidthEvent(bandwidthObserver);
         return bandwidthObserver;
     }
 
@@ -185,17 +183,17 @@ public class NetworkLayer {
     @Subscribe
     public void listen(DobbyEvent event) {
         Log.v(TAG, "NL, Found Event: " + event.toString());
-        if (event.getLastEventType() == DobbyEvent.EventType.DHCP_INFO_AVAILABLE) {
+        if (event.getEventType() == DobbyEvent.EventType.DHCP_INFO_AVAILABLE) {
             ipLayerInfo = new IPLayerInfo(getWifiAnalyzerInstance().getDhcpInfo());
             if (ipLayerInfo != null) {
                 getPingAnalyzerInstance().updateIPLayerInfo(ipLayerInfo);
                 startPing();
             }
-        } else if (event.getLastEventType() == DobbyEvent.EventType.WIFI_INTERNET_CONNECTIVITY_ONLINE) {
+        } else if (event.getEventType() == DobbyEvent.EventType.WIFI_INTERNET_CONNECTIVITY_ONLINE) {
             if (getPingAnalyzerInstance().checkIfShouldRedoPingStats(MIN_TIME_GAP_TO_RETRIGGER_PING_MS, MIN_PKT_LOSS_RATE_TO_RETRIGGER_PING_PERCENT)) {
                 startPing();
             }
-        } else if (event.getLastEventType() == DobbyEvent.EventType.PING_INFO_AVAILABLE || event.getLastEventType() == DobbyEvent.EventType.PING_FAILED) {
+        } else if (event.getEventType() == DobbyEvent.EventType.PING_INFO_AVAILABLE || event.getEventType() == DobbyEvent.EventType.PING_FAILED) {
             //TODO: Do we need to autotrigger gatewayDownloadLatencyTest here ??
             startGatewayDownloadLatencyTest();
         }
@@ -212,4 +210,15 @@ public class NetworkLayer {
             bandwidthObserver = null;
         }
     }
+
+    private PingAnalyzer getPingAnalyzerInstance() {
+        return getPingAnalyzer(ipLayerInfo, threadpool, eventBus);
+    }
+
+    private void sendBandwidthEvent(BandwidthObserver observer){
+        DobbyEvent event = new DobbyEvent(DobbyEvent.EventType.BANDWIDTH_TEST_STARTING);
+        event.setPayload(observer);
+        eventBus.postEvent(event);
+    }
+
 }

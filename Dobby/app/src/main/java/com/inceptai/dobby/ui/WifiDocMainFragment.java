@@ -8,7 +8,10 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
@@ -17,19 +20,34 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.google.common.eventbus.Subscribe;
 import com.inceptai.dobby.R;
+import com.inceptai.dobby.eventbus.DobbyEvent;
+import com.inceptai.dobby.eventbus.DobbyEventBus;
+import com.inceptai.dobby.model.BandwidthStats;
+import com.inceptai.dobby.speedtest.BandwidthObserver;
+import com.inceptai.dobby.speedtest.BandwithTestCodes;
+import com.inceptai.dobby.speedtest.NewBandwidthAnalyzer;
+import com.inceptai.dobby.speedtest.ServerInformation;
+import com.inceptai.dobby.speedtest.SpeedTestConfig;
 import com.inceptai.dobby.utils.Utils;
 
-public class WifiDocMainFragment extends Fragment implements View.OnClickListener {
+import java.util.List;
+
+public class WifiDocMainFragment extends Fragment implements View.OnClickListener, NewBandwidthAnalyzer.ResultsCallback, Handler.Callback{
     public static final String TAG = "WifiDocMainFragment";
     private static final int PERMISSION_COARSE_LOCATION_REQUEST_CODE = 101;
     private static final String ARG_PARAM1 = "param1";
+    private static final int MSG_UPDATED_CIRCULAR_GAUGE = 1001;
 
     private OnFragmentInteractionListener mListener;
 
     private FloatingActionButton mainFab;
     private CircularGauge cirularGauge;
     private String mParam1;
+    private DobbyEventBus eventBus;
+    private BandwidthObserver bandwidthObserver;
+    private Handler handler;
 
     public WifiDocMainFragment() {
         // Required empty public constructor
@@ -54,9 +72,11 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        handler = new Handler(this);
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_wifi_doc_main, container, false);
         mainFab = (FloatingActionButton) view.findViewById(R.id.main_fab_button);
+        mainFab.setOnClickListener(this);
         cirularGauge = (CircularGauge) view.findViewById(R.id.bw_gauge);
         requestPermissions();
         return view;
@@ -72,6 +92,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
+        eventBus = ((WifiDocActivity) getActivity()).getEventBus();
+        eventBus.registerListener(this);
         if (context instanceof OnFragmentInteractionListener) {
             mListener = (OnFragmentInteractionListener) context;
         } else {
@@ -83,12 +105,18 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     @Override
     public void onDetach() {
         super.onDetach();
+        eventBus.unregisterListener(this);
+        if (bandwidthObserver != null) {
+            bandwidthObserver.unregisterCallback(this);
+        }
         mListener = null;
     }
 
     @Override
     public void onClick(View v) {
-
+        if (mListener != null) {
+            mListener.onMainButtonClick();
+        }
     }
 
     public interface OnFragmentInteractionListener {
@@ -131,5 +159,58 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                 return;
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    @Subscribe
+    public void listenToEventBus(DobbyEvent event) {
+        if (event.getEventType() == DobbyEvent.EventType.BANDWIDTH_TEST_STARTING) {
+            bandwidthObserver = (BandwidthObserver) event.getPayload();
+            bandwidthObserver.registerCallback(this);
+        }
+    }
+
+    @Override
+    public void onConfigFetch(SpeedTestConfig config) {
+
+    }
+
+    @Override
+    public void onServerInformationFetch(ServerInformation serverInformation) {
+
+    }
+
+    @Override
+    public void onClosestServersSelected(List<ServerInformation.ServerDetails> closestServers) {
+
+    }
+
+    @Override
+    public void onBestServerSelected(ServerInformation.ServerDetails bestServer) {
+
+    }
+
+    @Override
+    public void onTestFinished(@BandwithTestCodes.TestMode int testMode, BandwidthStats stats) {
+
+    }
+
+    @Override
+    public void onTestProgress(@BandwithTestCodes.TestMode int testMode, double instantBandwidth) {
+        Message.obtain(handler, MSG_UPDATED_CIRCULAR_GAUGE, (int)(instantBandwidth / 1.0e6), testMode).sendToTarget();
+    }
+
+    @Override
+    public void onBandwidthTestError(@BandwithTestCodes.TestMode int testMode, @BandwithTestCodes.ErrorCodes int errorCode, @Nullable String errorMessage) {
+
+    }
+
+    @Override
+    public boolean handleMessage(Message msg) {
+        switch(msg.what) {
+            case MSG_UPDATED_CIRCULAR_GAUGE:
+                cirularGauge.setValue(msg.arg1);
+                break;
+        }
+        return false;
     }
 }

@@ -225,7 +225,7 @@ public class ConnectivityAnalyzer {
 
     @Subscribe
     synchronized public void listen(DobbyEvent event) {
-        int eventType = event.getLastEventType();
+        int eventType = event.getEventType();
         Log.v(TAG, "Got event: " + event);
         switch(eventType) {
             case DobbyEvent.EventType.WIFI_STATE_ENABLED:
