@@ -153,10 +153,8 @@ public class InferenceEngine {
         lastBandwidthUpdateTimestampMs = 0;
         if (testMode == BandwithTestCodes.TestMode.UPLOAD) {
             metricsDb.updateUploadBandwidthGrade(bandwidth * 1.0e-6, DataInterpreter.MetricType.UNKNOWN);
-            //metricsDb.reportUploadMbps(bandwidth * 1.0e-6);
         } else if (testMode == BandwithTestCodes.TestMode.DOWNLOAD) {
             metricsDb.updateDownloadBandwidthGrade(bandwidth * 1.0e-6, DataInterpreter.MetricType.UNKNOWN);
-            //metricsDb.reportDownloadMbps(bandwidth * 1.0e-6);
         }
         if (metricsDb.hasValidDownload() && metricsDb.hasValidUpload()) {
             DataInterpreter.BandwidthGrade bandwidthGrade = DataInterpreter.interpret(

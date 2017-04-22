@@ -28,10 +28,10 @@ public class DataInterpreter {
     };
 
     private static final double[] BW_UPLOAD_STEPS_MBPS = { /* higher is better */
-            6.0, /* excellent */
-            2.0, /* good */
-            0.8, /* average */
-            0.05 /* poor */
+            10.0, /* excellent */
+            5.0, /* good */
+            2.0, /* average */
+            1.0 /* poor */
     };
 
     private static final double[] PING_LATENCY_EXTSERVER_STEPS_MS = { /* lower is better */
@@ -123,8 +123,20 @@ public class DataInterpreter {
         return (metric == MetricType.NONFUNCTIONAL);
     }
 
+    public static boolean isNonFunctionalOrUnknown(@MetricType int metric) {
+        return (metric == MetricType.NONFUNCTIONAL || metric == MetricType.UNKNOWN);
+    }
+
     public static boolean isAverageOrPoorOrNonFunctional(@MetricType int metric) {
         return (metric == MetricType.AVERAGE || metric == MetricType.POOR || metric == MetricType.NONFUNCTIONAL);
+    }
+
+    public static boolean isAverage(@MetricType int metric) {
+        return (metric == MetricType.AVERAGE);
+    }
+
+    public static boolean isPoorOrNonFunctional(@MetricType int metric) {
+        return (metric == MetricType.POOR || metric == MetricType.NONFUNCTIONAL);
     }
 
     public static boolean isGoodOrExcellent(@MetricType int[] metric) {
@@ -447,10 +459,10 @@ public class DataInterpreter {
      * @param downloadMbps Bandwidth in Mbps or -1 if failed.
      * @return
      */
-    public static BandwidthGrade interpret(double uploadMbps, double downloadMbps, String isp, String externalClientIp) {
+    public static BandwidthGrade interpret(double downloadMbps, double uploadMbps, String isp, String externalClientIp) {
         BandwidthGrade grade = new BandwidthGrade();
-        @MetricType int downloadMetric = getGradeHigherIsBetter(downloadMbps, BW_DOWNLOAD_STEPS_MBPS, downloadMbps > 0.0);
-        @MetricType int uploadMetric = getGradeHigherIsBetter(uploadMbps, BW_UPLOAD_STEPS_MBPS, uploadMbps > 0.0);
+        @MetricType int downloadMetric = getGradeHigherIsBetter(downloadMbps, BW_DOWNLOAD_STEPS_MBPS, downloadMbps >= 0.0);
+        @MetricType int uploadMetric = getGradeHigherIsBetter(uploadMbps, BW_UPLOAD_STEPS_MBPS, uploadMbps >= 0.0);
         grade.updateUploadInfo(uploadMbps, uploadMetric);
         grade.updateDownloadInfo(downloadMbps, downloadMetric);
         grade.isp = isp;
