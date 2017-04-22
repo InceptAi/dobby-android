@@ -4,7 +4,6 @@ import android.support.annotation.IntDef;
 import android.util.Log;
 
 import com.inceptai.dobby.connectivity.ConnectivityAnalyzer;
-import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.model.DobbyWifiInfo;
 import com.inceptai.dobby.model.IPLayerInfo;
 import com.inceptai.dobby.model.PingStats;
@@ -15,6 +14,7 @@ import com.inceptai.dobby.wifi.WifiState;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.HashMap;
+import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -123,9 +123,9 @@ public class InferenceEngine {
 
     public String getSuggestions() {
         // Convert currentConditions into suggestions.
-        //Set<Integer> conditions = currentConditions.finalizeInference().keySet();
-        //Integer[] conditionArray = conditions.toArray(new Integer[conditions.size()]);
-        Integer[] conditionArray = {InferenceMap.Condition.CAPTIVE_PORTAL_NO_INTERNET};
+        Set<Integer> conditions = currentConditions.finalizeInference().keySet();
+        Integer[] conditionArray = conditions.toArray(new Integer[conditions.size()]);
+        //Integer[] conditionArray = {InferenceMap.Condition.CAPTIVE_PORTAL_NO_INTERNET};
         return SuggestionCreator.getSuggestionForConditions(conditionArray, conditionArray.length, metricsDb.getParamsForSuggestions());
     }
 
@@ -160,7 +160,8 @@ public class InferenceEngine {
             DataInterpreter.BandwidthGrade bandwidthGrade = DataInterpreter.interpret(
                     metricsDb.getDownloadMbps(), metricsDb.getUploadMbps(), clientIsp, clientExternalIp);
             //Update the bandwidth grade, overwriting earlier info.
-            metricsDb.updateBandwidthMetric(bandwidthGrade.getDownloadBandwidthMetric(), bandwidthGrade.getUploadBandwidthMetric());
+            //metricsDb.updateBandwidthMetric(bandwidthGrade.getDownloadBandwidthMetric(), bandwidthGrade.getUploadBandwidthMetric());
+            metricsDb.updateBandwidthGrade(bandwidthGrade);
             PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(bandwidthGrade);
             Log.i(TAG, "InferenceEngine bandwidthGrade: " + bandwidthGrade.toString());
             Log.i(TAG, "InferenceEngine which gives conditions: " + conditions.toString());

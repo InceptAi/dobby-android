@@ -57,6 +57,7 @@ public class SuggestionCreator {
             int index = 1;
             for(String suggestion: suggestionList) {
                 sb.append(index + ". " + suggestion + "\n");
+                index++;
             }
         }
         return sb.toString();
@@ -79,7 +80,7 @@ public class SuggestionCreator {
         switch (condition) {
             case Condition.WIFI_CHANNEL_CONGESTION:
                 return "Your wifi is operating on channel " + params.currentWifiChannel + " " +
-                        "which is congested. +This means there a lot of other Wifi networks near " +
+                        "which is congested. This means there a lot of other Wifi networks near " +
                         "you which are also operating on the same channel as yours. " +
                         "You can mitigate it by changing the channel on which your router is " +
                         "operating. As per my current analysis, Channel " + params.bestWifiChannel + " " +
@@ -180,7 +181,7 @@ public class SuggestionCreator {
                 return "Your wifi network is fine but we are unable to reach your DNS server, which means you can't access " +
                         "the Internet on your phone and other devices. This could be because the DNS " +
                         "server you have configured is down. We would recommend changing your DNS " +
-                        "server to  " + params.alternateDNS + "and re-run the test to see " +
+                        "server to  " + params.alternateDNS + " and re-run the test to see " +
                         "if you get connectivity restored. You can change your DNS settings in the router " +
                         "settings page or in the app accompanying your wireless router.";
             case Condition.CABLE_MODEM_FAULT:
