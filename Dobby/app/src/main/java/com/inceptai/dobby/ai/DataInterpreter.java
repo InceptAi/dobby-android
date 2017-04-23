@@ -103,8 +103,9 @@ public class DataInterpreter {
         int UNKNOWN = 5;  /* no valid result available */
     }
 
-    private static boolean isFresh(long timestampMs) {
-        return (System.currentTimeMillis() - timestampMs < MAX_STALENESS_MS);
+    public static int compareMetric(@MetricType int metric1, @MetricType int metric2) {
+        //Positivie value means metric1 is better, neg means worse, 0 means equal
+        return (metric2 - metric1);
     }
 
     public static boolean isUnknown(@MetricType int metric) {
@@ -169,6 +170,11 @@ public class DataInterpreter {
         }
         return allNonFunctional;
     }
+
+    private static boolean isFresh(long timestampMs) {
+        return (System.currentTimeMillis() - timestampMs < MAX_STALENESS_MS);
+    }
+
 
     public static class BandwidthGrade {
         private @MetricType int uploadBandwidthMetric;
