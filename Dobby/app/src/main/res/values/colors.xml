@@ -11,4 +11,5 @@
     <color name="basicGreen">#33cc33</color>
     <color name="basicRed">#ff0000</color>
     <color name="basicYellow">#e6e600</color>
+    <color name="lightGray">#e6e6e6</color>
 </resources>
