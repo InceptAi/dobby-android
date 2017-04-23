@@ -115,6 +115,10 @@ public class DataInterpreter {
         return (metric == MetricType.EXCELLENT || metric == MetricType.GOOD);
     }
 
+    public static boolean isGoodOrExcellentorAverage(@MetricType int metric) {
+        return (metric == MetricType.EXCELLENT || metric == MetricType.GOOD || metric == MetricType.AVERAGE);
+    }
+
     public static boolean isAverageOrPoor(@MetricType int metric) {
         return (metric == MetricType.AVERAGE || metric == MetricType.POOR);
     }
@@ -553,26 +557,23 @@ public class DataInterpreter {
         WifiGrade wifiGrade = new WifiGrade();
         //Figure out the # of APs on primary channel
         WifiState.ChannelInfo primaryChannelInfo = wifiChannelInfo.get(linkInfo.getFrequency());
-
         int numStrongInterferingAps = computeStrongInterferingAps(primaryChannelInfo);
-        wifiGrade.primaryApChannelInterferingAps = numStrongInterferingAps;
-        wifiGrade.primaryLinkChannelOccupancyMetric = getGradeLowerIsBetter(numStrongInterferingAps,
-                WIFI_CHANNEL_OCCUPANCY_STEPS,
-                (linkInfo.getFrequency() > 0 && numStrongInterferingAps >= 0));
-
         //Compute metrics for all channels -- for later use
-        int leastOccupiedChannel = wifiGrade.primaryApChannel;
-        int minOccupancyAPs = wifiGrade.primaryApChannelInterferingAps;
+        int leastOccupiedChannel = linkInfo.getFrequency(); // current ap channel
+        int minOccupancyAPs = numStrongInterferingAps;
         for (WifiState.ChannelInfo channelInfo: wifiChannelInfo.values()) {
             int occupancy = computeStrongInterferingAps(channelInfo);
             if (occupancy < minOccupancyAPs) {
                 leastOccupiedChannel = channelInfo.channelFrequency;
                 minOccupancyAPs = occupancy;
             }
-            wifiGrade.wifiChannelOccupancyMetric.put(channelInfo.channelFrequency,
-                    occupancy);
+            wifiGrade.wifiChannelOccupancyMetric.put(channelInfo.channelFrequency, occupancy);
         }
 
+        wifiGrade.primaryApChannelInterferingAps = numStrongInterferingAps;
+        wifiGrade.primaryLinkChannelOccupancyMetric = getGradeLowerIsBetter(numStrongInterferingAps,
+                WIFI_CHANNEL_OCCUPANCY_STEPS,
+                (linkInfo.getFrequency() > 0 && numStrongInterferingAps >= 0));
         wifiGrade.primaryApSignalMetric = getGradeHigherIsBetter(linkInfo.getRssi(),
                 WIFI_RSSI_STEPS_DBM, linkInfo.getRssi() < 0);
         wifiGrade.primaryApLinkSpeedMetric = getGradeHigherIsBetter(linkInfo.getLinkSpeed(),

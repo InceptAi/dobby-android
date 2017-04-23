@@ -195,7 +195,7 @@ public class InferenceMap {
             conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE, 0.5);
             //It could be that the right network is not showing up in the scans.
             conditions.include(Condition.ROUTER_WIFI_INTERFACE_FAULT, 0.5);
-        }  else if (DataInterpreter.isAverageOrPoorOrNonFunctional(wifiGrade.primaryApSignalMetric)) {
+        }  else if (DataInterpreter.isPoorOrNonFunctional(wifiGrade.primaryApSignalMetric)) {
             //poor signal and high congestion
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 1.0);
             if (DataInterpreter.isAverageOrPoorOrNonFunctional(wifiGrade.primaryLinkChannelOccupancyMetric)) {
@@ -206,7 +206,7 @@ public class InferenceMap {
                     wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.HANGING_ON_DHCP){
                 conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.2);
             }
-        } else if (DataInterpreter.isGoodOrExcellent(wifiGrade.primaryApSignalMetric)){
+        } else if (DataInterpreter.isGoodOrExcellentorAverage(wifiGrade.primaryApSignalMetric)){
             if (DataInterpreter.isAverageOrPoorOrNonFunctional(wifiGrade.primaryApLinkSpeedMetric)) {
                 conditions.include(Condition.ROUTER_GOOD_SIGNAL_USING_SLOW_DATA_RATE, 0.5);
             }
@@ -227,9 +227,8 @@ public class InferenceMap {
             conditions.include(Condition.WIFI_LINK_AUTH_ISSUE, 1.0);
         } else if (wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.HANGING_ON_DHCP) {
             conditions.include(Condition.WIFI_LINK_DHCP_ISSUE, 1.0);
-        } else if (wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.UNKNOWN) {
-            conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE, 0.3);
         }
+
         return conditions;
     }
 
