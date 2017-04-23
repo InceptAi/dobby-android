@@ -29,7 +29,6 @@ public class InferenceMap {
             Condition.ROUTER_WIFI_INTERFACE_FAULT,
             Condition.ROUTER_SOFTWARE_FAULT,
             Condition.ROUTER_GOOD_SIGNAL_USING_SLOW_DATA_RATE,
-            Condition.ISP_INTERNET_SLOW_DNS_OK,
             Condition.ISP_INTERNET_DOWN,
             Condition.ISP_INTERNET_SLOW,
             Condition.ISP_INTERNET_SLOW_DOWNLOAD,
@@ -37,9 +36,6 @@ public class InferenceMap {
             Condition.DNS_RESPONSE_SLOW,
             Condition.DNS_SLOW_TO_REACH,
             Condition.DNS_UNREACHABLE,
-            Condition.DNS_SLOW_FAST_ALTERNATIVE_AVAILABLE,
-            Condition.DNS_UNREACHABLE_ALTERNATIVE_WORKING,
-            Condition.ISP_INTERNET_DOWN_DNS_OK,
             Condition.CABLE_MODEM_FAULT,
             Condition.CAPTIVE_PORTAL_NO_INTERNET,
             Condition.REMOTE_SERVER_IS_SLOW_TO_RESPOND})
@@ -57,7 +53,6 @@ public class InferenceMap {
         int ROUTER_WIFI_INTERFACE_FAULT = 21;
         int ROUTER_SOFTWARE_FAULT = 22;
         int ROUTER_GOOD_SIGNAL_USING_SLOW_DATA_RATE = 23;
-        int ISP_INTERNET_SLOW_DNS_OK = 30;
         int ISP_INTERNET_DOWN = 31;
         int ISP_INTERNET_SLOW = 32;
         int ISP_INTERNET_SLOW_DOWNLOAD = 33;
@@ -65,9 +60,6 @@ public class InferenceMap {
         int DNS_RESPONSE_SLOW = 35;
         int DNS_SLOW_TO_REACH = 36;
         int DNS_UNREACHABLE = 37;
-        int DNS_SLOW_FAST_ALTERNATIVE_AVAILABLE = 38;
-        int DNS_UNREACHABLE_ALTERNATIVE_WORKING = 39;
-        int ISP_INTERNET_DOWN_DNS_OK = 40;
         int CABLE_MODEM_FAULT = 41;
         int CAPTIVE_PORTAL_NO_INTERNET = 50;
         int REMOTE_SERVER_IS_SLOW_TO_RESPOND = 51;
@@ -94,8 +86,6 @@ public class InferenceMap {
         Condition.ISP_INTERNET_SLOW,
         Condition.ISP_INTERNET_SLOW_DOWNLOAD,
         Condition.ISP_INTERNET_SLOW_UPLOAD,
-        Condition.ISP_INTERNET_SLOW_DNS_OK,
-        Condition.ISP_INTERNET_DOWN_DNS_OK,
         Condition.REMOTE_SERVER_IS_SLOW_TO_RESPOND
     };
 
@@ -103,8 +93,6 @@ public class InferenceMap {
         Condition.DNS_RESPONSE_SLOW,
         Condition.DNS_SLOW_TO_REACH,
         Condition.DNS_UNREACHABLE,
-        Condition.DNS_SLOW_FAST_ALTERNATIVE_AVAILABLE,
-        Condition.DNS_UNREACHABLE_ALTERNATIVE_WORKING
     };
 
 
@@ -126,7 +114,6 @@ public class InferenceMap {
         if (DataInterpreter.isGoodOrExcellent(bandwidthGrade.getDownloadBandwidthMetric()) &&
                 DataInterpreter.isGoodOrExcellent(bandwidthGrade.getUploadBandwidthMetric())) {
             conditions.exclude(ISP_CONDITIONS);
-            //conditions.exclude(DNS_CONDITIONS);
             //We can exclude WIFI CONDITIONS here but what about FREQUENCT DISCONNECTIONS etc.
             //TODO: Decide whether to exclude wifi conditions here
             //conditions.exclude(WIFI_CONDITIONS);
@@ -251,11 +238,11 @@ public class InferenceMap {
 
                 //Good Router / dns latency but poor external server latency
                 if (DataInterpreter.isAverageOrPoorOrNonFunctional(pingGrade.externalServerLatencyMetric)) {
-                    conditions.include(Condition.ISP_INTERNET_SLOW_DNS_OK, 0.3);
+                    conditions.include(Condition.ISP_INTERNET_SLOW, 0.3);
                     conditions.include(Condition.CABLE_MODEM_FAULT, 0.3);
                     conditions.include(Condition.REMOTE_SERVER_IS_SLOW_TO_RESPOND, 0.1);
                 } else if (DataInterpreter.isUnknown(pingGrade.externalServerLatencyMetric)) {
-                    conditions.include(Condition.ISP_INTERNET_DOWN_DNS_OK, 0.7);
+                    conditions.include(Condition.ISP_INTERNET_DOWN, 0.7);
                     conditions.include(Condition.CABLE_MODEM_FAULT, 0.3);
                 }
             } else if (DataInterpreter.isAverageOrPoorOrNonFunctional(pingGrade.dnsServerLatencyMetric)) {
@@ -282,12 +269,6 @@ public class InferenceMap {
             if (DataInterpreter.isUnknown(pingGrade.dnsServerLatencyMetric)) {
                 conditions.include(Condition.DNS_UNREACHABLE, 1.0);
             }
-        }
-
-        if ((!DataInterpreter.isGoodOrExcellent(pingGrade.dnsServerLatencyMetric) && DataInterpreter.isGoodOrExcellent(pingGrade.alternativeDnsMetric))) {
-            conditions.include(Condition.DNS_SLOW_FAST_ALTERNATIVE_AVAILABLE, 1.0);
-        } else if ((DataInterpreter.isNonFunctionalOrUnknown(pingGrade.dnsServerLatencyMetric) && !DataInterpreter.isNonFunctionalOrUnknown(pingGrade.alternativeDnsMetric))) {
-            conditions.include(Condition.DNS_UNREACHABLE_ALTERNATIVE_WORKING, 1.0);
         }
 
         return conditions;
@@ -349,16 +330,8 @@ public class InferenceMap {
                 return "DNS_SLOW_TO_REACH";
             case Condition.DNS_UNREACHABLE:
                 return "DNS_UNREACHABLE";
-            case Condition.DNS_SLOW_FAST_ALTERNATIVE_AVAILABLE:
-                return "DNS_SLOW_FAST_ALTERNATIVE_AVAILABLE";
-            case Condition.DNS_UNREACHABLE_ALTERNATIVE_WORKING:
-                return "DNS_UNREACHABLE_ALTERNATIVE_WORKING";
-            case Condition.ISP_INTERNET_DOWN_DNS_OK:
-                return "ISP_INTERNET_DOWN_DNS_OK";
             case Condition.CAPTIVE_PORTAL_NO_INTERNET:
                 return "CAPTIVE_PORTAL_NO_INTERNET";
-            case Condition.ISP_INTERNET_SLOW_DNS_OK:
-                return "ISP_INTERNET_SLOW_DNS_OK";
             case Condition.ISP_INTERNET_DOWN:
                 return "ISP_INTERNET_DOWN";
             case Condition.CABLE_MODEM_FAULT:

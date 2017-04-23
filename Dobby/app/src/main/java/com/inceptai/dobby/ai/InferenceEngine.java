@@ -30,6 +30,10 @@ import static com.inceptai.dobby.DobbyApplication.TAG;
 public class InferenceEngine {
     private static final String CANNED_RESPONSE = "We are working on it.";
 
+    private static final int MAX_SUGGESTIONS_TO_SHOW = 2;
+    private static final double MAX_GAP_IN_SUGGESTION_WEIGHT = 0.2;
+    private static final boolean LONG_SUGGESTION_MODE = true;
+
     private static final int STATE_BANDWIDTH_TEST_NONE = 0;
     private static final int STATE_BANDWIDTH_TEST_REQUESTED = 1;
     private static final int STATE_BANDWIDTH_TEST_RUNNING = 2;
@@ -109,7 +113,7 @@ public class InferenceEngine {
         Log.i(TAG, "InferenceEngine After merging: " + currentConditions.toString());
 
         //TODO: Remove this hack.
-        String suggestions = getSuggestions();
+        String suggestions = getSuggestions(MAX_SUGGESTIONS_TO_SHOW, MAX_GAP_IN_SUGGESTION_WEIGHT, LONG_SUGGESTION_MODE);
         sendResponseOnlyAction(suggestions);
         return pingGrade;
     }
@@ -125,15 +129,10 @@ public class InferenceEngine {
     }
 
 
-    public String getSuggestions() {
-        // Convert currentConditions into suggestions.
-        List<Integer> conditionArray = currentConditions.getTopConditions(5, 0.2);
-        //Set<Integer> conditions = currentConditions.finalizeInference().keySet();
-        //Integer[] conditionArray = conditions.toArray(new Integer[conditions.size()]);
-        //Integer[] conditionArray = {InferenceMap.Condition.CAPTIVE_PORTAL_NO_INTERNET};
-        //return SuggestionCreator.getSuggestionForConditions(conditionArray, conditionArray.length, metricsDb.getParamsForSuggestions());
-        return SuggestionCreator.getSuggestionForConditions(conditionArray, metricsDb.getParamsForSuggestions());
-
+    public String getSuggestions(int maxSuggestions, double maxGapInWeight, boolean getLongSuggestions) {
+        List<Integer> conditionArray = currentConditions.getTopConditions(maxSuggestions, maxGapInWeight);
+        return SuggestionCreator.getSuggestionForConditions(conditionArray,
+                metricsDb.getParamsForSuggestions(), getLongSuggestions);
     }
 
     // Bandwidth test notifications:

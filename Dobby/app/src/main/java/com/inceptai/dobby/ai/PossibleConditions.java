@@ -117,6 +117,7 @@ public class PossibleConditions {
 
     public List<Integer> getTopConditions(int maxConditionsToReturn, double maxGap) {
         List<Integer> topConditionsList = new ArrayList<>();
+        normalizeWeights();
         Map<Integer, Double> sortedHashMap = Utils.sortHashMapByValueDescending(finalizeInference());
         double maxWeight = 0;
         for (HashMap.Entry<Integer, Double> entry : sortedHashMap.entrySet()) {

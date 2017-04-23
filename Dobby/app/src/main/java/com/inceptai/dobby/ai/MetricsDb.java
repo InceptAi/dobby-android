@@ -112,10 +112,14 @@ public class MetricsDb {
             params.currentSignal = wifiGrade.primaryApSignal;
             params.currentWifiChannel = wifiGrade.primaryApChannel;
             params.currentWifiSSID = wifiGrade.primaryApSsid;
-            params.bestWifiChannel = wifiGrade.leastOccupiedChannel;
+            //Only set best wifi channel if not equal to primary AP channel
+            if (wifiGrade.leastOccupiedChannel != wifiGrade.primaryApChannel) {
+                params.bestWifiChannel = wifiGrade.leastOccupiedChannel;
+            }
         }
 
-        if (pingGrade.hasValidData()) {
+        if (pingGrade.hasValidData() && DataInterpreter.compareMetric(pingGrade.alternativeDnsMetric,
+                pingGrade.dnsServerLatencyMetric) > 0) {
             params.alternateDNS = pingGrade.alternativeDns;
         }
 
