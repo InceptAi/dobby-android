@@ -6,6 +6,8 @@ import com.inceptai.dobby.utils.Utils;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.inceptai.dobby.utils.Utils.convertSignalDbmToPercent;
+
 /**
  * Created by vivek on 4/19/17.
  */
@@ -73,18 +75,6 @@ public class SuggestionCreator {
         return sb.toString();
     }
 
-    private static int convertSignalDbmToPercent(int signalDbm) {
-        final double MAX_SIGNAL_DBM = -30.0;
-        final double MIN_SIGNAL_DBM = -100.0;
-        double percent = ((double)signalDbm - MIN_SIGNAL_DBM) / (MAX_SIGNAL_DBM - MIN_SIGNAL_DBM);
-        if (percent > 100) {
-            percent = 100;
-        } else if (percent < 0) {
-            percent = 1;
-        }
-        return (int)percent;
-    }
-
     public static String getSuggestionForCondition(@InferenceMap.Condition int condition,
                                                    SuggestionCreatorParams params) {
         StringBuilder suggestionToReturn = new StringBuilder();
@@ -93,7 +83,7 @@ public class SuggestionCreator {
         switch (condition) {
             case Condition.WIFI_CHANNEL_CONGESTION:
                 baseMessage = "Your wifi is operating on Channel " + params.currentWifiChannel +
-                        "which is congested. This means there a lot of other Wifi networks near " +
+                        " which is congested. This means there a lot of other Wifi networks near " +
                         "you which are also operating on the same channel as yours. ";
                 if (params.bestWifiChannel > 0) {
                     conditionalMessage = "As per our current analysis, Channel " + params.bestWifiChannel + " " +
@@ -102,7 +92,7 @@ public class SuggestionCreator {
                 break;
             case Condition.WIFI_CHANNEL_BAD_SIGNAL:
                 baseMessage = "Your signal to your wireless router is very weak (about "
-                        + convertSignalDbmToPercent(params.currentSignal) + " %) " +
+                        + Utils.convertSignalDbmToPercent(params.currentSignal) + " %) " +
                         ", this could lead to poor speeds and bad experience in streaming etc. " +
                         "If you are close to your router while doing this test (within 20ft), then your router is not " +
                         "providing enough signal. Make sure your router is not obstructed and if " +

@@ -397,6 +397,17 @@ public class Utils {
         return sortedList.get(index);
     }
 
+    public static int convertSignalDbmToPercent(int signalDbm) {
+        final double MAX_SIGNAL_DBM = -50.0;
+        final double MIN_SIGNAL_DBM = -110.0;
+        double percent = (((double)signalDbm - MIN_SIGNAL_DBM) / (MAX_SIGNAL_DBM - MIN_SIGNAL_DBM)) * 100.0;
+        if (percent > 100) {
+            percent = 100;
+        } else if (percent < 0) {
+            percent = 1;
+        }
+        return (int)percent;
+    }
 
     public static <K, V extends Comparable<? super V>> Map<K, V>
     sortHashMapByValueDescending(Map<K, V> map )
