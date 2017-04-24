@@ -52,6 +52,7 @@ public class NewBandwidthAnalyzer {
     private ParseSpeedTestConfig parseSpeedTestConfig;
     private ParseServerInformation parseServerInformation;
     private SpeedTestConfig speedTestConfig;
+    private ServerInformation serverInformation;
     private ServerInformation.ServerDetails bestServer;
     private NewDownloadAnalyzer downloadAnalyzer;
     private NewUploadAnalyzer uploadAnalyzer;
@@ -159,14 +160,19 @@ public class NewBandwidthAnalyzer {
             }
             //Update lastConfigFetch timestamp
             lastConfigFetchTimestampMs = System.currentTimeMillis();
+        } else { //we already have a fresh config. Do nothing. Use speedTestConfig.
+            //Inform if anyone is listening for this.
+            if (resultsCallback != null) {
+                resultsCallback.onConfigFetch(speedTestConfig);
+            }
         }
     }
 
     synchronized private void fetchServerConfigAndDetermineBestServerIfNeeded() {
         //Get best server information if stale
         if (System.currentTimeMillis() - lastBestServerDeterminationTimestampMs > MAX_AGE_FOR_FRESHNESS_MS) {
-            ServerInformation info = parseServerInformation.getServerInfo();
-            if (info == null) {
+            serverInformation = parseServerInformation.getServerInfo();
+            if (serverInformation == null) {
                 if (resultsCallback != null) {
                     resultsCallback.onBandwidthTestError(BandwithTestCodes.TestMode.SERVER_FETCH,
                             ErrorCodes.ERROR_FETCHING_SERVER_INFO,
@@ -176,7 +182,7 @@ public class NewBandwidthAnalyzer {
             }
 
             //Get best server
-            bestServer = getBestServer(speedTestConfig, info);
+            bestServer = getBestServer(speedTestConfig, serverInformation);
             if (bestServer == null) {
                 if (resultsCallback != null) {
                     resultsCallback.onBandwidthTestError(BandwithTestCodes.TestMode.SERVER_FETCH,
@@ -186,6 +192,11 @@ public class NewBandwidthAnalyzer {
                 return;
             }
             lastBestServerDeterminationTimestampMs = System.currentTimeMillis();
+        } else { //Use the existing best server for testing.
+            if (resultsCallback != null) {
+                resultsCallback.onServerInformationFetch(serverInformation);
+                resultsCallback.onBestServerSelected(bestServer);
+            }
         }
     }
 
