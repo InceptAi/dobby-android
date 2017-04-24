@@ -39,6 +39,7 @@ public class NetworkLayer {
     public static final int MIN_TIME_GAP_TO_RETRIGGER_PING_MS = 10000; //10sec
     public static final int MIN_PKT_LOSS_RATE_TO_RETRIGGER_PING_PERCENT = 50;
     public static final int MIN_CHECKS_CONNECTIIVITY = 3;
+    public static final int MAX_AGE_GAP_TO_RETRIGGER_PING_MS = 120000; // 2 mins
 
     private Context context;
     private DobbyThreadpool threadpool;
@@ -118,7 +119,7 @@ public class NetworkLayer {
     @Nullable
     public ListenableFuture<HashMap<String, PingStats>> startPing() {
         try {
-            return getPingAnalyzerInstance().scheduleEssentialPingTestsAsyncSafely();
+            return getPingAnalyzerInstance().scheduleEssentialPingTestsAsyncSafely(MAX_AGE_GAP_TO_RETRIGGER_PING_MS);
         } catch (IllegalStateException e) {
             Log.v(TAG, "Exception while scheduling ping tests: " + e);
         }

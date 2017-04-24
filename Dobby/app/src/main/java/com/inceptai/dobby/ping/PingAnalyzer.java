@@ -117,39 +117,74 @@ public class PingAnalyzer {
         return pingsAllDone;
     }
 
-    public ListenableFuture<HashMap<String, PingStats>> scheduleEssentialPingTestsAsyncSafely() throws IllegalStateException {
+    public ListenableFuture<HashMap<String, PingStats>> scheduleEssentialPingTestsAsyncSafely(int maxAgeToReTriggerPingMs) throws IllegalStateException {
+        final int maxAge = maxAgeToReTriggerPingMs;
         if (pingResultsFuture != null && !pingResultsFuture.isDone()) {
             AsyncFunction<HashMap<String, PingStats>, HashMap<String, PingStats>> redoPing = new
                     AsyncFunction<HashMap<String, PingStats>, HashMap<String, PingStats>>() {
                         @Override
                         public ListenableFuture<HashMap<String, PingStats>> apply(HashMap<String, PingStats> input) throws Exception {
-                            return scheduleEssentialPingTestsAsync();
+                            return scheduleEssentialPingTestsAsync(maxAge);
                         }
                     };
             ListenableFuture<HashMap<String, PingStats>> newPingResultsFuture = Futures.transformAsync(pingResultsFuture, redoPing);
             return newPingResultsFuture;
         } else {
-            return scheduleEssentialPingTestsAsync();
+            return scheduleEssentialPingTestsAsync(maxAge);
         }
     }
 
-    private ListenableFuture<HashMap<String, PingStats>> scheduleEssentialPingTestsAsync() throws IllegalStateException {
+    private String[] getAddressListToPing(int maxAgeToReTriggerPingMs) {
+        HashMap<String, Boolean> addressToPingMap = new HashMap<>();
+        String[] addressList = {ipLayerInfo.gateway, ipLayerInfo.dns1,ipLayerInfo.dns2,
+                ipLayerInfo.referenceExternalAddress1, ipLayerInfo.referenceExternalAddress2,
+                ipLayerInfo.publicDns1, ipLayerInfo.publicDns2};
+
+        //By default ping everyone
+        for (String address: addressList) {
+            addressToPingMap.put(address, true);
+        }
+        //Mark ones with fresh enough timestamp as false
+        for (PingStats stats: ipLayerPingStats.values()) {
+            if (stats.updatedAt > 0 && (System.currentTimeMillis() - stats.updatedAt < maxAgeToReTriggerPingMs)) {
+                if (addressToPingMap.get(stats.ipAddress) != null) {
+                    addressToPingMap.put(stats.ipAddress, false);
+                }
+            }
+        }
+        List<String> addressListToPing = new ArrayList<>();
+        //Get the list of ips to ping
+        for (HashMap.Entry<String, Boolean> entry : addressToPingMap.entrySet()) {
+            if (entry.getValue()) {
+                addressListToPing.add(entry.getKey());
+            }
+        }
+        return addressListToPing.toArray(new String[addressListToPing.size()]);
+    }
+
+    private ListenableFuture<HashMap<String, PingStats>> scheduleEssentialPingTestsAsync(int maxAgeToReTriggerPingMs) throws IllegalStateException {
         if (ipLayerInfo == null) {
             // Try to get new iplayerInfo
             eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.PING_FAILED));
             throw new IllegalStateException("Cannot schedule pings when iplayerInfo is null or own IP is 0.0.0.0");
         }
-        eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.PING_STARTED));
-        pingInProgress.set(true);
-        pingsInFlight.clear();
-        String[] addressList = {ipLayerInfo.gateway, ipLayerInfo.dns1,ipLayerInfo.dns2,
-                ipLayerInfo.referenceExternalAddress1, ipLayerInfo.referenceExternalAddress2,
-                ipLayerInfo.publicDns1, ipLayerInfo.publicDns2};
-        for (String address: addressList) {
-            pingsInFlight.put(address, true);
-        }
-        scheduleMultipleAsyncPingAndReturn(addressList);
+        //Get list of addresses to ping
+        String[] addressList = getAddressListToPing(maxAgeToReTriggerPingMs);
         pingResultsFuture = SettableFuture.create();
+        if (addressList.length > 0) {
+            eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.PING_STARTED));
+            pingInProgress.set(true);
+            pingsInFlight.clear();
+            for (String address: addressList) {
+                pingsInFlight.put(address, true);
+            }
+            scheduleMultipleAsyncPingAndReturn(addressList);
+        } else {
+            //No need to ping, just set the future and return
+            if (pingResultsFuture != null) {
+                pingResultsFuture.set(ipLayerPingStats);
+            }
+        }
         return pingResultsFuture;
     }
 
