@@ -27,16 +27,13 @@ import com.inceptai.dobby.ai.DataInterpreter;
 import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.BandwidthStats;
-import com.inceptai.dobby.model.PingStats;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
 import com.inceptai.dobby.speedtest.NewBandwidthAnalyzer;
 import com.inceptai.dobby.speedtest.ServerInformation;
 import com.inceptai.dobby.speedtest.SpeedTestConfig;
 import com.inceptai.dobby.utils.Utils;
-import com.inceptai.dobby.wifi.WifiState;
 
-import java.util.HashMap;
 import java.util.List;
 
 public class WifiDocMainFragment extends Fragment implements View.OnClickListener, NewBandwidthAnalyzer.ResultsCallback, Handler.Callback{
@@ -44,8 +41,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private static final int PERMISSION_COARSE_LOCATION_REQUEST_CODE = 101;
     private static final String ARG_PARAM1 = "param1";
     private static final int MSG_UPDATED_CIRCULAR_GAUGE = 1001;
-    private static final int MSG_WIFI_SCAN_AVAILABLE = 1002;
-    private static final int MSG_PING_AVAILABLE = 1003;
+    private static final int MSG_WIFI_GRADE_AVAILABLE = 1002;
+    private static final int MSG_PING_GRADE_AVAILABLE = 1003;
 
     private OnFragmentInteractionListener mListener;
 
@@ -177,10 +174,10 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         if (event.getEventType() == DobbyEvent.EventType.BANDWIDTH_TEST_STARTING) {
             bandwidthObserver = (BandwidthObserver) event.getPayload();
             bandwidthObserver.registerCallback(this);
-        } else if (event.getEventType() == DobbyEvent.EventType.WIFI_SCAN_AVAILABLE) {
-            Message.obtain(handler, MSG_WIFI_SCAN_AVAILABLE, event.getPayload()).sendToTarget();
-        } else if (event.getEventType() == DobbyEvent.EventType.PING_INFO_AVAILABLE) {
-            Message.obtain(handler, MSG_PING_AVAILABLE, event.getPayload()).sendToTarget();
+        } else if (event.getEventType() == DobbyEvent.EventType.WIFI_GRADE_AVAILABLE) {
+            Message.obtain(handler, MSG_WIFI_GRADE_AVAILABLE, event.getPayload()).sendToTarget();
+        } else if (event.getEventType() == DobbyEvent.EventType.PING_GRADE_AVAILABLE) {
+            Message.obtain(handler, MSG_PING_GRADE_AVAILABLE, event.getPayload()).sendToTarget();
         }
     }
 
@@ -226,10 +223,10 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                 circularGauge.setValue(msg.arg1);
                 gaugeTv.setText(String.valueOf(msg.arg1));
                 break;
-            case MSG_WIFI_SCAN_AVAILABLE:
+            case MSG_WIFI_GRADE_AVAILABLE:
                 showWifiResults((DataInterpreter.WifiGrade) msg.obj);
                 break;
-            case MSG_PING_AVAILABLE:
+            case MSG_PING_GRADE_AVAILABLE:
                 showPingResults((DataInterpreter.PingGrade) msg.obj);
                 break;
         }

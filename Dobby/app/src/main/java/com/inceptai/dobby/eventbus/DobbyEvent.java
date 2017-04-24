@@ -23,13 +23,12 @@ public class DobbyEvent {
             EventType.BWTEST_INFO_AVAILABLE, EventType.BWTEST_FAILED, EventType.HANGING_ON_DHCP,
             EventType.HANGING_ON_AUTHENTICATING, EventType.HANGING_ON_SCANNING, EventType.FREQUENT_DISCONNECTIONS,
             EventType.BANDWIDTH_TEST_STARTING, EventType.WIFI_SCAN_STARTING, EventType.PING_STARTING,
-            EventType.PING_GRADE_AVAILABLE})
+            EventType.PING_GRADE_AVAILABLE, EventType.GATEWAY_HTTP_GRADE_AVAILABLE, EventType.WIFI_GRADE_AVAILABLE})
     public @interface EventType {
         //Unknown event type
         int NO_EVENT_RECEIVED = 0;
 
         //WiFi state events
-
         int WIFI_STATE_CHANGED = 1;
         int WIFI_STATE_ENABLED = 2;
         int WIFI_STATE_DISABLED = 3;
@@ -70,6 +69,8 @@ public class DobbyEvent {
         int WIFI_SCAN_STARTING = 25;
         int PING_STARTING = 26;
         int PING_GRADE_AVAILABLE = 27;
+        int GATEWAY_HTTP_GRADE_AVAILABLE = 28;
+        int WIFI_GRADE_AVAILABLE = 29;
     }
 
     @DobbyEvent.EventType
@@ -129,6 +130,8 @@ public class DobbyEvent {
                 return "WIFI_RSSI_CHANGED";
             case EventType.WIFI_SCAN_STARTING:
                 return "WIFI_SCAN_STARTING";
+            case EventType.WIFI_GRADE_AVAILABLE:
+                return "WIFI_GRADE_AVAILABLE";
 
             //WiFi network changed event
             case EventType.NETWORK_STATE_CHANGED:
@@ -153,6 +156,8 @@ public class DobbyEvent {
                 return "PING_FAILED";
             case EventType.PING_GRADE_AVAILABLE:
                 return "PING_GRADE_AVAILABLE";
+            case EventType.GATEWAY_HTTP_GRADE_AVAILABLE:
+                return "GATEWAY_HTTP_GRADE_AVAILABLE";
 
             //BWTest notifications
             case EventType.BANDWIDTH_TEST_STARTING:
