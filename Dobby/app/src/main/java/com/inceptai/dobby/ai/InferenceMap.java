@@ -236,56 +236,54 @@ public class InferenceMap {
             conditions.exclude(DNS_CONDITIONS);
             return conditions;
         }
-
         //Router is quick
         if (DataInterpreter.isGoodOrExcellent(pingGrade.routerLatencyMetric)) {
             //conditions.exclude(ROUTER_CONDITIONS);
-            if (DataInterpreter.isGoodOrExcellent(pingGrade.dnsServerLatencyMetric)) {
+            if (DataInterpreter.isGoodOrExcellentorAverage(pingGrade.dnsServerLatencyMetric)) {
 
                 conditions.exclude(DNS_CONDITIONS);
 
                 //Good Router / dns latency but poor external server latency
-                if (DataInterpreter.isAverageOrPoorOrNonFunctional(pingGrade.externalServerLatencyMetric)) {
-                    conditions.include(Condition.ISP_INTERNET_SLOW, 0.3);
+                if (DataInterpreter.isPoor(pingGrade.externalServerLatencyMetric)) {
+                    conditions.include(Condition.ISP_INTERNET_SLOW, 0.7);
                     conditions.include(Condition.CABLE_MODEM_FAULT, 0.3);
                     conditions.include(Condition.REMOTE_SERVER_IS_SLOW_TO_RESPOND, 0.05);
-                } else if (DataInterpreter.isUnknown(pingGrade.externalServerLatencyMetric)) {
+                } else if (DataInterpreter.isNonFunctional(pingGrade.externalServerLatencyMetric)) { // Use loss rates here instead of unknown
                     conditions.include(Condition.ISP_INTERNET_DOWN, 0.7);
                     conditions.include(Condition.CABLE_MODEM_FAULT, 0.3);
                 }
-            } else if (DataInterpreter.isAverageOrPoorOrNonFunctional(pingGrade.dnsServerLatencyMetric)) {
+            } else if (DataInterpreter.isPoor(pingGrade.dnsServerLatencyMetric)) {
                 //Good router / slow dns
                 conditions.include(Condition.DNS_SLOW_TO_REACH, 0.8);
                 conditions.include(Condition.CABLE_MODEM_FAULT, 0.2);
-            } else {
+            } else if (DataInterpreter.isNonFunctional(pingGrade.dnsServerLatencyMetric)) {
                 conditions.include(Condition.DNS_UNREACHABLE, 0.8);
                 conditions.include(Condition.CABLE_MODEM_FAULT, 0.2);
             }
         } else if (DataInterpreter.isAverage(pingGrade.routerLatencyMetric)){
             //Router has average latency to respond to ping
-            if (DataInterpreter.isPoorOrNonFunctional(pingGrade.dnsServerLatencyMetric)) {
+            if (DataInterpreter.isPoor(pingGrade.dnsServerLatencyMetric)) {
                 //Good router / slow dns
                 conditions.include(Condition.DNS_SLOW_TO_REACH, 0.5);
                 conditions.include(Condition.CABLE_MODEM_FAULT, 0.2);
-            } else if (DataInterpreter.isUnknown(pingGrade.dnsServerLatencyMetric)) {
+            } else if (DataInterpreter.isNonFunctional(pingGrade.dnsServerLatencyMetric)) {
                 conditions.include(Condition.DNS_UNREACHABLE, 0.5);
                 conditions.include(Condition.CABLE_MODEM_FAULT, 0.2);
             }
-        } else if (DataInterpreter.isPoorOrNonFunctional(pingGrade.routerLatencyMetric)){
+        } else if (DataInterpreter.isPoor(pingGrade.routerLatencyMetric)) {
             //Router has average latency to respond to ping
             conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.2);
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.8);
             conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.2);
-            if (DataInterpreter.isUnknown(pingGrade.dnsServerLatencyMetric)) {
+            if (DataInterpreter.isNonFunctional(pingGrade.dnsServerLatencyMetric)) {
                 conditions.include(Condition.DNS_UNREACHABLE, 0.1);
             }
-        } else {
-            //Router ping is UNKNOWN
+        } else if (DataInterpreter.isNonFunctional(pingGrade.routerLatencyMetric)) {
+            //Router ping is Non functional -- loss rate could be 100%
             conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.2);
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.7);
             conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.7);
         }
-
         return conditions;
     }
 
