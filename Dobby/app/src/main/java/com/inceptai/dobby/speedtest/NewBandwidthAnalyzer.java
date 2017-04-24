@@ -34,6 +34,7 @@ public class NewBandwidthAnalyzer {
     private static final int DOWNLOAD_THREADS = 1;
     private static final int UPLOAD_THREADS = 1;
     private static final int REPORT_INTERVAL_MS = 250;
+    private static final int MAX_AGE_FOR_FRESHNESS_MS = 300000; // 5 mins
 
     @IntDef({BandwidthAnalyzerState.STOPPED, BandwidthAnalyzerState.RUNNING,
             BandwidthAnalyzerState.CANCELLING, BandwidthAnalyzerState.CANCELLED})
@@ -56,6 +57,8 @@ public class NewBandwidthAnalyzer {
     private NewUploadAnalyzer uploadAnalyzer;
     private DobbyThreadpool dobbyThreadpool;
     private DobbyEventBus eventBus;
+    private long lastConfigFetchTimestampMs;
+    private long lastBestServerDeterminationTimestampMs;
 
     private BandwidthTestListener bandwidthTestListener;
 
@@ -96,6 +99,8 @@ public class NewBandwidthAnalyzer {
         this.parseSpeedTestConfig = new ParseSpeedTestConfig(this.bandwidthTestListener);
         this.parseServerInformation = new ParseServerInformation(this.bandwidthTestListener);
         this.dobbyThreadpool = dobbyThreadpool;
+        lastConfigFetchTimestampMs = 0;
+        lastBestServerDeterminationTimestampMs = 0;
         Log.e(TAG, "NEW BANDWIDTH ANALYZER INSTANCE CREATED.");
     }
 
@@ -132,6 +137,56 @@ public class NewBandwidthAnalyzer {
         downloadAnalyzer.cancelAllTests();
         uploadAnalyzer.cancelAllTests();
         markTestsAsCancelled();
+    }
+
+    public void onConnectivityChangeToOnline() {
+        fetchSpeedTestConfigIfNeeded();
+        fetchServerConfigAndDetermineBestServerIfNeeded();
+    }
+
+    synchronized private void fetchSpeedTestConfigIfNeeded() {
+        final String downloadMode = "http";
+        //Get config if not fresh
+        if (System.currentTimeMillis() - lastConfigFetchTimestampMs > MAX_AGE_FOR_FRESHNESS_MS) {
+            speedTestConfig = parseSpeedTestConfig.getConfig(downloadMode);
+            if (speedTestConfig == null) {
+                if (resultsCallback != null) {
+                    resultsCallback.onBandwidthTestError(BandwithTestCodes.TestMode.CONFIG_FETCH,
+                            ErrorCodes.ERROR_FETCHING_CONFIG,
+                            "Config fetch returned null");
+                }
+                return;
+            }
+            //Update lastConfigFetch timestamp
+            lastConfigFetchTimestampMs = System.currentTimeMillis();
+        }
+    }
+
+    synchronized private void fetchServerConfigAndDetermineBestServerIfNeeded() {
+        //Get best server information if stale
+        if (System.currentTimeMillis() - lastBestServerDeterminationTimestampMs > MAX_AGE_FOR_FRESHNESS_MS) {
+            ServerInformation info = parseServerInformation.getServerInfo();
+            if (info == null) {
+                if (resultsCallback != null) {
+                    resultsCallback.onBandwidthTestError(BandwithTestCodes.TestMode.SERVER_FETCH,
+                            ErrorCodes.ERROR_FETCHING_SERVER_INFO,
+                            "Server info fetch returned null");
+                }
+                return;
+            }
+
+            //Get best server
+            bestServer = getBestServer(speedTestConfig, info);
+            if (bestServer == null) {
+                if (resultsCallback != null) {
+                    resultsCallback.onBandwidthTestError(BandwithTestCodes.TestMode.SERVER_FETCH,
+                            ErrorCodes.ERROR_SELECTING_BEST_SERVER,
+                            "best server returned as null");
+                }
+                return;
+            }
+            lastBestServerDeterminationTimestampMs = System.currentTimeMillis();
+        }
     }
 
     /**
@@ -316,41 +371,9 @@ public class NewBandwidthAnalyzer {
             //Tests are already
             return;
         }
-        final String downloadMode = "http";
         this.testMode = testMode;
-        //Get config
-        speedTestConfig = parseSpeedTestConfig.getConfig(downloadMode);
-        if (speedTestConfig == null) {
-            if (resultsCallback != null) {
-                resultsCallback.onBandwidthTestError(BandwithTestCodes.TestMode.CONFIG_FETCH,
-                        ErrorCodes.ERROR_FETCHING_CONFIG,
-                        "Config fetch returned null");
-            }
-            return;
-        }
-
-        //Get server information
-        ServerInformation info = parseServerInformation.getServerInfo();
-        if (info == null) {
-            if (resultsCallback != null) {
-                resultsCallback.onBandwidthTestError(BandwithTestCodes.TestMode.SERVER_FETCH,
-                        ErrorCodes.ERROR_FETCHING_SERVER_INFO,
-                        "Server info fetch returned null");
-            }
-            return;
-        }
-
-        //Get best server
-        bestServer = getBestServer(speedTestConfig, info);
-        if (bestServer == null) {
-            if (resultsCallback != null) {
-                resultsCallback.onBandwidthTestError(BandwithTestCodes.TestMode.SERVER_FETCH,
-                        ErrorCodes.ERROR_SELECTING_BEST_SERVER,
-                        "best server returned as null");
-            }
-            return;
-        }
-
+        fetchSpeedTestConfigIfNeeded();
+        fetchServerConfigAndDetermineBestServerIfNeeded();
         if (testMode == TestMode.DOWNLOAD_AND_UPLOAD || testMode == BandwithTestCodes.TestMode.DOWNLOAD) {
             performDownload();
         }

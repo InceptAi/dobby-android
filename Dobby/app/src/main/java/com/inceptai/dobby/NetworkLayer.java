@@ -185,14 +185,13 @@ public class NetworkLayer {
         Log.v(TAG, "NL, Found Event: " + event.toString());
         if (event.getEventType() == DobbyEvent.EventType.DHCP_INFO_AVAILABLE) {
             ipLayerInfo = new IPLayerInfo(getWifiAnalyzerInstance().getDhcpInfo());
-            if (ipLayerInfo != null) {
-                getPingAnalyzerInstance().updateIPLayerInfo(ipLayerInfo);
-                startPing();
-            }
+            getPingAnalyzerInstance().updateIPLayerInfo(ipLayerInfo);
+            startPing();
         } else if (event.getEventType() == DobbyEvent.EventType.WIFI_INTERNET_CONNECTIVITY_ONLINE) {
             if (getPingAnalyzerInstance().checkIfShouldRedoPingStats(MIN_TIME_GAP_TO_RETRIGGER_PING_MS, MIN_PKT_LOSS_RATE_TO_RETRIGGER_PING_PERCENT)) {
                 startPing();
             }
+            bandwidthAnalyzer.onConnectivityChangeToOnline();
         } else if (event.getEventType() == DobbyEvent.EventType.PING_INFO_AVAILABLE || event.getEventType() == DobbyEvent.EventType.PING_FAILED) {
             //TODO: Do we need to autotrigger gatewayDownloadLatencyTest here ??
             startGatewayDownloadLatencyTest();
