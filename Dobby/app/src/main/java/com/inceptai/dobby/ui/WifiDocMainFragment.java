@@ -89,7 +89,6 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         mainFab.setOnClickListener(this);
         circularGauge = (CircularGauge) view.findViewById(R.id.bw_gauge);
         gaugeTv = (TextView) view.findViewById(R.id.gauge_tv);
-        pingTv = (TextView) view.findViewById(R.id.ping_tv);
         wifiTv = (TextView) view.findViewById(R.id.wifi_quality_tv);
         requestPermissions();
         return view;

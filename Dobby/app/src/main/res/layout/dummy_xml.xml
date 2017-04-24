@@ -7,7 +7,6 @@
     <!--- ROUTER LATENCY -->
     <LinearLayout
         android:layout_width="wrap_content"
-        android:layout_below="@id/ping_cardview_title_tv"
         android:orientation="vertical"
         android:id="@+id/router_ping_full_ll"
         android:layout_height="wrap_content">
