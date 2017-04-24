@@ -40,6 +40,7 @@ public class NetworkLayer {
     public static final int MIN_PKT_LOSS_RATE_TO_RETRIGGER_PING_PERCENT = 50;
     public static final int MIN_CHECKS_CONNECTIIVITY = 3;
     public static final int MAX_AGE_GAP_TO_RETRIGGER_PING_MS = 120000; // 2 mins
+    public static final int MAX_AGE_GAP_TO_RETRIGGER_WIFI_SCAN_MS = 120000; // 2 mins
 
     private Context context;
     private DobbyThreadpool threadpool;
@@ -68,7 +69,7 @@ public class NetworkLayer {
     }
 
     public ListenableFuture<List<ScanResult>> wifiScan() {
-        return getWifiAnalyzerInstance().startWifiScan();
+        return getWifiAnalyzerInstance().startWifiScan(MAX_AGE_GAP_TO_RETRIGGER_WIFI_SCAN_MS);
     }
 
     public WifiState getWifiState() {

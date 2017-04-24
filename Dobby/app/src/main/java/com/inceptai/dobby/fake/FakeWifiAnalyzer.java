@@ -102,7 +102,7 @@ public class FakeWifiAnalyzer extends WifiAnalyzer {
     }
 
     @Override
-    public ListenableFuture<List<ScanResult>> startWifiScan() {
+    public ListenableFuture<List<ScanResult>> startWifiScan(int maxAgeToRetriggerWifiScanMs) {
         fakeWifiScanFuture = threadpool.getListeningScheduledExecutorService().schedule(new Callable<List<ScanResult>>() {
             @Override
             public List<ScanResult> call() {

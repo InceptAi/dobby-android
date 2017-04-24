@@ -50,6 +50,7 @@ public class WifiAnalyzer {
     protected SettableFuture<List<ScanResult>> wifiScanFuture;
     protected DobbyEventBus eventBus;
     protected List<ScanResult> combinedScanResult;
+    protected long lastScanCompletionTimestampMs;
 
 
     protected WifiAnalyzer(Context context, WifiManager wifiManager, DobbyThreadpool threadpool, DobbyEventBus eventBus) {
@@ -65,6 +66,7 @@ public class WifiAnalyzer {
         wifiState.updateWifiStats(new DobbyWifiInfo(wifiManager.getConnectionInfo()), null);
         registerWifiStateReceiver();
         combinedScanResult = new ArrayList<>();
+        lastScanCompletionTimestampMs = 0;
     }
 
     /**
@@ -85,16 +87,24 @@ public class WifiAnalyzer {
     /**
      * @return An instance of a {@link ListenableFuture<List<ScanResult>>} or null on immediate failure.
      */
-    public ListenableFuture<List<ScanResult>> startWifiScan() {
-        //Clearing out previous scan results
-        combinedScanResult.clear();
+    public ListenableFuture<List<ScanResult>> startWifiScan(int maxAgeForRetriggeringScan) {
+        //Check if the last scan result is fresh enough
+        if (System.currentTimeMillis() - lastScanCompletionTimestampMs > maxAgeForRetriggeringScan) {
+            //Clearing out previous scan results
+            combinedScanResult.clear();
 
-        if (wifiReceiverState != WIFI_RECEIVER_REGISTERED) {
-            registerScanReceiver();
-        }
-        if (wifiManager.startScan()) {
+            if (wifiReceiverState != WIFI_RECEIVER_REGISTERED) {
+                registerScanReceiver();
+            }
+            if (wifiManager.startScan()) {
+                wifiScanFuture = SettableFuture.create();
+                eventBus.postEvent(DobbyEvent.EventType.WIFI_SCAN_STARTING);
+                return wifiScanFuture;
+            }
+        } else {
+            //Return the last result
             wifiScanFuture = SettableFuture.create();
-            eventBus.postEvent(DobbyEvent.EventType.WIFI_SCAN_STARTING);
+            wifiScanFuture.set(combinedScanResult);
             return wifiScanFuture;
         }
         return null;
@@ -211,6 +221,7 @@ public class WifiAnalyzer {
             boolean setResult = wifiScanFuture.set(combinedScanResult);
             Log.v(TAG, "Setting wifi scan future: return value: " + setResult);
         }
+        lastScanCompletionTimestampMs = System.currentTimeMillis();
         /*
         if (wifiList.size() == 0) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
@@ -348,7 +359,8 @@ public class WifiAnalyzer {
             int updatedSignal = intent.getIntExtra(WifiManager.EXTRA_NEW_RSSI, 0);
             if (TRIGGER_WIFI_SCAN_ON_RSSI_CHANGE && this.wifiState.updateSignal(updatedSignal)){
                 //Reissue wifi scan to correctly compute contention since the signal has changed significantly
-                startWifiScan();
+                //Force a wifi scan
+                startWifiScan(0);
             }
         }
     }
