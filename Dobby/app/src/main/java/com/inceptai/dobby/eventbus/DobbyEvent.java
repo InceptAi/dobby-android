@@ -127,6 +127,8 @@ public class DobbyEvent {
                 return "WIFI_SCAN_AVAILABLE";
             case EventType.WIFI_RSSI_CHANGED:
                 return "WIFI_RSSI_CHANGED";
+            case EventType.WIFI_SCAN_STARTING:
+                return "WIFI_SCAN_STARTING";
 
             //WiFi network changed event
             case EventType.NETWORK_STATE_CHANGED:
@@ -149,8 +151,12 @@ public class DobbyEvent {
                 return "PING_INFO_AVAILABLE";
             case EventType.PING_FAILED:
                 return "PING_FAILED";
+            case EventType.PING_GRADE_AVAILABLE:
+                return "PING_GRADE_AVAILABLE";
 
             //BWTest notifications
+            case EventType.BANDWIDTH_TEST_STARTING:
+                return "BANDWIDTH_TEST_STARTING";
             case EventType.BWTEST_INFO_AVAILABLE:
                 return "BWTEST_INFO_AVAILABLE";
             case EventType.BWTEST_FAILED:
