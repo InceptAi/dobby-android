@@ -486,6 +486,10 @@ public class Utils {
         return channelList;
     }
 
+    public static int[] get2GHzNonOverlappingChannelList() {
+        return new int[] {2412, 2437, 2462};
+    }
+
     public static int convertCenterFrequencyToChannelNumber(int centerFrequency) {
         final int CHANNEL_11_CENTER_FREQUENCY = 2462;
         final int CHANNEL_1_CENTER_FREQUENCY = 2417;
