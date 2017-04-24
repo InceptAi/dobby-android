@@ -144,6 +144,8 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         bwTest.uponCompletion(wifiScan);
         final ComposableOperation ping = pingOperation();
         wifiScan.uponCompletion(ping);
+        final ComposableOperation gatewayLatencyTest = gatewayLatencyTestOperation();
+        ping.uponCompletion(gatewayLatencyTest);
 
         // Wire up with IE.
         wifiScan.getFuture().addListener(new Runnable() {
@@ -153,7 +155,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 DataInterpreter.WifiGrade wifiGrade = inferenceEngine.notifyWifiState(networkLayer.getWifiState(),
                         networkLayer.getWifiLinkMode(),
                         networkLayer.getCurrentConnectivityMode());
-                eventBus.postEvent(DobbyEvent.EventType.WIFI_SCAN_AVAILABLE, wifiGrade);
+                eventBus.postEvent(DobbyEvent.EventType.WIFI_GRADE_AVAILABLE, wifiGrade);
             }
         }, threadpool.getExecutor());
 
@@ -166,7 +168,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                     if (payload != null) {
                         DataInterpreter.PingGrade pingGrade = inferenceEngine.notifyPingStats(payload, networkLayer.getIpLayerInfo());
                         if (pingGrade != null) {
-                            eventBus.postEvent(DobbyEvent.EventType.PING_INFO_AVAILABLE, pingGrade);
+                            eventBus.postEvent(DobbyEvent.EventType.PING_GRADE_AVAILABLE, pingGrade);
                         }
                     } else {
                         // Error.
@@ -178,6 +180,30 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 }
             }
         }, threadpool.getExecutor());
+
+        gatewayLatencyTest.getFuture().addListener(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    OperationResult result = gatewayLatencyTest.getFuture().get();
+                    PingStats payload = (PingStats) result.getPayload();
+                    if (payload != null) {
+                        DataInterpreter.HttpGrade httpGrade = inferenceEngine.notifyGatewayHttpStats(payload);
+                        if (httpGrade != null) {
+                            eventBus.postEvent(DobbyEvent.EventType.GATEWAY_HTTP_GRADE_AVAILABLE, httpGrade);
+                        }
+                    } else {
+                        // Error.
+                        Log.i(TAG, "Error starting ping.");
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace(System.out);
+                    Log.w(TAG, "Exception getting gateway latency results: " + e.getStackTrace().toString());
+                }
+            }
+        }, threadpool.getExecutor());
+
+
     }
 
     private ComposableOperation wifiScanOperation() {
@@ -218,6 +244,20 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             @Override
             protected String getName() {
                 return "Bandwidth test operation";
+            }
+        };
+    }
+
+    private ComposableOperation gatewayLatencyTestOperation() {
+        return new ComposableOperation(threadpool) {
+            @Override
+            public void post() {
+                setFuture(networkLayer.startGatewayDownloadLatencyTest());
+            }
+
+            @Override
+            protected String getName() {
+                return "Gateway latency test operation";
             }
         };
     }

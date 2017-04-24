@@ -111,14 +111,10 @@ public class InferenceEngine {
         Log.i(TAG, "InferenceEngine Ping Grade: " + pingGrade.toString());
         Log.i(TAG, "InferenceEngine which gives conditions: " + conditions.toString());
         Log.i(TAG, "InferenceEngine After merging: " + currentConditions.toString());
-
-        //TODO: Remove this hack.
-        String suggestions = getSuggestions(MAX_SUGGESTIONS_TO_SHOW, MAX_GAP_IN_SUGGESTION_WEIGHT, LONG_SUGGESTION_MODE);
-        sendResponseOnlyAction(suggestions);
         return pingGrade;
     }
 
-    public void notifyGatewayHttpStats(PingStats gatewayHttpStats) {
+    public DataInterpreter.HttpGrade notifyGatewayHttpStats(PingStats gatewayHttpStats) {
         DataInterpreter.HttpGrade httpGrade = DataInterpreter.interpret(gatewayHttpStats);
         metricsDb.updateHttpGrade(httpGrade);
         PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(httpGrade);
@@ -126,6 +122,10 @@ public class InferenceEngine {
         Log.i(TAG, "InferenceEngine httpGrade: " + httpGrade.toString());
         Log.i(TAG, "InferenceEngine which gives conditions: " + conditions.toString());
         Log.i(TAG, "InferenceEngine After merging: " + currentConditions.toString());
+        //TODO: Remove this hack.
+        String suggestions = getSuggestions(MAX_SUGGESTIONS_TO_SHOW, MAX_GAP_IN_SUGGESTION_WEIGHT, LONG_SUGGESTION_MODE);
+        sendResponseOnlyAction(suggestions);
+        return httpGrade;
     }
 
 
@@ -166,7 +166,6 @@ public class InferenceEngine {
             DataInterpreter.BandwidthGrade bandwidthGrade = DataInterpreter.interpret(
                     metricsDb.getDownloadMbps(), metricsDb.getUploadMbps(), clientIsp, clientExternalIp);
             //Update the bandwidth grade, overwriting earlier info.
-            //metricsDb.updateBandwidthMetric(bandwidthGrade.getDownloadBandwidthMetric(), bandwidthGrade.getUploadBandwidthMetric());
             metricsDb.updateBandwidthGrade(bandwidthGrade);
             PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(bandwidthGrade);
             Log.i(TAG, "InferenceEngine bandwidthGrade: " + bandwidthGrade.toString());
