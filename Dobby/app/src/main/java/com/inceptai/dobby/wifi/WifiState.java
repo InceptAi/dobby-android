@@ -297,15 +297,15 @@ public class WifiState {
             Integer freq = Utils.parseIntWithDefault(0, freqBSSIDCombinedKey.split("-")[0]);
             String BSSID = freqBSSIDCombinedKey.split("-")[1];
 
-            //If this is the primary AP, continue, we don't want to include it
-            if ((BSSID.equals(linkBSSID) || BSSID.equals(linkSSID))) {
-                continue;
-            }
-
             ChannelInfo channelInfo = infoToReturn.get(freq);
             if (channelInfo == null) {
                 channelInfo = new ChannelInfo(freq);
                 infoToReturn.put(freq, channelInfo);
+            }
+
+            //If this is the primary AP, continue, we don't want to include it
+            if ((BSSID.equals(linkBSSID) || BSSID.equals(linkSSID))) {
+                continue;
             }
 
             Integer signalValue = entry.getValue();
@@ -357,6 +357,7 @@ public class WifiState {
 
     private void updateWithScanResult(List<ScanResult> scanResultList) {
         for (ScanResult scanResult : scanResultList) {
+
             //Update the channel info stuff
             ChannelInfo channelInfo = channelInfoMap.get(scanResult.frequency);
             if (channelInfo == null) {
@@ -477,8 +478,8 @@ public class WifiState {
                 THRESHOLD_FOR_COUNTING_FREQUENT_STATE_CHANGES_MS) > THRESHOLD_FOR_FLAGGING_FREQUENT_STATE_CHANGES){
             //Check for frequenct disconnections
             wifiProblemMode = WifiLinkMode.FREQUENT_DISCONNECTIONS;
-        } else if(getCurrentState() == NetworkInfo.DetailedState.CONNECTED &&
-                (currentTimeMs - getCurrentStateStartTimeMs() > THRESHOLD_FOR_DECLARING_CONNECTION_SETUP_AS_DONE_IF_CONNECTED_FOR_MS)) {
+        } else if(getCurrentState() == NetworkInfo.DetailedState.CONNECTED) {
+                // && (currentTimeMs - getCurrentStateStartTimeMs() >= THRESHOLD_FOR_DECLARING_CONNECTION_SETUP_AS_DONE_IF_CONNECTED_FOR_MS)) {
             wifiProblemMode = WifiLinkMode.NO_PROBLEM_DEFAULT_STATE;
         }
         return wifiProblemMode;
