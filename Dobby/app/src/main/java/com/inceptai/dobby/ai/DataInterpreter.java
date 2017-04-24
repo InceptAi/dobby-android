@@ -90,6 +90,13 @@ public class DataInterpreter {
             10 /* poor */
     };
 
+    private static final double[] PKT_LOSS_RATE_STEPS = { /* lower is better */
+            0.0, /* excellent */
+            10.0, /* good */
+            20.0, /* average */
+            50.0 /* poor */
+    };
+
 
     @IntDef({MetricType.EXCELLENT, MetricType.GOOD, MetricType.AVERAGE, MetricType.POOR,
             MetricType.NONFUNCTIONAL, MetricType.UNKNOWN})
@@ -104,7 +111,7 @@ public class DataInterpreter {
     }
 
     public static int compareMetric(@MetricType int metric1, @MetricType int metric2) {
-        //Positivie value means metric1 is better, neg means worse, 0 means equal
+        //Positive value means metric1 is better, neg means worse, 0 means equal
         return (metric2 - metric1);
     }
 
@@ -142,6 +149,10 @@ public class DataInterpreter {
 
     public static boolean isPoorOrNonFunctional(@MetricType int metric) {
         return (metric == MetricType.POOR || metric == MetricType.NONFUNCTIONAL);
+    }
+
+    public static boolean isPoor(@MetricType int metric) {
+        return (metric == MetricType.POOR);
     }
 
     public static boolean isGoodOrExcellent(@MetricType int[] metric) {
@@ -516,34 +527,37 @@ public class DataInterpreter {
         PingStats primaryDnsStats = pingStatsHashMap.get(ipLayerInfo.dns1);
 
         double avgExternalServerLatency = 0.0;
-        int count = 0;
+        double avgExternalServerLossPercent = 0.0;
+        int countLatencyValues = 0;
+        int countLossValues = 0;
         for(PingStats pingStats : externalServerStats.values()) {
             if (pingStats.avgLatencyMs > 0.0){
                 avgExternalServerLatency += pingStats.avgLatencyMs;
-                count ++;
+                countLatencyValues ++;
+            }
+            if (pingStats.lossRatePercent >= 0.0){
+                avgExternalServerLossPercent += pingStats.lossRatePercent;
+                countLossValues ++;
             }
         }
-        avgExternalServerLatency /= (double) count;
+        avgExternalServerLatency /= (double) countLatencyValues;
+        if (countLossValues > 0) {
+            avgExternalServerLossPercent /= (double) countLossValues;
+        } else {
+            avgExternalServerLossPercent = -1.0;
+        }
 
-        pingGrade.externalServerLatencyMetric = getGradeLowerIsBetter(
-                avgExternalServerLatency,
-                PING_LATENCY_EXTSERVER_STEPS_MS,
-                avgExternalServerLatency > 0.0);
+        pingGrade.externalServerLatencyMetric = getPingGradeLowerIsBetter(avgExternalServerLatency,
+                avgExternalServerLossPercent, PING_LATENCY_EXTSERVER_STEPS_MS);
 
-        pingGrade.dnsServerLatencyMetric = getGradeLowerIsBetter(
-                primaryDnsStats.avgLatencyMs,
-                PING_LATENCY_DNS_STEPS_MS,
-                primaryDnsStats.avgLatencyMs > 0.0);
+        pingGrade.dnsServerLatencyMetric = getPingGradeLowerIsBetter(primaryDnsStats.avgLatencyMs,
+                primaryDnsStats.lossRatePercent, PING_LATENCY_DNS_STEPS_MS);
 
-        pingGrade.routerLatencyMetric = getGradeLowerIsBetter(routerStats.avgLatencyMs,
-                PING_LATENCY_ROUTER_STEPS_MS,
-                routerStats.avgLatencyMs > 0.0);
+        pingGrade.routerLatencyMetric = getPingGradeLowerIsBetter(routerStats.avgLatencyMs,
+                routerStats.lossRatePercent, PING_LATENCY_ROUTER_STEPS_MS);
 
-
-        pingGrade.alternativeDnsMetric = getGradeLowerIsBetter(lowerAlternativeDnsStats.avgLatencyMs,
-                PING_LATENCY_ROUTER_STEPS_MS,
-                lowerAlternativeDnsStats.avgLatencyMs > 0.0);
-
+        pingGrade.alternativeDnsMetric = getPingGradeLowerIsBetter(lowerAlternativeDnsStats.avgLatencyMs,
+                lowerAlternativeDnsStats.lossRatePercent, PING_LATENCY_DNS_STEPS_MS);
 
         return pingGrade;
     }
@@ -602,6 +616,18 @@ public class DataInterpreter {
         return channelInfo.similarStrengthAPs +
                 channelInfo.higherStrengthAps + channelInfo.highestStrengthAps;
     }
+
+    @MetricType
+    private static int getPingGradeLowerIsBetter(double latencyMs, double lossRatePercent, double[] steps) {
+        @MetricType int lossRateMetric = getGradeLowerIsBetter(lossRatePercent, PKT_LOSS_RATE_STEPS, lossRatePercent >= 0);
+        if (DataInterpreter.isNonFunctional(lossRateMetric)) {
+            return MetricType.NONFUNCTIONAL;
+        }
+        double effectiveLatencyMs = latencyMs * (1.0 / (1.0 - (lossRatePercent/100)));
+        @MetricType int latencyMetric = getGradeLowerIsBetter(effectiveLatencyMs, steps, latencyMs > 0);
+        return latencyMetric;
+    }
+
 
     @MetricType
     private static int getGradeLowerIsBetter(double value, double[] steps, boolean isValid) {
