@@ -42,6 +42,17 @@ public class SuggestionCreator {
 
     private static String MULTIPLE_CONDITIONS_PREFIX = "There a few things which can be causing problems for your network.";
 
+    private static String convertChannelFrequencyToString(int channelFrequency) {
+        int channelNumber = Utils.convertCenterFrequencyToChannelNumber(channelFrequency);
+        String channelString = Utils.EMPTY_STRING;
+        if (channelNumber > 0) {
+            channelString = Integer.toString(channelNumber);
+        } else {
+            channelString = Integer.toString(channelNumber);
+        }
+        return channelString;
+    }
+
     public static String getSuggestionForConditions(List<Integer> conditionList,
                                                     SuggestionCreatorParams params,
                                                     boolean getLongSuggestions) {
@@ -75,6 +86,7 @@ public class SuggestionCreator {
         return sb.toString();
     }
 
+
     public static String getSuggestionForCondition(@InferenceMap.Condition int condition,
                                                    SuggestionCreatorParams params) {
         StringBuilder suggestionToReturn = new StringBuilder();
@@ -82,12 +94,13 @@ public class SuggestionCreator {
         String conditionalMessage = Utils.EMPTY_STRING;
         switch (condition) {
             case Condition.WIFI_CHANNEL_CONGESTION:
-                baseMessage = "Your wifi is operating on Channel " + params.currentWifiChannel +
+                baseMessage = "Your wifi is operating on Channel " + convertChannelFrequencyToString(params.currentWifiChannel) +
                         " which is congested. This means there a lot of other Wifi networks near " +
                         "you which are also operating on the same channel as yours. ";
                 if (params.bestWifiChannel > 0) {
-                    conditionalMessage = "As per our current analysis, Channel " + params.bestWifiChannel + " " +
-                            "could provide better results for your network.";
+                    conditionalMessage = "As per our current analysis, Channel " +
+                            convertChannelFrequencyToString(params.bestWifiChannel) +
+                            " could provide better results for your network.";
                 }
                 break;
             case Condition.WIFI_CHANNEL_BAD_SIGNAL:

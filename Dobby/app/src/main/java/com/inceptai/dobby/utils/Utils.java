@@ -473,4 +473,30 @@ public class Utils {
         return result;
     }
 
+    //Wifi channel stuff
+
+    public static int[] get2GHzChannelList() {
+        final int MAX_CHANNELS_2GHZ = 11;
+        final int CHANNEL_1_CENTER_FREQUENCY = 2412;
+        final int GAP_BETWEEN_CHANNELS = 5;
+        int[] channelList = new int[MAX_CHANNELS_2GHZ];
+        for (int channelIndex=0; channelIndex < MAX_CHANNELS_2GHZ; channelIndex++) {
+            channelList[channelIndex] = CHANNEL_1_CENTER_FREQUENCY + (GAP_BETWEEN_CHANNELS * channelIndex);
+        }
+        return channelList;
+    }
+
+    public static int convertCenterFrequencyToChannelNumber(int centerFrequency) {
+        final int CHANNEL_11_CENTER_FREQUENCY = 2462;
+        final int CHANNEL_1_CENTER_FREQUENCY = 2417;
+        final int GAP_BETWEEN_CHANNELS = 5;
+        if (centerFrequency > CHANNEL_11_CENTER_FREQUENCY || centerFrequency < CHANNEL_1_CENTER_FREQUENCY) {
+            return -1;
+        }
+        int gap = (centerFrequency - CHANNEL_1_CENTER_FREQUENCY);
+        if (gap % GAP_BETWEEN_CHANNELS != 0) {
+            return -1;
+        }
+        return (gap / GAP_BETWEEN_CHANNELS) + 1;
+    }
 }
