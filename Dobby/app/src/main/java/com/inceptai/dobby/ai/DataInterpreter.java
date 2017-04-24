@@ -561,10 +561,10 @@ public class DataInterpreter {
                                       @WifiState.WifiLinkMode int wifiProblemMode,
                                       @ConnectivityAnalyzer.WifiConnectivityMode int wifiConnectivityMode) {
         WifiGrade wifiGrade = new WifiGrade();
-        //Figure out the # of APs on primary channel
+        // Figure out the # of APs on primary channel
         WifiState.ChannelInfo primaryChannelInfo = wifiChannelInfo.get(linkInfo.getFrequency());
         int numStrongInterferingAps = computeStrongInterferingAps(primaryChannelInfo);
-        //Compute metrics for all channels -- for later use
+        // Compute metrics for all channels -- for later use
         int leastOccupiedChannel = linkInfo.getFrequency(); // current ap channel
         int minOccupancyAPs = numStrongInterferingAps;
         for (WifiState.ChannelInfo channelInfo: wifiChannelInfo.values()) {
