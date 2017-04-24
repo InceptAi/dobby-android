@@ -13,7 +13,7 @@ public class MetricsDb {
     private DataInterpreter.WifiGrade wifiGrade;
     private DataInterpreter.HttpGrade httpGrade;
 
-    MetricsDb() {
+    public MetricsDb() {
         bandwidthGrade = new DataInterpreter.BandwidthGrade();
         pingGrade = new DataInterpreter.PingGrade();
         wifiGrade = new DataInterpreter.WifiGrade();

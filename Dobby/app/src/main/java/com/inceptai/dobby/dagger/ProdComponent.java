@@ -3,6 +3,7 @@ package com.inceptai.dobby.dagger;
 import com.inceptai.dobby.MainActivity;
 import com.inceptai.dobby.NetworkLayer;
 import com.inceptai.dobby.ai.DobbyAi;
+import com.inceptai.dobby.ai.MetricsDb;
 import com.inceptai.dobby.ui.DebugFragment;
 import com.inceptai.dobby.ui.FakeDataFragment;
 import com.inceptai.dobby.ui.WifiDocActivity;
@@ -23,6 +24,8 @@ public interface ProdComponent {
     void inject(DobbyAi dobbyAi);
 
     void inject(NetworkLayer networkLayer);
+
+    void inject(MetricsDb metricsDb);
 
     void inject(DebugFragment debugFragment);
 

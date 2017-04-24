@@ -4,6 +4,7 @@ import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.ai.DobbyAi;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.NetworkLayer;
+import com.inceptai.dobby.ai.MetricsDb;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 
 import javax.inject.Singleton;
@@ -43,6 +44,13 @@ public class ProdModule {
         return new DobbyEventBus();
     }
     */
+
+    @Singleton
+    @Provides
+    public MetricsDb providesMetricsDb() {
+        return new MetricsDb();
+    }
+
 
     @Singleton
     @Provides
