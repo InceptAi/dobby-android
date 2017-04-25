@@ -284,13 +284,13 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             return;
         }
 
-        setPingResult(pingRouterValueTv, String.format("%2.2f", pingGrade.getRouterLatencyMs()),
+        setPingResult(pingRouterValueTv, String.format("%2.1f", pingGrade.getRouterLatencyMs()),
                 pingRouterGradeIv, pingGrade.getRouterLatencyMetric());
 
-        setPingResult(pingDnsPrimaryValueTv, String.format("%2.2f", pingGrade.getDnsServerLatencyMs()),
+        setPingResult(pingDnsPrimaryValueTv, String.format("%2.1f", pingGrade.getDnsServerLatencyMs()),
                 pingDnsPrimaryGradeIv, pingGrade.getDnsServerLatencyMetric());
 
-        setPingResult(pingDnsSecondValueTv,  String.format("%2.2f", pingGrade.getAlternativeDnsLatencyMs()),
+        setPingResult(pingDnsSecondValueTv,  String.format("%2.1f", pingGrade.getAlternativeDnsLatencyMs()),
                 pingDnsSecondGradeIv, pingGrade.getAlternativeDnsMetric());
 
         setPingResult(pingWebValueTv, String.format("%2.2f", pingGrade.getExternalServerLatencyMs()),
