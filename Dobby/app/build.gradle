@@ -67,6 +67,7 @@ android {
 }
 
 dependencies {
+    compile files('libs/jspeedtest-1.26.jar')
     compile fileTree(include: ['*.jar'], dir: 'libs')
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
@@ -83,7 +84,6 @@ dependencies {
     compile 'ai.api:sdk:2.0.5@aar'
     compile 'com.google.code.gson:gson:2.3.1'
     compile 'commons-io:commons-io:2.4'
-    compile 'fr.bmartel:jspeedtest:1.25'
     compile 'com.google.guava:guava:20.0'
     compile 'com.android.support:support-v4:25.3.1'
     compile 'com.android.support:cardview-v7:25.3.1'
@@ -94,6 +94,10 @@ dependencies {
     testCompile 'junit:junit:4.12'
     annotationProcessor 'com.google.dagger:dagger-compiler:2.9'
     provided 'javax.annotation:jsr250-api:1.0'
+    //For jspeedtest
+    //compile 'fr.bmartel:jspeedtest:1.25'
+    compile 'fr.bmartel:http-endec:1.04'
+    compile 'commons-net:commons-net:3.6'
 }
 
 

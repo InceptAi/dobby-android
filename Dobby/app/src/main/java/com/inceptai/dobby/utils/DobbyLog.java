@@ -18,28 +18,28 @@ public class DobbyLog {
 
     public static void i(String message) {
         if (BuildConfig.DEBUG) {
-            DobbyLog.i(message);
+            Log.i(TAG, message);
         }
         FirebaseCrash.logcat(Log.INFO, TAG, message);
     }
 
     public static void e(String message) {
         if (BuildConfig.DEBUG) {
-            DobbyLog.e(message);
+            Log.e(TAG, message);
         }
         FirebaseCrash.logcat(Log.ERROR, TAG, message);
     }
 
     public static void v(String message) {
         if (BuildConfig.DEBUG) {
-            DobbyLog.v(message);
+            Log.v(TAG, message);
         }
         FirebaseCrash.logcat(Log.VERBOSE, TAG, message);
     }
 
     public static void w(String message) {
         if (BuildConfig.DEBUG) {
-            DobbyLog.w(message);
+            Log.w(TAG, message);
         }
         FirebaseCrash.logcat(Log.WARN, TAG, message);
     }

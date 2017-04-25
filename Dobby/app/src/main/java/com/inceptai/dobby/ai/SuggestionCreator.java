@@ -135,9 +135,9 @@ public class SuggestionCreator {
                 "We performed speed tests, pings and wifi scans on your network and didn't find any issues." +
                 "You are getting " + String.format("%.2f", params.downloadBandwidthMbps) +
                 " Mbps download / " + String.format("%.2f", params.uploadBandwidthMbps) +
-                " Mbps upload speed. You connection to your wifi is about " +
+                " Mbps upload speed. You connection to your wifi is quite good at about " +
                 Utils.convertSignalDbmToPercent(params.currentSignal) +
-                ". Since wifi network problems are sometimes transient, it might be good if you run " +
+                "% strength (100% means very very high signal). Since wifi network problems are sometimes transient, it might be good if you run " +
                 "this test a few times so we can catch an issue if it shows up. Hope this helps :)";
 
         List<String> suggestionList = new ArrayList<>();
