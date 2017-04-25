@@ -122,26 +122,25 @@ public class InferenceMap {
 
 
         if (DataInterpreter.isGoodOrExcellent(bandwidthGrade.getDownloadBandwidthMetric()) &&
-                DataInterpreter.isAverageOrPoorOrNonFunctional(bandwidthGrade.getUploadBandwidthMetric())) {
+                DataInterpreter.isPoorOrAbysmal(bandwidthGrade.getUploadBandwidthMetric())) {
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
             conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
-            conditions.include(Condition.ISP_INTERNET_SLOW_UPLOAD, 0.3);
-        } else if (DataInterpreter.isAverageOrPoorOrNonFunctional(bandwidthGrade.getDownloadBandwidthMetric()) &&
+            conditions.include(Condition.ISP_INTERNET_SLOW_UPLOAD, 0.7);
+        } else if (DataInterpreter.isPoorOrAbysmal(bandwidthGrade.getDownloadBandwidthMetric()) &&
                 DataInterpreter.isGoodOrExcellent(bandwidthGrade.getUploadBandwidthMetric())) {
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
             conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
-            conditions.include(Condition.ISP_INTERNET_SLOW_DOWNLOAD, 0.3);
-        } else if (DataInterpreter.isAverageOrPoor(bandwidthGrade.getDownloadBandwidthMetric()) &&
-                DataInterpreter.isAverageOrPoor(bandwidthGrade.getUploadBandwidthMetric())) {
+            conditions.include(Condition.ISP_INTERNET_SLOW_DOWNLOAD, 0.7);
+        } else if (DataInterpreter.isPoorOrAbysmal(bandwidthGrade.getDownloadBandwidthMetric()) &&
+                DataInterpreter.isPoorOrAbysmal(bandwidthGrade.getUploadBandwidthMetric())) {
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
             conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
-            conditions.include(Condition.ISP_INTERNET_SLOW, 0.3);
+            conditions.include(Condition.ISP_INTERNET_SLOW, 0.7);
         } else if (DataInterpreter.isNonFunctional(bandwidthGrade.getDownloadBandwidthMetric()) ||
                 DataInterpreter.isNonFunctional(bandwidthGrade.getUploadBandwidthMetric())) {
-            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.25);
-            conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.25);
-            conditions.include(Condition.DNS_UNREACHABLE, 0.25);
-            conditions.include(ISP_INTERNET_DOWN, 0.25);
+            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.7);
+            conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
+            conditions.include(ISP_INTERNET_DOWN, 0.7);
         }
         return conditions;
     }
@@ -244,7 +243,7 @@ public class InferenceMap {
                 conditions.exclude(DNS_CONDITIONS);
 
                 //Good Router / dns latency but poor external server latency
-                if (DataInterpreter.isPoor(pingGrade.externalServerLatencyMetric)) {
+                if (DataInterpreter.isPoorOrAbysmal(pingGrade.externalServerLatencyMetric)) {
                     conditions.include(Condition.ISP_INTERNET_SLOW, 0.7);
                     conditions.include(Condition.CABLE_MODEM_FAULT, 0.3);
                     conditions.include(Condition.REMOTE_SERVER_IS_SLOW_TO_RESPOND, 0.05);
@@ -252,7 +251,7 @@ public class InferenceMap {
                     conditions.include(Condition.ISP_INTERNET_DOWN, 0.7);
                     conditions.include(Condition.CABLE_MODEM_FAULT, 0.3);
                 }
-            } else if (DataInterpreter.isPoor(pingGrade.dnsServerLatencyMetric)) {
+            } else if (DataInterpreter.isPoorOrAbysmal(pingGrade.dnsServerLatencyMetric)) {
                 //Good router / slow dns
                 conditions.include(Condition.DNS_SLOW_TO_REACH, 0.8);
                 conditions.include(Condition.CABLE_MODEM_FAULT, 0.2);
@@ -262,7 +261,7 @@ public class InferenceMap {
             }
         } else if (DataInterpreter.isAverage(pingGrade.routerLatencyMetric)){
             //Router has average latency to respond to ping
-            if (DataInterpreter.isPoor(pingGrade.dnsServerLatencyMetric)) {
+            if (DataInterpreter.isPoorOrAbysmal(pingGrade.dnsServerLatencyMetric)) {
                 //Good router / slow dns
                 conditions.include(Condition.DNS_SLOW_TO_REACH, 0.5);
                 conditions.include(Condition.CABLE_MODEM_FAULT, 0.2);
@@ -295,12 +294,13 @@ public class InferenceMap {
             return conditions;
         }
 
-        if (DataInterpreter.isAverageOrPoor(httpGrade.httpDownloadLatencyMetric)) {
-            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
+        if (DataInterpreter.isPoorOrAbysmal(httpGrade.httpDownloadLatencyMetric)) {
+            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.7);
             conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
             conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.1);
         } else if (DataInterpreter.isNonFunctional(httpGrade.httpDownloadLatencyMetric)) {
-            conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 1.0);
+            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
+            conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.7);
         }
         return conditions;
     }
