@@ -372,6 +372,44 @@ public class DataInterpreter {
             return routerLatencyMetric;
         }
 
+        @MetricType
+        public int getExternalServerLatencyMetric() {
+            return externalServerLatencyMetric;
+        }
+
+        @MetricType
+        public int getDnsServerLatencyMetric() {
+            return dnsServerLatencyMetric;
+        }
+
+        @MetricType
+        public int getAlternativeDnsMetric() {
+            return alternativeDnsMetric;
+        }
+
+        public String getPrimaryDns() {
+            return primaryDns;
+        }
+
+        public String getAlternativeDns() {
+            return alternativeDns;
+        }
+
+        public double getRouterLatencyMs() {
+            return routerLatencyMs;
+        }
+
+        public double getDnsServerLatencyMs() {
+            return dnsServerLatencyMs;
+        }
+
+        public double getExternalServerLatencyMs() {
+            return externalServerLatencyMs;
+        }
+
+        public double getAlternativeDnsLatencyMs() {
+            return alternativeDnsLatencyMs;
+        }
     }
 
     /**

@@ -57,9 +57,11 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private FloatingActionButton mainFab;
     private CircularGauge downloadCircularGauge;
     private TextView downloadGaugeTv;
+    private TextView downloadGaugeTitleTv;
 
     private CircularGauge uploadCircularGauge;
     private TextView uploadGaugeTv;
+    private TextView uploadGaugeTitleTv;
 
     private TextView pingRouterTitleTv;
     private TextView pingRouterValueTv;
@@ -276,20 +278,23 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     }
 
     private void showPingResults(DataInterpreter.PingGrade pingGrade) {
-        if (pingGrade == null) return;
-        switch (pingGrade.getRouterLatencyMetric()) {
-            case DataInterpreter.MetricType.GOOD:
-                break;
-            case DataInterpreter.MetricType.AVERAGE:
-                break;
-            case EXCELLENT:
-                break;
-            case POOR:
-                break;
-            case DataInterpreter.MetricType.UNKNOWN:
-                break;
-
+        Log.i(TAG, "Ping grade available.");
+        if (pingGrade == null) {
+            Log.w(TAG, "Null ping grade.");
+            return;
         }
+
+        setPingResult(pingRouterValueTv, String.format("%2.2f", pingGrade.getRouterLatencyMs()),
+                pingRouterGradeIv, pingGrade.getRouterLatencyMetric());
+
+        setPingResult(pingDnsPrimaryValueTv, String.format("%2.2f", pingGrade.getDnsServerLatencyMs()),
+                pingDnsPrimaryGradeIv, pingGrade.getDnsServerLatencyMetric());
+
+        setPingResult(pingDnsSecondValueTv,  String.format("%2.2f", pingGrade.getAlternativeDnsLatencyMs()),
+                pingDnsSecondGradeIv, pingGrade.getAlternativeDnsMetric());
+
+        setPingResult(pingWebValueTv, String.format("%2.2f", pingGrade.getExternalServerLatencyMs()),
+                pingWebGradeIv, pingGrade.getExternalServerLatencyMetric());
     }
 
     private void populateViews(View rootView) {
@@ -299,10 +304,13 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         View downloadView = rootView.findViewById(R.id.cg_download);
         downloadCircularGauge = (CircularGauge) downloadView.findViewById(R.id.bw_gauge);
         downloadGaugeTv = (TextView) downloadView.findViewById(R.id.gauge_tv);
+        downloadGaugeTitleTv = (TextView) downloadView.findViewById(R.id.title_tv);
 
         View uploadView = rootView.findViewById(R.id.cg_upload);
         uploadCircularGauge = (CircularGauge) uploadView.findViewById(R.id.bw_gauge);
         uploadGaugeTv = (TextView) uploadView.findViewById(R.id.gauge_tv);
+        uploadGaugeTitleTv = (TextView) uploadView.findViewById(R.id.title_tv);
+
         wifiTitleTv = (TextView) uploadView.findViewById(R.id.wifi_quality_title_tv);
 
         View row1View = rootView.findViewById(R.id.ping_latency_row_inc1);
@@ -322,6 +330,11 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         pingDnsSecondTitleTv = (TextView) row2View.findViewById(R.id.right_title_tv);
         pingDnsSecondValueTv = (TextView) row2View.findViewById(R.id.right_value_tv);
         pingDnsSecondGradeIv = (ImageView) row2View.findViewById(R.id.right_grade_iv);
+
+        pingRouterTitleTv.setText(R.string.router_ping);
+        pingDnsPrimaryTitleTv.setText(R.string.dns_primary_ping);
+        pingDnsSecondTitleTv.setText(R.string.dns_second_ping);
+        pingWebTitleTv.setText(R.string.web_ping);
     }
 
     private void updateBandwidthGauge(Message msg) {
@@ -371,10 +384,6 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         input = Math.min(100.0, input);
         // 50 to 100 maps to 87.5 to 100
         return 12.5 * (input - 50.0) / 50.0 + 87.5;
-    }
-
-    private void setupPingCard() {
-
     }
 
     private void setPingResult(TextView valueTv, String value, ImageView gradeIv, @DataInterpreter.MetricType int grade) {
