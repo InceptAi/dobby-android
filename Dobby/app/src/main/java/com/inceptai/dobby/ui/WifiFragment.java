@@ -8,7 +8,6 @@ import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,14 +15,11 @@ import android.widget.TextView;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.dobby.R;
+import com.inceptai.dobby.utils.DobbyLog;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
-
-
-
-import static com.inceptai.dobby.DobbyApplication.TAG;
 
 /**
  * A fragment representing a list of wifi aps and their signal strengths.
@@ -84,10 +80,10 @@ public class WifiFragment extends Fragment implements Handler.Callback {
             @Override
             public void run() {
                 try {
-                    Log.i(TAG, "wifi scan future got result:" + scanFuture.get());
+                    DobbyLog.i("wifi scan future got result:" + scanFuture.get());
                     Message.obtain(handler, MSG_UPDATE_WIFI_SCAN_RESULT, scanFuture.get()).sendToTarget();
                 } catch (Exception e) {
-                    Log.i(TAG, "Exception getting scan result");
+                    DobbyLog.i("Exception getting scan result");
                 }
             }
         }, executor);

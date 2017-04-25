@@ -1,6 +1,6 @@
 package com.inceptai.dobby.fake;
 
-import android.util.Log;
+import com.inceptai.dobby.utils.DobbyLog;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -18,8 +18,6 @@ import fr.bmartel.speedtest.inter.ISpeedTestListener;
 import fr.bmartel.speedtest.model.SpeedTestError;
 import fr.bmartel.speedtest.model.SpeedTestMode;
 import fr.bmartel.speedtest.model.UploadStorageType;
-
-import static com.inceptai.dobby.DobbyApplication.TAG;
 
 /**
  * FakeSpeedTestSocket allows fake behavior to be programmed.
@@ -83,7 +81,7 @@ public class FakeSpeedTestSocket extends SpeedTestSocket {
         super();
         listeners = new HashSet<>();
         requestSet = new HashSet<>();
-        Log.i(TAG, "Fake speed test socket created.");
+        DobbyLog.i("Fake speed test socket created.");
     }
 
     @Override
@@ -167,7 +165,7 @@ public class FakeSpeedTestSocket extends SpeedTestSocket {
             long delta = currentTs - startTs;
             double maxBw = speedTestMode == SpeedTestMode.DOWNLOAD ? config.getMaxDownloadBandwidthMbps() : config.getMaxUploadBandwidthMbps();
             double currBwMbps = getInstantBandwidth(delta, maxBw);
-            Log.i(TAG, "Current b/w:" + currBwMbps + " Mbps.");
+            DobbyLog.i("Current b/w:" + currBwMbps + " Mbps.");
             lastCurrBw = currBwMbps;
             float progressPercent = PROGRESS_PERCENT;
             SpeedTestReport report = createReport(speedTestMode, progressPercent, startTs, currentTs,

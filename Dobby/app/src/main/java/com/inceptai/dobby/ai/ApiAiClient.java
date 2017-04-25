@@ -4,7 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.inceptai.dobby.DobbyThreadpool;
-import com.inceptai.dobby.utils.Utils;
+import com.inceptai.dobby.utils.DobbyLog;
 
 import ai.api.AIListener;
 import ai.api.AIServiceException;
@@ -86,11 +86,11 @@ public class ApiAiClient implements AIListener {
                 final AIRequest aiRequest = new AIRequest();
                 aiRequest.setQuery(query);
                 try {
-                    Log.i(TAG, "Submitting query: " + query);
+                    DobbyLog.i("Submitting query: " + query);
                     final AIResponse response = aiDataService.request(aiRequest);
                     processResult(response.getResult(), listener);
                 } catch (AIServiceException exception ) {
-                    Log.e(TAG, "Api.ai Exception: " + exception);
+                    DobbyLog.e("Api.ai Exception: " + exception);
                 }
             }
         });
@@ -133,7 +133,7 @@ public class ApiAiClient implements AIListener {
 
     @Override
     public void onResult(final  AIResponse result) {
-        Log.i(TAG, "Action: " + result.getResult().getAction());
+        DobbyLog.i("Action: " + result.getResult().getAction());
     }
 
     @Override

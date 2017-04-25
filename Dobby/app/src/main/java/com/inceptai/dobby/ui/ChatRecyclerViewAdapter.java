@@ -3,18 +3,14 @@ package com.inceptai.dobby.ui;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.inceptai.dobby.R;
+import com.inceptai.dobby.utils.DobbyLog;
 
 import java.util.List;
-
-import lecho.lib.hellocharts.model.LineChartData;
-
-import static com.inceptai.dobby.DobbyApplication.TAG;
 /**
  * Created by arunesh on 3/28/17.
  */
@@ -103,7 +99,7 @@ public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
         if (graphData != null) {
             viewHolder.setGraphData(graphData);
         } else {
-            Log.e(TAG, "Error: Attempting to draw chart with null GraphData.");
+            DobbyLog.e("Error: Attempting to draw chart with null GraphData.");
         }
     }
 

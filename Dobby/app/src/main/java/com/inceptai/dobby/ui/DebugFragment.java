@@ -75,7 +75,7 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
 
 
     public DebugFragment() {
-        Log.v(TAG, "Constructing DebugFragment " + this);
+        DobbyLog.v("Constructing DebugFragment " + this);
     }
 
     @Override
@@ -176,25 +176,25 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
 
     private void startPing() {
         final long startedAt = System.currentTimeMillis();
-        Log.v(TAG, "Ping started at: " + System.currentTimeMillis());
+        DobbyLog.v("Ping started at: " + System.currentTimeMillis());
         final ListenableFuture<HashMap<String, PingStats>> future = networkLayer.startPing();
         if (future == null) {
-            Log.v(TAG, "Starting ping failed");
+            DobbyLog.v("Starting ping failed");
             return;
         }
         future.addListener(new Runnable() {
             @Override
             public void run() {
                 try {
-                    Log.v(TAG, "Printing results: " + future.get().toString());
+                    DobbyLog.v("Printing results: " + future.get().toString());
                     addConsoleText("Ping Results:" + future.get().toString());
-                    Log.v(TAG, "Ping ended at: " + System.currentTimeMillis());
+                    DobbyLog.v("Ping ended at: " + System.currentTimeMillis());
                     long estimatedTime = System.currentTimeMillis() - startedAt;
-                    Log.v(TAG, "Time elapsed: " + estimatedTime + " ms");
+                    DobbyLog.v("Time elapsed: " + estimatedTime + " ms");
                 } catch (InterruptedException e) {
-                    Log.w(TAG, "Exception pinging " + e);
+                    DobbyLog.w("Exception pinging " + e);
                 } catch (ExecutionException e) {
-                    Log.w(TAG, "Exception pinging " + e);
+                    DobbyLog.w("Exception pinging " + e);
                 }
             }
         }, threadpool.getUiThreadExecutor());
@@ -207,12 +207,12 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
             @Override
             public void run() {
                 try {
-                    Log.v(TAG, "Got wifi scan result");
+                    DobbyLog.v("Got wifi scan result");
                     addConsoleText("Wifi Scan:" + future.get().toString());
                 } catch (InterruptedException e) {
-                    Log.w(TAG, "InterruptedException parsing " + e);
+                    DobbyLog.w("InterruptedException parsing " + e);
                 } catch (ExecutionException e) {
-                    Log.w(TAG, "ExecutionException parsing " + e);
+                    DobbyLog.w("ExecutionException parsing " + e);
                 }
             }
         }, threadpool.getUiThreadExecutor());

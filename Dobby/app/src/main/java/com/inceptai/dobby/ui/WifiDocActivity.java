@@ -1,12 +1,11 @@
 package com.inceptai.dobby.ui;
 
 import android.net.Uri;
+import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.util.Log;
 
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.DobbyThreadpool;
@@ -15,6 +14,7 @@ import com.inceptai.dobby.R;
 import com.inceptai.dobby.ai.Action;
 import com.inceptai.dobby.ai.DobbyAi;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
+import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 
 import javax.inject.Inject;
@@ -52,7 +52,7 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
             try {
                 existingFragment = (Fragment) WifiDocMainFragment.newInstance(Utils.EMPTY_STRING);
             } catch (Exception e) {
-                Log.e(TAG, "Unable to create WifiDocMainFragment");
+                DobbyLog.e("Unable to create WifiDocMainFragment");
             }
         }
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();

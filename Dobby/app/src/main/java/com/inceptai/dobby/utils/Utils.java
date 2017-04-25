@@ -64,7 +64,7 @@ public class Utils {
             try {
                 existingFragment = (Fragment) fragmentClass.newInstance();
             } catch (Exception e) {
-                Log.e(TAG, "Unable to create fragment: " + fragmentClass.getCanonicalName());
+                DobbyLog.e("Unable to create fragment: " + fragmentClass.getCanonicalName());
                 return null;
             }
         }
@@ -339,7 +339,7 @@ public class Utils {
             // reading output stream of the command
             while ((s = inputStream.readLine()) != null) {
                 outputStringBuilder.append(s);
-                //Log.v(TAG, "ping response: " + s);
+                //DobbyLog.v("ping response: " + s);
             }
 
         } catch (Exception e) {

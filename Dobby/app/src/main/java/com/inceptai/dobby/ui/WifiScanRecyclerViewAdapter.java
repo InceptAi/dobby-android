@@ -2,19 +2,17 @@ package com.inceptai.dobby.ui;
 
 import android.net.wifi.ScanResult;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.inceptai.dobby.R;
+import com.inceptai.dobby.utils.DobbyLog;
 
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-
-import static com.inceptai.dobby.DobbyApplication.TAG;
 
 /**
  * {@link RecyclerView.Adapter} that can display a {@link ScanResult}.
@@ -29,7 +27,7 @@ public class WifiScanRecyclerViewAdapter extends RecyclerView.Adapter<WifiScanRe
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        Log.i(TAG, "onCreateViewHolder");
+        DobbyLog.i("onCreateViewHolder");
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.fragment_single_ap, parent, false);
         return new ViewHolder(view);
@@ -37,7 +35,7 @@ public class WifiScanRecyclerViewAdapter extends RecyclerView.Adapter<WifiScanRe
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
-        Log.i(TAG, "onBindViewHolder: " + position);
+        DobbyLog.i("onBindViewHolder: " + position);
         holder.mItem = mValues.get(position);
         holder.mIdView.setText(mValues.get(position).BSSID);
         holder.mContentView.setText(String.valueOf(mValues.get(position).level));
@@ -77,6 +75,6 @@ public class WifiScanRecyclerViewAdapter extends RecyclerView.Adapter<WifiScanRe
         Collections.sort(results, scanResultComparator);
         mValues = results;
         notifyDataSetChanged();
-        Log.i(TAG, "Notified data sets changed." + mValues.toString());
+        DobbyLog.i("Notified data sets changed." + mValues.toString());
     }
 }

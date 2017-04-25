@@ -3,7 +3,6 @@ package com.inceptai.dobby.ui;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,13 +24,13 @@ import com.inceptai.dobby.connectivity.ConnectivityAnalyzer;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.fake.FakePingAnalyzer;
 import com.inceptai.dobby.fake.FakeSpeedTestSocket;
+import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.wifi.WifiState;
 
 import java.util.ArrayList;
 
 import javax.inject.Inject;
 
-import static com.inceptai.dobby.DobbyApplication.TAG;
 import static com.inceptai.dobby.fake.FakeConnectivityAnalyzer.fakeWifiConnectivityMode;
 import static com.inceptai.dobby.fake.FakeConnectivityAnalyzer.setFakeWifiConnectivityMode;
 import static com.inceptai.dobby.fake.FakePingAnalyzer.PingStatsMode.DEFAULT_WORKING_STATE;
@@ -250,18 +249,18 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
     @Override
     public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
         String text = v.getText().toString();
-        Log.i(TAG, "Action ID: " + actionId);
+        DobbyLog.i("Action ID: " + actionId);
         if (event != null) {
-            Log.i(TAG, "key event: " + event.toString());
+            DobbyLog.i("key event: " + event.toString());
         }
         if (actionId == EditorInfo.IME_NULL && event.getAction() == KeyEvent.ACTION_DOWN) {
-            Log.i(TAG, "ENTER 1");
+            DobbyLog.i("ENTER 1");
             processBandwidthChange(v, text);
             return true;
         } else if (actionId == EditorInfo.IME_ACTION_DONE ||
                 actionId == EditorInfo.IME_ACTION_GO ||
                 actionId == EditorInfo.IME_ACTION_NEXT) {
-            Log.i(TAG, "ENTER 2");
+            DobbyLog.i("ENTER 2");
             processBandwidthChange(v, text);
             return true;
         }
@@ -354,7 +353,7 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
             hasChanged = true;
             //noinspection ResourceType
             FAKE_WIFI_SCAN_CONFIG.fakeWifiProblemMode = selectedMode;
-            Log.i(TAG, "FAKE Setting Wifi Problem mode to : " +
+            DobbyLog.i("FAKE Setting Wifi Problem mode to : " +
                     WifiState.wifiLinkModeToString(selectedMode));
             if (networkLayer != null) {
                 networkLayer.getWifiAnalyzerInstance().getWifiState().setCurrentWifiProblemMode(selectedMode);
@@ -370,7 +369,7 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
             hasChanged = true;
             //noinspection ResourceType
             setFakeWifiConnectivityMode(selectedMode);
-            Log.i(TAG, "FAKE Setting Connectivity mode to : " +
+            DobbyLog.i("FAKE Setting Connectivity mode to : " +
                     ConnectivityAnalyzer.connecitivyModeToString(fakeWifiConnectivityMode));
             if (networkLayer != null) {
                 networkLayer.getConnectivityAnalyzerInstance().setWifiConnectivityMode(fakeWifiConnectivityMode);
@@ -386,7 +385,7 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
             hasChanged = true;
             //noinspection ResourceType
             FakePingAnalyzer.pingStatsMode = selectedMode;
-            Log.i(TAG, "FAKE Setting ping stats mode to : " + FakePingAnalyzer.getPingStatsModeName(FakePingAnalyzer.pingStatsMode));
+            DobbyLog.i("FAKE Setting ping stats mode to : " + FakePingAnalyzer.getPingStatsModeName(FakePingAnalyzer.pingStatsMode));
         }
         return hasChanged;
     }
@@ -396,19 +395,19 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
         if (chanOneNumApsSpinner.getSelectedItemPosition() != FAKE_WIFI_SCAN_CONFIG.numApsChannelOne) {
             hasChanged = true;
             FAKE_WIFI_SCAN_CONFIG.numApsChannelOne = chanOneNumApsSpinner.getSelectedItemPosition();
-            Log.i(TAG, "Setting num Aps for Channel 1 to : " + chanOneNumApsSpinner.getSelectedItemPosition());
+            DobbyLog.i("Setting num Aps for Channel 1 to : " + chanOneNumApsSpinner.getSelectedItemPosition());
         }
 
         if (chanSixNumApsSpinner.getSelectedItemPosition() != FAKE_WIFI_SCAN_CONFIG.numApsChannelSix) {
             hasChanged = true;
             FAKE_WIFI_SCAN_CONFIG.numApsChannelSix = chanSixNumApsSpinner.getSelectedItemPosition();
-            Log.i(TAG, "Setting num Aps for Channel 6 to : " + chanSixNumApsSpinner.getSelectedItemPosition());
+            DobbyLog.i("Setting num Aps for Channel 6 to : " + chanSixNumApsSpinner.getSelectedItemPosition());
         }
 
         if (chanElevenNumApsSpinner.getSelectedItemPosition() != FAKE_WIFI_SCAN_CONFIG.numApsChannelEleven) {
             hasChanged = true;
             FAKE_WIFI_SCAN_CONFIG.numApsChannelEleven = chanElevenNumApsSpinner.getSelectedItemPosition();
-            Log.i(TAG, "Setting num Aps for Channel 11 to : " + chanElevenNumApsSpinner.getSelectedItemPosition());
+            DobbyLog.i("Setting num Aps for Channel 11 to : " + chanElevenNumApsSpinner.getSelectedItemPosition());
         }
 
         int zone = getRssiZone(chanOneRssiSpinner);

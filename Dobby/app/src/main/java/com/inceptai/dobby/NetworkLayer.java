@@ -3,7 +3,6 @@ package com.inceptai.dobby;
 import android.content.Context;
 import android.net.wifi.ScanResult;
 import android.support.annotation.Nullable;
-import android.util.Log;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -17,6 +16,7 @@ import com.inceptai.dobby.ping.PingAnalyzer;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
 import com.inceptai.dobby.speedtest.NewBandwidthAnalyzer;
+import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.wifi.WifiAnalyzer;
 import com.inceptai.dobby.wifi.WifiState;
 
@@ -25,7 +25,6 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import static com.inceptai.dobby.DobbyApplication.TAG;
 import static com.inceptai.dobby.connectivity.ConnectivityAnalyzerFactory.getConnecitivityAnalyzer;
 import static com.inceptai.dobby.ping.PingAnalyzerFactory.getPingAnalyzer;
 import static com.inceptai.dobby.wifi.WifiAnalyzerFactory.getWifiAnalyzer;
@@ -122,7 +121,7 @@ public class NetworkLayer {
         try {
             return getPingAnalyzerInstance().scheduleEssentialPingTestsAsyncSafely(MAX_AGE_GAP_TO_RETRIGGER_PING_MS);
         } catch (IllegalStateException e) {
-            Log.v(TAG, "Exception while scheduling ping tests: " + e);
+            DobbyLog.v("Exception while scheduling ping tests: " + e);
         }
         return null;
     }
@@ -132,7 +131,7 @@ public class NetworkLayer {
         try {
             return getPingAnalyzerInstance().scheduleRouterDownloadLatencyTestSafely();
         } catch (IllegalStateException e) {
-            Log.v(TAG, "Exception while scheduling ping tests: " + e);
+            DobbyLog.v("Exception while scheduling ping tests: " + e);
         }
         return null;
     }
@@ -186,7 +185,7 @@ public class NetworkLayer {
     // Process events from eventbus
     @Subscribe
     public void listen(DobbyEvent event) {
-        Log.v(TAG, "NL, Found Event: " + event.toString());
+        DobbyLog.v("NL, Found Event: " + event.toString());
         if (event.getEventType() == DobbyEvent.EventType.DHCP_INFO_AVAILABLE) {
             ipLayerInfo = new IPLayerInfo(getWifiAnalyzerInstance().getDhcpInfo());
             getPingAnalyzerInstance().updateIPLayerInfo(ipLayerInfo);

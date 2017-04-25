@@ -1,10 +1,10 @@
 package com.inceptai.dobby.speedtest;
 
 import android.support.annotation.Nullable;
-import android.util.Log;
 
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.Ints;
+import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 
 import java.io.IOException;
@@ -13,8 +13,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-
-import static com.inceptai.dobby.DobbyApplication.TAG;
 
 
 /**
@@ -104,7 +102,7 @@ public class BestServerSelector {
                     if (this.resultsCallback != null) {
                         this.resultsCallback.onBestServerSelectionError(errorString);
                     }
-                    Log.v(TAG, errorString);
+                    DobbyLog.v(errorString);
                 }
             }
             try {
@@ -118,7 +116,7 @@ public class BestServerSelector {
                 if (this.resultsCallback != null) {
                     this.resultsCallback.onBestServerSelectionError(errorString);
                 }
-                Log.v(TAG, errorString);
+                DobbyLog.v(errorString);
             }
         }
         if (this.resultsCallback != null) {

@@ -10,7 +10,6 @@ import android.net.wifi.ScanResult;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.support.annotation.Nullable;
-import android.util.Log;
 
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -19,12 +18,11 @@ import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.DobbyWifiInfo;
+import com.inceptai.dobby.utils.DobbyLog;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
-import static com.inceptai.dobby.DobbyApplication.TAG;
 
 /**
  * Class contains logic for scanning, computing contention and any other wifi-related diagnostics.
@@ -140,7 +138,7 @@ public class WifiAnalyzer {
         try {
             context.unregisterReceiver(wifiScanReceiver);
         } catch (IllegalArgumentException e) {
-            Log.v(TAG, "Exception while unregistering wifi receiver: " + e);
+            DobbyLog.v("Exception while unregistering wifi receiver: " + e);
         }
         wifiReceiverState = WIFI_RECEIVER_UNREGISTERED;
     }
@@ -167,10 +165,10 @@ public class WifiAnalyzer {
                     printScanResults(wifiList);
 
                     if (doScanAgain && wifiManager.startScan()) {
-                        Log.v(TAG, "Starting Wifi Scan again, currentScans: " + currentScans);
+                        DobbyLog.v("Starting Wifi Scan again, currentScans: " + currentScans);
                     } else {
                         updateWifiScanResults();
-                        Log.v(TAG, "Unregistering Scan Receiver");
+                        DobbyLog.v("Unregistering Scan Receiver");
                         unregisterScanReceiver();
                         resetCurrentScans();
                     }
@@ -211,7 +209,7 @@ public class WifiAnalyzer {
             sb.append((scanResultList.get(i)).toString());
             sb.append("\\n");
         }
-        Log.i(TAG, "Wifi scan result: " + sb.toString());
+        DobbyLog.i("Wifi scan result: " + sb.toString());
     }
 
     private void updateWifiScanResults() {
@@ -219,15 +217,15 @@ public class WifiAnalyzer {
         wifiState.updateWifiStats(null, combinedScanResult);
         if (wifiScanFuture != null) {
             boolean setResult = wifiScanFuture.set(combinedScanResult);
-            Log.v(TAG, "Setting wifi scan future: return value: " + setResult);
+            DobbyLog.v("Setting wifi scan future: return value: " + setResult);
         }
         lastScanCompletionTimestampMs = System.currentTimeMillis();
         /*
         if (wifiList.size() == 0) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                Log.i(TAG, "isScanAlwaysAvailable: " + String.valueOf(wifiManager.isScanAlwaysAvailable()));
-                Log.i(TAG, "WifiInfo:" + wifiManager.getConnectionInfo().toString());
-                Log.i(TAG, "WifiState:" + wifiManager.getWifiState());
+                DobbyLog.i("isScanAlwaysAvailable: " + String.valueOf(wifiManager.isScanAlwaysAvailable()));
+                DobbyLog.i("WifiInfo:" + wifiManager.getConnectionInfo().toString());
+                DobbyLog.i("WifiState:" + wifiManager.getWifiState());
                 wifiManager.reconnect();
                 wifiManager.startScan();
             }
@@ -247,7 +245,7 @@ public class WifiAnalyzer {
         try {
             context.unregisterReceiver(wifiStateReceiver);
         } catch (IllegalArgumentException e) {
-            Log.v(TAG, "Exception while unregistering wifi state receiver: " + e);
+            DobbyLog.v("Exception while unregistering wifi state receiver: " + e);
         }
     }
 
@@ -292,7 +290,7 @@ public class WifiAnalyzer {
             }
         }
         //Utils.PercentileStats stats = wifiState.getStatsForDetailedState(detailedState, GAP_FOR_GETTING_DETAILED_NETWORK_STATE_STATS_MS);
-        //Log.v(TAG, "updateDetailedWifiStateInfo State: " + detailedState.name() + " stats: " + stats.toString());
+        //DobbyLog.v("updateDetailedWifiStateInfo State: " + detailedState.name() + " stats: " + stats.toString());
     }
 
     private void processNetworkStateChangedIntent(Intent intent) {
@@ -320,9 +318,9 @@ public class WifiAnalyzer {
             eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.WIFI_NOT_CONNECTED));
         } else {
             if (wifiConnected) {
-                Log.v(TAG, "No change in wifi state -- we were connected and are connected");
+                DobbyLog.v("No change in wifi state -- we were connected and are connected");
             } else {
-                Log.v(TAG, "No change in wifi state -- we were NOT connected and are still NOT connected");
+                DobbyLog.v("No change in wifi state -- we were NOT connected and are still NOT connected");
             }
         }
     }

@@ -1,7 +1,6 @@
 package com.inceptai.dobby.ping;
 
 import android.support.annotation.Nullable;
-import android.util.Log;
 
 import com.google.common.base.Preconditions;
 import com.google.common.eventbus.Subscribe;
@@ -14,6 +13,7 @@ import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.IPLayerInfo;
 import com.inceptai.dobby.model.PingStats;
+import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 
 import java.io.IOException;
@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.inceptai.dobby.DobbyApplication.TAG;
 import static com.inceptai.dobby.speedtest.BestServerSelector.MAX_STRING_LENGTH;
 
 /**
@@ -245,7 +244,7 @@ public class PingAnalyzer {
                 pingInProgress.set(false);
                 if (pingResultsFuture != null) {
                     pingResultsFuture.set(ipLayerPingStats);
-                    Log.v(TAG, "IP Layer Ping Stats " + ipLayerPingStats.toString());
+                    DobbyLog.v("IP Layer Ping Stats " + ipLayerPingStats.toString());
                     eventBus.postEvent(DobbyEvent.EventType.PING_INFO_AVAILABLE);
                 }
             }
@@ -280,11 +279,11 @@ public class PingAnalyzer {
                     latencyMeasurementsMs.add(Double.valueOf((double)System.currentTimeMillis() - startTime));
                 }
             } catch (Utils.HTTPReturnCodeException e) {
-                Log.v(TAG, "HTTP Return code: " + e.httpReturnCode);
+                DobbyLog.v("HTTP Return code: " + e.httpReturnCode);
                 latencyMeasurementsMs.add(Double.valueOf((double)System.currentTimeMillis() - startTime));
             } catch (IOException e) {
                 String errorString = "Exception while performing latencyMs test: " + e;
-                Log.v(TAG, errorString);
+                DobbyLog.v(errorString);
                 //latencyMeasurementsMs.add(MAX_LATENCY_GATEWAY_MS);
             }
         }
@@ -298,12 +297,12 @@ public class PingAnalyzer {
                 downloadLatencyStats.minLatencyMs = Utils.computePercentileFromSortedList(latencyMeasurementsMs, 0);
             } catch (IllegalArgumentException e) {
                 String errorString = "Got exception while computing average: " + e;
-                Log.v(TAG, errorString);
+                DobbyLog.v(errorString);
             }
         }
         gatewayDownloadLatencyTestStats = downloadLatencyStats;
         gatewayDownloadTestFuture.set(gatewayDownloadLatencyTestStats);
-        Log.v(TAG, "GW server latency is : " + gatewayDownloadLatencyTestStats.toString());
+        DobbyLog.v("GW server latency is : " + gatewayDownloadLatencyTestStats.toString());
     }
 
     public ListenableFuture<PingStats> scheduleRouterDownloadLatencyTestSafely() throws IllegalStateException {

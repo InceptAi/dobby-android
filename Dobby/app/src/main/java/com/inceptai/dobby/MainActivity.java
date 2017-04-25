@@ -20,7 +20,6 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
@@ -33,13 +32,12 @@ import com.inceptai.dobby.ui.ChatFragment;
 import com.inceptai.dobby.ui.DebugFragment;
 import com.inceptai.dobby.ui.FakeDataFragment;
 import com.inceptai.dobby.ui.WifiFragment;
+import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 
 import java.util.List;
 
 import javax.inject.Inject;
-
-import static com.inceptai.dobby.DobbyApplication.TAG;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
@@ -96,7 +94,7 @@ public class MainActivity extends AppCompatActivity
             try {
                 existingFragment = (Fragment) fragmentClass.newInstance();
             } catch (Exception e) {
-                Log.e(TAG, "Unable to create fragment: " + fragmentClass.getCanonicalName());
+                DobbyLog.e("Unable to create fragment: " + fragmentClass.getCanonicalName());
                 return null;
             }
         }
@@ -233,7 +231,7 @@ public class MainActivity extends AppCompatActivity
         switch (requestCode) {
             case PERMISSION_COARSE_LOCATION_REQUEST_CODE:
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Log.i(TAG,"Coarse location permission granted.");
+                    DobbyLog.i("Coarse location permission granted.");
                 } else {
                     Utils.buildSimpleDialog(this, "Functionality limited",
                             "Since location access has not been granted, this app will not be able to analyze your wifi network.");

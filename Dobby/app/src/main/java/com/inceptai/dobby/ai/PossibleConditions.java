@@ -1,7 +1,6 @@
 package com.inceptai.dobby.ai;
 
-import android.util.Log;
-
+import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 
 import java.util.ArrayList;
@@ -10,8 +9,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import static com.inceptai.dobby.DobbyApplication.TAG;
 
 /**
  * Created by arunesh on 4/18/17.
@@ -59,7 +56,7 @@ public class PossibleConditions {
     }
 
     void mergeIn(PossibleConditions mergeFrom) {
-        Log.i(TAG, "Removing conditions: " + InferenceMap.toString(mergeFrom.exclusionSet()));
+        DobbyLog.i("Removing conditions: " + InferenceMap.toString(mergeFrom.exclusionSet()));
         exclusionSet.addAll(mergeFrom.exclusionSet());
         HashMap<Integer, Double> mergeMap = mergeFrom.inclusionMap();
         for (int condition : mergeMap.keySet()) {

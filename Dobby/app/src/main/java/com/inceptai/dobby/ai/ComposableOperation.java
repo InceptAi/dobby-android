@@ -1,13 +1,12 @@
 package com.inceptai.dobby.ai;
 
 import android.support.annotation.Nullable;
-import android.util.Log;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import com.inceptai.dobby.DobbyThreadpool;
+import com.inceptai.dobby.utils.DobbyLog;
 
-import static com.inceptai.dobby.DobbyApplication.TAG;
 import static com.inceptai.dobby.ai.OperationResult.SUCCESS;
 
 /**
@@ -43,7 +42,7 @@ public abstract class ComposableOperation {
                 try {
                     setResult(new OperationResult(SUCCESS, future.get()));
                 } catch (Exception e) {
-                    Log.w(TAG, "Exception getting result for:" + getName());
+                    DobbyLog.w("Exception getting result for:" + getName());
                 }
             }
         }, threadpool.getExecutor());

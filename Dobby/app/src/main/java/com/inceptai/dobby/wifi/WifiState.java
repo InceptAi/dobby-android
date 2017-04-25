@@ -4,10 +4,10 @@ import android.net.NetworkInfo;
 import android.net.wifi.ScanResult;
 import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
-import android.util.Log;
 
 import com.google.gson.Gson;
 import com.inceptai.dobby.model.DobbyWifiInfo;
+import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 
 import java.lang.annotation.Retention;
@@ -16,8 +16,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static android.content.ContentValues.TAG;
 
 /**
  * Created by vivek on 4/8/17.
@@ -205,7 +203,7 @@ public class WifiState {
                     detailedWifiStateStats.put(lastWifiState, currentList);
                 }
                 currentList.add(lastWifiStateInfo);
-                Log.v(TAG, "updateDetailedWifiStateInfo current state is: " +
+                DobbyLog.v("updateDetailedWifiStateInfo current state is: " +
                         detailedWifiState.name() + " last state,lasted: " +
                         lastWifiState.name() + "," + (timestampMs - lastWifiStateTimestampMs) + "ms");
             }
@@ -460,7 +458,7 @@ public class WifiState {
             for (WifiStateInfo wifiStateInfo: wifiStateInfos) {
                 sb.append(wifiStateInfo.toJson());
             }
-            Log.v(TAG, "updateDetailedWifiStateInfo4 Key: " + key.name() + " value: " + sb.toString());
+            DobbyLog.v("updateDetailedWifiStateInfo4 Key: " + key.name() + " value: " + sb.toString());
         }
     }
 

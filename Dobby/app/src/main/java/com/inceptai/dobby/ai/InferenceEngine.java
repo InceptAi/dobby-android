@@ -1,13 +1,13 @@
 package com.inceptai.dobby.ai;
 
 import android.support.annotation.IntDef;
-import android.util.Log;
 
 import com.inceptai.dobby.connectivity.ConnectivityAnalyzer;
 import com.inceptai.dobby.model.DobbyWifiInfo;
 import com.inceptai.dobby.model.IPLayerInfo;
 import com.inceptai.dobby.model.PingStats;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
+import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 import com.inceptai.dobby.wifi.WifiState;
 
@@ -19,7 +19,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import static com.inceptai.dobby.DobbyApplication.TAG;
 
 /**
  * Inference engine consumes actions from the NLU engine (ApiAi or local) and creates Actions.
@@ -94,9 +93,9 @@ public class InferenceEngine {
         metricsDb.updateWifiGrade(wifiGrade);
         PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(wifiGrade);
         currentConditions.mergeIn(conditions);
-        Log.i(TAG, "InferenceEngine Wifi Grade: " + wifiGrade.toString());
-        Log.i(TAG, "InferenceEngine which gives conditions: " + conditions.toString());
-        Log.i(TAG, "InferenceEngine After merging: " + currentConditions.toString());
+        DobbyLog.i("InferenceEngine Wifi Grade: " + wifiGrade.toString());
+        DobbyLog.i("InferenceEngine which gives conditions: " + conditions.toString());
+        DobbyLog.i("InferenceEngine After merging: " + currentConditions.toString());
         return wifiGrade;
     }
 
@@ -108,9 +107,9 @@ public class InferenceEngine {
         metricsDb.updatePingGrade(pingGrade);
         PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(pingGrade);
         currentConditions.mergeIn(conditions);
-        Log.i(TAG, "InferenceEngine Ping Grade: " + pingGrade.toString());
-        Log.i(TAG, "InferenceEngine which gives conditions: " + conditions.toString());
-        Log.i(TAG, "InferenceEngine After merging: " + currentConditions.toString());
+        DobbyLog.i("InferenceEngine Ping Grade: " + pingGrade.toString());
+        DobbyLog.i("InferenceEngine which gives conditions: " + conditions.toString());
+        DobbyLog.i("InferenceEngine After merging: " + currentConditions.toString());
         return pingGrade;
     }
 
@@ -119,9 +118,9 @@ public class InferenceEngine {
         metricsDb.updateHttpGrade(httpGrade);
         PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(httpGrade);
         currentConditions.mergeIn(conditions);
-        Log.i(TAG, "InferenceEngine httpGrade: " + httpGrade.toString());
-        Log.i(TAG, "InferenceEngine which gives conditions: " + conditions.toString());
-        Log.i(TAG, "InferenceEngine After merging: " + currentConditions.toString());
+        DobbyLog.i("InferenceEngine httpGrade: " + httpGrade.toString());
+        DobbyLog.i("InferenceEngine which gives conditions: " + conditions.toString());
+        DobbyLog.i("InferenceEngine After merging: " + currentConditions.toString());
         //TODO: Remove this hack.
         String suggestions = getSuggestions(MAX_SUGGESTIONS_TO_SHOW, MAX_GAP_IN_SUGGESTION_WEIGHT, LONG_SUGGESTION_MODE);
         sendResponseOnlyAction(suggestions);
@@ -168,9 +167,9 @@ public class InferenceEngine {
             //Update the bandwidth grade, overwriting earlier info.
             metricsDb.updateBandwidthGrade(bandwidthGrade);
             PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(bandwidthGrade);
-            Log.i(TAG, "InferenceEngine bandwidthGrade: " + bandwidthGrade.toString());
-            Log.i(TAG, "InferenceEngine which gives conditions: " + conditions.toString());
-            Log.i(TAG, "InferenceEngine After merging: " + currentConditions.toString());
+            DobbyLog.i("InferenceEngine bandwidthGrade: " + bandwidthGrade.toString());
+            DobbyLog.i("InferenceEngine which gives conditions: " + conditions.toString());
+            DobbyLog.i("InferenceEngine After merging: " + currentConditions.toString());
         }
     }
 
@@ -204,7 +203,7 @@ public class InferenceEngine {
 
     private void sendResponseOnlyAction(String response) {
         if (actionListener == null) {
-            Log.w(TAG, "Attempting to send action to non-existent listener");
+            DobbyLog.w("Attempting to send action to non-existent listener");
             return;
         }
         if (response == null || response.isEmpty()) {

@@ -1,9 +1,9 @@
 package com.inceptai.dobby.speedtest;
 
 import android.support.annotation.Nullable;
-import android.util.Log;
 
 import com.inceptai.dobby.model.BandwidthStats;
+import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 
 import java.security.InvalidParameterException;
@@ -19,8 +19,6 @@ import fr.bmartel.speedtest.SpeedTestSocket;
 import fr.bmartel.speedtest.inter.IRepeatListener;
 import fr.bmartel.speedtest.inter.ISpeedTestListener;
 import fr.bmartel.speedtest.model.SpeedTestError;
-
-import static com.inceptai.dobby.DobbyApplication.TAG;
 
 /**
  * Created by vivek on 4/6/17.
@@ -117,26 +115,26 @@ public class BandwidthAggregator {
     synchronized  private boolean checkIfAllThreadsDone() {
         for (int threadIndex=0; threadIndex < testInFlight.length; threadIndex++) {
             if (testInFlight[threadIndex]) {
-                Log.v(TAG, "Thread not done index: " + threadIndex);
+                DobbyLog.v("Thread not done index: " + threadIndex);
                 return false;
             }
         }
-        Log.v(TAG, "All threads are done ");
+        DobbyLog.v("All threads are done ");
         return true;
     }
 
     synchronized private void updateTestAsDone(int id) {
-        Log.v(TAG, "Coming into updateTestasDone for id: " + id);
+        DobbyLog.v("Coming into updateTestasDone for id: " + id);
         if (id < MAX_THREADS) {
             testInFlight[id] = false;
-            Log.v(TAG, "Updating listener as done with id: " + id);
+            DobbyLog.v("Updating listener as done with id: " + id);
         }
     }
 
     synchronized private void updateTestAsStarted(int id) {
         if (id < MAX_THREADS) {
             testInFlight[id] = true;
-            Log.v(TAG, "Updating listener as started with id: " + id);
+            DobbyLog.v("Updating listener as started with id: " + id);
         }
     }
 
@@ -177,7 +175,7 @@ public class BandwidthAggregator {
             try {
                 Thread.sleep(WAIT_TIMEOUT_FOR_CANCELLATION_MS);                 //1000 milliseconds is one second.
             } catch(InterruptedException e) {
-                Log.v(TAG, "Interrupted while sleeping: " + e);
+                DobbyLog.v("Interrupted while sleeping: " + e);
                 Thread.currentThread().interrupt();
                 return false;
             }
@@ -256,7 +254,7 @@ public class BandwidthAggregator {
             // called when a download report is dispatched
             // called to notify download progress
             //Update transfer rate
-            Log.v(TAG, "onReport id " + id);
+            DobbyLog.v("onReport id " + id);
             if (isListenerCancelled()) {
                 return;
             }
@@ -274,7 +272,7 @@ public class BandwidthAggregator {
             // called when repeat task is finished
             // called to notify download progress
             // If we are trying to cancel, return now.
-            Log.v(TAG, "OnFinish id: " + id);
+            DobbyLog.v("OnFinish id: " + id);
             updateTestAsDone(id);
             if (isListenerCancelled()) {
                 return;
@@ -291,7 +289,7 @@ public class BandwidthAggregator {
         @Override
         public void onDownloadFinished(SpeedTestReport report) {
             // called when download is finished
-            Log.v("speedtest", "[DL FINISHED] rate in bit/s   : " + report.getTransferRateBit());
+            DobbyLog.v("SpeedTest: [DL FINISHED] rate in bit/s   : " + report.getTransferRateBit());
         }
 
         @Override
@@ -325,7 +323,7 @@ public class BandwidthAggregator {
 
         @Override
         public void onInterruption() {
-            Log.v(TAG, "onInterruption id " + id);
+            DobbyLog.v("onInterruption id " + id);
             if (cancelling.get()) {
                 markListenerAsCancelled();
             }

@@ -2,7 +2,6 @@ package com.inceptai.dobby.fake;
 
 import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
-import android.util.Log;
 
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.AsyncFunction;
@@ -14,6 +13,7 @@ import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.IPLayerInfo;
 import com.inceptai.dobby.model.PingStats;
 import com.inceptai.dobby.ping.PingAnalyzer;
+import com.inceptai.dobby.utils.DobbyLog;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -22,7 +22,6 @@ import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
-import static com.inceptai.dobby.DobbyApplication.TAG;
 import static com.inceptai.dobby.fake.FakePingAnalyzer.PingStatsMode.DEFAULT_WORKING_STATE;
 import static com.inceptai.dobby.fake.FakePingAnalyzer.PingStatsMode.DNS_SLOW;
 import static com.inceptai.dobby.fake.FakePingAnalyzer.PingStatsMode.DNS_SLOW_ALTERNATIVE_FAST;
@@ -343,7 +342,7 @@ public class FakePingAnalyzer extends PingAnalyzer {
 
     public HashMap<String, PingStats> generateFakePingStats() {
         HashMap<String, PingStats> pingStatsHashMap = new HashMap<>();
-        Log.v(TAG, "FAKE Generating fake ping for mode " + getPingStatsModeName(FakePingAnalyzer.pingStatsMode));
+        DobbyLog.v("FAKE Generating fake ping for mode " + getPingStatsModeName(FakePingAnalyzer.pingStatsMode));
         FakePingConfig fakePingConfig = new FakePingConfig(FakePingAnalyzer.pingStatsMode);
         PingStats gatewayPingStats = generateIndividualPingStats(ipLayerInfo.gateway,
                 fakePingConfig.gatewayLatencyRangeMs, fakePingConfig.gatewayLossRangePercent);
@@ -397,7 +396,7 @@ public class FakePingAnalyzer extends PingAnalyzer {
             public HashMap<String, PingStats> call() {
                 HashMap<String, PingStats> pingStatsHashMap = generateFakePingStats();
                 ipLayerPingStats = pingStatsHashMap;
-                Log.v(TAG, "FAKE IP Layer Ping Stats " + ipLayerPingStats.toString());
+                DobbyLog.v("FAKE IP Layer Ping Stats " + ipLayerPingStats.toString());
                 eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.PING_INFO_AVAILABLE));
                 return  pingStatsHashMap;
             }
@@ -427,7 +426,7 @@ public class FakePingAnalyzer extends PingAnalyzer {
             public PingStats call() {
                 PingStats pingStats = generateFakeGatewayStats();
                 gatewayDownloadLatencyTestStats = pingStats;
-                Log.v(TAG, "FAKE GW server latency is : " + gatewayDownloadLatencyTestStats.toString());
+                DobbyLog.v("FAKE GW server latency is : " + gatewayDownloadLatencyTestStats.toString());
                 return  pingStats;
             }
         }, PING_LATENCY_MS, TimeUnit.MILLISECONDS);
@@ -435,7 +434,7 @@ public class FakePingAnalyzer extends PingAnalyzer {
     }
 
     private PingStats generateFakeGatewayStats() {
-        Log.v(TAG, "FAKE Generating fake gateway http latency for mode " + getPingStatsModeName(FakePingAnalyzer.pingStatsMode));
+        DobbyLog.v("FAKE Generating fake gateway http latency for mode " + getPingStatsModeName(FakePingAnalyzer.pingStatsMode));
         FakePingConfig fakePingConfig = new FakePingConfig(FakePingAnalyzer.pingStatsMode);
         PingStats gatewayLatencyStats = generateIndividualPingStats(ipLayerInfo.gateway,
                 fakePingConfig.gatewayLatencyRangeMs, fakePingConfig.gatewayLossRangePercent);
