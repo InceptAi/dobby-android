@@ -25,7 +25,8 @@ public class CircularGauge extends View {
 
 
     private Paint mPaint;        /* The Paint object to be used for the arc */
-    private float mStrokeWidth;  /* Goes into the Paint object */
+    private float mStrokeWidth;  /* Goes into the Paint object, default width for the arc */
+    private float mBaselineStrokeWidth; /* Width for the baseline arc (not showing data) */
     private int mStrokeColor;    /* Goes into the Paint object */
 
     private RectF mRect;
@@ -73,6 +74,7 @@ public class CircularGauge extends View {
 
         // stroke style
         setStrokeWidth(a.getDimension(R.styleable.CircularGauge_gaugeStrokeWidth, 10));
+        setBaselineStrokeWidth(a.getDimension(R.styleable.CircularGauge_gaugeBaselineStrokeWidth, 2));
         setStrokeColor(a.getColor(R.styleable.CircularGauge_gaugeStrokeColor, ContextCompat.getColor(context, android.R.color.darker_gray)));
         setStrokeCap(a.getString(R.styleable.CircularGauge_gaugeStrokeCap));
 
@@ -117,7 +119,7 @@ public class CircularGauge extends View {
         // main Paint
         mPaint = new Paint();
         mPaint.setColor(mStrokeColor);
-        mPaint.setStrokeWidth(mStrokeWidth);
+        mPaint.setStrokeWidth(mBaselineStrokeWidth);
         mPaint.setAntiAlias(true);
         if (!TextUtils.isEmpty(mStrokeCap)) {
             if (mStrokeCap.equals("BUTT"))
@@ -152,9 +154,12 @@ public class CircularGauge extends View {
 
         mPaint.setColor(mStrokeColor);
         mPaint.setShader(null);
+        mPaint.setStrokeWidth(mBaselineStrokeWidth);
         canvas.drawArc(mRect, mStartAngle, mSweepAngle, false, mPaint);
         mPaint.setColor(mPointStartColor);
         mPaint.setShader(new LinearGradient(getWidth(), getHeight(), 0, 0, mPointEndColor, mPointStartColor, Shader.TileMode.CLAMP));
+        /* Switch to mStrokeWidth when showing the real data */
+        mPaint.setStrokeWidth(mStrokeWidth);
         if (mPointSize > 0) { // if size of pointer is defined
             if (mCurrentValueInAngle > mStartAngle + mPointSize/2) {
                 canvas.drawArc(mRect, mCurrentValueInAngle - mPointSize/2, mPointSize, false, mPaint);
@@ -198,6 +203,10 @@ public class CircularGauge extends View {
 
     public void setStrokeWidth(float strokeWidth) {
         mStrokeWidth = strokeWidth;
+    }
+
+    public void setBaselineStrokeWidth(float baselineStrokeWidth) {
+        mBaselineStrokeWidth = baselineStrokeWidth;
     }
 
     @SuppressWarnings("unused")

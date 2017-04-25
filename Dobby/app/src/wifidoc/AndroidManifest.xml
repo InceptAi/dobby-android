@@ -9,7 +9,7 @@
         android:label="@string/wifidoc_app_name"
         android:supportsRtl="true"
         android:name=".DobbyApplication"
-        android:theme="@style/AppThemeOrangeLight"
+        android:theme="@style/AppThemeOrangeDark"
         tools:replace="android:theme"
         >
         <activity android:name=".ui.WifiDocActivity">

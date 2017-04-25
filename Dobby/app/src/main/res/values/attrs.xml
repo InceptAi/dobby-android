@@ -6,6 +6,7 @@
         <attr name="gaugePointEndColor" format="color" />
         <attr name="gaugeStrokeColor" format="color" />
         <attr name="gaugeStrokeWidth" format="dimension" />
+        <attr name="gaugeBaselineStrokeWidth" format="dimension" />
         <attr name="gaugeStrokeCap" format="string" />
         <attr name="gaugeStartAngle" format="integer" />
         <attr name="gaugeSweepAngle" format="integer" />

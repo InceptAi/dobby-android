@@ -5,6 +5,7 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.graphics.PorterDuff;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -19,6 +20,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.google.common.eventbus.Subscribe;
@@ -28,6 +30,7 @@ import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.BandwidthStats;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
+import com.inceptai.dobby.speedtest.BandwidthResult;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
 import com.inceptai.dobby.speedtest.NewBandwidthAnalyzer;
 import com.inceptai.dobby.speedtest.ServerInformation;
@@ -35,6 +38,11 @@ import com.inceptai.dobby.speedtest.SpeedTestConfig;
 import com.inceptai.dobby.utils.Utils;
 
 import java.util.List;
+
+import static com.inceptai.dobby.ai.DataInterpreter.MetricType.AVERAGE;
+import static com.inceptai.dobby.ai.DataInterpreter.MetricType.EXCELLENT;
+import static com.inceptai.dobby.ai.DataInterpreter.MetricType.GOOD;
+import static com.inceptai.dobby.ai.DataInterpreter.MetricType.POOR;
 
 public class WifiDocMainFragment extends Fragment implements View.OnClickListener, NewBandwidthAnalyzer.ResultsCallback, Handler.Callback{
     public static final String TAG = "WifiDocMainFragment";
@@ -47,14 +55,36 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private OnFragmentInteractionListener mListener;
 
     private FloatingActionButton mainFab;
-    private CircularGauge circularGauge;
+    private CircularGauge downloadCircularGauge;
+    private TextView downloadGaugeTv;
+
+    private CircularGauge uploadCircularGauge;
+    private TextView uploadGaugeTv;
+
+    private TextView pingRouterTitleTv;
+    private TextView pingRouterValueTv;
+    private ImageView pingRouterGradeIv;
+
+    private TextView pingDnsPrimaryTitleTv;
+    private TextView pingDnsPrimaryValueTv;
+    private ImageView pingDnsPrimaryGradeIv;
+
+    private TextView pingDnsSecondTitleTv;
+    private TextView pingDnsSecondValueTv;
+    private ImageView pingDnsSecondGradeIv;
+
+    private TextView pingWebTitleTv;
+    private TextView pingWebValueTv;
+    private ImageView pingWebGradeIv;
+
+
+    private TextView wifiTitleTv;
+
     private String mParam1;
     private DobbyEventBus eventBus;
     private BandwidthObserver bandwidthObserver;
     private Handler handler;
-    private TextView gaugeTv;
-    private TextView pingTv;
-    private TextView wifiTv;
+
 
     public WifiDocMainFragment() {
         // Required empty public constructor
@@ -82,11 +112,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         handler = new Handler(this);
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_wifi_doc_main, container, false);
-        mainFab = (FloatingActionButton) view.findViewById(R.id.main_fab_button);
-        mainFab.setOnClickListener(this);
-        circularGauge = (CircularGauge) view.findViewById(R.id.bw_gauge);
-        gaugeTv = (TextView) view.findViewById(R.id.gauge_tv);
-        wifiTv = (TextView) view.findViewById(R.id.wifi_quality_tv);
+
+        populateViews(view);
         requestPermissions();
         return view;
     }
@@ -208,7 +235,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
     @Override
     public void onTestProgress(@BandwithTestCodes.TestMode int testMode, double instantBandwidth) {
-        Message.obtain(handler, MSG_UPDATED_CIRCULAR_GAUGE, (int)(instantBandwidth / 1.0e6), testMode).sendToTarget();
+        Message.obtain(handler, MSG_UPDATED_CIRCULAR_GAUGE, BandwidthValue.from(testMode, (instantBandwidth / 1.0e6))).sendToTarget();
     }
 
     @Override
@@ -220,8 +247,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     public boolean handleMessage(Message msg) {
         switch(msg.what) {
             case MSG_UPDATED_CIRCULAR_GAUGE:
-                circularGauge.setValue(msg.arg1);
-                gaugeTv.setText(String.valueOf(msg.arg1));
+                updateBandwidthGauge(msg);
                 break;
             case MSG_WIFI_GRADE_AVAILABLE:
                 showWifiResults((DataInterpreter.WifiGrade) msg.obj);
@@ -239,9 +265,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                 break;
             case DataInterpreter.MetricType.AVERAGE:
                 break;
-            case DataInterpreter.MetricType.EXCELLENT:
+            case EXCELLENT:
                 break;
-            case DataInterpreter.MetricType.POOR:
+            case POOR:
                 break;
             case DataInterpreter.MetricType.UNKNOWN:
                 break;
@@ -256,11 +282,119 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                 break;
             case DataInterpreter.MetricType.AVERAGE:
                 break;
-            case DataInterpreter.MetricType.EXCELLENT:
+            case EXCELLENT:
                 break;
-            case DataInterpreter.MetricType.POOR:
+            case POOR:
                 break;
             case DataInterpreter.MetricType.UNKNOWN:
+                break;
+
+        }
+    }
+
+    private void populateViews(View rootView) {
+        mainFab = (FloatingActionButton) rootView.findViewById(R.id.main_fab_button);
+        mainFab.setOnClickListener(this);
+
+        View downloadView = rootView.findViewById(R.id.cg_download);
+        downloadCircularGauge = (CircularGauge) downloadView.findViewById(R.id.bw_gauge);
+        downloadGaugeTv = (TextView) downloadView.findViewById(R.id.gauge_tv);
+
+        View uploadView = rootView.findViewById(R.id.cg_upload);
+        uploadCircularGauge = (CircularGauge) uploadView.findViewById(R.id.bw_gauge);
+        uploadGaugeTv = (TextView) uploadView.findViewById(R.id.gauge_tv);
+        wifiTitleTv = (TextView) uploadView.findViewById(R.id.wifi_quality_title_tv);
+
+        View row1View = rootView.findViewById(R.id.ping_latency_row_inc1);
+        pingRouterTitleTv = (TextView) row1View.findViewById(R.id.left_title_tv);
+        pingRouterValueTv = (TextView) row1View.findViewById(R.id.left_value_tv);
+        pingRouterGradeIv = (ImageView) row1View.findViewById(R.id.left_grade_iv);
+
+        pingWebTitleTv = (TextView) row1View.findViewById(R.id.right_title_tv);
+        pingWebValueTv = (TextView) row1View.findViewById(R.id.right_value_tv);
+        pingWebGradeIv = (ImageView) row1View.findViewById(R.id.right_grade_iv);
+
+        View row2View = rootView.findViewById(R.id.ping_latency_row_inc2);
+        pingDnsPrimaryTitleTv = (TextView) row2View.findViewById(R.id.left_title_tv);
+        pingDnsPrimaryValueTv = (TextView) row2View.findViewById(R.id.left_value_tv);
+        pingDnsPrimaryGradeIv = (ImageView) row2View.findViewById(R.id.left_grade_iv);
+
+        pingDnsSecondTitleTv = (TextView) row2View.findViewById(R.id.right_title_tv);
+        pingDnsSecondValueTv = (TextView) row2View.findViewById(R.id.right_value_tv);
+        pingDnsSecondGradeIv = (ImageView) row2View.findViewById(R.id.right_grade_iv);
+    }
+
+    private void updateBandwidthGauge(Message msg) {
+        BandwidthValue bandwidthValue = (BandwidthValue) msg.obj;
+        if (bandwidthValue.mode == BandwithTestCodes.TestMode.UPLOAD) {
+            uploadCircularGauge.setValue((int) nonLinearBwScale(bandwidthValue.value));
+            uploadGaugeTv.setText(String.format("%2.2f", bandwidthValue.value));
+        } else if (bandwidthValue.mode == BandwithTestCodes.TestMode.DOWNLOAD) {
+            downloadCircularGauge.setValue((int) nonLinearBwScale(bandwidthValue.value));
+            downloadGaugeTv.setText(String.format("%2.2f", bandwidthValue.value));
+        }
+    }
+
+    private static class BandwidthValue {
+        @BandwithTestCodes.TestMode
+        int mode;
+        double value;
+        static BandwidthValue from(int mode, double value) {
+            BandwidthValue bandwidthValue = new BandwidthValue();
+            bandwidthValue.mode = mode;
+            bandwidthValue.value = value;
+            return bandwidthValue;
+        }
+    }
+
+    private static double nonLinearBwScale(double input) {
+        // 0 .. 5 maps to 0 .. 50
+        if (input <= 5.0) {
+            return input * 10.;
+        }
+        // 5 to 10 maps to 50 .. 62.5
+        if (input <= 10.0) {
+            return  12.5 * (input - 5.0)  / 5.0 + 50.0;
+        }
+
+        // 10 to 20 maps to 62.5 .. 75.
+        if (input < 20.0) {
+            return 12.5 * (input - 10.0) / 10.0 + 62.5;
+        }
+
+        // 20 to 50 maps to 75 to 87.5
+        if (input < 50.0) {
+            return 12.5 * (input - 20.0) / 30.0 + 75;
+        }
+
+        // Upper bound by 100
+        input = Math.min(100.0, input);
+        // 50 to 100 maps to 87.5 to 100
+        return 12.5 * (input - 50.0) / 50.0 + 87.5;
+    }
+
+    private void setupPingCard() {
+
+    }
+
+    private void setPingResult(TextView valueTv, String value, ImageView gradeIv, @DataInterpreter.MetricType int grade) {
+        valueTv.setText(value);
+        switch (grade) {
+            case EXCELLENT:
+                gradeIv.setBackgroundResource(R.drawable.double_tick);
+                break;
+            case GOOD:
+                gradeIv.setBackgroundResource(R.drawable.tick_mark);
+                break;
+            case AVERAGE:
+                gradeIv.setBackgroundResource(R.drawable.tick_mark);
+                gradeIv.setColorFilter(R.color.basicYellow, PorterDuff.Mode.DST_ATOP);
+                break;
+            case POOR:
+                gradeIv.setBackgroundResource(R.drawable.poor_icon);
+                break;
+            default:
+                gradeIv.setBackgroundResource(R.drawable.non_functional);
                 break;
 
         }
