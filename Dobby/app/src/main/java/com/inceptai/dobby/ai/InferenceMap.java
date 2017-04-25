@@ -155,7 +155,7 @@ public class InferenceMap {
         //All izz well -- from Three Idiots
         if (DataInterpreter.isGoodOrExcellent(allWifiMetrics) &&
                 wifiGrade.wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_ONLINE &&
-                wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.NO_PROBLEM_DEFAULT_STATE) {
+                wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.NO_PROBLEM_DEFAULT_STATE) {
             conditions.exclude(WIFI_CONDITIONS);
             return conditions;
         }
@@ -175,11 +175,11 @@ public class InferenceMap {
 
         //Wifi signal
         if (DataInterpreter.isUnknown(wifiGrade.primaryApSignalMetric) ||
-                wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.HANGING_ON_SCANNING ||
+                wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.HANGING_ON_SCANNING ||
                 wifiGrade.wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.ON_AND_DISCONNECTED ||
-                wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.FREQUENT_DISCONNECTIONS ||
-                wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.HANGING_ON_AUTHENTICATING ||
-                wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.HANGING_ON_DHCP) {
+                wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.FREQUENT_DISCONNECTIONS ||
+                wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.HANGING_ON_AUTHENTICATING ||
+                wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.HANGING_ON_DHCP) {
             // Wifi is on but not connected to the router
             //It could be that client Wifi interface is not connecting or user needs to issue explicit command to connect
             conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE, 0.3);
@@ -192,10 +192,10 @@ public class InferenceMap {
             if (DataInterpreter.isAverageOrPoorOrNonFunctional(wifiGrade.primaryLinkChannelOccupancyMetric)) {
                 conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.5);
             }
-            if (wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.FREQUENT_DISCONNECTIONS){
+            if (wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.FREQUENT_DISCONNECTIONS){
                 conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.8);
-            } else if (wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.HANGING_ON_AUTHENTICATING ||
-                    wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.HANGING_ON_DHCP){
+            } else if (wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.HANGING_ON_AUTHENTICATING ||
+                    wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.HANGING_ON_DHCP){
                 conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 1.0);
             }
         } else if (DataInterpreter.isGoodOrExcellentorAverage(wifiGrade.primaryApSignalMetric)){
@@ -206,20 +206,20 @@ public class InferenceMap {
             if (DataInterpreter.isAverageOrPoorOrNonFunctional(wifiGrade.primaryLinkChannelOccupancyMetric)) {
                 conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.2);
             }
-            if (wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.FREQUENT_DISCONNECTIONS ||
-                    wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.HANGING_ON_AUTHENTICATING ||
-                    wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.HANGING_ON_DHCP){
+            if (wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.FREQUENT_DISCONNECTIONS ||
+                    wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.HANGING_ON_AUTHENTICATING ||
+                    wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.HANGING_ON_DHCP){
                 conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 1.0);
             }
         }
 
         /*
         //Based on wifi problem mode
-        if (wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.FREQUENT_DISCONNECTIONS) {
+        if (wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.FREQUENT_DISCONNECTIONS) {
             conditions.include(Condition.WIFI_LINK_ASSOCIATION_ISSUE, 1.0);
-        } else if (wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.HANGING_ON_AUTHENTICATING) {
+        } else if (wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.HANGING_ON_AUTHENTICATING) {
             conditions.include(Condition.WIFI_LINK_AUTH_ISSUE, 1.0);
-        } else if (wifiGrade.wifiProblemMode == WifiState.WifiLinkMode.HANGING_ON_DHCP) {
+        } else if (wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.HANGING_ON_DHCP) {
             conditions.include(Condition.WIFI_LINK_DHCP_ISSUE, 1.0);
         }
         */

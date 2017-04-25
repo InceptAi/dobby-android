@@ -6,11 +6,13 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.graphics.PorterDuff;
+import android.media.Image;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -37,8 +39,11 @@ import com.inceptai.dobby.speedtest.SpeedTestConfig;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 
+import org.w3c.dom.Text;
+
 import java.util.List;
 
+import static com.inceptai.dobby.ai.DataInterpreter.MetricType.ABYSMAL;
 import static com.inceptai.dobby.ai.DataInterpreter.MetricType.AVERAGE;
 import static com.inceptai.dobby.ai.DataInterpreter.MetricType.EXCELLENT;
 import static com.inceptai.dobby.ai.DataInterpreter.MetricType.GOOD;
@@ -79,8 +84,16 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private TextView pingWebValueTv;
     private ImageView pingWebGradeIv;
 
-
     private TextView wifiTitleTv;
+
+    private TextView wifiSsidTv;
+    private TextView wifiSignalTitleTv;
+    private TextView wifiSignalValueTv;
+    private ImageView wifiSignalIconIv;
+
+    private TextView wifiCongestionTitleTv;
+    private TextView wifiCongestionValueTv;
+    private ImageView wifiCongestionIconIv;
 
     private String mParam1;
     private DobbyEventBus eventBus;
@@ -262,19 +275,14 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     }
 
     private void showWifiResults(DataInterpreter.WifiGrade wifiGrade) {
-        switch (wifiGrade.getPrimaryApSignalMetric()) {
-            case DataInterpreter.MetricType.GOOD:
-                break;
-            case DataInterpreter.MetricType.AVERAGE:
-                break;
-            case EXCELLENT:
-                break;
-            case POOR:
-                break;
-            case DataInterpreter.MetricType.UNKNOWN:
-                break;
-
+        String ssid = wifiGrade.getPrimaryApSsid();
+        if (ssid != null && !ssid.isEmpty()) {
+            ssid = ssid.substring(0, 10);
+            wifiSsidTv.setText("SSID: " + ssid);
         }
+        setWifiResult(wifiSignalValueTv, String.valueOf(wifiGrade.getPrimaryApSignal()),
+                wifiSignalIconIv, wifiGrade.getPrimaryApSignalMetric());
+        //setWifiResult(wifiCongestionValueTv, String);
     }
 
     private void showPingResults(DataInterpreter.PingGrade pingGrade) {
@@ -337,6 +345,19 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         pingDnsPrimaryTitleTv.setText(R.string.dns_primary_ping);
         pingDnsSecondTitleTv.setText(R.string.dns_second_ping);
         pingWebTitleTv.setText(R.string.web_ping);
+
+        // Populate wifi card views
+        wifiSsidTv = (TextView) rootView.findViewById(R.id.wifi_ssid_tv);
+
+        View wifiRow1View = rootView.findViewById(R.id.wifi_row_1);
+        wifiSignalTitleTv = (TextView) wifiRow1View.findViewById(R.id.title_tv);
+        wifiSignalValueTv = (TextView) wifiRow1View.findViewById(R.id.value_tv);
+        wifiSignalIconIv = (ImageView) wifiRow1View.findViewById(R.id.icon_iv);
+
+        View wifiRow2View = rootView.findViewById(R.id.wifi_row_2);
+        wifiCongestionTitleTv = (TextView) wifiRow2View.findViewById(R.id.title_tv);
+        wifiCongestionValueTv = (TextView) wifiRow2View.findViewById(R.id.value_tv);
+        wifiCongestionIconIv = (ImageView) wifiRow2View.findViewById(R.id.icon_iv);
     }
 
     private void updateBandwidthGauge(Message msg) {
@@ -406,6 +427,31 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                 break;
             default:
                 gradeIv.setBackgroundResource(R.drawable.non_functional);
+                break;
+
+        }
+    }
+
+    private void setWifiResult(TextView valueTv, String value, ImageView gradeIv, @DataInterpreter.MetricType int grade) {
+        valueTv.setText(value);
+        switch (grade) {
+            case EXCELLENT:
+                gradeIv.setBackgroundResource(R.drawable.signal_5);
+                break;
+            case GOOD:
+                gradeIv.setBackgroundResource(R.drawable.signal_4);
+                break;
+            case AVERAGE:
+                gradeIv.setBackgroundResource(R.drawable.signal_3);
+                break;
+            case POOR:
+                gradeIv.setBackgroundResource(R.drawable.signal_2);
+                break;
+            case ABYSMAL:
+                gradeIv.setBackgroundResource(R.drawable.signal_1);
+                break;
+            default:
+                gradeIv.setBackgroundResource(R.drawable.signal_disc);
                 break;
 
         }

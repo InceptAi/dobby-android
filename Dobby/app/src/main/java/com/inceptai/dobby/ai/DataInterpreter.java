@@ -454,7 +454,7 @@ public class DataInterpreter {
         @MetricType int primaryApLinkSpeedMetric;
         @MetricType int primaryLinkChannelOccupancyMetric;
         @ConnectivityAnalyzer.WifiConnectivityMode int wifiConnectivityMode;
-        @WifiState.WifiLinkMode int wifiProblemMode;
+        @WifiState.WifiLinkMode int wifiLinkMode;
         long updatedAtMs;
         String primaryApSsid;
         int primaryApChannel;
@@ -484,7 +484,7 @@ public class DataInterpreter {
                     ", channelOccupancy: " +
                     metricTypeToString(primaryLinkChannelOccupancyMetric));
             builder.append("\nWifi connectivity mode: " + ConnectivityAnalyzer.connecitivyModeToString(wifiConnectivityMode));
-            builder.append("\nWifi link mode: " + WifiState.wifiLinkModeToString(wifiProblemMode));
+            builder.append("\nWifi link mode: " + WifiState.wifiLinkModeToString(wifiLinkMode));
             builder.append("\nChannel map:" + wifiChannelOccupancyMetric.toString());
             builder.append("\n primaryApChannel:" + primaryApChannel);
             builder.append("\n primaryApSignal:" + primaryApSignal);
@@ -509,6 +509,50 @@ public class DataInterpreter {
         @MetricType
         public int getPrimaryApSignalMetric() {
             return primaryApSignalMetric;
+        }
+
+        public HashMap<Integer, Integer> getWifiChannelOccupancyMetric() {
+            return wifiChannelOccupancyMetric;
+        }
+
+        public int getPrimaryApLinkSpeedMetric() {
+            return primaryApLinkSpeedMetric;
+        }
+
+        public int getPrimaryLinkChannelOccupancyMetric() {
+            return primaryLinkChannelOccupancyMetric;
+        }
+
+        public int getWifiConnectivityMode() {
+            return wifiConnectivityMode;
+        }
+
+        public int getWifiLinkMode() {
+            return wifiLinkMode;
+        }
+
+        public String getPrimaryApSsid() {
+            return primaryApSsid;
+        }
+
+        public int getPrimaryApChannel() {
+            return primaryApChannel;
+        }
+
+        public int getLeastOccupiedChannel() {
+            return leastOccupiedChannel;
+        }
+
+        public int getPrimaryApChannelInterferingAps() {
+            return primaryApChannelInterferingAps;
+        }
+
+        public int getLeastOccupiedChannelAps() {
+            return leastOccupiedChannelAps;
+        }
+
+        public int getPrimaryApSignal() {
+            return primaryApSignal;
         }
     }
 
@@ -661,7 +705,7 @@ public class DataInterpreter {
                 LINK_SPEED_STEPS_MBPS, linkInfo.getLinkSpeed() > 0, false);
 
         wifiGrade.wifiConnectivityMode = wifiConnectivityMode;
-        wifiGrade.wifiProblemMode = wifiProblemMode;
+        wifiGrade.wifiLinkMode = wifiProblemMode;
         wifiGrade.primaryApSsid = linkInfo.getSSID();
         wifiGrade.primaryApChannel = linkInfo.getFrequency();
         wifiGrade.leastOccupiedChannel = leastOccupiedChannel;
