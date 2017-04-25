@@ -263,11 +263,12 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     }
 
     private ListenableFuture<BandwidthResult> startBandwidthTest() {
-        Log.i(TAG, "Going to start bandwidth test.");
+        Log.v(TAG, "Going to start bandwidth test.");
         @BandwithTestCodes.TestMode
         int testMode = BandwithTestCodes.TestMode.DOWNLOAD_AND_UPLOAD;
         BandwidthObserver observer = networkLayer.startBandwidthTest(testMode);
         if (observer == null) {
+            Log.w(TAG, "Null observer returned from NL, abandoning bandwidth test.");
             return null;
         }
         observer.setInferenceEngine(inferenceEngine);

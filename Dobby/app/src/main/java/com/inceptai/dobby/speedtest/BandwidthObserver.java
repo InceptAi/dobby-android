@@ -135,6 +135,8 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
 
         if (areTestsDone(testMode)) {
             testsDone();
+        } else {
+            Log.v(TAG, "Tests not done.");
         }
     }
 
