@@ -3,15 +3,24 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
+
     <color name="orangeDark">#b34700</color>
     <color name="orangeMedium">#ff6600</color>
     <color name="orangeMediumLight1">#ff944d</color>
     <color name="orangeLight">#ffb380</color>
     <color name="orangeLighter">#ffe0cc</color>
+
     <color name="basicGreen">#33cc33</color>
+    <color name="greenForCheckIcons">#1AB408</color>
+    <color name="lightGreen1">#33ff33</color>
+    <color name="Green0">#00cc00</color>
     <color name="basicRed">#ff0000</color>
     <color name="basicYellow">#e6e600</color>
+    <color name="yellowForIcons">#C7C20E</color>
+
     <color name="lightGray">#e6e6e6</color>
     <color name="darkGray">#595959</color>
     <color name="lessDarkGray">#808080</color>
+    <color name="lessDarkGray2">#A0A0A0</color>
+
 </resources>
