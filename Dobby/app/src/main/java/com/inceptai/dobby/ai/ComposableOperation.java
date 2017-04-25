@@ -49,7 +49,6 @@ public abstract class ComposableOperation {
     }
 
     protected void setResult(OperationResult result) {
-        Log.v(TAG, "setResult called on parent ComposableOperation : " + getName());
         settableFuture.set(result);
     }
 
