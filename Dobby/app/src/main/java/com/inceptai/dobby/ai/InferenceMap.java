@@ -187,7 +187,7 @@ public class InferenceMap {
             //It could be that the right network is not showing up in the scans.
             conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.7);
             conditions.include(Condition.ROUTER_WIFI_INTERFACE_FAULT, 0.7);
-        }  else if (DataInterpreter.isPoorOrNonFunctional(wifiGrade.primaryApSignalMetric)) {
+        }  else if (DataInterpreter.isPoorOrAbysmal(wifiGrade.primaryApSignalMetric)) {
             //poor signal and high congestion
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 1.0);
             if (DataInterpreter.isAverageOrPoorOrNonFunctional(wifiGrade.primaryLinkChannelOccupancyMetric)) {

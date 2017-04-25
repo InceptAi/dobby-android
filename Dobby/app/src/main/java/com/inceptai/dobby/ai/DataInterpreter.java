@@ -19,12 +19,13 @@ import java.util.HashMap;
 
 public class DataInterpreter {
     private static final long MAX_STALENESS_MS = 120 * 1000; // 120 seconds.
+    private static final long MAX_LATENCY_FOR_BEING_NONFUNCTIONAL_MS = 10000; // 10secs
 
     private static final double[] BW_DOWNLOAD_STEPS_MBPS = { /* higher is better */
             20.0, /* excellent */
             15.0, /* good */
             10.0, /* average */
-            5.0 /* poor */
+            5.0, /* poor */
     };
 
     private static final double[] BW_UPLOAD_STEPS_MBPS = { /* higher is better */
@@ -99,21 +100,23 @@ public class DataInterpreter {
 
 
     @IntDef({MetricType.EXCELLENT, MetricType.GOOD, MetricType.AVERAGE, MetricType.POOR,
-            MetricType.NONFUNCTIONAL, MetricType.UNKNOWN})
+            MetricType.ABYSMAL, MetricType.NONFUNCTIONAL, MetricType.UNKNOWN})
     @Retention(RetentionPolicy.SOURCE)
     public @interface MetricType {
         int EXCELLENT = 0;
         int GOOD = 1;
         int AVERAGE = 2;
         int POOR = 3;
-        int NONFUNCTIONAL = 4;  /* all valid values that are POOR or worse */
-        int UNKNOWN = 5;  /* no valid result available */
+        int ABYSMAL = 4;
+        int NONFUNCTIONAL = 5;  /* all valid values that are POOR or worse */
+        int UNKNOWN = 6;  /* no valid result available */
     }
 
     public static int compareMetric(@MetricType int metric1, @MetricType int metric2) {
         //Positive value means metric1 is better, neg means worse, 0 means equal
         return (metric2 - metric1);
     }
+
 
     public static boolean isUnknown(@MetricType int metric) {
         return (metric == MetricType.UNKNOWN);
@@ -143,13 +146,23 @@ public class DataInterpreter {
         return (metric == MetricType.AVERAGE || metric == MetricType.POOR || metric == MetricType.NONFUNCTIONAL);
     }
 
+
     public static boolean isAverage(@MetricType int metric) {
         return (metric == MetricType.AVERAGE);
     }
 
-    public static boolean isPoorOrNonFunctional(@MetricType int metric) {
-        return (metric == MetricType.POOR || metric == MetricType.NONFUNCTIONAL);
+    public static boolean isPoorOrAbysmal(@MetricType int metric) {
+        return (metric == MetricType.POOR || metric == MetricType.ABYSMAL);
     }
+
+    public static boolean isPoorOrAbysmalOrNonFunctional(@MetricType int metric) {
+        return (metric == MetricType.POOR || metric == MetricType.ABYSMAL || metric == MetricType.NONFUNCTIONAL);
+    }
+
+    public static boolean isAbysmalOrNonFunctional(@MetricType int metric) {
+        return (metric == MetricType.NONFUNCTIONAL || metric == MetricType.UNKNOWN);
+    }
+
 
     public static boolean isPoor(@MetricType int metric) {
         return (metric == MetricType.POOR);
@@ -316,6 +329,10 @@ public class DataInterpreter {
         long updatedAtMs;
         String primaryDns;
         String alternativeDns;
+        double routerLatencyMs;
+        double dnsServerLatencyMs;
+        double externalServerLatencyMs;
+        double alternativeDnsLatencyMs;
 
         public PingGrade() {
             updatedAtMs = System.currentTimeMillis();
@@ -482,8 +499,8 @@ public class DataInterpreter {
      */
     public static BandwidthGrade interpret(double downloadMbps, double uploadMbps, String isp, String externalClientIp) {
         BandwidthGrade grade = new BandwidthGrade();
-        @MetricType int downloadMetric = getGradeHigherIsBetter(downloadMbps, BW_DOWNLOAD_STEPS_MBPS, downloadMbps >= 0.0);
-        @MetricType int uploadMetric = getGradeHigherIsBetter(uploadMbps, BW_UPLOAD_STEPS_MBPS, uploadMbps >= 0.0);
+        @MetricType int downloadMetric = getGradeHigherIsBetter(downloadMbps, BW_DOWNLOAD_STEPS_MBPS, downloadMbps >= 0.0, downloadMbps == 0.0);
+        @MetricType int uploadMetric = getGradeHigherIsBetter(uploadMbps, BW_UPLOAD_STEPS_MBPS, uploadMbps >= 0.0, uploadMbps == 0.0);
         grade.updateUploadInfo(uploadMbps, uploadMetric);
         grade.updateDownloadInfo(downloadMbps, downloadMetric);
         grade.isp = isp;
@@ -526,13 +543,13 @@ public class DataInterpreter {
         //Primary DNS stats
         PingStats primaryDnsStats = pingStatsHashMap.get(ipLayerInfo.dns1);
 
-        double avgExternalServerLatency = 0.0;
+        double avgExternalServerLatencyMs = 0.0;
         double avgExternalServerLossPercent = 0.0;
         int countLatencyValues = 0;
         int countLossValues = 0;
         for(PingStats pingStats : externalServerStats.values()) {
             if (pingStats.avgLatencyMs > 0.0){
-                avgExternalServerLatency += pingStats.avgLatencyMs;
+                avgExternalServerLatencyMs += pingStats.avgLatencyMs;
                 countLatencyValues ++;
             }
             if (pingStats.lossRatePercent >= 0.0){
@@ -540,14 +557,14 @@ public class DataInterpreter {
                 countLossValues ++;
             }
         }
-        avgExternalServerLatency /= (double) countLatencyValues;
+        avgExternalServerLatencyMs /= (double) countLatencyValues;
         if (countLossValues > 0) {
             avgExternalServerLossPercent /= (double) countLossValues;
         } else {
             avgExternalServerLossPercent = -1.0;
         }
 
-        pingGrade.externalServerLatencyMetric = getPingGradeLowerIsBetter(avgExternalServerLatency,
+        pingGrade.externalServerLatencyMetric = getPingGradeLowerIsBetter(avgExternalServerLatencyMs,
                 avgExternalServerLossPercent, PING_LATENCY_EXTSERVER_STEPS_MS);
 
         pingGrade.dnsServerLatencyMetric = getPingGradeLowerIsBetter(primaryDnsStats.avgLatencyMs,
@@ -559,6 +576,12 @@ public class DataInterpreter {
         pingGrade.alternativeDnsMetric = getPingGradeLowerIsBetter(lowerAlternativeDnsStats.avgLatencyMs,
                 lowerAlternativeDnsStats.lossRatePercent, PING_LATENCY_DNS_STEPS_MS);
 
+
+        //putting in the values
+        pingGrade.routerLatencyMs = routerStats.avgLatencyMs;
+        pingGrade.alternativeDnsLatencyMs = lowerAlternativeDnsStats.avgLatencyMs;
+        pingGrade.dnsServerLatencyMs = primaryDnsStats.avgLatencyMs;
+        pingGrade.externalServerLatencyMs = avgExternalServerLatencyMs;
         return pingGrade;
     }
 
@@ -566,7 +589,7 @@ public class DataInterpreter {
         HttpGrade httpGrade = new HttpGrade();
         httpGrade.httpDownloadLatencyMetric = getGradeLowerIsBetter(httpRouterStats.avgLatencyMs,
                 HTTP_LATENCY_ROUTER_STEPS_MS,
-                httpRouterStats.avgLatencyMs > 0.0);
+                httpRouterStats.avgLatencyMs > 0.0, httpRouterStats.avgLatencyMs > MAX_LATENCY_FOR_BEING_NONFUNCTIONAL_MS);
         return  httpGrade;
     }
 
@@ -593,11 +616,11 @@ public class DataInterpreter {
         wifiGrade.primaryApChannelInterferingAps = numStrongInterferingAps;
         wifiGrade.primaryLinkChannelOccupancyMetric = getGradeLowerIsBetter(numStrongInterferingAps,
                 WIFI_CHANNEL_OCCUPANCY_STEPS,
-                (linkInfo.getFrequency() > 0 && numStrongInterferingAps >= 0));
+                (linkInfo.getFrequency() > 0 && numStrongInterferingAps >= 0), false);
         wifiGrade.primaryApSignalMetric = getGradeHigherIsBetter(linkInfo.getRssi(),
-                WIFI_RSSI_STEPS_DBM, linkInfo.getRssi() < 0);
+                WIFI_RSSI_STEPS_DBM, linkInfo.getRssi() < 0, false);
         wifiGrade.primaryApLinkSpeedMetric = getGradeHigherIsBetter(linkInfo.getLinkSpeed(),
-                LINK_SPEED_STEPS_MBPS, linkInfo.getLinkSpeed() > 0);
+                LINK_SPEED_STEPS_MBPS, linkInfo.getLinkSpeed() > 0, false);
 
         wifiGrade.wifiConnectivityMode = wifiConnectivityMode;
         wifiGrade.wifiProblemMode = wifiProblemMode;
@@ -619,33 +642,36 @@ public class DataInterpreter {
 
     @MetricType
     private static int getPingGradeLowerIsBetter(double latencyMs, double lossRatePercent, double[] steps) {
-        @MetricType int lossRateMetric = getGradeLowerIsBetter(lossRatePercent, PKT_LOSS_RATE_STEPS, lossRatePercent >= 0);
-        if (DataInterpreter.isNonFunctional(lossRateMetric)) {
+        @MetricType int lossRateMetric = getGradeLowerIsBetter(lossRatePercent, PKT_LOSS_RATE_STEPS, lossRatePercent >= 0, lossRatePercent == 100.0);
+        if (DataInterpreter.isAbysmalOrNonFunctional(lossRateMetric)) {
             return MetricType.NONFUNCTIONAL;
         }
         double effectiveLatencyMs = latencyMs * (1.0 / (1.0 - (lossRatePercent/100)));
-        @MetricType int latencyMetric = getGradeLowerIsBetter(effectiveLatencyMs, steps, latencyMs > 0);
+        @MetricType int latencyMetric = getGradeLowerIsBetter(effectiveLatencyMs, steps,
+                effectiveLatencyMs > 0, effectiveLatencyMs > MAX_LATENCY_FOR_BEING_NONFUNCTIONAL_MS);
         return latencyMetric;
     }
 
 
     @MetricType
-    private static int getGradeLowerIsBetter(double value, double[] steps, boolean isValid) {
+    private static int getGradeLowerIsBetter(double value, double[] steps, boolean isValid, boolean isNonFunctional) {
         if (!isValid) return MetricType.UNKNOWN;
+        if (isNonFunctional) return MetricType.NONFUNCTIONAL;
         if (value < steps[0]) return MetricType.EXCELLENT;
         else if (value < steps[1]) return MetricType.GOOD;
         else if (value < steps[2]) return MetricType.AVERAGE;
         else if (value < steps[3]) return MetricType.POOR;
-        else return MetricType.NONFUNCTIONAL;
+        else return MetricType.ABYSMAL;
     }
 
     @MetricType
-    private static int getGradeHigherIsBetter(double value, double[] steps, boolean isValid) {
+    private static int getGradeHigherIsBetter(double value, double[] steps, boolean isValid, boolean isNonFunctional) {
         if (!isValid) return MetricType.UNKNOWN;
+        if (isNonFunctional) return MetricType.NONFUNCTIONAL;
         if (value > steps[0]) return MetricType.EXCELLENT;
         else if (value > steps[1]) return MetricType.GOOD;
         else if (value > steps[2]) return MetricType.AVERAGE;
         else if (value > steps[3]) return MetricType.POOR;
-        else return MetricType.NONFUNCTIONAL;
+        else return MetricType.ABYSMAL;
     }
 }
