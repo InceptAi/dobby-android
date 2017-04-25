@@ -92,6 +92,60 @@ public class PingAnalyzer {
         return new PingAnalyzer(ipLayerInfo, dobbyThreadpool, eventBus);
     }
 
+    // Called in order to cleanup any held resources.
+    public void cleanup() {
+        if (eventBus != null) {
+            eventBus.unregisterListener(this);
+        }
+    }
+
+    public ListenableFuture<HashMap<String, PingStats>> scheduleEssentialPingTestsAsyncSafely(int maxAgeToReTriggerPingMs) throws IllegalStateException {
+        final int maxAge = maxAgeToReTriggerPingMs;
+        if (pingResultsFuture != null && !pingResultsFuture.isDone()) {
+            AsyncFunction<HashMap<String, PingStats>, HashMap<String, PingStats>> redoPing = new
+                    AsyncFunction<HashMap<String, PingStats>, HashMap<String, PingStats>>() {
+                        @Override
+                        public ListenableFuture<HashMap<String, PingStats>> apply(HashMap<String, PingStats> input) throws Exception {
+                            return scheduleEssentialPingTestsAsync(maxAge);
+                        }
+                    };
+            ListenableFuture<HashMap<String, PingStats>> newPingResultsFuture = Futures.transformAsync(pingResultsFuture, redoPing);
+            return newPingResultsFuture;
+        } else {
+            return scheduleEssentialPingTestsAsync(maxAge);
+        }
+    }
+
+    public HashMap<String, PingStats> getRecentIPLayerPingStats() {
+        return ipLayerPingStats;
+    }
+
+    public PingStats getRecentGatewayDownloadTestStats() {
+        return gatewayDownloadLatencyTestStats;
+    }
+
+
+    public boolean checkIfShouldRedoPingStats(int minGapToRetriggerPing, int lossRateToTriggerPing) {
+        boolean redoPing = false;
+        long maxTimeUpdatedAt = 0;
+        for (PingStats pingStats : ipLayerPingStats.values()) {
+            maxTimeUpdatedAt = Math.max(maxTimeUpdatedAt, pingStats.updatedAt);
+            if (pingStats.lossRatePercent == -1 || pingStats.lossRatePercent > lossRateToTriggerPing) {
+                redoPing = true;
+                break;
+            }
+        }
+        long gap = System.currentTimeMillis() - maxTimeUpdatedAt;
+        if (gap > minGapToRetriggerPing) {
+            redoPing = true;
+        }
+        return redoPing;
+    }
+
+    public void updateIPLayerInfo(IPLayerInfo updatedInfo) {
+        this.ipLayerInfo = updatedInfo;
+    }
+
     private void schedulePingAndReturn(String[] pingAddressList) {
         final String[] pingAddressListFinal = pingAddressList;
         dobbyThreadpool.submit(new Runnable() {
@@ -115,23 +169,6 @@ public class PingAnalyzer {
             pingsAllDone = pingsAllDone && !value;
         }
         return pingsAllDone;
-    }
-
-    public ListenableFuture<HashMap<String, PingStats>> scheduleEssentialPingTestsAsyncSafely(int maxAgeToReTriggerPingMs) throws IllegalStateException {
-        final int maxAge = maxAgeToReTriggerPingMs;
-        if (pingResultsFuture != null && !pingResultsFuture.isDone()) {
-            AsyncFunction<HashMap<String, PingStats>, HashMap<String, PingStats>> redoPing = new
-                    AsyncFunction<HashMap<String, PingStats>, HashMap<String, PingStats>>() {
-                        @Override
-                        public ListenableFuture<HashMap<String, PingStats>> apply(HashMap<String, PingStats> input) throws Exception {
-                            return scheduleEssentialPingTestsAsync(maxAge);
-                        }
-                    };
-            ListenableFuture<HashMap<String, PingStats>> newPingResultsFuture = Futures.transformAsync(pingResultsFuture, redoPing);
-            return newPingResultsFuture;
-        } else {
-            return scheduleEssentialPingTestsAsync(maxAge);
-        }
     }
 
     private String[] getAddressListToPing(int maxAgeToReTriggerPingMs) {
@@ -188,35 +225,6 @@ public class PingAnalyzer {
         return pingResultsFuture;
     }
 
-    public HashMap<String, PingStats> getRecentIPLayerPingStats() {
-        return ipLayerPingStats;
-    }
-
-    public PingStats getRecentGatewayDownloadTestStats() {
-        return gatewayDownloadLatencyTestStats;
-    }
-
-
-    public boolean checkIfShouldRedoPingStats(int minGapToRetriggerPing, int lossRateToTriggerPing) {
-        boolean redoPing = false;
-        long maxTimeUpdatedAt = 0;
-        for (PingStats pingStats : ipLayerPingStats.values()) {
-            maxTimeUpdatedAt = Math.max(maxTimeUpdatedAt, pingStats.updatedAt);
-            if (pingStats.lossRatePercent == -1 || pingStats.lossRatePercent > lossRateToTriggerPing) {
-                redoPing = true;
-                break;
-            }
-        }
-        long gap = System.currentTimeMillis() - maxTimeUpdatedAt;
-        if (gap > minGapToRetriggerPing) {
-            redoPing = true;
-        }
-        return redoPing;
-    }
-
-    public void updateIPLayerInfo(IPLayerInfo updatedInfo) {
-        this.ipLayerInfo = updatedInfo;
-    }
 
     private class PingActionListener implements PingAction.ResultsCallback {
 

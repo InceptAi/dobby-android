@@ -201,12 +201,23 @@ public class NetworkLayer {
     }
 
     public void cleanup() {
+        //Unregister from Event bus
+        if (eventBus != null) {
+            eventBus.unregisterListener(this);
+        }
+
         if (getWifiAnalyzerInstance() != null) {
             getWifiAnalyzerInstance().cleanup();
         }
+
+        if (getPingAnalyzerInstance() != null) {
+            getPingAnalyzerInstance().cleanup();
+        }
+
         if (bandwidthAnalyzer != null) {
             bandwidthAnalyzer.cleanup();
         }
+
         if (bandwidthObserver != null) {
             bandwidthObserver = null;
         }

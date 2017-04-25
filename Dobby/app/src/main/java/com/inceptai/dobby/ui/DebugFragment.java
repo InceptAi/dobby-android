@@ -79,6 +79,14 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
     }
 
     @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (eventBus != null) {
+            eventBus.unregisterListener(this);
+        }
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         ((DobbyApplication) getActivity().getApplication()).getProdComponent().inject(this);
@@ -221,7 +229,7 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
                 BandwidthObserver observer = networkLayer.startBandwidthTest(testMode);
                 observer.registerCallback(DebugFragment.this);
                 if (observer.getTestModeRequested() != testMode) {
-                    setFollupBandwidthTest(testMode);
+                    setFollowUpBandwidthTest(testMode);
                     addConsoleText("Scheduled follow up test. Currently another test is running.");
                 }
             }
@@ -284,7 +292,7 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
         addConsoleText("Found event on dobby event bus: " + event.toString());
     }
 
-    private void setFollupBandwidthTest(@BandwithTestCodes.TestMode int testMode) {
+    private void setFollowUpBandwidthTest(@BandwithTestCodes.TestMode int testMode) {
         followupBandwidthTestMode = testMode;
         scheduleFollowupBandwidthTest = true;
     }
