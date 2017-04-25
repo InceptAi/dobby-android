@@ -139,14 +139,14 @@ public class NetworkLayer {
 
     public synchronized BandwidthObserver startBandwidthTest(final @BandwithTestCodes.TestMode int mode) {
         if (bandwidthObserver != null && bandwidthObserver.testsRunning()) {
-            Log.i(TAG, "Bandwidth tests already running.");
+            DobbyLog.i("Bandwidth tests already running.");
             // We have an already running bandwidth operation.
             return bandwidthObserver;
         }
 
         if (!getConnectivityAnalyzerInstance().isWifiOnline()) {
             // TODO: Always check if bandwidth analyzer is null
-            Log.w(TAG, "Abandoning bandwidth test since wifi is offline.");
+            DobbyLog.w("Abandoning bandwidth test since wifi is offline.");
             return null;
         }
 

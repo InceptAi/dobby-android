@@ -377,11 +377,11 @@ public class NewBandwidthAnalyzer {
      */
     private void startBandwidthTest(@BandwithTestCodes.TestMode int testMode) {
         if (!checkTestStatusAndMarkRunningIfInactive()) {
-            Log.i(TAG, "Tests already running.");
+            DobbyLog.i("Tests already running.");
             //Tests are already
             return;
         }
-        Log.i(TAG, "Starting bandwidth tests in NewBandwidthAnalyzer.");
+        DobbyLog.i("Starting bandwidth tests in NewBandwidthAnalyzer.");
         this.testMode = testMode;
         fetchSpeedTestConfigIfNeeded();
         fetchServerConfigAndDetermineBestServerIfNeeded();
