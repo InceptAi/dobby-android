@@ -13,6 +13,8 @@ import static com.inceptai.dobby.utils.Utils.convertSignalDbmToPercent;
  */
 
 public class SuggestionCreator {
+    static final String MULTIPLE_CONDITIONS_PREFIX = "There a few things which can be causing problems for your network.";
+    static final String NO_CONDITION_MESSAGE = "We performed speed tests, DNS pings and wifi tests on your network and did not see anything amiss.";
 
     public static class Suggestion {
         String title;
@@ -23,6 +25,57 @@ public class SuggestionCreator {
             title = Utils.EMPTY_STRING;
             longSuggestionList = new ArrayList<>();
             shortSuggestionList = new ArrayList<>();
+        }
+
+        public String getTitle() {
+            return title;
+        }
+
+        public List<String> getLongSuggestionList() {
+            return longSuggestionList;
+        }
+
+        public List<String> getShortSuggestionList() {
+            return shortSuggestionList;
+        }
+
+        private String convertListToStringMessage(boolean useLongSuggestions) {
+            //Use short suggestion by default.
+            List<String> suggestionList;
+            if (useLongSuggestions) {
+                suggestionList = longSuggestionList;
+            } else {
+                suggestionList = shortSuggestionList;
+            }
+            StringBuilder sb = new StringBuilder();
+            if (suggestionList.size() == 0) {
+                sb.append(NO_CONDITION_MESSAGE);
+            } else if (suggestionList.size() == 1) {
+                sb.append(suggestionList.get(0));
+            } else {
+                //Multiple conditions
+                sb.append(MULTIPLE_CONDITIONS_PREFIX);
+                sb.append("\n");
+                int index = 1;
+                for(String suggestion: suggestionList) {
+                    sb.append(index);
+                    sb.append(". ");
+                    sb.append(suggestion);
+                    sb.append("\n");
+                    index++;
+                }
+            }
+            return sb.toString();
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            sb.append(getTitle());
+            sb.append("\n");
+            //Use short suggestion by default.
+            sb.append(convertListToStringMessage(false));
+            return sb.toString();
         }
     }
 
@@ -86,8 +139,6 @@ public class SuggestionCreator {
                 Utils.convertSignalDbmToPercent(params.currentSignal) +
                 ". Since wifi network problems are sometimes transient, it might be good if you run " +
                 "this test a few times so we can catch an issue if it shows up. Hope this helps :)";
-
-        final String MULTIPLE_CONDITIONS_PREFIX = "There a few things which can be causing problems for your network.";
 
         List<String> suggestionList = new ArrayList<>();
 
