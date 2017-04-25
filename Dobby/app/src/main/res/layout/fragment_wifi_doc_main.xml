@@ -57,8 +57,8 @@
         <android.support.v7.widget.CardView
             android:id="@+id/wifi_cardview"
             android:layout_width="0dp"
-            android:layout_weight="0.5"
-            android:layout_height="wrap_content"
+            android:layout_weight="0.6"
+            android:layout_height="match_parent"
             app:cardBackgroundColor="@android:color/white"
             app:cardCornerRadius="2dp"
             app:cardElevation="4dp"
@@ -89,13 +89,15 @@
 
                 <include
                     layout="@layout/raw_data_card_row"
+                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"
                     android:id="@+id/ping_latency_row_inc1"
                     />
 
                 <include
                     layout="@layout/raw_data_card_row"
                     android:layout_marginTop="10dp"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
                     android:layout_width="match_parent"
                     android:id="@+id/ping_latency_row_inc2"
                     />
@@ -107,8 +109,8 @@
         <android.support.v7.widget.CardView
             android:id="@+id/ping_cardview"
             android:layout_width="0dp"
-            android:layout_height="100dp"
-            android:layout_weight="0.5"
+            android:layout_height="match_parent"
+            android:layout_weight="0.4"
             android:layout_marginStart="5dp"
             android:layout_marginLeft="5dp"
             app:cardCornerRadius="2dp"
@@ -133,11 +135,41 @@
                     android:textStyle="bold"
                     android:text="@string/wifi_quality" />
 
-                <include
-                    layout="@layout/raw_data_card_row"
-                    android:id="@+id/wifi_row_inc"
-                    />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:orientation="vertical"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginStart="10dp"
+                    android:layout_height="wrap_content">
 
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:text="SSID: your network"
+                        android:textSize="10sp"
+                        android:layout_height="wrap_content" />
+
+                    <android.support.v4.widget.Space
+                        android:layout_width="match_parent"
+                        android:layout_height="2dp" />
+
+                    <include
+                        layout="@layout/wifi_data_one_row"
+                        android:layout_marginTop="10dp"
+                        android:layout_height="match_parent"
+                        android:layout_width="match_parent"
+                        android:layout_gravity="left"
+                        android:id="@+id/wifi_row_1"
+                        />
+
+                    <include
+                        layout="@layout/wifi_data_one_row"
+                        android:layout_marginTop="10dp"
+                        android:layout_height="match_parent"
+                        android:layout_width="match_parent"
+                        android:layout_gravity="left"
+                        android:id="@+id/wifi_row_2"
+                        />
+                </LinearLayout>
             </LinearLayout>
 
         </android.support.v7.widget.CardView>
@@ -145,8 +177,8 @@
     </LinearLayout>
 
     <android.support.design.widget.FloatingActionButton
-        android:layout_width="60dp"
-        android:layout_height="60dp"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
         android:id="@+id/main_fab_button"
         android:src="@mipmap/wifi_meter"
         app:backgroundTint="@color/orangeMediumLight1"
