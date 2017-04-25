@@ -232,7 +232,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
     @Override
     public void onTestFinished(@BandwithTestCodes.TestMode int testMode, BandwidthStats stats) {
-
+        Message.obtain(handler, MSG_UPDATED_CIRCULAR_GAUGE, BandwidthValue.from(testMode, (stats.getPercentile90() / 1.0e6))).sendToTarget();
     }
 
     @Override
@@ -305,11 +305,13 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         downloadCircularGauge = (CircularGauge) downloadView.findViewById(R.id.bw_gauge);
         downloadGaugeTv = (TextView) downloadView.findViewById(R.id.gauge_tv);
         downloadGaugeTitleTv = (TextView) downloadView.findViewById(R.id.title_tv);
+        downloadGaugeTitleTv.setText(R.string.download_bw);
 
         View uploadView = rootView.findViewById(R.id.cg_upload);
         uploadCircularGauge = (CircularGauge) uploadView.findViewById(R.id.bw_gauge);
         uploadGaugeTv = (TextView) uploadView.findViewById(R.id.gauge_tv);
         uploadGaugeTitleTv = (TextView) uploadView.findViewById(R.id.title_tv);
+        uploadGaugeTitleTv.setText(R.string.upload_bw);
 
         wifiTitleTv = (TextView) uploadView.findViewById(R.id.wifi_quality_title_tv);
 
