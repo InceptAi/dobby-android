@@ -1,6 +1,7 @@
 package com.inceptai.dobby.eventbus;
 
 import com.google.common.eventbus.EventBus;
+import com.inceptai.dobby.utils.DobbyLog;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -22,7 +23,11 @@ public class DobbyEventBus {
     }
 
     public void unregisterListener(Object listener) {
-        eventBus.unregister(listener);
+        try {
+            eventBus.unregister(listener);
+        }catch (IllegalArgumentException e) {
+            DobbyLog.w("This Object was not registered, so can't unregister from event bus" + listener.toString());
+        }
     }
 
     public void postEvent(DobbyEvent event) {

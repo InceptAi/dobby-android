@@ -212,7 +212,7 @@ public class SuggestionCreator {
                 break;
             case Condition.WIFI_CHANNEL_BAD_SIGNAL:
                 baseMessage = "Your signal to your wireless router is very weak (about "
-                        + Utils.convertSignalDbmToPercent(params.currentSignal) + " %) " +
+                        + Utils.convertSignalDbmToPercent(params.currentSignal) + "/100) " +
                         ", this could lead to poor speeds and bad experience in streaming etc. " +
                         "If you are close to your router while doing this test (within 20ft), then your router is not " +
                         "providing enough signal. Make sure your router is not obstructed and if " +

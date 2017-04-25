@@ -132,6 +132,7 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
         }
 
         if (areTestsDone(testMode)) {
+            DobbyLog.v("Calling tests Done with tesmode: " + testMode);
             testsDone();
         } else {
             DobbyLog.v("Tests not done.");
@@ -159,6 +160,7 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
                                      @BandwithTestCodes.ErrorCodes int errorCode,
                                      @Nullable String errorMessage) {
         //TODO: Inform the inference engine that we encountered an error during bandwidth tests.
+        DobbyLog.v("BandwidthObserver: onBandwidthTestError Got bw test error: " + errorCode + " testmode: " + testMode);
         for (NewBandwidthAnalyzer.ResultsCallback callback : resultsCallbacks) {
             callback.onBandwidthTestError(testMode, errorCode, errorMessage);
         }
@@ -170,8 +172,6 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
         for (RtDataListener<Float> listener : listenersUpload) {
             listener.onClose();
         }
-
-
         testsDone();
     }
 
