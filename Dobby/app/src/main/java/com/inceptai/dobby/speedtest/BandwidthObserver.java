@@ -192,7 +192,8 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
 
     private void testsDone() {
         if (operationFuture != null) {
-            operationFuture.set(result);
+            boolean setResult = operationFuture.set(result);
+            Log.v(TAG, "Setting bwtest result was " + setResult);
         }
         testsRunning = false;
         listenersUpload.clear();

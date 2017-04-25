@@ -36,6 +36,7 @@ public class ProdModule {
     }
 
 
+    //Commented here since we are creating a singleton right in DobbyEventBus.java
     /*
     @Singleton
     @Provides
