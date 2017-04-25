@@ -4,13 +4,11 @@ package com.inceptai.dobby.ui;
  * Created by arunesh on 4/7/17.
  */
 
-import android.util.Log;
-
 import com.inceptai.dobby.ai.RtDataSource;
+import com.inceptai.dobby.utils.DobbyLog;
 
 import java.util.LinkedList;
 import java.util.List;
-import static com.inceptai.dobby.DobbyApplication.TAG;
 
 /**
  * Represents the data behind a (real-time) graph.
@@ -45,7 +43,7 @@ public class GraphData<T, U> implements RtDataSource.RtDataListener<T> {
 
     @Override
     public void onUpdate(T dataItem) {
-        Log.i(TAG, "Update avail: " + dataItem);
+        DobbyLog.i("Update avail: " + dataItem);
         addData(dataItem);
         if (listener != null) {
             listener.updateAvailable();

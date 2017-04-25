@@ -30,11 +30,11 @@ import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.BandwidthStats;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
-import com.inceptai.dobby.speedtest.BandwidthResult;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
 import com.inceptai.dobby.speedtest.NewBandwidthAnalyzer;
 import com.inceptai.dobby.speedtest.ServerInformation;
 import com.inceptai.dobby.speedtest.SpeedTestConfig;
+import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 
 import java.util.List;
@@ -188,7 +188,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         switch (requestCode) {
             case PERMISSION_COARSE_LOCATION_REQUEST_CODE:
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Log.i(TAG,"Coarse location permission granted.");
+                    DobbyLog.i("Coarse location permission granted.");
                 } else {
                     Utils.buildSimpleDialog(getContext(), "Functionality limited",
                             "Since location access has not been granted, this app will not be able to analyze your wifi network.");
@@ -278,9 +278,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     }
 
     private void showPingResults(DataInterpreter.PingGrade pingGrade) {
-        Log.i(TAG, "Ping grade available.");
+        DobbyLog.i("Ping grade available.");
         if (pingGrade == null) {
-            Log.w(TAG, "Null ping grade.");
+            DobbyLog.w("Null ping grade.");
             return;
         }
 

@@ -1,19 +1,17 @@
 package com.inceptai.dobby.speedtest;
 
 import android.support.annotation.Nullable;
-import android.util.Log;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import com.inceptai.dobby.ai.InferenceEngine;
 import com.inceptai.dobby.ai.RtDataSource;
 import com.inceptai.dobby.model.BandwidthStats;
+import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 
 import java.util.HashSet;
 import java.util.List;
-
-import static com.inceptai.dobby.DobbyApplication.TAG;
 
 /**
  * Created by arunesh on 4/6/17.
@@ -114,7 +112,7 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
 
     @Override
     public synchronized void onTestFinished(@BandwithTestCodes.TestMode int testMode, BandwidthStats stats) {
-        Log.v(TAG, "BandwidthObserver onTestFinished");
+        DobbyLog.v("BandwidthObserver onTestFinished");
         if (inferenceEngine != null) {
             inferenceEngine.notifyBandwidthTestResult(testMode, stats.getPercentile90(), clientIsp, clientExternalIp);
         }
@@ -140,7 +138,7 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
 
     @Override
     public synchronized void onTestProgress(@BandwithTestCodes.TestMode int testMode, double instantBandwidth) {
-        Log.v(TAG, "BandwidthObserver onTestProgress");
+        DobbyLog.v("BandwidthObserver onTestProgress");
         if (inferenceEngine != null) {
             inferenceEngine.notifyBandwidthTestProgress(testMode, instantBandwidth);
         }
@@ -193,7 +191,7 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
     private void testsDone() {
         if (operationFuture != null) {
             boolean setResult = operationFuture.set(result);
-            Log.v(TAG, "Setting bwtest result was " + setResult);
+            DobbyLog.v("Setting bwtest result was " + setResult);
         }
         testsRunning = false;
         listenersUpload.clear();

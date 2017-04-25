@@ -6,7 +6,6 @@ package com.inceptai.dobby.speedtest;
 
 import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
-import android.util.Log;
 
 import com.google.common.base.Preconditions;
 import com.inceptai.dobby.DobbyThreadpool;
@@ -14,6 +13,7 @@ import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.BandwidthStats;
 import com.inceptai.dobby.speedtest.BandwithTestCodes.ErrorCodes;
 import com.inceptai.dobby.speedtest.BandwithTestCodes.TestMode;
+import com.inceptai.dobby.utils.DobbyLog;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -23,8 +23,6 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import fr.bmartel.speedtest.model.SpeedTestError;
-
-import static com.inceptai.dobby.DobbyApplication.TAG;
 
 /**
  * Class contains logic performing bandwidth tests.
@@ -102,12 +100,12 @@ public class NewBandwidthAnalyzer {
         this.dobbyThreadpool = dobbyThreadpool;
         lastConfigFetchTimestampMs = 0;
         lastBestServerDeterminationTimestampMs = 0;
-        Log.e(TAG, "NEW BANDWIDTH ANALYZER INSTANCE CREATED.");
+        DobbyLog.e("NEW BANDWIDTH ANALYZER INSTANCE CREATED.");
     }
 
     /**
      * Factory constructor to create an instance
-     * @return Instance of BandwidthAnalyzer or null on error.
+     * @return Instance of NewBandwidthAnalyzer or null on error.
      */
     @Nullable
     public static NewBandwidthAnalyzer create(ResultsCallback resultsCallback, DobbyThreadpool dobbyThreadpool, DobbyEventBus eventBus) {
@@ -129,7 +127,7 @@ public class NewBandwidthAnalyzer {
         try {
             startBandwidthTest(testMode);
         } catch(Exception e) {
-            Log.i(TAG, "Exception starting bandwidth test." + e);
+            DobbyLog.i("Exception starting bandwidth test." + e);
         }
     }
 
@@ -217,14 +215,14 @@ public class NewBandwidthAnalyzer {
 
         //Config callbacks
         public void onConfigFetch(SpeedTestConfig config) {
-            Log.v(TAG, "Speed test config fetched");
+            DobbyLog.v("Speed test config fetched");
             if (resultsCallback != null) {
                 resultsCallback.onConfigFetch(config);
             }
         }
 
         public void onConfigFetchError(String error) {
-            Log.v(TAG, "Speed test config fetched error: " + error);
+            DobbyLog.v("Speed test config fetched error: " + error);
             if (resultsCallback != null) {
                 resultsCallback.onBandwidthTestError(BandwithTestCodes.TestMode.CONFIG_FETCH,
                         ErrorCodes.ERROR_FETCHING_CONFIG,
@@ -234,7 +232,7 @@ public class NewBandwidthAnalyzer {
 
         // Server information callbacks
         public void onServerInformationFetch(ServerInformation serverInformation) {
-            Log.v(TAG, "Speed test server information fetched, num servers:" + serverInformation.serverList.size());
+            DobbyLog.v("Speed test server information fetched, num servers:" + serverInformation.serverList.size());
             if (resultsCallback != null) {
                 if (serverInformation != null && serverInformation.serverList.size() > 0) {
                     resultsCallback.onServerInformationFetch(serverInformation);
@@ -273,7 +271,7 @@ public class NewBandwidthAnalyzer {
 
         @Override
         public void onFinish(@BandwithTestCodes.TestMode int callbackTestMode, BandwidthStats bandwidthStats) {
-            Log.v(TAG, "NewBandwidthAnalyzer onFinish");
+            DobbyLog.v("NewBandwidthAnalyzer onFinish");
             if (resultsCallback != null) {
                 resultsCallback.onTestFinished(callbackTestMode, bandwidthStats);
             }
@@ -293,7 +291,7 @@ public class NewBandwidthAnalyzer {
 
         @Override
         public void onProgress(@BandwithTestCodes.TestMode int callbackTestMode, double instantBandwidth) {
-            Log.v(TAG, "NewBandwidthAnalyzer onProgress");
+            DobbyLog.v("NewBandwidthAnalyzer onProgress");
             if (resultsCallback != null) {
                 resultsCallback.onTestProgress(callbackTestMode, instantBandwidth);
             }

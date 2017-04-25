@@ -2,9 +2,9 @@ package com.inceptai.dobby.ping;
 
 import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
-import android.util.Log;
 
 import com.inceptai.dobby.model.PingStats;
+import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 
 import java.lang.annotation.Retention;
@@ -13,7 +13,6 @@ import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.inceptai.dobby.DobbyApplication.TAG;
 import static com.inceptai.dobby.ping.PingAction.PingErrorCode.PING_EXCEPTION_COMMAND_NOT_FOUND;
 import static com.inceptai.dobby.ping.PingAction.PingErrorCode.PING_EXCEPTION_INVALID_HOST;
 import static com.inceptai.dobby.ping.PingAction.PingErrorCode.PING_EXCEPTION_PARSING_OUTPUT;
@@ -92,7 +91,7 @@ public class PingAction {
     }
 
     public static String pingIP(String ipAddress, int timeOut, int numberOfPings) throws PingActionException {
-        Log.v(TAG, "Starting ping for IP: " + ipAddress);
+        DobbyLog.v("Starting ping for IP: " + ipAddress);
         String output = EMPTY_STRING;
         try {
             //output = Utils.runSystemCommand("ping -w 0.2 -c " + numberOfPings + " " + ipAddress);
@@ -100,7 +99,7 @@ public class PingAction {
         } catch (Exception e) {
             throw new PingActionException(PING_EXCEPTION_COMMAND_NOT_FOUND, ipAddress);
         }
-        Log.v(TAG, "Ending ping for IP: " + ipAddress);
+        DobbyLog.v("Ending ping for IP: " + ipAddress);
         return output;
     }
 
@@ -120,13 +119,13 @@ public class PingAction {
                 resultsCallback.onFinish(pingStatsMap);
             }
         } catch (PingActionException e) {
-            Log.i(TAG, "Exception while pinging: " + e);
+            DobbyLog.i("Exception while pinging: " + e);
             if (resultsCallback != null) {
                 resultsCallback.onError(e.exceptionType, pingAddressList,
                         "Exception while pinging: " + e);
             }
         }  catch (Exception e) {
-            Log.i(TAG, "Exception while pinging: " + e);
+            DobbyLog.i("Exception while pinging: " + e);
             if (resultsCallback != null) {
                 //TODO: Return meaningful error code here.
                 resultsCallback.onError(PingErrorCode.PING_EXCEPTION_PARSING_OUTPUT,

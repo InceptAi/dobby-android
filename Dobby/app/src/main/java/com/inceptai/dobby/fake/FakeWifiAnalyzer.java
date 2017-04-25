@@ -6,13 +6,13 @@ import android.net.wifi.ScanResult;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.support.annotation.Nullable;
-import android.util.Log;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.DobbyWifiInfo;
+import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 import com.inceptai.dobby.wifi.WifiAnalyzer;
 import com.inceptai.dobby.wifi.WifiState;
@@ -22,8 +22,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
-
-import static com.inceptai.dobby.DobbyApplication.TAG;
 
 /**
  * Created by arunesh on 4/11/17.
@@ -165,7 +163,7 @@ public class FakeWifiAnalyzer extends WifiAnalyzer {
             result.channelWidth = ScanResult.CHANNEL_WIDTH_20MHZ;
         } catch (InstantiationException e) {
         } catch (IllegalAccessException e) {
-            Log.e(TAG, "Unable to generate fake ScanResult");
+            DobbyLog.e("Unable to generate fake ScanResult");
         }
         return result;
     }
@@ -198,7 +196,7 @@ public class FakeWifiAnalyzer extends WifiAnalyzer {
             result.channelWidth = ScanResult.CHANNEL_WIDTH_20MHZ;
         } catch (InstantiationException e) {
         } catch (IllegalAccessException e) {
-            Log.e(TAG, "Unable to generate fake ScanResult");
+            DobbyLog.e("Unable to generate fake ScanResult");
         }
         return result;
     }

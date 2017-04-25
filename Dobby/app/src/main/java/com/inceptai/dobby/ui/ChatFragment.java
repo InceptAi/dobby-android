@@ -8,7 +8,6 @@ import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,11 +21,10 @@ import android.widget.Toast;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.ai.RtDataSource;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
+import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 
 import java.util.LinkedList;
-
-import static com.inceptai.dobby.DobbyApplication.TAG;
 
 /**
  * Fragment shows the UI for the chat-based interaction with the AI agent.
@@ -115,17 +113,17 @@ public class ChatFragment extends Fragment implements Handler.Callback {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 String text = queryEditText.getText().toString();
-                Log.i(TAG, "Action ID: " + actionId);
+                DobbyLog.i("Action ID: " + actionId);
                 if (event != null) {
-                    Log.i(TAG, "key event: " + event.toString());
+                    DobbyLog.i("key event: " + event.toString());
                 }
                 if (actionId == EditorInfo.IME_NULL && event.getAction() == KeyEvent.ACTION_DOWN) {
-                    Log.i(TAG, "ENTER 1");
+                    DobbyLog.i("ENTER 1");
                     processTextQuery(text);
                 } else if (actionId == EditorInfo.IME_ACTION_DONE ||
                         actionId == EditorInfo.IME_ACTION_GO ||
                         actionId == EditorInfo.IME_ACTION_NEXT) {
-                    Log.i(TAG, "ENTER 2");
+                    DobbyLog.i("ENTER 2");
                     processTextQuery(text);
                 }
                 queryEditText.getText().clear();
@@ -171,7 +169,7 @@ public class ChatFragment extends Fragment implements Handler.Callback {
 
 
     private void addDobbyChat(String text) {
-        Log.i(TAG, "Adding dobby chat: " + text);
+        DobbyLog.i("Adding dobby chat: " + text);
         ChatEntry chatEntry = new ChatEntry(text.trim(), ChatEntry.DOBBY_CHAT);
         recyclerViewAdapter.addEntryAtBottom(chatEntry);
         chatRv.scrollToPosition(recyclerViewAdapter.getItemCount() - 1);
@@ -218,7 +216,7 @@ public class ChatFragment extends Fragment implements Handler.Callback {
     }
 
     private void addRtGraph(RtDataSource<Float, Integer> rtDataSource) {
-        Log.i(TAG, "Adding GRAPH entry.");
+        DobbyLog.i("Adding GRAPH entry.");
         ChatEntry entry = new ChatEntry(Utils.EMPTY_STRING, ChatEntry.RT_GRAPH);
         entry.addGraph(new GraphData<Float, Integer>(rtDataSource, BandwithTestCodes.TestMode.DOWNLOAD));
         recyclerViewAdapter.addEntryAtBottom(entry);

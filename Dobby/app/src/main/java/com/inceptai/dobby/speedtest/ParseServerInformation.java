@@ -1,14 +1,12 @@
 package com.inceptai.dobby.speedtest;
 
 import android.support.annotation.Nullable;
-import android.util.Log;
 
+import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 
 import java.io.IOException;
 import java.io.InputStream;
-
-import static com.inceptai.dobby.DobbyApplication.TAG;
 
 /**
  * Created by vivek on 4/1/17.
@@ -50,14 +48,14 @@ public class ParseServerInformation {
         try {
             info = downloadAndParseServerInformation(defaultServerListUrl1);
         } catch (IOException e) {
-            Log.v(TAG, "Exception thrown while fetching config: " + e);
+            DobbyLog.v("Exception thrown while fetching config: " + e);
         }
         if (info == null) {
             try {
                 info = downloadAndParseServerInformation(defaultServerListUrl2);
             } catch (IOException e) {
                 String exceptionString = "Exception thrown while fetching config: " + e;
-                Log.v(TAG, exceptionString);
+                DobbyLog.v(exceptionString);
                 if (this.resultsCallback != null) {
                     this.resultsCallback.onServerInformationFetchError(exceptionString);
                 }

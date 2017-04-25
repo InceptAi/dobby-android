@@ -10,13 +10,13 @@ import android.net.NetworkInfo;
 import android.os.Build;
 import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
-import android.util.Log;
 
 import com.google.common.base.Preconditions;
 import com.google.common.eventbus.Subscribe;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
+import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 
 import java.io.IOException;
@@ -25,7 +25,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.net.HttpURLConnection;
 import java.util.concurrent.TimeUnit;
 
-import static com.inceptai.dobby.DobbyApplication.TAG;
 import static com.inceptai.dobby.connectivity.ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL;
 import static com.inceptai.dobby.connectivity.ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_OFFLINE;
 import static com.inceptai.dobby.connectivity.ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_ONLINE;
@@ -125,7 +124,7 @@ public class ConnectivityAnalyzer {
             try {
                 dataFetched = Utils.getDataFromUrl(URL_FOR_CONNECTIVITY_AND_PORTAL_TEST, MAX_STRING_LENGTH_TO_FETCH);
             } catch (Utils.HTTPReturnCodeException e) {
-                Log.v(TAG, "Exception, wanted 200, Got return code " + e.httpReturnCode);
+                DobbyLog.v("Exception, wanted 200, Got return code " + e.httpReturnCode);
                 if (e.httpReturnCode == HttpURLConnection.HTTP_NO_CONTENT) {
                     //This is working, we can return as online
                     mode = CONNECTED_AND_ONLINE;
@@ -134,10 +133,10 @@ public class ConnectivityAnalyzer {
                     mode = WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL;
                 }
             } catch (IOException e) {
-                Log.v(TAG, "Unable to fetch: " + URL_FOR_CONNECTIVITY_TEST + " Except: " + e);
+                DobbyLog.v("Unable to fetch: " + URL_FOR_CONNECTIVITY_TEST + " Except: " + e);
                 mode = WifiConnectivityMode.CONNECTED_AND_OFFLINE;
             } catch (Exception e) {
-                Log.v(TAG, "Exception : " + e);
+                DobbyLog.v("Exception : " + e);
             }
         }
         return mode;
@@ -151,12 +150,12 @@ public class ConnectivityAnalyzer {
             try {
                 dataFetched = Utils.getDataFromUrl(URL_FOR_CONNECTIVITY_TEST, MAX_STRING_LENGTH_TO_FETCH);
             } catch (IOException e) {
-                Log.v(TAG, "Unable to fetch: " + URL_FOR_CONNECTIVITY_TEST + " Except: " + e);
+                DobbyLog.v("Unable to fetch: " + URL_FOR_CONNECTIVITY_TEST + " Except: " + e);
                 return false;
             } catch (Exception e) {
-                Log.v(TAG, "Exception : " + e);
+                DobbyLog.v("Exception : " + e);
             }
-            Log.v(TAG, "Total bytes recv: " + dataFetched.length());
+            DobbyLog.v("Total bytes recv: " + dataFetched.length());
             connectedAndOnline = (dataFetched.length() > 0);
         }
         return connectedAndOnline;
@@ -167,7 +166,7 @@ public class ConnectivityAnalyzer {
         if (isWifiOnline()) {
             return;
         }
-        Log.v(TAG, "Update wifi connectivity mode, scheduleCount =" + scheduleCount);
+        DobbyLog.v("Update wifi connectivity mode, scheduleCount =" + scheduleCount);
         final NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
 
         // Reschedule network check if requested to do so and we have a null NetworkInfo.
@@ -175,13 +174,13 @@ public class ConnectivityAnalyzer {
             rescheduleConnectivityTest(scheduleCount - 1);
             return;
         }
-        Log.v(TAG, "active network is not null, activeNetwork:" + activeNetwork.toString());
+        DobbyLog.v("active network is not null, activeNetwork:" + activeNetwork.toString());
         boolean isWifiConnectionOnline = false;
         try {
             currentWifiMode = performConnectivityAndPortalTest(activeNetwork);
             isWifiConnectionOnline = currentWifiMode == CONNECTED_AND_ONLINE;
         } catch (IllegalStateException e) {
-            Log.v(TAG, "Exception while checking connectivity: " + e);
+            DobbyLog.v("Exception while checking connectivity: " + e);
         }
         if (scheduleCount > 0 && !isWifiConnectionOnline) {
             rescheduleConnectivityTest(0);  // Try once more before quitting.
@@ -200,7 +199,7 @@ public class ConnectivityAnalyzer {
         threadpool.getScheduledExecutorService().schedule(new Runnable() {
             @Override
             public void run() {
-                Log.v(TAG, "Scheduled");
+                DobbyLog.v("Scheduled");
                 updateWifiConnectivityMode(scheduleCount);
             }
         }, GAP_BETWEEN_CONNECTIIVITY_CHECKS_MS, TimeUnit.MILLISECONDS);
@@ -226,7 +225,7 @@ public class ConnectivityAnalyzer {
     @Subscribe
     synchronized public void listen(DobbyEvent event) {
         int eventType = event.getEventType();
-        Log.v(TAG, "Got event: " + event);
+        DobbyLog.v("Got event: " + event);
         switch(eventType) {
             case DobbyEvent.EventType.WIFI_STATE_ENABLED:
             case DobbyEvent.EventType.WIFI_NOT_CONNECTED:
@@ -248,7 +247,7 @@ public class ConnectivityAnalyzer {
                 updateWifiConnectivityMode(MAX_SCHEDULING_TRIES_FOR_CHECKING_WIFI_CONNECTIVITY /* try to schdule again twice */);
                 break;
         }
-        Log.v(TAG, "WifiConnectivity Mode is " + wifiConnectivityMode);
+        DobbyLog.v("WifiConnectivity Mode is " + wifiConnectivityMode);
     }
 
     @TargetApi(Build.VERSION_CODES.N)
@@ -256,7 +255,7 @@ public class ConnectivityAnalyzer {
         //Connection Manager callbacks
         @Override
         public void onAvailable(Network network) {
-            Log.v(TAG, "Inside onAvailable");
+            DobbyLog.v("Inside onAvailable");
             if (!isWifiOnline()) {
                 threadpool.submit(new Runnable() {
                     @Override

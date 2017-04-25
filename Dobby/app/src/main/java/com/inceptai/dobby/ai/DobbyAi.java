@@ -73,7 +73,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         });
 
 
-        Log.i(TAG, "Got response Action: " + result.toString());
+        DobbyLog.i("Got response Action: " + result.toString());
         if (result.toString().contains("test")) {
         }
     }
@@ -94,16 +94,16 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         }
 
         if (action.getAction() == Action.ActionType.ACTION_TYPE_BANDWIDTH_TEST) {
-            Log.i(TAG, "Starting ACTION BANDWIDTH TEST.");
+            DobbyLog.i("Starting ACTION BANDWIDTH TEST.");
             postBandwidthTestOperation();
         }
 
         if (action.getAction() == Action.ActionType.ACTION_TYPE_CANCEL_BANDWIDTH_TEST) {
-            Log.i(TAG, "Starting ACTION CANCEL BANDWIDTH TEST.");
+            DobbyLog.i("Starting ACTION CANCEL BANDWIDTH TEST.");
             try {
                 cancelBandwidthTest();
             } catch (Exception e) {
-                Log.i(TAG, "Exception while cancelling:" + e);
+                DobbyLog.i("Exception while cancelling:" + e);
             }
         }
         if (action.getAction() == Action.ActionType.ACTION_TYPE_DIAGNOSE_SLOW_INTERNET) {
@@ -172,11 +172,11 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                         }
                     } else {
                         // Error.
-                        Log.i(TAG, "Error starting ping.");
+                        DobbyLog.i("Error starting ping.");
                     }
                 } catch (Exception e) {
                     e.printStackTrace(System.out);
-                    Log.w(TAG, "Exception getting ping results: " + e.getStackTrace().toString());
+                    DobbyLog.w("Exception getting ping results: " + e.getStackTrace().toString());
                 }
             }
         }, threadpool.getExecutor());
@@ -194,11 +194,11 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                         }
                     } else {
                         // Error.
-                        Log.i(TAG, "Error starting ping.");
+                        DobbyLog.i("Error starting ping.");
                     }
                 } catch (Exception e) {
                     e.printStackTrace(System.out);
-                    Log.w(TAG, "Exception getting gateway latency results: " + e.getStackTrace().toString());
+                    DobbyLog.w("Exception getting gateway latency results: " + e.getStackTrace().toString());
                 }
             }
         }, threadpool.getExecutor());
@@ -263,7 +263,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     }
 
     private ListenableFuture<BandwidthResult> startBandwidthTest() {
-        Log.i(TAG, "Going to start bandwidth test.");
+        DobbyLog.i("Going to start bandwidth test.");
         @BandwithTestCodes.TestMode
         int testMode = BandwithTestCodes.TestMode.DOWNLOAD_AND_UPLOAD;
         BandwidthObserver observer = networkLayer.startBandwidthTest(testMode);
