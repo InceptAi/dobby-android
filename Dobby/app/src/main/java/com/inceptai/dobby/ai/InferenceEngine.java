@@ -131,7 +131,7 @@ public class InferenceEngine {
 
     public String getSuggestions(int maxSuggestions, double maxGapInWeight, boolean getLongSuggestions) {
         List<Integer> conditionArray = currentConditions.getTopConditions(maxSuggestions, maxGapInWeight);
-        return SuggestionCreator.getSuggestionForConditions(conditionArray,
+        return SuggestionCreator.getSuggestionString(conditionArray,
                 metricsDb.getParamsForSuggestions(), getLongSuggestions);
     }
 

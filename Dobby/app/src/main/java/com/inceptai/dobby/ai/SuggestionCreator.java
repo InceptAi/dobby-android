@@ -14,17 +14,29 @@ import static com.inceptai.dobby.utils.Utils.convertSignalDbmToPercent;
 
 public class SuggestionCreator {
 
-    public static class SuggestionCreatorParams {
-        public int currentWifiChannel;
-        public int bestWifiChannel;
-        public int currentSignal;
-        public double downloadBandwidthMbps;
-        public double uploadBandwidthMbps;
-        public String isp;
-        public String currentWifiSSID;
-        public String alternateDNS;
+    public static class Suggestion {
+        String title;
+        List<String> longSuggestionList;
+        List<String> shortSuggestionList;
 
-        public SuggestionCreatorParams() {
+        Suggestion() {
+            title = Utils.EMPTY_STRING;
+            longSuggestionList = new ArrayList<>();
+            shortSuggestionList = new ArrayList<>();
+        }
+    }
+
+    public static class SuggestionCreatorParams {
+        int currentWifiChannel;
+        int bestWifiChannel;
+        int currentSignal;
+        double downloadBandwidthMbps;
+        double uploadBandwidthMbps;
+        String isp;
+        String currentWifiSSID;
+        String alternateDNS;
+
+        SuggestionCreatorParams() {
             currentWifiChannel = 0;
             bestWifiChannel = 0;
             currentSignal = 0;
@@ -36,11 +48,6 @@ public class SuggestionCreator {
         }
     }
 
-    private static String NO_CONDITION_MESSAGE = "We don't see any key issues with your Wifi network. " +
-            "Since wifi network problems are sometimes transient, it might be good if you run " +
-            "this test a few times so we can catch an issue if it shows up. Wish we can be more helpful here.";
-
-    private static String MULTIPLE_CONDITIONS_PREFIX = "There a few things which can be causing problems for your network.";
 
     private static String convertChannelFrequencyToString(int channelFrequency) {
         int channelNumber = Utils.convertCenterFrequencyToChannelNumber(channelFrequency);
@@ -53,11 +60,37 @@ public class SuggestionCreator {
         return channelString;
     }
 
-    public static String getSuggestionForConditions(List<Integer> conditionList,
+    static Suggestion getSuggestionForConditions(List<Integer> conditionList,
                                                     SuggestionCreatorParams params,
                                                     boolean getLongSuggestions) {
+        Suggestion suggestionToReturn = new Suggestion();
+        suggestionToReturn.title = getTitle(conditionList, params);
+        List<String> longSuggestionList = new ArrayList<>();
+        List<String> shortSuggestionList = new ArrayList<>();
+        for (int index=0; index < conditionList.size(); index++) {
+            @Condition int condition  = conditionList.get(index);
+            longSuggestionList.add(getSuggestionForCondition(condition, params));
+            shortSuggestionList.add(getShortSuggestionForCondition(condition, params));
+        }
+        return suggestionToReturn;
+    }
+
+    public static String getSuggestionString(List<Integer> conditionList,
+                                              SuggestionCreatorParams params,
+                                              boolean getLongSuggestions) {
+        final String NO_CONDITION_MESSAGE = "We don't see any key issues with your Wifi network. " +
+                "We performed speed tests, pings and wifi scans on your network and didn't find any issues." +
+                "You are getting " + String.format("%.2f", params.downloadBandwidthMbps) +
+                " Mbps download / " + String.format("%.2f", params.uploadBandwidthMbps) +
+                " Mbps upload speed. You connection to your wifi is about " +
+                Utils.convertSignalDbmToPercent(params.currentSignal) +
+                ". Since wifi network problems are sometimes transient, it might be good if you run " +
+                "this test a few times so we can catch an issue if it shows up. Hope this helps :)";
+
+        final String MULTIPLE_CONDITIONS_PREFIX = "There a few things which can be causing problems for your network.";
+
         List<String> suggestionList = new ArrayList<>();
-        StringBuilder sb = new StringBuilder();
+
         for (int index=0; index < conditionList.size(); index++) {
             @Condition int condition  = conditionList.get(index);
             if (getLongSuggestions) {
@@ -66,6 +99,8 @@ public class SuggestionCreator {
                 suggestionList.add(getShortSuggestionForCondition(condition, params));
             }
         }
+
+        StringBuilder sb = new StringBuilder();
         if (suggestionList.size() == 0) {
             sb.append(NO_CONDITION_MESSAGE);
         } else if (suggestionList.size() == 1) {
@@ -83,18 +118,39 @@ public class SuggestionCreator {
                 index++;
             }
         }
+
         return sb.toString();
+
     }
 
+    private static String getTitle(List<Integer> conditionList,
+                                  SuggestionCreatorParams params) {
 
-    public static String getSuggestionForCondition(@InferenceMap.Condition int condition,
+        String titleToReturn = Utils.EMPTY_STRING;
+        if (conditionList.size() > 0) {
+            @Condition int condition = conditionList.get(0);
+            titleToReturn = getShortSuggestionForCondition(condition, params);
+        } else {
+            titleToReturn = "We don't see any key issues with your Wifi network. " +
+                    "We performed speed tests, pings and wifi scans on your network and didn't find any issues." +
+                    "You are getting " + String.format("%.2f", params.downloadBandwidthMbps) +
+                    " Mbps download / " + String.format("%.2f", params.uploadBandwidthMbps) +
+                    " Mbps upload speed. You connection to your wifi is about " + Utils.convertSignalDbmToPercent(params.currentSignal) +
+                    ". Since wifi network problems are sometimes transient, it might be good if you run " +
+                    "this test a few times so we can catch an issue if it shows up. Hope this helps :)";
+        }
+        return titleToReturn;
+    }
+
+    private static String getSuggestionForCondition(@InferenceMap.Condition int condition,
                                                    SuggestionCreatorParams params) {
         StringBuilder suggestionToReturn = new StringBuilder();
         String baseMessage = Utils.EMPTY_STRING;
         String conditionalMessage = Utils.EMPTY_STRING;
         switch (condition) {
             case Condition.WIFI_CHANNEL_CONGESTION:
-                baseMessage = "Your wifi is operating on Channel " + convertChannelFrequencyToString(params.currentWifiChannel) +
+                baseMessage = "Your wifi is operating on Channel " +
+                        convertChannelFrequencyToString(params.currentWifiChannel) +
                         " which is congested. This means there a lot of other Wifi networks near " +
                         "you which are also operating on the same channel as yours. ";
                 if (params.bestWifiChannel > 0) {
@@ -115,6 +171,7 @@ public class SuggestionCreator {
                         "a stronger router or a mesh Wifi solution which can provide better coverage.";
                 break;
             case Condition.WIFI_INTERFACE_ON_PHONE_OFFLINE:
+                baseMessage = Utils.EMPTY_STRING;
                 break; //find a good explanation
             case Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE:
                 baseMessage = "Your wifi on your phone seems to be in a bad state, " +
@@ -145,6 +202,7 @@ public class SuggestionCreator {
                         "recommend getting a router which supports 802.11n for higher speeds.";
                 break;
             case Condition.ROUTER_FAULT_WIFI_OK:
+                baseMessage = Utils.EMPTY_STRING;
                 return ""; // Not sure what to say here
             case Condition.ROUTER_WIFI_INTERFACE_FAULT:
             case Condition.ROUTER_SOFTWARE_FAULT:
