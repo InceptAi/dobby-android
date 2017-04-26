@@ -153,9 +153,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     }
 
     private void postAllOperations() {
-        Log.i(TAG, "Entering postAllOperations()");
-        DobbyLog.checkCrashHandler();
-        ComposableOperation bwTest = bandwidthOperation();
+        final ComposableOperation bwTest = bandwidthOperation();
         bwTest.post();
         final ComposableOperation wifiScan = wifiScanOperation();
         bwTest.uponCompletion(wifiScan);
@@ -163,7 +161,6 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         wifiScan.uponCompletion(ping);
         final ComposableOperation gatewayLatencyTest = gatewayLatencyTestOperation();
         ping.uponCompletion(gatewayLatencyTest);
-
         // Wire up with IE.
         wifiScan.getFuture().addListener(new Runnable() {
             @Override
@@ -219,8 +216,6 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 }
             }
         }, threadpool.getExecutor());
-
-
     }
 
     private ComposableOperation wifiScanOperation() {
@@ -289,6 +284,10 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             return null;
         }
         observer.setInferenceEngine(inferenceEngine);
+<<<<<<< HEAD
+=======
+        responseCallback.showRtGraph(observer);
+>>>>>>> b8242435cd6fa23e5d29944a2e1883d703898bd2
         if (responseCallback != null) {
             responseCallback.showRtGraph(observer);
         }
