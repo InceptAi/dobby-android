@@ -12,7 +12,6 @@ import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
 
 import com.google.common.base.Preconditions;
-import com.google.common.eventbus.Subscribe;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
@@ -75,7 +74,6 @@ public class ConnectivityAnalyzer {
         this.threadpool = threadpool;
         this.eventBus = eventBus;
         this.connectivityManager = connectivityManager;
-        eventBus.registerListener(this);
         wifiConnectivityMode = WifiConnectivityMode.UNKNOWN;
         networkCallback = new ConnectivityAnalyzerNetworkCallback();
         // Make sure we're running on Honeycomb or higher to use ActionBar APIs
@@ -195,8 +193,8 @@ public class ConnectivityAnalyzer {
         }
     }
 
-    synchronized public void rescheduleConnectivityTest(final int scheduleCount) {
-        threadpool.getScheduledExecutorService().schedule(new Runnable() {
+    public void rescheduleConnectivityTest(final int scheduleCount) {
+        threadpool.getExecutorServiceForNetworkLayer().schedule(new Runnable() {
             @Override
             public void run() {
                 DobbyLog.v("Scheduled");
@@ -222,8 +220,8 @@ public class ConnectivityAnalyzer {
         return (wifiConnectivityMode == WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL);
     }
 
-    @Subscribe
-    synchronized public void listen(DobbyEvent event) {
+
+    public void processDobbyBusEvents(DobbyEvent event) {
         int eventType = event.getEventType();
         DobbyLog.v("Got event: " + event);
         switch(eventType) {
@@ -244,11 +242,17 @@ public class ConnectivityAnalyzer {
             case DobbyEvent.EventType.DHCP_INFO_AVAILABLE:
             case DobbyEvent.EventType.PING_INFO_AVAILABLE:
                 //Safe to call since it doesn't do anyting if we are already online
-                updateWifiConnectivityMode(MAX_SCHEDULING_TRIES_FOR_CHECKING_WIFI_CONNECTIVITY /* try to schdule again twice */);
+                threadpool.getExecutorServiceForNetworkLayer().submit(new Runnable() {
+                    @Override
+                    public void run() {
+                        updateWifiConnectivityMode(MAX_SCHEDULING_TRIES_FOR_CHECKING_WIFI_CONNECTIVITY /* Do not schedule again*/);
+                    }
+                });
                 break;
         }
         DobbyLog.v("WifiConnectivity Mode is " + wifiConnectivityMode);
     }
+
 
     @TargetApi(Build.VERSION_CODES.N)
     private class ConnectivityAnalyzerNetworkCallback extends ConnectivityManager.NetworkCallback {
@@ -257,7 +261,7 @@ public class ConnectivityAnalyzer {
         public void onAvailable(Network network) {
             DobbyLog.v("Inside onAvailable");
             if (!isWifiOnline()) {
-                threadpool.submit(new Runnable() {
+                threadpool.getExecutorServiceForNetworkLayer().submit(new Runnable() {
                     @Override
                     public void run() {
                         updateWifiConnectivityMode(0 /* Do not schedule again*/);
