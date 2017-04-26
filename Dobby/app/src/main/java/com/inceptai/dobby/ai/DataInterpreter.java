@@ -360,7 +360,7 @@ public class DataInterpreter {
         }
 
         public boolean hasValidData() {
-            return updatedAtMs > 0.0 && isFresh(updatedAtMs);
+            return updatedAtMs > 0.0 && DataInterpreter.isFresh(updatedAtMs);
         }
 
         public void updateTimestamp() {
@@ -410,6 +410,10 @@ public class DataInterpreter {
         public double getAlternativeDnsLatencyMs() {
             return alternativeDnsLatencyMs;
         }
+
+        public boolean isFresh() {
+            return updatedAtMs > 0.0 && DataInterpreter.isFresh(updatedAtMs);
+        }
     }
 
     /**
@@ -428,8 +432,8 @@ public class DataInterpreter {
             updatedAtMs = 0;
         }
 
-        public boolean hasValidData() {
-            return updatedAtMs > 0.0 && isFresh(updatedAtMs);
+        public boolean isFresh() {
+            return updatedAtMs > 0.0 && DataInterpreter.isFresh(updatedAtMs);
         }
 
         public void updateTimestamp() {
@@ -499,7 +503,7 @@ public class DataInterpreter {
         }
 
         public boolean hasValidData() {
-            return updatedAtMs > 0.0 && isFresh(updatedAtMs);
+            return updatedAtMs > 0.0 && DataInterpreter.isFresh(updatedAtMs);
         }
 
         public void updateTimestamp() {
@@ -519,8 +523,14 @@ public class DataInterpreter {
             return primaryApLinkSpeedMetric;
         }
 
+        @MetricType
         public int getPrimaryLinkChannelOccupancyMetric() {
             return primaryLinkChannelOccupancyMetric;
+        }
+
+        public double getPrimaryLinkCongestionPercentage() {
+            double x = (double) getPrimaryApChannelInterferingAps();
+            return 1.0 / (1.0 + Math.exp(-x + 4.0));
         }
 
         public int getWifiConnectivityMode() {
@@ -553,6 +563,10 @@ public class DataInterpreter {
 
         public int getPrimaryApSignal() {
             return primaryApSignal;
+        }
+
+        public boolean isFresh() {
+            return updatedAtMs > 0.0 && DataInterpreter.isFresh(updatedAtMs);
         }
     }
 

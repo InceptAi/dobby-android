@@ -6,19 +6,16 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.graphics.PorterDuff;
-import android.media.Image;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,6 +25,7 @@ import android.widget.TextView;
 import com.google.common.eventbus.Subscribe;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.ai.DataInterpreter;
+import com.inceptai.dobby.ai.SuggestionCreator;
 import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.BandwidthStats;
@@ -38,8 +36,6 @@ import com.inceptai.dobby.speedtest.ServerInformation;
 import com.inceptai.dobby.speedtest.SpeedTestConfig;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
-
-import org.w3c.dom.Text;
 
 import java.util.List;
 
@@ -56,6 +52,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private static final int MSG_UPDATED_CIRCULAR_GAUGE = 1001;
     private static final int MSG_WIFI_GRADE_AVAILABLE = 1002;
     private static final int MSG_PING_GRADE_AVAILABLE = 1003;
+    private static final int MSG_SUGGESTION_AVAILABLE = 1004;
+    private static final long SUGGESTION_FRESHNESS_TS_MS = 30000; // 30 seconds
 
     private OnFragmentInteractionListener mListener;
 
@@ -100,6 +98,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private BandwidthObserver bandwidthObserver;
     private Handler handler;
 
+    private SuggestionCreator.Suggestion currentSuggestion;
 
     public WifiDocMainFragment() {
         // Required empty public constructor
@@ -220,6 +219,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             Message.obtain(handler, MSG_WIFI_GRADE_AVAILABLE, event.getPayload()).sendToTarget();
         } else if (event.getEventType() == DobbyEvent.EventType.PING_GRADE_AVAILABLE) {
             Message.obtain(handler, MSG_PING_GRADE_AVAILABLE, event.getPayload()).sendToTarget();
+        } else if (event.getEventType() == DobbyEvent.EventType.SUGGESTIONS_AVAILABLE) {
+            Message.obtain(handler, MSG_SUGGESTION_AVAILABLE, event.getPayload()).sendToTarget();
         }
     }
 
@@ -270,6 +271,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             case MSG_PING_GRADE_AVAILABLE:
                 showPingResults((DataInterpreter.PingGrade) msg.obj);
                 break;
+            case MSG_SUGGESTION_AVAILABLE:
+                showSuggestion((SuggestionCreator.Suggestion) msg.obj);
+                break;
         }
         return false;
     }
@@ -284,7 +288,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         }
         setWifiResult(wifiSignalValueTv, String.valueOf(wifiGrade.getPrimaryApSignal()),
                 wifiSignalIconIv, wifiGrade.getPrimaryApSignalMetric());
-        // setWifiResult(wifiCongestionValueTv, String);
+        String availability = String.format("%2.1f", 100.0 *(1.0 - wifiGrade.getPrimaryLinkCongestionPercentage()));
+        setWifiResult(wifiCongestionValueTv, availability, wifiCongestionIconIv, wifiGrade.getPrimaryLinkChannelOccupancyMetric());
     }
 
     private void showPingResults(DataInterpreter.PingGrade pingGrade) {
@@ -305,6 +310,23 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
         setPingResult(pingWebValueTv, String.format("%2.2f", pingGrade.getExternalServerLatencyMs()),
                 pingWebGradeIv, pingGrade.getExternalServerLatencyMetric());
+    }
+
+    private void showSuggestion(SuggestionCreator.Suggestion suggestion) {
+        if (suggestion == null) {
+            DobbyLog.w("Null suggestion received from eventbus.");
+            return;
+        }
+
+        if (currentSuggestion != null && isSuggestionFresh(currentSuggestion)) {
+            DobbyLog.i("Already have a fresh enough suggestion, ignoring new suggestion");
+            return;
+        }
+
+    }
+
+    private static boolean isSuggestionFresh(SuggestionCreator.Suggestion suggestion) {
+        return (System.currentTimeMillis() - suggestion.getCreationTimestampMs()) < SUGGESTION_FRESHNESS_TS_MS;
     }
 
     private void populateViews(View rootView) {
@@ -457,5 +479,10 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                 break;
 
         }
+    }
+
+    private void resetData() {
+        uploadCircularGauge.setValue(0);
+        downloadCircularGauge.setValue(0);
     }
 }

@@ -20,15 +20,21 @@ public class SuggestionCreator {
         String title;
         List<String> longSuggestionList;
         List<String> shortSuggestionList;
+        long creationTimestampMs;
 
         Suggestion() {
             title = Utils.EMPTY_STRING;
             longSuggestionList = new ArrayList<>();
             shortSuggestionList = new ArrayList<>();
+            creationTimestampMs = System.currentTimeMillis();
         }
 
         public String getTitle() {
             return title;
+        }
+
+        public long getCreationTimestampMs() {
+            return creationTimestampMs;
         }
 
         public List<String> getLongSuggestionList() {
@@ -113,9 +119,7 @@ public class SuggestionCreator {
         return channelString;
     }
 
-    static Suggestion getSuggestionForConditions(List<Integer> conditionList,
-                                                    SuggestionCreatorParams params,
-                                                    boolean getLongSuggestions) {
+    static Suggestion get(List<Integer> conditionList, SuggestionCreatorParams params) {
         Suggestion suggestionToReturn = new Suggestion();
         suggestionToReturn.title = getTitle(conditionList, params);
         List<String> longSuggestionList = new ArrayList<>();

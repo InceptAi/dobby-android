@@ -2,6 +2,7 @@ package com.inceptai.dobby.ai;
 
 import android.content.Context;
 import android.support.annotation.Nullable;
+import android.util.EventLog;
 import android.util.Log;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -120,12 +121,21 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         }
     }
 
+    @Override
+    public void suggestionsAvailable(SuggestionCreator.Suggestion suggestion) {
+        eventBus.postEvent(DobbyEvent.EventType.SUGGESTIONS_AVAILABLE, suggestion);
+    }
+
     public void sendQuery(String text) {
         if (useApiAi) {
             apiAiClient.sendTextQuery(text, this);
         } else {
             DobbyLog.w("Ignoring text query for Wifi doc version :" + text);
         }
+    }
+
+    public SuggestionCreator.Suggestion getSuggestions() {
+        return inferenceEngine.suggest();
     }
 
     public void cleanup() {

@@ -51,6 +51,7 @@ public class InferenceEngine {
 
     public interface ActionListener {
         void takeAction(Action action);
+        void suggestionsAvailable(SuggestionCreator.Suggestion suggestion);
     }
 
     @IntDef({
@@ -96,6 +97,7 @@ public class InferenceEngine {
         DobbyLog.i("InferenceEngine Wifi Grade: " + wifiGrade.toString());
         DobbyLog.i("InferenceEngine which gives conditions: " + conditions.toString());
         DobbyLog.i("InferenceEngine After merging: " + currentConditions.toString());
+        checkAndSendSuggestions();
         return wifiGrade;
     }
 
@@ -110,6 +112,7 @@ public class InferenceEngine {
         DobbyLog.i("InferenceEngine Ping Grade: " + pingGrade.toString());
         DobbyLog.i("InferenceEngine which gives conditions: " + conditions.toString());
         DobbyLog.i("InferenceEngine After merging: " + currentConditions.toString());
+        checkAndSendSuggestions();
         return pingGrade;
     }
 
@@ -127,11 +130,27 @@ public class InferenceEngine {
         return httpGrade;
     }
 
+    public SuggestionCreator.Suggestion suggest() {
+        List<Integer> conditionArray = currentConditions.getTopConditions(MAX_SUGGESTIONS_TO_SHOW,
+                MAX_GAP_IN_SUGGESTION_WEIGHT);
+        return SuggestionCreator.get(conditionArray, metricsDb.getParamsForSuggestions());
+    }
 
     public String getSuggestions(int maxSuggestions, double maxGapInWeight, boolean getLongSuggestions) {
         List<Integer> conditionArray = currentConditions.getTopConditions(maxSuggestions, maxGapInWeight);
         return SuggestionCreator.getSuggestionString(conditionArray,
                 metricsDb.getParamsForSuggestions(), getLongSuggestions);
+    }
+
+    public void checkAndSendSuggestions() {
+        if (metricsDb.hasValidUpload() && metricsDb.hasValidDownload() && metricsDb.hasFreshPingGrade() &&
+                metricsDb.hasFreshWifiGrade()) {
+            SuggestionCreator.Suggestion suggestion = suggest();
+            if (actionListener != null) {
+                DobbyLog.i("Sending suggestions to DobbyAi");
+                actionListener.suggestionsAvailable(suggestion);
+            }
+        }
     }
 
     // Bandwidth test notifications:
@@ -170,6 +189,7 @@ public class InferenceEngine {
             DobbyLog.i("InferenceEngine bandwidthGrade: " + bandwidthGrade.toString());
             DobbyLog.i("InferenceEngine which gives conditions: " + conditions.toString());
             DobbyLog.i("InferenceEngine After merging: " + currentConditions.toString());
+            checkAndSendSuggestions();
         }
     }
 
