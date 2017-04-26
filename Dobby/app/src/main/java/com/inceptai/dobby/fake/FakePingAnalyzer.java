@@ -7,7 +7,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningScheduledExecutorService;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
@@ -21,7 +20,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.HashMap;
 import java.util.Random;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static com.inceptai.dobby.fake.FakePingAnalyzer.PingStatsMode.DEFAULT_WORKING_STATE;
@@ -47,14 +45,12 @@ public class FakePingAnalyzer extends PingAnalyzer {
     public static int pingStatsMode = PingStatsMode.DEFAULT_WORKING_STATE;
     private ListenableFuture<HashMap<String, PingStats>> fakePingResultsFuture;
     private ListenableFuture<PingStats> fakeGatewayDownloadTestFuture;
-    private ListeningScheduledExecutorService executorService;
 
     private Random random;
 
 
-    private FakePingAnalyzer(IPLayerInfo ipLayerInfo, ListeningScheduledExecutorService executorService, DobbyEventBus eventBus) {
-        super(ipLayerInfo, executorService, eventBus);
-        this.executorService = executorService;
+    private FakePingAnalyzer(IPLayerInfo ipLayerInfo, DobbyThreadpool dobbyThreadpool, DobbyEventBus eventBus) {
+        super(ipLayerInfo, dobbyThreadpool, eventBus);
         random = new Random(RANDOM_SEED);
     }
 
@@ -79,11 +75,11 @@ public class FakePingAnalyzer extends PingAnalyzer {
      */
     @Nullable
     public static FakePingAnalyzer create(IPLayerInfo ipLayerInfo,
-                                          ListeningScheduledExecutorService executorService,
+                                          DobbyThreadpool dobbyThreadpool,
                                           DobbyEventBus eventBus) {
         Preconditions.checkNotNull(ipLayerInfo);
-        Preconditions.checkNotNull(executorService);
-        return new FakePingAnalyzer(ipLayerInfo, executorService, eventBus);
+        Preconditions.checkNotNull(dobbyThreadpool);
+        return new FakePingAnalyzer(ipLayerInfo, dobbyThreadpool, eventBus);
     }
 
     @Retention(RetentionPolicy.SOURCE)
@@ -395,7 +391,7 @@ public class FakePingAnalyzer extends PingAnalyzer {
             eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.PING_FAILED));
             throw new IllegalStateException("Cannot schedule pings when iplayerInfo is null or own IP is 0.0.0.0");
         }
-        fakePingResultsFuture = executorService.schedule(new Callable<HashMap<String, PingStats>>() {
+        fakePingResultsFuture = dobbyThreadpool.getListeningScheduledExecutorService().schedule(new Callable<HashMap<String, PingStats>>() {
             @Override
             public HashMap<String, PingStats> call() {
                 HashMap<String, PingStats> pingStatsHashMap = generateFakePingStats();
@@ -425,7 +421,7 @@ public class FakePingAnalyzer extends PingAnalyzer {
     }
 
     private ListenableFuture<PingStats> scheduleGatewayDownloadLatencyTest() throws IllegalStateException {
-        fakeGatewayDownloadTestFuture = executorService.schedule(new Callable<PingStats>() {
+        fakeGatewayDownloadTestFuture = dobbyThreadpool.getListeningScheduledExecutorService().schedule(new Callable<PingStats>() {
             @Override
             public PingStats call() {
                 PingStats pingStats = generateFakeGatewayStats();

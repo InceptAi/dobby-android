@@ -3,7 +3,6 @@ package com.inceptai.dobby.ping;
 import android.support.annotation.Nullable;
 
 import com.google.common.base.Preconditions;
-import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -22,7 +21,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.inceptai.dobby.speedtest.BestServerSelector.MAX_STRING_LENGTH;
@@ -39,7 +37,7 @@ public class PingAnalyzer {
     protected IPLayerInfo ipLayerInfo;
     protected HashMap<String, PingStats> ipLayerPingStats;
     protected PingStats gatewayDownloadLatencyTestStats;
-    protected ExecutorService executorService;
+    protected DobbyThreadpool dobbyThreadpool;
     protected DobbyEventBus eventBus;
     protected AtomicBoolean pingInProgress = new AtomicBoolean(false);
 
@@ -50,9 +48,9 @@ public class PingAnalyzer {
     private SettableFuture<PingStats> gatewayDownloadTestFuture;
 
 
-    protected PingAnalyzer(IPLayerInfo ipLayerInfo, ExecutorService executorService, DobbyEventBus eventBus) {
+    protected PingAnalyzer(IPLayerInfo ipLayerInfo, DobbyThreadpool dobbyThreadpool, DobbyEventBus eventBus) {
         this.ipLayerInfo = ipLayerInfo;
-        this.executorService = executorService;
+        this.dobbyThreadpool = dobbyThreadpool;
         this.eventBus = eventBus;
         pingActionListener = new PingActionListener();
         pingAction = PingAction.create(pingActionListener);
@@ -84,11 +82,11 @@ public class PingAnalyzer {
      */
     @Nullable
     public static PingAnalyzer create(IPLayerInfo ipLayerInfo,
-                                      ExecutorService executorService,
+                                      DobbyThreadpool dobbyThreadpool,
                                       DobbyEventBus eventBus) {
         Preconditions.checkNotNull(ipLayerInfo);
-        Preconditions.checkNotNull(executorService);
-        return new PingAnalyzer(ipLayerInfo, executorService, eventBus);
+        Preconditions.checkNotNull(dobbyThreadpool);
+        return new PingAnalyzer(ipLayerInfo, dobbyThreadpool, eventBus);
     }
 
     // Called in order to cleanup any held resources.
@@ -144,7 +142,7 @@ public class PingAnalyzer {
 
     private void schedulePingAndReturn(String[] pingAddressList) {
         final String[] pingAddressListFinal = pingAddressList;
-        executorService.submit(new Runnable() {
+        dobbyThreadpool.submit(new Runnable() {
             @Override
             public void run() {
                 pingAction.pingAndReturnStatsList(pingAddressListFinal);
@@ -319,7 +317,7 @@ public class PingAnalyzer {
     }
 
     private ListenableFuture<PingStats> scheduleGatewayDownloadLatencyTest() throws IllegalStateException {
-        executorService.submit(new Runnable() {
+        dobbyThreadpool.submit(new Runnable() {
             @Override
             public void run() {
                 performGatewayDownloadTest();
