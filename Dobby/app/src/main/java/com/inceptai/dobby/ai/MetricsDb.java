@@ -83,6 +83,14 @@ public class MetricsDb {
         return bandwidthGrade.hasValidDownload();
     }
 
+    public boolean hasFreshWifiGrade() {
+        return wifiGrade.isFresh();
+    }
+
+    public boolean hasFreshPingGrade() {
+        return pingGrade.isFresh();
+    }
+
     public double getDownloadMbps() {
         return bandwidthGrade.getDownloadMbps();
     }
