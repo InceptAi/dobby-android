@@ -6,12 +6,10 @@ import android.util.Log;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.ListeningScheduledExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-import com.google.common.util.concurrent.UncaughtExceptionHandlers;
 import com.inceptai.dobby.ui.UiThreadExecutor;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
@@ -34,7 +32,7 @@ public class DobbyThreadpool {
 
     private static int NUMBER_OF_CORES =
             Runtime.getRuntime().availableProcessors();
-    private static int INTIAL_POOL_SIZE = Math.min(NUMBER_OF_CORES, 2);  // Upper bound by 2
+    private static int INTIAL_POOL_SIZE = Math.min(NUMBER_OF_CORES, 4);  // Upper bound by 4
 
     // A queue of Runnables
     private final BlockingQueue<Runnable> workQueue;
