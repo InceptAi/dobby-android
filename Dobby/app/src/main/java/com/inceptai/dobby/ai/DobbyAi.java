@@ -2,7 +2,6 @@ package com.inceptai.dobby.ai;
 
 import android.content.Context;
 import android.support.annotation.Nullable;
-import android.util.EventLog;
 import android.util.Log;
 
 import com.google.android.gms.tasks.RuntimeExecutionException;
@@ -161,6 +160,19 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         wifiScan.uponCompletion(ping);
         final ComposableOperation gatewayLatencyTest = gatewayLatencyTestOperation();
         ping.uponCompletion(gatewayLatencyTest);
+
+
+        /*
+        final ComposableOperation wifiScan = wifiScanOperation();
+        wifiScan.post();
+        final ComposableOperation ping = pingOperation();
+        wifiScan.uponCompletion(ping);
+        final ComposableOperation gatewayLatencyTest = gatewayLatencyTestOperation();
+        ping.uponCompletion(gatewayLatencyTest);
+        final ComposableOperation bwTest = bandwidthOperation();
+        gatewayLatencyTest.uponCompletion(bwTest);
+        */
+
         // Wire up with IE.
         wifiScan.getFuture().addListener(new Runnable() {
             @Override
@@ -284,6 +296,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             return null;
         }
         observer.setInferenceEngine(inferenceEngine);
+        //responseCallback.showRtGraph(observer);
         if (responseCallback != null) {
             responseCallback.showRtGraph(observer);
         }

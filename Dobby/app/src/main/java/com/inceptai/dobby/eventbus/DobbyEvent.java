@@ -179,7 +179,7 @@ public class DobbyEvent {
             case EventType.FREQUENT_DISCONNECTIONS:
                 return "FREQUENT_DISCONNECTIONS";
             default:
-                return "UNKNOWN EVENT TYPE";
+                return "UNKNOWN EVENT TYPE:" + eventType;
         }
     }
 }
