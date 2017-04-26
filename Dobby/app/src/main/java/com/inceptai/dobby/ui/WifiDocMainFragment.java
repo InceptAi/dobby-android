@@ -289,7 +289,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             if (ssid.length() > 10) {
                 ssid = ssid.substring(0, 10);
             }
-            wifiSsidTv.setText("\"" + ssid + "\"");
+            wifiSsidTv.setText(ssid);
         }
         setWifiResult(wifiSignalValueTv, String.valueOf(wifiGrade.getPrimaryApSignal()),
                 wifiSignalIconIv, wifiGrade.getPrimaryApSignalMetric());
@@ -461,8 +461,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                 setImage(gradeIv, R.drawable.tick_mark);
                 break;
             case AVERAGE:
-                setImage(gradeIv, R.drawable.tick_mark);
-                // gradeIv.setColorFilter(R.color.basicYellowTrans, PorterDuff.Mode.DST_ATOP);
+                setImage(gradeIv, R.drawable.yellow_tick_mark);
                 break;
             case POOR:
                 setImage(gradeIv, R.drawable.poor_icon);
