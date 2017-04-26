@@ -152,7 +152,7 @@ public class NetworkLayer {
 
         bandwidthObserver = new BandwidthObserver(mode);
         bandwidthAnalyzer.registerCallback(bandwidthObserver);
-        threadpool.getExecutorServiceForNetworkLayer().submit(new Runnable() {
+        threadpool.submit(new Runnable() {
             @Override
             public void run() {
                 bandwidthAnalyzer.startBandwidthTestSync(mode);
@@ -234,7 +234,7 @@ public class NetworkLayer {
     }
 
     private PingAnalyzer getPingAnalyzerInstance() {
-        return getPingAnalyzer(ipLayerInfo, threadpool.getExecutorServiceForNetworkLayer(), eventBus);
+        return getPingAnalyzer(ipLayerInfo, threadpool, eventBus);
     }
 
     // Asynchronous post.
