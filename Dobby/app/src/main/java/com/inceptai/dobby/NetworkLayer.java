@@ -211,10 +211,14 @@ public class NetworkLayer {
             case DobbyEvent.EventType.PING_FAILED:
                 startGatewayDownloadLatencyTest();
                 break;
+            case DobbyEvent.EventType.WIFI_CONNECTED:
+            case DobbyEvent.EventType.WIFI_STATE_ENABLED:
+                wifiScan();
+                break;
         }
         //Passing this info to ConnectivityAnalyzer
-        getConnectivityAnalyzerInstance().processDobbyBusEvents(event);
         getNewBandwidthAnalyzerInstance().processDobbyBusEvents(event);
+        getConnectivityAnalyzerInstance().processDobbyBusEvents(event);
     }
 
     public void cleanup() {
