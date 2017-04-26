@@ -2,12 +2,14 @@ package com.inceptai.dobby.utils;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.os.Build;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.widget.ImageView;
 
 import com.google.common.net.InetAddresses;
 import com.google.gson.Gson;
@@ -502,5 +504,13 @@ public class Utils {
             return -1;
         }
         return (gap / GAP_BETWEEN_CHANNELS) + 1;
+    }
+
+    public static void setImage(Context context, ImageView view, int resourceId) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            view.setImageDrawable(context.getResources().getDrawable(resourceId, context.getApplicationContext().getTheme()));
+        } else {
+            view.setImageDrawable(context.getResources().getDrawable(resourceId));
+        }
     }
 }
