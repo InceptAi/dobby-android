@@ -150,14 +150,14 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:text="Name: "
-                        android:textSize="10sp"
+                        android:textSize="12sp"
                         android:id="@+id/wifi_ssid_name_tv"
                         android:layout_height="wrap_content" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:text="your network"
-                            android:textSize="10sp"
+                            android:textSize="12sp"
                             android:id="@+id/wifi_ssid_tv"
                             android:textStyle="bold"
                             android:layout_height="wrap_content" />
@@ -225,6 +225,7 @@
             android:layout_width="wrap_content"
             android:text=""
             android:textSize="10sp"
+            android:layout_margin="10dp"
             android:id="@+id/suggestion_value_tv"
             android:maxLines="10"
             android:layout_height="wrap_content" />

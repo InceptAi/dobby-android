@@ -131,6 +131,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         View view = inflater.inflate(R.layout.fragment_wifi_doc_main, container, false);
 
         populateViews(view);
+        resetData();
         requestPermissions();
         return view;
     }
@@ -288,7 +289,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             if (ssid.length() > 10) {
                 ssid = ssid.substring(0, 10);
             }
-            wifiSsidTv.setText("SSID: " + ssid);
+            wifiSsidTv.setText("\"" + ssid + "\"");
         }
         setWifiResult(wifiSignalValueTv, String.valueOf(wifiGrade.getPrimaryApSignal()),
                 wifiSignalIconIv, wifiGrade.getPrimaryApSignalMetric());
@@ -328,6 +329,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             return;
         }
         StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(suggestion.getTitle() + "\n");
         for(String line : suggestion.getShortSuggestionList()) {
             stringBuilder.append(line + "\n");
         }
