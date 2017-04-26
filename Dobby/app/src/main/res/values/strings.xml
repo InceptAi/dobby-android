@@ -50,6 +50,7 @@
     <string name="upload_bw">Upload</string>
     <string name="percent">%</string>
     <string name="congestion">Congestion</string>
+    <string name="suggestions">Suggestions</string>
     <string-array name="rssi_level_array">
         <item>High</item>
         <item>Medium</item>

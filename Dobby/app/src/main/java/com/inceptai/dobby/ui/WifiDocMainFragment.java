@@ -94,6 +94,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private ImageView wifiCongestionIconIv;
     private TextView wifiCongestionUnitTv;
 
+    private TextView suggestionsValueTv;
+
     private String mParam1;
     private DobbyEventBus eventBus;
     private BandwidthObserver bandwidthObserver;
@@ -324,7 +326,13 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             DobbyLog.i("Already have a fresh enough suggestion, ignoring new suggestion");
             return;
         }
+        StringBuilder stringBuilder = new StringBuilder();
+        for(String line : suggestion.getShortSuggestionList()) {
+            stringBuilder.append(line + "\n");
+        }
+        suggestionsValueTv.setText(stringBuilder.toString());
     }
+
 
     private static boolean isSuggestionFresh(SuggestionCreator.Suggestion suggestion) {
         return (System.currentTimeMillis() - suggestion.getCreationTimestampMs()) < SUGGESTION_FRESHNESS_TS_MS;
@@ -386,6 +394,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         wifiCongestionUnitTv = (TextView) wifiRow2View.findViewById(R.id.unit_tv);
         wifiCongestionUnitTv.setText(R.string.percent);
         wifiCongestionTitleTv.setText(R.string.congestion);
+
+        suggestionsValueTv = (TextView)rootView.findViewById(R.id.suggestion_value_tv);
     }
 
     private void updateBandwidthGauge(Message msg) {

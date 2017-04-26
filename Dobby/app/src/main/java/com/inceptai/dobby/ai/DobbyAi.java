@@ -284,10 +284,6 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             return null;
         }
         observer.setInferenceEngine(inferenceEngine);
-<<<<<<< HEAD
-=======
-        responseCallback.showRtGraph(observer);
->>>>>>> b8242435cd6fa23e5d29944a2e1883d703898bd2
         if (responseCallback != null) {
             responseCallback.showRtGraph(observer);
         }
