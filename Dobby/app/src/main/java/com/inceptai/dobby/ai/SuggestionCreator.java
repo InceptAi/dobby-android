@@ -191,7 +191,7 @@ public class SuggestionCreator {
                     "You are getting " + String.format("%.2f", params.downloadBandwidthMbps) +
                     " Mbps download / " + String.format("%.2f", params.uploadBandwidthMbps) +
                     " Mbps upload speed. You connection to your wifi is about " + Utils.convertSignalDbmToPercent(params.currentSignal) +
-                    ". Since wifi network problems are sometimes transient, it might be good if you run " +
+                    " % strong. Since wifi network problems are sometimes transient, it might be good if you run " +
                     "this test a few times so we can catch an issue if it shows up. Hope this helps :)";
         }
         return titleToReturn;
