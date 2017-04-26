@@ -43,11 +43,13 @@
     <string name="ping_latency">PING LATENCY</string>
     <string name="wifi_quality">WIFI LINK</string>
     <string name="router_ping"> Router</string>
-    <string name="dns_primary_ping">DNS 1</string>
+    <string name="dns_primary_ping">Main DNS</string>
     <string name="dns_second_ping">DNS 2</string>
     <string name="web_ping">Web </string>
     <string name="download_bw">Download</string>
     <string name="upload_bw">Upload</string>
+    <string name="percent">%</string>
+    <string name="congestion">Congestion</string>
     <string-array name="rssi_level_array">
         <item>High</item>
         <item>Medium</item>

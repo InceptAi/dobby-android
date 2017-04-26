@@ -92,6 +92,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private TextView wifiCongestionTitleTv;
     private TextView wifiCongestionValueTv;
     private ImageView wifiCongestionIconIv;
+    private TextView wifiCongestionUnitTv;
 
     private String mParam1;
     private DobbyEventBus eventBus;
@@ -166,6 +167,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         if (mListener != null) {
             mListener.onMainButtonClick();
         }
+        resetData();
     }
 
     public interface OnFragmentInteractionListener {
@@ -288,7 +290,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         }
         setWifiResult(wifiSignalValueTv, String.valueOf(wifiGrade.getPrimaryApSignal()),
                 wifiSignalIconIv, wifiGrade.getPrimaryApSignalMetric());
-        String availability = String.format("%2.1f", 100.0 *(1.0 - wifiGrade.getPrimaryLinkCongestionPercentage()));
+        String availability = String.format("%2.1f", 100.0 *(wifiGrade.getPrimaryLinkCongestionPercentage()));
         setWifiResult(wifiCongestionValueTv, availability, wifiCongestionIconIv, wifiGrade.getPrimaryLinkChannelOccupancyMetric());
     }
 
@@ -322,7 +324,6 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             DobbyLog.i("Already have a fresh enough suggestion, ignoring new suggestion");
             return;
         }
-
     }
 
     private static boolean isSuggestionFresh(SuggestionCreator.Suggestion suggestion) {
@@ -382,6 +383,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         wifiCongestionTitleTv = (TextView) wifiRow2View.findViewById(R.id.title_tv);
         wifiCongestionValueTv = (TextView) wifiRow2View.findViewById(R.id.value_tv);
         wifiCongestionIconIv = (ImageView) wifiRow2View.findViewById(R.id.icon_iv);
+        wifiCongestionUnitTv = (TextView) wifiRow2View.findViewById(R.id.unit_tv);
+        wifiCongestionUnitTv.setText(R.string.percent);
+        wifiCongestionTitleTv.setText(R.string.congestion);
     }
 
     private void updateBandwidthGauge(Message msg) {
@@ -437,20 +441,20 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         valueTv.setText(value);
         switch (grade) {
             case EXCELLENT:
-                gradeIv.setBackgroundResource(R.drawable.double_tick);
+                setImage(gradeIv, R.drawable.double_tick);
                 break;
             case GOOD:
-                gradeIv.setBackgroundResource(R.drawable.tick_mark);
+                setImage(gradeIv, R.drawable.tick_mark);
                 break;
             case AVERAGE:
-                gradeIv.setBackgroundResource(R.drawable.tick_mark);
-                gradeIv.setColorFilter(R.color.basicYellow, PorterDuff.Mode.DST_ATOP);
+                setImage(gradeIv, R.drawable.tick_mark);
+                gradeIv.setColorFilter(R.color.basicYellowTrans, PorterDuff.Mode.DST_ATOP);
                 break;
             case POOR:
-                gradeIv.setBackgroundResource(R.drawable.poor_icon);
+                setImage(gradeIv, R.drawable.poor_icon);
                 break;
             default:
-                gradeIv.setBackgroundResource(R.drawable.non_functional);
+                setImage(gradeIv, R.drawable.non_functional);
                 break;
 
         }
@@ -460,22 +464,22 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         valueTv.setText(value);
         switch (grade) {
             case EXCELLENT:
-                gradeIv.setBackgroundResource(R.drawable.signal_5);
+                setImage(gradeIv, R.drawable.signal_5);
                 break;
             case GOOD:
-                gradeIv.setBackgroundResource(R.drawable.signal_4);
+                setImage(gradeIv, R.drawable.signal_4);
                 break;
             case AVERAGE:
-                gradeIv.setBackgroundResource(R.drawable.signal_3);
+                setImage(gradeIv, R.drawable.signal_3);
                 break;
             case POOR:
-                gradeIv.setBackgroundResource(R.drawable.signal_2);
+                setImage(gradeIv, R.drawable.signal_2);
                 break;
             case ABYSMAL:
-                gradeIv.setBackgroundResource(R.drawable.signal_1);
+                setImage(gradeIv, R.drawable.signal_1);
                 break;
             default:
-                gradeIv.setBackgroundResource(R.drawable.signal_disc);
+                setImage(gradeIv, R.drawable.signal_disc);
                 break;
 
         }
@@ -484,5 +488,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private void resetData() {
         uploadCircularGauge.setValue(0);
         downloadCircularGauge.setValue(0);
+    }
+
+    private void setImage(ImageView view, int resourceId) {
+        Utils.setImage(getContext(), view, resourceId);
     }
 }

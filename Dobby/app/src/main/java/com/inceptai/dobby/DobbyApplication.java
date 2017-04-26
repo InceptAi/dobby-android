@@ -27,8 +27,8 @@ public class DobbyApplication extends Application {
 
         prodComponent = DaggerProdComponent.builder().prodModule(new ProdModule(this)).build();
         Thread.UncaughtExceptionHandler handler = Thread.getDefaultUncaughtExceptionHandler();
-        Log.i("Dobby", "Old handler:" + handler.getClass().getCanonicalName());
-        Thread.setDefaultUncaughtExceptionHandler(new DobbyThreadpool.DobbyUncaughtExceptionHandler(handler));
+        Log.i("Dobby", "DobbyApplication: Old handler:" + handler.getClass().getCanonicalName());
+        // Thread.setDefaultUncaughtExceptionHandler(new DobbyThreadpool.DobbyUncaughtExceptionHandler(handler));
     }
 
     public ProdComponent getProdComponent() {

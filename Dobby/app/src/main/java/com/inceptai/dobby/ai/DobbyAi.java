@@ -5,6 +5,7 @@ import android.support.annotation.Nullable;
 import android.util.EventLog;
 import android.util.Log;
 
+import com.google.android.gms.tasks.RuntimeExecutionException;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.DobbyThreadpool;
@@ -152,6 +153,8 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     }
 
     private void postAllOperations() {
+        Log.i(TAG, "Entering postAllOperations()");
+        DobbyLog.checkCrashHandler();
         ComposableOperation bwTest = bandwidthOperation();
         bwTest.post();
         final ComposableOperation wifiScan = wifiScanOperation();
@@ -286,7 +289,9 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             return null;
         }
         observer.setInferenceEngine(inferenceEngine);
-        responseCallback.showRtGraph(observer);
+        if (responseCallback != null) {
+            responseCallback.showRtGraph(observer);
+        }
         return observer.asFuture();
     }
 

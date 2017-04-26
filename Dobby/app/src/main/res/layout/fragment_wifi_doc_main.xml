@@ -177,6 +177,18 @@
 
     </LinearLayout>
 
+    <android.support.v7.widget.CardView
+        android:id="@+id/suggestion_cardview"
+        android:layout_width="368dp"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="2dp"
+        app:cardElevation="4dp"
+        app:cardMaxElevation="5dp"
+        tools:layout_editor_absoluteY="0dp"
+        tools:layout_editor_absoluteX="8dp">
+
+    </android.support.v7.widget.CardView>
+
     <android.support.design.widget.FloatingActionButton
         android:layout_width="70dp"
         android:layout_height="70dp"
