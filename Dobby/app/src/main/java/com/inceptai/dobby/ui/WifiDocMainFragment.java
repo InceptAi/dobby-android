@@ -317,6 +317,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     }
 
     private void showSuggestion(SuggestionCreator.Suggestion suggestion) {
+
         if (suggestion == null) {
             DobbyLog.w("Null suggestion received from eventbus.");
             return;
@@ -331,6 +332,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             stringBuilder.append(line + "\n");
         }
         suggestionsValueTv.setText(stringBuilder.toString());
+        DobbyLog.i("Received suggestions:" + stringBuilder.toString());
     }
 
 
@@ -458,7 +460,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                 break;
             case AVERAGE:
                 setImage(gradeIv, R.drawable.tick_mark);
-                gradeIv.setColorFilter(R.color.basicYellowTrans, PorterDuff.Mode.DST_ATOP);
+                // gradeIv.setColorFilter(R.color.basicYellowTrans, PorterDuff.Mode.DST_ATOP);
                 break;
             case POOR:
                 setImage(gradeIv, R.drawable.poor_icon);
@@ -498,6 +500,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private void resetData() {
         uploadCircularGauge.setValue(0);
         downloadCircularGauge.setValue(0);
+        wifiCongestionValueTv.setText(String.valueOf(0));
+        wifiSignalValueTv.setText(String.valueOf(0));
     }
 
     private void setImage(ImageView view, int resourceId) {
