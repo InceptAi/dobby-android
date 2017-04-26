@@ -1,6 +1,7 @@
 package com.inceptai.dobby;
 
 import android.app.Application;
+import android.util.Log;
 
 import com.inceptai.dobby.dagger.DaggerProdComponent;
 import com.inceptai.dobby.dagger.ProdComponent;
@@ -25,6 +26,9 @@ public class DobbyApplication extends Application {
         super.onCreate();
 
         prodComponent = DaggerProdComponent.builder().prodModule(new ProdModule(this)).build();
+        Thread.UncaughtExceptionHandler handler = Thread.getDefaultUncaughtExceptionHandler();
+        Log.i("Dobby", "Old handler:" + handler.getClass().getCanonicalName());
+        Thread.setDefaultUncaughtExceptionHandler(new DobbyThreadpool.DobbyUncaughtExceptionHandler(handler));
     }
 
     public ProdComponent getProdComponent() {

@@ -1,10 +1,12 @@
 package com.inceptai.dobby;
 
+import android.os.Process;
 import android.util.Log;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.ListeningScheduledExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.UncaughtExceptionHandlers;
 import com.inceptai.dobby.ui.UiThreadExecutor;
 
 import java.util.concurrent.BlockingQueue;
@@ -46,7 +48,9 @@ public class DobbyThreadpool {
 
         // Instantiates the queue of Runnables as a LinkedBlockingQueue
         workQueue = new LinkedBlockingQueue<>();
-        Thread.currentThread().setUncaughtExceptionHandler(new DobbyUncaughtExceptionHandler());
+        Thread.UncaughtExceptionHandler handler = Thread.getDefaultUncaughtExceptionHandler();
+        Log.i("Dobby", "Old handler:" + handler.getClass().getCanonicalName());
+        Thread.setDefaultUncaughtExceptionHandler(new DobbyUncaughtExceptionHandler(handler));
 
         // Creates a thread pool manager
         dobbyThreadPool = new ThreadPoolExecutor(
@@ -86,7 +90,6 @@ public class DobbyThreadpool {
     }
 
     private static class DobbyThreadFactory implements ThreadFactory {
-        private static DobbyUncaughtExceptionHandler exceptionHandler = new DobbyUncaughtExceptionHandler();
         private static final AtomicInteger poolNumber = new AtomicInteger(1);
         private final ThreadGroup group;
         private final AtomicInteger threadNumber = new AtomicInteger(1);
@@ -109,16 +112,23 @@ public class DobbyThreadpool {
                 t.setDaemon(false);
             if (t.getPriority() != Thread.NORM_PRIORITY)
                 t.setPriority(Thread.NORM_PRIORITY);
-            t.setUncaughtExceptionHandler(exceptionHandler);
             return t;
         }
     }
 
-    private static class DobbyUncaughtExceptionHandler implements Thread.UncaughtExceptionHandler {
+    public static class DobbyUncaughtExceptionHandler implements Thread.UncaughtExceptionHandler {
+        private Thread.UncaughtExceptionHandler uncaughtExceptionHandler;
+
+        public DobbyUncaughtExceptionHandler(Thread.UncaughtExceptionHandler handler) {
+            uncaughtExceptionHandler = handler;
+        }
+
         @Override
         public void uncaughtException(Thread t, Throwable e) {
             Log.wtf("FATAL", e);
             System.err.println("FATAL" + e);
+            uncaughtExceptionHandler.uncaughtException(t, e);
+            Process.killProcess(Process.myPid());
             System.exit(2);
         }
     }

@@ -16,6 +16,11 @@ import static com.inceptai.dobby.DobbyApplication.TAG;
  */
 public class DobbyLog {
 
+    private static void checkCrashHandler() {
+        Thread.UncaughtExceptionHandler handler = Thread.getDefaultUncaughtExceptionHandler();
+        Log.i(TAG, "Old handler:" + handler.getClass().getCanonicalName());
+    }
+
     public static void i(String message) {
         if (BuildConfig.DEBUG) {
             Log.i(TAG, message);
