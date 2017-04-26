@@ -11,6 +11,7 @@ import com.inceptai.dobby.ui.UiThreadExecutor;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
@@ -33,7 +34,7 @@ public class DobbyThreadpool {
 
     private static int NUMBER_OF_CORES =
             Runtime.getRuntime().availableProcessors();
-    private static int INTIAL_POOL_SIZE = NUMBER_OF_CORES;
+    private static int INTIAL_POOL_SIZE = Math.min(NUMBER_OF_CORES, 2);  // Upper bound by 2
 
     // A queue of Runnables
     private final BlockingQueue<Runnable> workQueue;
@@ -41,6 +42,9 @@ public class DobbyThreadpool {
     private ThreadPoolExecutor dobbyThreadPool;
     private ListeningExecutorService listeningExecutorService;
     private ListeningScheduledExecutorService scheduledExecutorService;
+
+    private ListeningScheduledExecutorService networkLayerExecutorService;
+    private ListeningScheduledExecutorService eventBusExecutorService;
 
     private UiThreadExecutor uiThreadExecutor;
 
@@ -63,6 +67,8 @@ public class DobbyThreadpool {
         listeningExecutorService = MoreExecutors.listeningDecorator(dobbyThreadPool);
         scheduledExecutorService = MoreExecutors.listeningDecorator(Executors.newSingleThreadScheduledExecutor());
         uiThreadExecutor = new UiThreadExecutor();
+        networkLayerExecutorService = MoreExecutors.listeningDecorator(Executors.newSingleThreadScheduledExecutor());
+        eventBusExecutorService = MoreExecutors.listeningDecorator(Executors.newSingleThreadScheduledExecutor());
     }
 
     public void submit(Runnable runnable) {
@@ -83,6 +89,14 @@ public class DobbyThreadpool {
 
     public ListeningScheduledExecutorService getListeningScheduledExecutorService() {
         return scheduledExecutorService;
+    }
+
+    public ListeningScheduledExecutorService getExecutorServiceForNetworkLayer() {
+        return networkLayerExecutorService;
+    }
+
+    public ListeningScheduledExecutorService getExecutorServiceForEventBus() {
+        return eventBusExecutorService;
     }
 
     public Executor getUiThreadExecutor() {

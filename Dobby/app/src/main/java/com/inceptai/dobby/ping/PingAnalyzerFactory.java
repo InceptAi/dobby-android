@@ -1,9 +1,12 @@
 package com.inceptai.dobby.ping;
 
+import com.google.common.util.concurrent.ListeningScheduledExecutorService;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.fake.FakePingAnalyzer;
 import com.inceptai.dobby.model.IPLayerInfo;
+
+import java.util.concurrent.ExecutorService;
 
 import static com.inceptai.dobby.DobbyApplication.USE_FAKES;
 
@@ -18,42 +21,42 @@ public class PingAnalyzerFactory {
     private PingAnalyzerFactory() {}
 
     private static PingAnalyzer create(IPLayerInfo ipLayerInfo,
-                                      DobbyThreadpool dobbyThreadpool,
+                                      ListeningScheduledExecutorService executorService,
                                       DobbyEventBus eventBus) {
         if (USE_FAKES.get()) {
-            return FakePingAnalyzer.create(ipLayerInfo, dobbyThreadpool, eventBus);
+            return FakePingAnalyzer.create(ipLayerInfo, executorService, eventBus);
         } else {
-            return PingAnalyzer.create(ipLayerInfo, dobbyThreadpool, eventBus);
+            return PingAnalyzer.create(ipLayerInfo, executorService, eventBus);
         }
     }
 
     public static PingAnalyzer getPingAnalyzer(IPLayerInfo ipLayerInfo,
-                                               DobbyThreadpool dobbyThreadpool,
+                                               ListeningScheduledExecutorService executorService,
                                                DobbyEventBus eventBus) {
         if (USE_FAKES.get()) {
-            return getFakeInstance(ipLayerInfo, dobbyThreadpool, eventBus);
+            return getFakeInstance(ipLayerInfo, executorService, eventBus);
         } else {
             // return real instance.
-            return getRealInstance(ipLayerInfo, dobbyThreadpool, eventBus);
+            return getRealInstance(ipLayerInfo, executorService, eventBus);
         }
     }
 
     private static FakePingAnalyzer getFakeInstance(IPLayerInfo ipLayerInfo,
-                                                    DobbyThreadpool dobbyThreadpool,
+                                                    ListeningScheduledExecutorService executorService,
                                                     DobbyEventBus eventBus) {
         if (FAKE_PING_ANALYZER_INSTANCE ==  null) {
             // create new instance
-            FAKE_PING_ANALYZER_INSTANCE = FakePingAnalyzer.create(ipLayerInfo, dobbyThreadpool, eventBus);
+            FAKE_PING_ANALYZER_INSTANCE = FakePingAnalyzer.create(ipLayerInfo, executorService, eventBus);
         }
         return FAKE_PING_ANALYZER_INSTANCE;
     }
 
     private static PingAnalyzer getRealInstance(IPLayerInfo ipLayerInfo,
-                                                    DobbyThreadpool dobbyThreadpool,
+                                                    ExecutorService executorService,
                                                     DobbyEventBus eventBus) {
         if (PING_ANALYZER_INSTANCE ==  null) {
             // create new instance
-            PING_ANALYZER_INSTANCE = PingAnalyzer.create(ipLayerInfo, dobbyThreadpool, eventBus);
+            PING_ANALYZER_INSTANCE = PingAnalyzer.create(ipLayerInfo, executorService, eventBus);
         }
         return PING_ANALYZER_INSTANCE;
     }

@@ -1,6 +1,8 @@
 package com.inceptai.dobby.eventbus;
 
 import com.google.common.eventbus.EventBus;
+import com.google.common.util.concurrent.ListeningScheduledExecutorService;
+import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.utils.DobbyLog;
 
 import javax.inject.Inject;
@@ -13,9 +15,11 @@ import javax.inject.Singleton;
 public class DobbyEventBus {
 
     public final EventBus eventBus = new EventBus("dobby");
+    private ListeningScheduledExecutorService executorService;
 
     @Inject
-    public DobbyEventBus() {
+    public DobbyEventBus(DobbyThreadpool threadpool) {
+        this.executorService = threadpool.getExecutorServiceForEventBus();
     }
 
     public void registerListener(Object listener) {
@@ -30,8 +34,16 @@ public class DobbyEventBus {
         }
     }
 
-    public void postEvent(DobbyEvent event) {
-        eventBus.post(event);
+
+    // Do a thread switch so that all post() and subscribe (or listen) calls happen on a single
+    // thread to reduce the chances of a deadlock.
+    public void postEvent(final DobbyEvent event) {
+        executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+                eventBus.post(event);
+            }
+        });
     }
 
     /**

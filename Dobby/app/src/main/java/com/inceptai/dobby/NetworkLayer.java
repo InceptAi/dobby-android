@@ -152,7 +152,7 @@ public class NetworkLayer {
 
         bandwidthObserver = new BandwidthObserver(mode);
         bandwidthAnalyzer.registerCallback(bandwidthObserver);
-        threadpool.submit(new Runnable() {
+        threadpool.getExecutorServiceForNetworkLayer().submit(new Runnable() {
             @Override
             public void run() {
                 bandwidthAnalyzer.startBandwidthTestSync(mode);
@@ -182,9 +182,18 @@ public class NetworkLayer {
 
     public DobbyWifiInfo getLinkInfo() { return getWifiAnalyzerInstance().getLinkInfo(); }
 
-    // Process events from eventbus
+    // Process events from eventbus. Do a thread switch to prevent deadlocks.
     @Subscribe
-    public void listen(DobbyEvent event) {
+    public void listen(final DobbyEvent event) {
+        threadpool.getListeningExecutorService().submit(new Runnable() {
+            @Override
+            public void run() {
+                listenOnNetworkLayerThread(event);
+            }
+        });
+    }
+
+    public void listenOnNetworkLayerThread(DobbyEvent event) {
         DobbyLog.v("NL, Found Event: " + event.toString());
         if (event.getEventType() == DobbyEvent.EventType.DHCP_INFO_AVAILABLE) {
             ipLayerInfo = new IPLayerInfo(getWifiAnalyzerInstance().getDhcpInfo());
@@ -225,12 +234,11 @@ public class NetworkLayer {
     }
 
     private PingAnalyzer getPingAnalyzerInstance() {
-        return getPingAnalyzer(ipLayerInfo, threadpool, eventBus);
+        return getPingAnalyzer(ipLayerInfo, threadpool.getExecutorServiceForNetworkLayer(), eventBus);
     }
 
+    // Asynchronous post.
     private void sendBandwidthEvent(BandwidthObserver observer){
-        DobbyEvent event = new DobbyEvent(DobbyEvent.EventType.BANDWIDTH_TEST_STARTING);
-        event.setPayload(observer);
-        eventBus.postEvent(event);
+        eventBus.postEvent(DobbyEvent.EventType.BANDWIDTH_TEST_STARTING, observer);
     }
 }
