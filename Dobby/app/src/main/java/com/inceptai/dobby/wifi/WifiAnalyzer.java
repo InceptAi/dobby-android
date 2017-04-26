@@ -327,39 +327,54 @@ public class WifiAnalyzer {
 
     private void processWifiStateChangedIntent(Intent intent) {
         int wifiState = intent.getIntExtra(WifiManager.EXTRA_WIFI_STATE, WifiManager.WIFI_STATE_UNKNOWN);
-        if (wifiState == WifiManager.WIFI_STATE_ENABLED) {
-            eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.WIFI_STATE_ENABLED));
-            wifiEnabled = true;
-        } else if (wifiState == WifiManager.WIFI_STATE_DISABLED) {
-            eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.WIFI_STATE_DISABLED));
-            wifiEnabled = false;
-        } else if (wifiState == WifiManager.WIFI_STATE_ENABLING) {
-            eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.WIFI_STATE_ENABLING));
-            wifiEnabled = false;
-        } else if (wifiState == WifiManager.WIFI_STATE_DISABLING) {
-            eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.WIFI_STATE_DISABLING));
-            wifiEnabled = false;
-        } else if (wifiState == WifiManager.WIFI_STATE_UNKNOWN) {
-            eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.WIFI_STATE_UNKNOWN));
-            wifiEnabled = false;
+        @DobbyEvent.EventType int eventToBroadcast = DobbyEvent.EventType.NO_EVENT_RECEIVED;
+        switch (wifiState) {
+            case WifiManager.WIFI_STATE_ENABLED:
+                eventToBroadcast = DobbyEvent.EventType.WIFI_STATE_ENABLED;
+                wifiEnabled = true;
+                break;
+            case WifiManager.WIFI_STATE_DISABLED:
+                eventToBroadcast = DobbyEvent.EventType.WIFI_STATE_DISABLED;
+                wifiEnabled = false;
+                break;
+            case WifiManager.WIFI_STATE_ENABLING:
+                eventToBroadcast = DobbyEvent.EventType.WIFI_STATE_ENABLING;
+                wifiEnabled = false;
+                break;
+            case WifiManager.WIFI_STATE_DISABLING:
+                eventToBroadcast = DobbyEvent.EventType.WIFI_STATE_DISABLING;
+                wifiEnabled = false;
+                break;
+            case WifiManager.WIFI_STATE_UNKNOWN:
+                eventToBroadcast = DobbyEvent.EventType.WIFI_STATE_UNKNOWN;
+                wifiEnabled = false;
+                break;
+        }
+        if (eventToBroadcast != DobbyEvent.EventType.NO_EVENT_RECEIVED) {
+            eventBus.postEvent(new DobbyEvent(eventToBroadcast));
         }
     }
+
     //Listening for WiFi intents
     synchronized private void processWifiStateRelatedIntents(Intent intent) {
         final String action = intent.getAction();
         int wifiState;
-        if (action.equals(WifiManager.WIFI_STATE_CHANGED_ACTION)) {
-            processWifiStateChangedIntent(intent);
-        } else if (action.equals(WifiManager.NETWORK_STATE_CHANGED_ACTION)) {
-            processNetworkStateChangedIntent(intent);
-        } else if (action.equals(WifiManager.RSSI_CHANGED_ACTION)) {
-            eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.WIFI_RSSI_CHANGED));
-            int updatedSignal = intent.getIntExtra(WifiManager.EXTRA_NEW_RSSI, 0);
-            if (TRIGGER_WIFI_SCAN_ON_RSSI_CHANGE && this.wifiState.updateSignal(updatedSignal)){
-                //Reissue wifi scan to correctly compute contention since the signal has changed significantly
-                //Force a wifi scan
-                startWifiScan(0);
-            }
+        switch (action) {
+            case WifiManager.WIFI_STATE_CHANGED_ACTION:
+                processWifiStateChangedIntent(intent);
+                break;
+            case WifiManager.NETWORK_STATE_CHANGED_ACTION:
+                processNetworkStateChangedIntent(intent);
+                break;
+            case WifiManager.RSSI_CHANGED_ACTION:
+                eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.WIFI_RSSI_CHANGED));
+                int updatedSignal = intent.getIntExtra(WifiManager.EXTRA_NEW_RSSI, 0);
+                if (TRIGGER_WIFI_SCAN_ON_RSSI_CHANGE && this.wifiState.updateSignal(updatedSignal)) {
+                    //Reissue wifi scan to correctly compute contention since the signal has changed significantly
+                    //Force a wifi scan
+                    startWifiScan(0);
+                }
+                break;
         }
     }
 

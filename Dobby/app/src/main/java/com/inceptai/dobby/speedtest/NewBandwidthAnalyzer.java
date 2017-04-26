@@ -9,6 +9,7 @@ import android.support.annotation.Nullable;
 
 import com.google.common.base.Preconditions;
 import com.inceptai.dobby.DobbyThreadpool;
+import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.BandwidthStats;
 import com.inceptai.dobby.speedtest.BandwithTestCodes.ErrorCodes;
@@ -120,7 +121,8 @@ public class NewBandwidthAnalyzer {
      * @param resultsCallback
      */
     public void registerCallback(ResultsCallback resultsCallback) {
-        this.resultsCallback = resultsCallback;
+        this.resultsCallback = CallbackThreadSwitcher.wrap(
+                dobbyThreadpool.getExecutorServiceForNetworkLayer(), resultsCallback);
     }
 
     public void startBandwidthTestSync(@TestMode int testMode) {
@@ -138,9 +140,17 @@ public class NewBandwidthAnalyzer {
         markTestsAsCancelled();
     }
 
-    public void onConnectivityChangeToOnline() {
-        fetchSpeedTestConfigIfNeeded();
-        fetchServerConfigAndDetermineBestServerIfNeeded();
+    public void processDobbyBusEvents(DobbyEvent event) {
+        int eventType = event.getEventType();
+        DobbyLog.v("Got event: " + event);
+        if (event.getEventType() == DobbyEvent.EventType.WIFI_INTERNET_CONNECTIVITY_ONLINE) {
+            dobbyThreadpool.submit(new Runnable() {
+                @Override
+                public void run() {
+                    fetchSpeedTestConfigIfNeeded();
+                    fetchServerConfigAndDetermineBestServerIfNeeded();            }
+            });
+        }
     }
 
     synchronized private void fetchSpeedTestConfigIfNeeded() {
@@ -150,9 +160,8 @@ public class NewBandwidthAnalyzer {
             speedTestConfig = parseSpeedTestConfig.getConfig(downloadMode);
             if (speedTestConfig == null) {
                 if (resultsCallback != null) {
-                    resultsCallback.onBandwidthTestError(BandwithTestCodes.TestMode.CONFIG_FETCH,
-                            ErrorCodes.ERROR_FETCHING_CONFIG,
-                            "Config fetch returned null");
+                     resultsCallback.onBandwidthTestError(BandwithTestCodes.TestMode.CONFIG_FETCH,
+                             ErrorCodes.ERROR_FETCHING_CONFIG, "Config fetch returned null");
                 }
                 return;
             }
