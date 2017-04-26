@@ -277,12 +277,14 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private void showWifiResults(DataInterpreter.WifiGrade wifiGrade) {
         String ssid = wifiGrade.getPrimaryApSsid();
         if (ssid != null && !ssid.isEmpty()) {
-            ssid = ssid.substring(0, 10);
+            if (ssid.length() > 10) {
+                ssid = ssid.substring(0, 10);
+            }
             wifiSsidTv.setText("SSID: " + ssid);
         }
         setWifiResult(wifiSignalValueTv, String.valueOf(wifiGrade.getPrimaryApSignal()),
                 wifiSignalIconIv, wifiGrade.getPrimaryApSignalMetric());
-        //setWifiResult(wifiCongestionValueTv, String);
+        // setWifiResult(wifiCongestionValueTv, String);
     }
 
     private void showPingResults(DataInterpreter.PingGrade pingGrade) {

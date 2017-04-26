@@ -1,6 +1,7 @@
 package com.inceptai.dobby.ai;
 
 import android.content.Context;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -33,6 +34,8 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     private Context context;
     private DobbyThreadpool threadpool;
     private ApiAiClient apiAiClient;
+
+    @Nullable
     private ResponseCallback responseCallback;
     private InferenceEngine inferenceEngine;
     private boolean useApiAi = false; // We do not use ApiAi for the WifiDoc app.
@@ -112,6 +115,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             return;
         }
         if (action.getAction() == Action.ActionType.ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS) {
+            DobbyLog.i("Going into postAllOperations()");
             postAllOperations();
         }
     }

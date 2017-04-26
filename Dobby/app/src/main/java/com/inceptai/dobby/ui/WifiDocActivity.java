@@ -6,6 +6,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.DobbyThreadpool;
@@ -72,6 +73,7 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
         threadpool.submit(new Runnable() {
             @Override
             public void run() {
+                DobbyLog.i("onMainButtonClick.");
                 dobbyAi.takeAction(new Action(Utils.EMPTY_STRING,
                         Action.ActionType.ACTION_TYPE_DIAGNOSE_SLOW_INTERNET));
             }

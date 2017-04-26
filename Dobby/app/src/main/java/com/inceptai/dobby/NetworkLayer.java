@@ -233,5 +233,4 @@ public class NetworkLayer {
         event.setPayload(observer);
         eventBus.postEvent(event);
     }
-
 }
