@@ -7,6 +7,8 @@ import com.google.common.util.concurrent.SettableFuture;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.utils.DobbyLog;
 
+import java.util.concurrent.ExecutionException;
+
 import static com.inceptai.dobby.ai.OperationResult.SUCCESS;
 
 /**
@@ -41,8 +43,9 @@ public abstract class ComposableOperation {
             public void run() {
                 try {
                     setResult(new OperationResult(SUCCESS, future.get()));
-                } catch (Exception e) {
-                    DobbyLog.w("Exception getting result for:" + getName());
+                } catch (InterruptedException | ExecutionException e) {
+                    DobbyLog.w("Exception getting result for:" + getName() +
+                            " e = " + e.getStackTrace().toString());
                 }
             }
         }, threadpool.getExecutor());
