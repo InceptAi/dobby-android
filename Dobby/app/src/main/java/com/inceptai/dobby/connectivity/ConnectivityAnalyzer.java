@@ -74,7 +74,7 @@ public class ConnectivityAnalyzer {
         this.eventBus = eventBus;
         this.connectivityManager = connectivityManager;
         wifiConnectivityMode = WifiConnectivityMode.UNKNOWN;
-        
+
         // Make sure we're running on Honeycomb or higher to use ActionBar APIs
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             this.connectivityManager.registerDefaultNetworkCallback(new ConnectivityAnalyzerNetworkCallback());
