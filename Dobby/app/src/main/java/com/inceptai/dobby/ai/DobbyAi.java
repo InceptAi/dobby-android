@@ -4,6 +4,7 @@ import android.content.Context;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.google.android.gms.tasks.RuntimeExecutionException;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.DobbyThreadpool;
@@ -120,12 +121,21 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         }
     }
 
+    @Override
+    public void suggestionsAvailable(SuggestionCreator.Suggestion suggestion) {
+        eventBus.postEvent(DobbyEvent.EventType.SUGGESTIONS_AVAILABLE, suggestion);
+    }
+
     public void sendQuery(String text) {
         if (useApiAi) {
             apiAiClient.sendTextQuery(text, this);
         } else {
             DobbyLog.w("Ignoring text query for Wifi doc version :" + text);
         }
+    }
+
+    public SuggestionCreator.Suggestion getSuggestions() {
+        return inferenceEngine.suggest();
     }
 
     public void cleanup() {
@@ -142,7 +152,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     }
 
     private void postAllOperations() {
-        ComposableOperation bwTest = bandwidthOperation();
+        final ComposableOperation bwTest = bandwidthOperation();
         bwTest.post();
         final ComposableOperation wifiScan = wifiScanOperation();
         bwTest.uponCompletion(wifiScan);
@@ -150,6 +160,18 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         wifiScan.uponCompletion(ping);
         final ComposableOperation gatewayLatencyTest = gatewayLatencyTestOperation();
         ping.uponCompletion(gatewayLatencyTest);
+
+
+        /*
+        final ComposableOperation wifiScan = wifiScanOperation();
+        wifiScan.post();
+        final ComposableOperation ping = pingOperation();
+        wifiScan.uponCompletion(ping);
+        final ComposableOperation gatewayLatencyTest = gatewayLatencyTestOperation();
+        ping.uponCompletion(gatewayLatencyTest);
+        final ComposableOperation bwTest = bandwidthOperation();
+        gatewayLatencyTest.uponCompletion(bwTest);
+        */
 
         // Wire up with IE.
         wifiScan.getFuture().addListener(new Runnable() {
@@ -206,8 +228,6 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 }
             }
         }, threadpool.getExecutor());
-
-
     }
 
     private ComposableOperation wifiScanOperation() {
@@ -276,7 +296,10 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             return null;
         }
         observer.setInferenceEngine(inferenceEngine);
-        responseCallback.showRtGraph(observer);
+        //responseCallback.showRtGraph(observer);
+        if (responseCallback != null) {
+            responseCallback.showRtGraph(observer);
+        }
         return observer.asFuture();
     }
 

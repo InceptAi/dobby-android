@@ -6,19 +6,16 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.graphics.PorterDuff;
-import android.media.Image;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,6 +25,7 @@ import android.widget.TextView;
 import com.google.common.eventbus.Subscribe;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.ai.DataInterpreter;
+import com.inceptai.dobby.ai.SuggestionCreator;
 import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.BandwidthStats;
@@ -38,8 +36,6 @@ import com.inceptai.dobby.speedtest.ServerInformation;
 import com.inceptai.dobby.speedtest.SpeedTestConfig;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
-
-import org.w3c.dom.Text;
 
 import java.util.List;
 
@@ -56,6 +52,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private static final int MSG_UPDATED_CIRCULAR_GAUGE = 1001;
     private static final int MSG_WIFI_GRADE_AVAILABLE = 1002;
     private static final int MSG_PING_GRADE_AVAILABLE = 1003;
+    private static final int MSG_SUGGESTION_AVAILABLE = 1004;
+    private static final long SUGGESTION_FRESHNESS_TS_MS = 30000; // 30 seconds
 
     private OnFragmentInteractionListener mListener;
 
@@ -94,12 +92,16 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private TextView wifiCongestionTitleTv;
     private TextView wifiCongestionValueTv;
     private ImageView wifiCongestionIconIv;
+    private TextView wifiCongestionUnitTv;
+
+    private TextView suggestionsValueTv;
 
     private String mParam1;
     private DobbyEventBus eventBus;
     private BandwidthObserver bandwidthObserver;
     private Handler handler;
 
+    private SuggestionCreator.Suggestion currentSuggestion;
 
     public WifiDocMainFragment() {
         // Required empty public constructor
@@ -129,6 +131,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         View view = inflater.inflate(R.layout.fragment_wifi_doc_main, container, false);
 
         populateViews(view);
+        resetData();
         requestPermissions();
         return view;
     }
@@ -167,6 +170,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         if (mListener != null) {
             mListener.onMainButtonClick();
         }
+        resetData();
     }
 
     public interface OnFragmentInteractionListener {
@@ -220,6 +224,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             Message.obtain(handler, MSG_WIFI_GRADE_AVAILABLE, event.getPayload()).sendToTarget();
         } else if (event.getEventType() == DobbyEvent.EventType.PING_GRADE_AVAILABLE) {
             Message.obtain(handler, MSG_PING_GRADE_AVAILABLE, event.getPayload()).sendToTarget();
+        } else if (event.getEventType() == DobbyEvent.EventType.SUGGESTIONS_AVAILABLE) {
+            Message.obtain(handler, MSG_SUGGESTION_AVAILABLE, event.getPayload()).sendToTarget();
         }
     }
 
@@ -270,6 +276,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             case MSG_PING_GRADE_AVAILABLE:
                 showPingResults((DataInterpreter.PingGrade) msg.obj);
                 break;
+            case MSG_SUGGESTION_AVAILABLE:
+                showSuggestion((SuggestionCreator.Suggestion) msg.obj);
+                break;
         }
         return false;
     }
@@ -280,11 +289,12 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             if (ssid.length() > 10) {
                 ssid = ssid.substring(0, 10);
             }
-            wifiSsidTv.setText("SSID: " + ssid);
+            wifiSsidTv.setText(ssid);
         }
         setWifiResult(wifiSignalValueTv, String.valueOf(wifiGrade.getPrimaryApSignal()),
                 wifiSignalIconIv, wifiGrade.getPrimaryApSignalMetric());
-        // setWifiResult(wifiCongestionValueTv, String);
+        String availability = String.format("%2.1f", 100.0 *(wifiGrade.getPrimaryLinkCongestionPercentage()));
+        setWifiResult(wifiCongestionValueTv, availability, wifiCongestionIconIv, wifiGrade.getPrimaryLinkChannelOccupancyMetric());
     }
 
     private void showPingResults(DataInterpreter.PingGrade pingGrade) {
@@ -305,6 +315,31 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
         setPingResult(pingWebValueTv, String.format("%2.2f", pingGrade.getExternalServerLatencyMs()),
                 pingWebGradeIv, pingGrade.getExternalServerLatencyMetric());
+    }
+
+    private void showSuggestion(SuggestionCreator.Suggestion suggestion) {
+
+        if (suggestion == null) {
+            DobbyLog.w("Null suggestion received from eventbus.");
+            return;
+        }
+
+        if (currentSuggestion != null && isSuggestionFresh(currentSuggestion)) {
+            DobbyLog.i("Already have a fresh enough suggestion, ignoring new suggestion");
+            return;
+        }
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(suggestion.getTitle() + "\n");
+        for(String line : suggestion.getShortSuggestionList()) {
+            stringBuilder.append(line + "\n");
+        }
+        suggestionsValueTv.setText(stringBuilder.toString());
+        DobbyLog.i("Received suggestions:" + stringBuilder.toString());
+    }
+
+
+    private static boolean isSuggestionFresh(SuggestionCreator.Suggestion suggestion) {
+        return (System.currentTimeMillis() - suggestion.getCreationTimestampMs()) < SUGGESTION_FRESHNESS_TS_MS;
     }
 
     private void populateViews(View rootView) {
@@ -360,6 +395,11 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         wifiCongestionTitleTv = (TextView) wifiRow2View.findViewById(R.id.title_tv);
         wifiCongestionValueTv = (TextView) wifiRow2View.findViewById(R.id.value_tv);
         wifiCongestionIconIv = (ImageView) wifiRow2View.findViewById(R.id.icon_iv);
+        wifiCongestionUnitTv = (TextView) wifiRow2View.findViewById(R.id.unit_tv);
+        wifiCongestionUnitTv.setText(R.string.percent);
+        wifiCongestionTitleTv.setText(R.string.congestion);
+
+        suggestionsValueTv = (TextView)rootView.findViewById(R.id.suggestion_value_tv);
     }
 
     private void updateBandwidthGauge(Message msg) {
@@ -415,20 +455,19 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         valueTv.setText(value);
         switch (grade) {
             case EXCELLENT:
-                gradeIv.setBackgroundResource(R.drawable.double_tick);
+                setImage(gradeIv, R.drawable.double_tick);
                 break;
             case GOOD:
-                gradeIv.setBackgroundResource(R.drawable.tick_mark);
+                setImage(gradeIv, R.drawable.tick_mark);
                 break;
             case AVERAGE:
-                gradeIv.setBackgroundResource(R.drawable.tick_mark);
-                gradeIv.setColorFilter(R.color.basicYellow, PorterDuff.Mode.DST_ATOP);
+                setImage(gradeIv, R.drawable.yellow_tick_mark);
                 break;
             case POOR:
-                gradeIv.setBackgroundResource(R.drawable.poor_icon);
+                setImage(gradeIv, R.drawable.poor_icon);
                 break;
             default:
-                gradeIv.setBackgroundResource(R.drawable.non_functional);
+                setImage(gradeIv, R.drawable.non_functional);
                 break;
 
         }
@@ -438,24 +477,35 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         valueTv.setText(value);
         switch (grade) {
             case EXCELLENT:
-                gradeIv.setBackgroundResource(R.drawable.signal_5);
+                setImage(gradeIv, R.drawable.signal_5);
                 break;
             case GOOD:
-                gradeIv.setBackgroundResource(R.drawable.signal_4);
+                setImage(gradeIv, R.drawable.signal_4);
                 break;
             case AVERAGE:
-                gradeIv.setBackgroundResource(R.drawable.signal_3);
+                setImage(gradeIv, R.drawable.signal_3);
                 break;
             case POOR:
-                gradeIv.setBackgroundResource(R.drawable.signal_2);
+                setImage(gradeIv, R.drawable.signal_2);
                 break;
             case ABYSMAL:
-                gradeIv.setBackgroundResource(R.drawable.signal_1);
+                setImage(gradeIv, R.drawable.signal_1);
                 break;
             default:
-                gradeIv.setBackgroundResource(R.drawable.signal_disc);
+                setImage(gradeIv, R.drawable.signal_disc);
                 break;
 
         }
+    }
+
+    private void resetData() {
+        uploadCircularGauge.setValue(0);
+        downloadCircularGauge.setValue(0);
+        wifiCongestionValueTv.setText(String.valueOf(0));
+        wifiSignalValueTv.setText(String.valueOf(0));
+    }
+
+    private void setImage(ImageView view, int resourceId) {
+        Utils.setImage(getContext(), view, resourceId);
     }
 }

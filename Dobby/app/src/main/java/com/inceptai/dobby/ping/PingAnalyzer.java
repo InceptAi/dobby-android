@@ -3,7 +3,6 @@ package com.inceptai.dobby.ping;
 import android.support.annotation.Nullable;
 
 import com.google.common.base.Preconditions;
-import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -53,7 +52,6 @@ public class PingAnalyzer {
         this.ipLayerInfo = ipLayerInfo;
         this.dobbyThreadpool = dobbyThreadpool;
         this.eventBus = eventBus;
-        this.eventBus.registerListener(this);
         pingActionListener = new PingActionListener();
         pingAction = PingAction.create(pingActionListener);
         pingsInFlight = new ConcurrentHashMap<String, Boolean>();
@@ -93,9 +91,6 @@ public class PingAnalyzer {
 
     // Called in order to cleanup any held resources.
     public void cleanup() {
-        if (eventBus != null) {
-            eventBus.unregisterListener(this);
-        }
     }
 
     public ListenableFuture<HashMap<String, PingStats>> scheduleEssentialPingTestsAsyncSafely(int maxAgeToReTriggerPingMs) throws IllegalStateException {
@@ -331,10 +326,4 @@ public class PingAnalyzer {
         gatewayDownloadTestFuture = SettableFuture.create();
         return gatewayDownloadTestFuture;
     }
-
-    @Subscribe
-    public void listen(DobbyEvent event) {
-    }
-
-
 }

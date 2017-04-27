@@ -20,15 +20,21 @@ public class SuggestionCreator {
         String title;
         List<String> longSuggestionList;
         List<String> shortSuggestionList;
+        long creationTimestampMs;
 
         Suggestion() {
             title = Utils.EMPTY_STRING;
             longSuggestionList = new ArrayList<>();
             shortSuggestionList = new ArrayList<>();
+            creationTimestampMs = System.currentTimeMillis();
         }
 
         public String getTitle() {
             return title;
+        }
+
+        public long getCreationTimestampMs() {
+            return creationTimestampMs;
         }
 
         public List<String> getLongSuggestionList() {
@@ -113,9 +119,7 @@ public class SuggestionCreator {
         return channelString;
     }
 
-    static Suggestion getSuggestionForConditions(List<Integer> conditionList,
-                                                    SuggestionCreatorParams params,
-                                                    boolean getLongSuggestions) {
+    static Suggestion get(List<Integer> conditionList, SuggestionCreatorParams params) {
         Suggestion suggestionToReturn = new Suggestion();
         suggestionToReturn.title = getTitle(conditionList, params);
         List<String> longSuggestionList = new ArrayList<>();
@@ -187,7 +191,7 @@ public class SuggestionCreator {
                     "You are getting " + String.format("%.2f", params.downloadBandwidthMbps) +
                     " Mbps download / " + String.format("%.2f", params.uploadBandwidthMbps) +
                     " Mbps upload speed. You connection to your wifi is about " + Utils.convertSignalDbmToPercent(params.currentSignal) +
-                    ". Since wifi network problems are sometimes transient, it might be good if you run " +
+                    " % strong. Since wifi network problems are sometimes transient, it might be good if you run " +
                     "this test a few times so we can catch an issue if it shows up. Hope this helps :)";
         }
         return titleToReturn;

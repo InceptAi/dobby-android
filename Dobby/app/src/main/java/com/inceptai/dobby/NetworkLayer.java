@@ -151,11 +151,11 @@ public class NetworkLayer {
         }
 
         bandwidthObserver = new BandwidthObserver(mode);
-        bandwidthAnalyzer.registerCallback(bandwidthObserver);
+        getNewBandwidthAnalyzerInstance().registerCallback(bandwidthObserver);
         threadpool.submit(new Runnable() {
             @Override
             public void run() {
-                bandwidthAnalyzer.startBandwidthTestSync(mode);
+                getNewBandwidthAnalyzerInstance().startBandwidthTestSync(mode);
             }
         });
         sendBandwidthEvent(bandwidthObserver);
@@ -167,7 +167,7 @@ public class NetworkLayer {
     }
 
     public synchronized void cancelBandwidthTests() {
-        bandwidthAnalyzer.cancelBandwidthTests();
+        getNewBandwidthAnalyzerInstance().cancelBandwidthTests();
         bandwidthObserver.onCancelled();
         bandwidthObserver = null;
     }
@@ -182,23 +182,43 @@ public class NetworkLayer {
 
     public DobbyWifiInfo getLinkInfo() { return getWifiAnalyzerInstance().getLinkInfo(); }
 
-    // Process events from eventbus
+    // Process events from eventbus. Do a thread switch to prevent deadlocks.
     @Subscribe
-    public void listen(DobbyEvent event) {
-        DobbyLog.v("NL, Found Event: " + event.toString());
-        if (event.getEventType() == DobbyEvent.EventType.DHCP_INFO_AVAILABLE) {
-            ipLayerInfo = new IPLayerInfo(getWifiAnalyzerInstance().getDhcpInfo());
-            getPingAnalyzerInstance().updateIPLayerInfo(ipLayerInfo);
-            startPing();
-        } else if (event.getEventType() == DobbyEvent.EventType.WIFI_INTERNET_CONNECTIVITY_ONLINE) {
-            if (getPingAnalyzerInstance().checkIfShouldRedoPingStats(MIN_TIME_GAP_TO_RETRIGGER_PING_MS, MIN_PKT_LOSS_RATE_TO_RETRIGGER_PING_PERCENT)) {
-                startPing();
+    public void listen(final DobbyEvent event) {
+        threadpool.getExecutorServiceForNetworkLayer().submit(new Runnable() {
+            @Override
+            public void run() {
+                listenOnNetworkLayerThread(event);
             }
-            bandwidthAnalyzer.onConnectivityChangeToOnline();
-        } else if (event.getEventType() == DobbyEvent.EventType.PING_INFO_AVAILABLE || event.getEventType() == DobbyEvent.EventType.PING_FAILED) {
-            //TODO: Do we need to autotrigger gatewayDownloadLatencyTest here ??
-            startGatewayDownloadLatencyTest();
+        });
+    }
+
+    private void listenOnNetworkLayerThread(DobbyEvent event) {
+        //Called on listening executor service -- need to delegate long running tasks to other thread
+        DobbyLog.v("NL, Found Event: " + event.toString());
+        switch (event.getEventType()) {
+            case DobbyEvent.EventType.DHCP_INFO_AVAILABLE:
+                ipLayerInfo = new IPLayerInfo(getWifiAnalyzerInstance().getDhcpInfo());
+                getPingAnalyzerInstance().updateIPLayerInfo(ipLayerInfo);
+                startPing();
+                break;
+            case DobbyEvent.EventType.WIFI_INTERNET_CONNECTIVITY_ONLINE:
+                if (getPingAnalyzerInstance().checkIfShouldRedoPingStats(MIN_TIME_GAP_TO_RETRIGGER_PING_MS, MIN_PKT_LOSS_RATE_TO_RETRIGGER_PING_PERCENT)) {
+                    startPing();
+                }
+                break;
+            case DobbyEvent.EventType.PING_INFO_AVAILABLE:
+            case DobbyEvent.EventType.PING_FAILED:
+                startGatewayDownloadLatencyTest();
+                break;
+            case DobbyEvent.EventType.WIFI_CONNECTED:
+            case DobbyEvent.EventType.WIFI_STATE_ENABLED:
+                wifiScan();
+                break;
         }
+        //Passing this info to ConnectivityAnalyzer
+        getNewBandwidthAnalyzerInstance().processDobbyBusEvents(event);
+        getConnectivityAnalyzerInstance().processDobbyBusEvents(event);
     }
 
     public void cleanup() {
@@ -215,8 +235,8 @@ public class NetworkLayer {
             getPingAnalyzerInstance().cleanup();
         }
 
-        if (bandwidthAnalyzer != null) {
-            bandwidthAnalyzer.cleanup();
+        if (getNewBandwidthAnalyzerInstance() != null) {
+            getNewBandwidthAnalyzerInstance().cleanup();
         }
 
         if (bandwidthObserver != null) {
@@ -228,9 +248,13 @@ public class NetworkLayer {
         return getPingAnalyzer(ipLayerInfo, threadpool, eventBus);
     }
 
+    private NewBandwidthAnalyzer getNewBandwidthAnalyzerInstance() {
+        return bandwidthAnalyzer;
+    }
+
+
+    // Asynchronous post.
     private void sendBandwidthEvent(BandwidthObserver observer){
-        DobbyEvent event = new DobbyEvent(DobbyEvent.EventType.BANDWIDTH_TEST_STARTING);
-        event.setPayload(observer);
-        eventBus.postEvent(event);
+        eventBus.postEvent(DobbyEvent.EventType.BANDWIDTH_TEST_STARTING, observer);
     }
 }

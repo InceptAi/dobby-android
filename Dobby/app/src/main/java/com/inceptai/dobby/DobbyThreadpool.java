@@ -6,7 +6,6 @@ import android.util.Log;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.ListeningScheduledExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-import com.google.common.util.concurrent.UncaughtExceptionHandlers;
 import com.inceptai.dobby.ui.UiThreadExecutor;
 
 import java.util.concurrent.BlockingQueue;
@@ -33,7 +32,7 @@ public class DobbyThreadpool {
 
     private static int NUMBER_OF_CORES =
             Runtime.getRuntime().availableProcessors();
-    private static int INTIAL_POOL_SIZE = NUMBER_OF_CORES;
+    private static int INTIAL_POOL_SIZE = Math.min(NUMBER_OF_CORES, 4);  // Upper bound by 4
 
     // A queue of Runnables
     private final BlockingQueue<Runnable> workQueue;
@@ -42,6 +41,9 @@ public class DobbyThreadpool {
     private ListeningExecutorService listeningExecutorService;
     private ListeningScheduledExecutorService scheduledExecutorService;
 
+    private ListeningScheduledExecutorService networkLayerExecutorService;
+    private ListeningScheduledExecutorService eventBusExecutorService;
+
     private UiThreadExecutor uiThreadExecutor;
 
     public DobbyThreadpool() {
@@ -49,8 +51,9 @@ public class DobbyThreadpool {
         // Instantiates the queue of Runnables as a LinkedBlockingQueue
         workQueue = new LinkedBlockingQueue<>();
         Thread.UncaughtExceptionHandler handler = Thread.getDefaultUncaughtExceptionHandler();
-        Log.i("Dobby", "Old handler:" + handler.getClass().getCanonicalName());
-        Thread.setDefaultUncaughtExceptionHandler(new DobbyUncaughtExceptionHandler(handler));
+        Log.i("Dobby", "DobbyThreadpool: Old handler:" + handler.getClass().getCanonicalName());
+        Thread.UncaughtExceptionHandler newHandler = new DobbyUncaughtExceptionHandler(handler);
+        // Thread.setDefaultUncaughtExceptionHandler(newHandler);
 
         // Creates a thread pool manager
         dobbyThreadPool = new ThreadPoolExecutor(
@@ -58,11 +61,13 @@ public class DobbyThreadpool {
                 2 * NUMBER_OF_CORES,       // Max pool size
                 KEEP_ALIVE_TIME,
                 KEEP_ALIVE_TIME_UNIT,
-                workQueue, new DobbyThreadFactory());
+                workQueue, new DobbyThreadFactory(newHandler));
 
         listeningExecutorService = MoreExecutors.listeningDecorator(dobbyThreadPool);
         scheduledExecutorService = MoreExecutors.listeningDecorator(Executors.newSingleThreadScheduledExecutor());
         uiThreadExecutor = new UiThreadExecutor();
+        networkLayerExecutorService = MoreExecutors.listeningDecorator(Executors.newSingleThreadScheduledExecutor());
+        eventBusExecutorService = MoreExecutors.listeningDecorator(Executors.newSingleThreadScheduledExecutor());
     }
 
     public void submit(Runnable runnable) {
@@ -85,6 +90,14 @@ public class DobbyThreadpool {
         return scheduledExecutorService;
     }
 
+    public ListeningScheduledExecutorService getExecutorServiceForNetworkLayer() {
+        return networkLayerExecutorService;
+    }
+
+    public ListeningScheduledExecutorService getExecutorServiceForEventBus() {
+        return eventBusExecutorService;
+    }
+
     public Executor getUiThreadExecutor() {
         return uiThreadExecutor;
     }
@@ -94,8 +107,10 @@ public class DobbyThreadpool {
         private final ThreadGroup group;
         private final AtomicInteger threadNumber = new AtomicInteger(1);
         private final String namePrefix;
+        private final Thread.UncaughtExceptionHandler handler;
 
-        DobbyThreadFactory() {
+        DobbyThreadFactory(Thread.UncaughtExceptionHandler handler) {
+            this.handler = handler;
             SecurityManager s = System.getSecurityManager();
             group = (s != null) ? s.getThreadGroup() :
                     Thread.currentThread().getThreadGroup();
@@ -112,6 +127,7 @@ public class DobbyThreadpool {
                 t.setDaemon(false);
             if (t.getPriority() != Thread.NORM_PRIORITY)
                 t.setPriority(Thread.NORM_PRIORITY);
+            // t.setUncaughtExceptionHandler(handler);
             return t;
         }
     }
@@ -126,8 +142,9 @@ public class DobbyThreadpool {
         @Override
         public void uncaughtException(Thread t, Throwable e) {
             Log.wtf("FATAL", e);
+            Log.e(DobbyApplication.TAG, "FATAL EXCEPTION :" + e.getStackTrace().toString());
             System.err.println("FATAL" + e);
-            uncaughtExceptionHandler.uncaughtException(t, e);
+            // uncaughtExceptionHandler.uncaughtException(t, e);
             Process.killProcess(Process.myPid());
             System.exit(2);
         }
