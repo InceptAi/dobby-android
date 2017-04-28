@@ -215,6 +215,7 @@ public class SuggestionCreator {
                 }
                 break;
             case Condition.WIFI_CHANNEL_BAD_SIGNAL:
+                //TODO: Include a line about how bad signal is impacting the download/upload bandwidth
                 baseMessage = "Your signal to your wireless router is very weak (about "
                         + Utils.convertSignalDbmToPercent(params.currentSignal) + "/100) " +
                         ", this could lead to poor speeds and bad experience in streaming etc. " +
@@ -260,21 +261,27 @@ public class SuggestionCreator {
                 baseMessage = Utils.EMPTY_STRING;
                 return ""; // Not sure what to say here
             case Condition.ROUTER_WIFI_INTERFACE_FAULT:
-                baseMessage = "Seems like your router could be in a bad state, since are seeing that your phone is having issued staying connected to the router. " +
-                        "Try rebooting the router and hopefully it will get rid of some weird state that the router might be in. ";
+                baseMessage = "Your phone is having trouble connecting to the router. This could be because the router might be in a weird state. " +
+                        "Try rebooting the router and try connecting again. ";
+                break;
             case Condition.ROUTER_SOFTWARE_FAULT:
-                baseMessage =  "Seems like your router could be in a bad state, since we are seeing high latencies to it in our tests. " +
+                //TODO: Check here if external server/gateway is unreachable by ping or bwtest failed -- and tailor the message accordingly
+                // TODO: Also talk about how Wifi Signal is strong but not able to get ping latency.
+                baseMessage =  "Seems like your router could be in a bad state, since we are seeing very high latencies to it in our tests. " +
                         "Try rebooting the router and re-test. ";
                 break;
             case Condition.ISP_INTERNET_DOWN:
+                //TODO: Include  message about being ABLE to reach the gateway but not external servers and whats that latency like
+                // TODO: Don't show this message if WIFI SIGNAL is in fringe mode OR gateway is faulty OR captive portal is true
                 baseMessage =  "Looks like your Internet service is down. " +
-                        "We are unable to reach external servers for any bandwidth testing as well.";
+                        "We are unable to reach external servers for any bandwidth testing.";
                 if (!params.isp.equals(Utils.EMPTY_STRING)) {
                     conditionalMessage = "You should contact " + params.isp + " to see if they know about any outage " +
                             "in your area";
                 }
                 break;
             case Condition.ISP_INTERNET_SLOW:
+                //TODO: Include  message about being able to reach the gateway and whats that latency like
                 baseMessage = "Looks like your Internet service is really slow. " +
                         "You are getting about " + String.format("%.2f", params.downloadBandwidthMbps) + " Mbps download and " +
                         String.format("%.2f", params.uploadBandwidthMbps) + " Mbps upload. If these speeds seem low as per your " +
@@ -313,12 +320,14 @@ public class SuggestionCreator {
                 }
                 break;
             case Condition.DNS_SLOW_TO_REACH:
-                baseMessage = "Your wifi network is fine but your current DNS server has a high latency, " +
+                //TODO: Comment on how wifi network is fine by citing Wifi measurements and gateway latencies
+                baseMessage = "Your current DNS server has a high latency, " +
                         "which can cause an initial lag during the load time of an app or a " +
                         "webpage.";
                 break;
             case Condition.DNS_UNREACHABLE:
-                baseMessage = "Your wifi network is fine but we are unable to reach your DNS server, which means you can't access " +
+                //TODO: Comment on how wifi network is fine by citing Wifi measurements and gateway latencies
+                baseMessage = "We are unable to reach your DNS server, which means you can't access " +
                         "the Internet on your phone and other devices. This could be because the DNS " +
                         "server you have configured is down. ";
                 if (!params.alternateDNS.equals(Utils.EMPTY_STRING)) {
@@ -335,6 +344,7 @@ public class SuggestionCreator {
                         ". You should try resetting it to see if improves the performance. ";
                 break;
             case Condition.CAPTIVE_PORTAL_NO_INTERNET:
+                //TODO: Talk about how you can't reach internet but your wifi signal and your gateway ping latency is good
                 baseMessage = "You are behind a captive portal -- " +
                         "basically the wifi you are connected to " + params.currentWifiSSID + " is managed " +
                         "by someone who restricts access unless you sign in. Currently you don't have " +
@@ -395,7 +405,7 @@ public class SuggestionCreator {
                 break;
             case Condition.ROUTER_GOOD_SIGNAL_USING_SLOW_DATA_RATE:
                 baseMessage =  "Even though your signal to wifi router is strong (~" + Utils.convertSignalDbmToPercent(params.currentSignal) + " %), " +
-                        "router is using low speeds for transferring data. Make sure Mixed mode or 802.11n mode is on if " +
+                        " the wifi router is using low speeds for transferring data. Make sure Mixed mode or 802.11n mode is on if " +
                         "your router supports it. ";
                 break;
             case Condition.ROUTER_FAULT_WIFI_OK:
@@ -405,6 +415,7 @@ public class SuggestionCreator {
                         "Try rebooting the router and hopefully it will get rid of some weird state that the router might be in. ";
                 break;
             case Condition.ROUTER_SOFTWARE_FAULT:
+                //TODO: Check if the latency is indeed high and then print this message. Rely on suggestion params.
                 baseMessage =  "Seems like your router could be in a bad state, since we are seeing high latencies to it in our tests. " +
                         "Try rebooting the router and re-test. ";
                 break;
@@ -443,6 +454,7 @@ public class SuggestionCreator {
                 }
                 break;
             case Condition.DNS_SLOW_TO_REACH:
+                //TODO: Comment on how wifi network is fine by citing Wifi measurements and gateway latencies
                 baseMessage = "Your current DNS server has a high latency, " +
                         "which can cause an initial lag during the load time of an app or a " +
                         "webpage. ";
@@ -452,6 +464,7 @@ public class SuggestionCreator {
                 }
                 break;
             case Condition.DNS_UNREACHABLE:
+                //TODO: Comment on how wifi network is fine by citing Wifi measurements and gateway latencies
                 baseMessage = "We are unable to reach your DNS server, which means you can't access " +
                         "the Internet on your phone and other devices.";
                 if (!params.alternateDNS.equals(Utils.EMPTY_STRING)) {
@@ -523,6 +536,7 @@ public class SuggestionCreator {
                         "Try rebooting the router and hopefully it will get rid of some weird state that the router might be in. ";
                 break;
             case Condition.ROUTER_SOFTWARE_FAULT:
+                //TODO: Check if the latency is indeed high and then print this message. Rely on suggestion params.
                 baseMessage =  "Seems like your router could be in a bad state, since we are seeing high latencies to it in our tests. " +
                         "Try rebooting the router and re-test. ";
                 break;
@@ -550,18 +564,21 @@ public class SuggestionCreator {
                         "download speed (~ " + String.format("%.2f", params.downloadBandwidthMbps) + "  Mbps).";
                 break;
             case Condition.DNS_RESPONSE_SLOW:
-                baseMessage = "Your wifi network is fine but your current DNS server is acting slow to respond to queries. ";
+                //TODO: Comment on how wifi network is fine by citing Wifi measurements and gateway latencies
+                baseMessage = "Your current DNS server is acting slow to respond to queries. ";
                 if (!params.alternateDNS.equals(Utils.EMPTY_STRING)) {
                     conditionalMessage = "Try using " +  params.alternateDNS + " and re-run the test. ";
                 }
                 break;
             case Condition.DNS_SLOW_TO_REACH:
-                baseMessage = "Your wifi network is fine but your current DNS server has a high latency, " +
+                //TODO: Comment on how wifi network is fine by citing Wifi measurements and gateway latencies
+                baseMessage = "Your current DNS server has a high latency, " +
                         "which can cause an initial lag during the load time of an app or a " +
                         "webpage.";
                 break;
             case Condition.DNS_UNREACHABLE:
-                baseMessage = "Your wifi network is fine but we are unable to reach your DNS server, which means you can't access " +
+                //TODO: Comment on how wifi network is fine by citing Wifi measurements and gateway latencies
+                baseMessage = "We are unable to reach your DNS server, which means you can't access " +
                         "the Internet on your phone and other devices.";
                 if (!params.alternateDNS.equals(Utils.EMPTY_STRING)) {
                     conditionalMessage = "Try chaing primary DNS to " +  params.alternateDNS +
@@ -573,6 +590,7 @@ public class SuggestionCreator {
                         "it to see if improves the performance. ";
                 break;
             case Condition.CAPTIVE_PORTAL_NO_INTERNET:
+                //TODO: Talk about how you can't reach internet but your wifi signal and your gateway ping latency is good
                 baseMessage = "You are behind a captive portal -- " +
                         "basically the wifi you are connected to " + params.currentWifiSSID + " is managed " +
                         "by someone who restricts access unless you sign in.";
