@@ -48,6 +48,7 @@ public class InferenceEngine {
     private long lastBandwidthUpdateTimestampMs = 0;
     private MetricsDb metricsDb;
     private PossibleConditions currentConditions = PossibleConditions.NOOP_CONDITION;
+    private boolean firstRun = true;
 
     public interface ActionListener {
         void takeAction(Action action);
@@ -73,6 +74,11 @@ public class InferenceEngine {
     }
 
     public Action addGoal(@Goal int goal) {
+        if (!firstRun) {
+            metricsDb.clearAllGrades();
+            currentConditions.clearConditions();
+        }
+        firstRun = false;
         return new Action(Utils.EMPTY_STRING, Action.ActionType.ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS);
     }
 
@@ -88,9 +94,12 @@ public class InferenceEngine {
 
     public DataInterpreter.WifiGrade notifyWifiState(WifiState wifiState, @WifiState.WifiLinkMode int wifiLinkMode,
                                                      @ConnectivityAnalyzer.WifiConnectivityMode int wifiConnectivityMode) {
-        HashMap<Integer, WifiState.ChannelInfo> channelMap = wifiState.getChannelInfoMap();
-        DobbyWifiInfo wifiInfo = wifiState.getLinkInfo();
-        DataInterpreter.WifiGrade wifiGrade = DataInterpreter.interpret(channelMap, wifiInfo, wifiLinkMode, wifiConnectivityMode);
+        DataInterpreter.WifiGrade wifiGrade = new DataInterpreter.WifiGrade();
+        if (wifiState != null) {
+            HashMap<Integer, WifiState.ChannelInfo> channelMap = wifiState.getChannelInfoMap();
+            DobbyWifiInfo wifiInfo = wifiState.getLinkInfo();
+            wifiGrade = DataInterpreter.interpret(channelMap, wifiInfo, wifiLinkMode, wifiConnectivityMode);
+        }
         metricsDb.updateWifiGrade(wifiGrade);
         PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(wifiGrade);
         currentConditions.mergeIn(conditions);
@@ -102,10 +111,10 @@ public class InferenceEngine {
     }
 
     public DataInterpreter.PingGrade notifyPingStats(HashMap<String, PingStats> pingStatsMap, IPLayerInfo ipLayerInfo) {
-        if (pingStatsMap == null || ipLayerInfo == null) {
-            return null;
+        DataInterpreter.PingGrade pingGrade = new DataInterpreter.PingGrade();
+        if (pingStatsMap != null && ipLayerInfo != null) {
+            pingGrade = DataInterpreter.interpret(pingStatsMap, ipLayerInfo);
         }
-        DataInterpreter.PingGrade pingGrade = DataInterpreter.interpret(pingStatsMap, ipLayerInfo);
         metricsDb.updatePingGrade(pingGrade);
         PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(pingGrade);
         currentConditions.mergeIn(conditions);
@@ -117,16 +126,17 @@ public class InferenceEngine {
     }
 
     public DataInterpreter.HttpGrade notifyGatewayHttpStats(PingStats gatewayHttpStats) {
-        DataInterpreter.HttpGrade httpGrade = DataInterpreter.interpret(gatewayHttpStats);
+        DataInterpreter.HttpGrade httpGrade = new DataInterpreter.HttpGrade();
+        if (gatewayHttpStats != null) {
+            httpGrade = DataInterpreter.interpret(gatewayHttpStats);
+        }
         metricsDb.updateHttpGrade(httpGrade);
         PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(httpGrade);
         currentConditions.mergeIn(conditions);
         DobbyLog.i("InferenceEngine httpGrade: " + httpGrade.toString());
         DobbyLog.i("InferenceEngine which gives conditions: " + conditions.toString());
         DobbyLog.i("InferenceEngine After merging: " + currentConditions.toString());
-        //TODO: Remove this hack.
-        String suggestions = getSuggestions(MAX_SUGGESTIONS_TO_SHOW, MAX_GAP_IN_SUGGESTION_WEIGHT, LONG_SUGGESTION_MODE);
-        sendResponseOnlyAction(suggestions);
+        checkAndSendSuggestions();
         return httpGrade;
     }
 
@@ -143,18 +153,20 @@ public class InferenceEngine {
     }
 
     public void checkAndSendSuggestions() {
-        if (metricsDb.hasValidUpload() && metricsDb.hasValidDownload() && metricsDb.hasFreshPingGrade() &&
-                metricsDb.hasFreshWifiGrade()) {
+        if (metricsDb.hasValidUpload() && metricsDb.hasValidDownload() &&
+                metricsDb.hasFreshPingGrade() &&
+                metricsDb.hasFreshWifiGrade() &&
+                metricsDb.hasFreshHttpGrade()) {
             SuggestionCreator.Suggestion suggestion = suggest();
             if (actionListener != null) {
                 DobbyLog.i("Sending suggestions to DobbyAi");
                 actionListener.suggestionsAvailable(suggestion);
             }
+            sendResponseOnlyAction(suggestion.toString());
         }
     }
 
     // Bandwidth test notifications:
-
     public void notifyBandwidthTestStart(@BandwithTestCodes.TestMode int testMode) {
         if (testMode == BandwithTestCodes.TestMode.UPLOAD) {
             metricsDb.clearUploadBandwidthGrade();
@@ -173,7 +185,11 @@ public class InferenceEngine {
 
     public void notifyBandwidthTestResult(@BandwithTestCodes.TestMode int testMode,
                                           double bandwidth, String clientIsp, String clientExternalIp) {
-        sendResponseOnlyAction(testModeToString(testMode) + " Overall Bandwidth = " + String.format("%.2f", bandwidth / 1000000) + " Mbps");
+        if (bandwidth > 0) {
+            sendResponseOnlyAction(testModeToString(testMode) + " Overall Bandwidth = " + String.format("%.2f", bandwidth / 1000000) + " Mbps");
+        } else {
+            sendResponseOnlyAction(testModeToString(testMode) + " Bandwidth error -- can't do bandwidth test.");
+        }
         lastBandwidthUpdateTimestampMs = 0;
         if (testMode == BandwithTestCodes.TestMode.UPLOAD) {
             metricsDb.updateUploadBandwidthGrade(bandwidth * 1.0e-6, DataInterpreter.MetricType.UNKNOWN);
@@ -186,6 +202,7 @@ public class InferenceEngine {
             //Update the bandwidth grade, overwriting earlier info.
             metricsDb.updateBandwidthGrade(bandwidthGrade);
             PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(bandwidthGrade);
+            currentConditions.mergeIn(conditions);
             DobbyLog.i("InferenceEngine bandwidthGrade: " + bandwidthGrade.toString());
             DobbyLog.i("InferenceEngine which gives conditions: " + conditions.toString());
             DobbyLog.i("InferenceEngine After merging: " + currentConditions.toString());

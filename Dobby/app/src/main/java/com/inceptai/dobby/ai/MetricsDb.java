@@ -21,6 +21,13 @@ public class MetricsDb {
         httpGrade = new DataInterpreter.HttpGrade();
     }
 
+    public void clearAllGrades() {
+        clearBandwidthGrade();
+        clearHttpGrade();
+        clearWifiGrade();
+        clearPingGrade();
+    }
+
     public void clearBandwidthGrade() {
         bandwidthGrade.clear();
     }
@@ -85,6 +92,10 @@ public class MetricsDb {
 
     public boolean hasFreshWifiGrade() {
         return wifiGrade.isFresh();
+    }
+
+    public boolean hasFreshHttpGrade() {
+        return httpGrade.isFresh();
     }
 
     public boolean hasFreshPingGrade() {

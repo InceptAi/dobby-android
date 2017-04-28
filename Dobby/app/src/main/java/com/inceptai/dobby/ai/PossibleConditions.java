@@ -25,6 +25,11 @@ public class PossibleConditions {
         exclusionSet = new HashSet<>();
     }
 
+    void clearConditions() {
+        inclusionMap.clear();
+        exclusionSet.clear();
+    }
+
     void include(@InferenceMap.Condition int condition, double weight) {
         inclusionMap.put(condition, weight);
     }
