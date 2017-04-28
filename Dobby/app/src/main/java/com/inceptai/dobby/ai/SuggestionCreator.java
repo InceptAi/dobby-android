@@ -131,17 +131,22 @@ public class SuggestionCreator {
         return suggestionToReturn;
     }
 
-    public static String getSuggestionString(List<Integer> conditionList,
-                                              SuggestionCreatorParams params,
-                                              boolean getLongSuggestions) {
-        final String NO_CONDITION_MESSAGE = "We don't see any key issues with your Wifi network. " +
-                "We performed speed tests, pings and wifi scans on your network and didn't find any issues." +
+    private static String getNoConditionMessage(SuggestionCreatorParams params) {
+        return "We don't see any key issues with your Wifi network at the moment. " +
+                "We performed speed tests, pings and wifi scans on your network. " +
                 "You are getting " + String.format("%.2f", params.downloadBandwidthMbps) +
                 " Mbps download / " + String.format("%.2f", params.uploadBandwidthMbps) +
                 " Mbps upload speed. You connection to your wifi is quite good at about " +
                 Utils.convertSignalDbmToPercent(params.currentSignal) +
-                "% strength (100% means very very high signal). Since wifi network problems are sometimes transient, it might be good if you run " +
+                "% strength (100% means very very high signal). Since wifi network problems are " +
+                "sometimes transient, it might be good if you run " +
                 "this test a few times so we can catch an issue if it shows up. Hope this helps :)";
+    }
+
+    public static String getSuggestionString(List<Integer> conditionList,
+                                              SuggestionCreatorParams params,
+                                              boolean getLongSuggestions) {
+        final String NO_CONDITION_MESSAGE = getNoConditionMessage(params);
 
         List<String> suggestionList = new ArrayList<>();
 
@@ -185,9 +190,7 @@ public class SuggestionCreator {
             @Condition int condition = conditionList.get(0);
             titleToReturn = getTitleForCondition(condition, params);
         } else {
-            titleToReturn = "Overall, we don't see any key issues with your Wifi network. " +
-                    "Since wifi network problems are sometimes transient, it might be good if you run " +
-                    "this test a few times so we can catch an issue if it shows up.";
+            titleToReturn = getNoConditionMessage(params);
         }
         return titleToReturn;
     }
