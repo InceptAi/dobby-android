@@ -46,7 +46,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="sans-serif-condensed-thin"
                 android:text="@string/onboarding_three_desc1"
-                android:textSize="12sp"
+                android:textSize="14sp"
                 android:layout_gravity="bottom"
                 android:layout_marginTop="10dp"
                 android:textColor="@android:color/white" />
@@ -56,7 +56,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="sans-serif-condensed-thin"
                 android:text="@string/onboarding_three_desc2"
-                android:textSize="12sp"
+                android:textSize="14sp"
                 android:layout_gravity="bottom"
                 android:layout_marginTop="10dp"
                 android:textColor="@android:color/white" />
