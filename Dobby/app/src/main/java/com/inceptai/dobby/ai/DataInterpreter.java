@@ -36,10 +36,10 @@ public class DataInterpreter {
     };
 
     private static final double[] PING_LATENCY_EXTSERVER_STEPS_MS = { /* lower is better */
-            5.0, /* excellent */
-            15.0, /* good */
-            40.0, /* average */
-            100.0 /* poor */
+            20.0, /* excellent */
+            40.0, /* good */
+            80.0, /* average */
+            200.0 /* poor */
     };
 
     private static final double[] PING_LATENCY_DNS_STEPS_MS = { /* lower is better */
@@ -126,12 +126,21 @@ public class DataInterpreter {
         return (metric == MetricType.EXCELLENT || metric == MetricType.GOOD);
     }
 
-    public static boolean isGoodOrExcellentorAverage(@MetricType int metric) {
+    public static boolean isGoodOrExcellentOrAverage(@MetricType int metric) {
         return (metric == MetricType.EXCELLENT || metric == MetricType.GOOD || metric == MetricType.AVERAGE);
     }
 
     public static boolean isAverageOrPoor(@MetricType int metric) {
         return (metric == MetricType.AVERAGE || metric == MetricType.POOR);
+    }
+
+    public static boolean isAverageOrPoorOrNonFunctional(@MetricType int metric) {
+        return (metric == MetricType.AVERAGE || metric == MetricType.POOR || metric == MetricType.NONFUNCTIONAL);
+    }
+
+
+    public static boolean isAbysmal(@MetricType int metric) {
+        return (metric == MetricType.ABYSMAL);
     }
 
     public static boolean isNonFunctional(@MetricType int metric) {
@@ -141,11 +150,6 @@ public class DataInterpreter {
     public static boolean isNonFunctionalOrUnknown(@MetricType int metric) {
         return (metric == MetricType.NONFUNCTIONAL || metric == MetricType.UNKNOWN);
     }
-
-    public static boolean isAverageOrPoorOrNonFunctional(@MetricType int metric) {
-        return (metric == MetricType.AVERAGE || metric == MetricType.POOR || metric == MetricType.NONFUNCTIONAL);
-    }
-
 
     public static boolean isAverage(@MetricType int metric) {
         return (metric == MetricType.AVERAGE);
@@ -160,9 +164,8 @@ public class DataInterpreter {
     }
 
     public static boolean isAbysmalOrNonFunctional(@MetricType int metric) {
-        return (metric == MetricType.NONFUNCTIONAL || metric == MetricType.UNKNOWN);
+        return (metric == MetricType.ABYSMAL || metric == MetricType.NONFUNCTIONAL);
     }
-
 
     public static boolean isPoor(@MetricType int metric) {
         return (metric == MetricType.POOR);
@@ -201,8 +204,8 @@ public class DataInterpreter {
 
 
     public static class BandwidthGrade {
-        private @MetricType int uploadBandwidthMetric;
-        private @MetricType int downloadBandwidthMetric;
+        private @MetricType int uploadBandwidthMetric = MetricType.UNKNOWN;
+        private @MetricType int downloadBandwidthMetric = MetricType.UNKNOWN;
         private long downloadUpdatedAtMs;
         private long uploadUpdatedAtMs;
         private double uploadMbps;
@@ -258,11 +261,11 @@ public class DataInterpreter {
         }
 
         public boolean hasValidUpload() {
-            return uploadMbps > 0.0 && isFresh(uploadUpdatedAtMs);
+            return isFresh(uploadUpdatedAtMs);
         }
 
         public boolean hasValidDownload() {
-            return downloadMbps > 0.0 && isFresh(downloadUpdatedAtMs);
+            return isFresh(downloadUpdatedAtMs);
         }
 
         public double getUploadMbps() {
@@ -322,11 +325,10 @@ public class DataInterpreter {
 
 
     public static class PingGrade {
-        @MetricType int externalServerLatencyMetric;
-        @MetricType int dnsServerLatencyMetric;
-        @MetricType int routerLatencyMetric;
-        @MetricType int alternativeDnsMetric;
-        long updatedAtMs;
+        @MetricType int externalServerLatencyMetric = MetricType.UNKNOWN;
+        @MetricType int dnsServerLatencyMetric = MetricType.UNKNOWN;
+        @MetricType int routerLatencyMetric = MetricType.UNKNOWN;
+        @MetricType int alternativeDnsMetric = MetricType.UNKNOWN;
         String primaryDns;
         String alternativeDns;
         double routerLatencyMs;
@@ -334,9 +336,10 @@ public class DataInterpreter {
         double externalServerLatencyMs;
         double alternativeDnsLatencyMs;
 
-        public PingGrade() {
-            updatedAtMs = System.currentTimeMillis();
-        }
+        private long updatedAtMs;
+
+
+        public PingGrade() {}
 
         public String toJson() {
             Gson gson = new Gson();
@@ -421,11 +424,10 @@ public class DataInterpreter {
      * or google.com, etc.
      */
     public static class HttpGrade {
-        @MetricType int httpDownloadLatencyMetric;
-        long updatedAtMs;
+        @MetricType int httpDownloadLatencyMetric = MetricType.UNKNOWN;
+        private long updatedAtMs;
 
         public HttpGrade() {
-            updatedAtMs = System.currentTimeMillis();
         }
 
         public void clear() {
@@ -454,12 +456,11 @@ public class DataInterpreter {
 
     public static class WifiGrade {
         HashMap<Integer, Integer> wifiChannelOccupancyMetric;  /* based on congestion metric */
-        @MetricType int primaryApSignalMetric;
-        @MetricType int primaryApLinkSpeedMetric;
-        @MetricType int primaryLinkChannelOccupancyMetric;
-        @ConnectivityAnalyzer.WifiConnectivityMode int wifiConnectivityMode;
-        @WifiState.WifiLinkMode int wifiLinkMode;
-        long updatedAtMs;
+        @MetricType int primaryApSignalMetric = MetricType.UNKNOWN;
+        @MetricType int primaryApLinkSpeedMetric = MetricType.UNKNOWN;
+        @MetricType int primaryLinkChannelOccupancyMetric = MetricType.UNKNOWN;
+        @ConnectivityAnalyzer.WifiConnectivityMode int wifiConnectivityMode = ConnectivityAnalyzer.WifiConnectivityMode.UNKNOWN;
+        @WifiState.WifiLinkMode int wifiLinkMode = WifiState.WifiLinkMode.UNKNOWN;
         String primaryApSsid;
         int primaryApChannel;
         int leastOccupiedChannel;
@@ -467,10 +468,10 @@ public class DataInterpreter {
         int leastOccupiedChannelAps;
         int primaryApSignal;
 
+        private long updatedAtMs;
 
         public WifiGrade() {
             wifiChannelOccupancyMetric = new HashMap<>();
-            updatedAtMs = System.currentTimeMillis();
         }
 
         public String toJson() {
@@ -580,6 +581,8 @@ public class DataInterpreter {
                 return "GOOD";
             case MetricType.POOR:
                 return "POOR";
+            case MetricType.ABYSMAL:
+                return "ABYSMAL";
             case MetricType.NONFUNCTIONAL:
                 return "NONFUNCTIONAL";
 
