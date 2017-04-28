@@ -94,6 +94,7 @@ public class PingAnalyzer {
     }
 
     public ListenableFuture<HashMap<String, PingStats>> scheduleEssentialPingTestsAsyncSafely(int maxAgeToReTriggerPingMs) throws IllegalStateException {
+        DobbyLog.v("In real ping Analyzer");
         final int maxAge = maxAgeToReTriggerPingMs;
         if (pingResultsFuture != null && !pingResultsFuture.isDone()) {
             AsyncFunction<HashMap<String, PingStats>, HashMap<String, PingStats>> redoPing = new
@@ -193,7 +194,7 @@ public class PingAnalyzer {
         return addressListToPing.toArray(new String[addressListToPing.size()]);
     }
 
-    private ListenableFuture<HashMap<String, PingStats>> scheduleEssentialPingTestsAsync(int maxAgeToReTriggerPingMs) throws IllegalStateException {
+    protected ListenableFuture<HashMap<String, PingStats>> scheduleEssentialPingTestsAsync(int maxAgeToReTriggerPingMs) throws IllegalStateException {
         if (ipLayerInfo == null) {
             // Try to get new iplayerInfo
             eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.PING_FAILED));
@@ -316,7 +317,7 @@ public class PingAnalyzer {
         }
     }
 
-    private ListenableFuture<PingStats> scheduleGatewayDownloadLatencyTest() throws IllegalStateException {
+    protected ListenableFuture<PingStats> scheduleGatewayDownloadLatencyTest() throws IllegalStateException {
         dobbyThreadpool.submit(new Runnable() {
             @Override
             public void run() {

@@ -22,6 +22,7 @@ import com.inceptai.dobby.NetworkLayer;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.connectivity.ConnectivityAnalyzer;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
+import com.inceptai.dobby.fake.FakeConnectivityAnalyzer;
 import com.inceptai.dobby.fake.FakePingAnalyzer;
 import com.inceptai.dobby.fake.FakeSpeedTestSocket;
 import com.inceptai.dobby.utils.DobbyLog;
@@ -33,7 +34,6 @@ import javax.inject.Inject;
 
 import static com.inceptai.dobby.fake.FakeConnectivityAnalyzer.fakeWifiConnectivityMode;
 import static com.inceptai.dobby.fake.FakeConnectivityAnalyzer.setFakeWifiConnectivityMode;
-import static com.inceptai.dobby.fake.FakePingAnalyzer.PingStatsMode.DEFAULT_WORKING_STATE;
 import static com.inceptai.dobby.fake.FakeWifiAnalyzer.FAKE_WIFI_SCAN_CONFIG;
 
 /**
@@ -132,13 +132,13 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
         populateSpinnerWithNumbers(mainApChannelSpinner, 12, FAKE_WIFI_SCAN_CONFIG.mainApChannelNumber, 1);
 
         pingStatsModeSpinner = (Spinner) view.findViewById(R.id.ping_stats_mode_selector);
-        populateSpinnerWithPingModes(pingStatsModeSpinner, DEFAULT_WORKING_STATE);
+        populateSpinnerWithPingModes(pingStatsModeSpinner, FakePingAnalyzer.pingStatsMode);
 
         connectivityModeSpinner = (Spinner) view.findViewById(R.id.connectivity_mode_selector);
-        populateSpinnerWithConnectivityModes(connectivityModeSpinner, ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_ONLINE);
+        populateSpinnerWithConnectivityModes(connectivityModeSpinner, FakeConnectivityAnalyzer.fakeWifiConnectivityMode);
 
         wifiProblemStateSpinner = (Spinner) view.findViewById(R.id.wifiproblem_mode_selector);
-        populateSpinnerWithWifiProblemModes(wifiProblemStateSpinner, WifiState.WifiLinkMode.NO_PROBLEM_DEFAULT_STATE);
+        populateSpinnerWithWifiProblemModes(wifiProblemStateSpinner, FAKE_WIFI_SCAN_CONFIG.fakeWifiProblemMode);
 
         return view;
     }

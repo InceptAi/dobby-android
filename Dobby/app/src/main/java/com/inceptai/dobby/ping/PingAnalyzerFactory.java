@@ -4,6 +4,7 @@ import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.fake.FakePingAnalyzer;
 import com.inceptai.dobby.model.IPLayerInfo;
+import com.inceptai.dobby.utils.DobbyLog;
 
 import static com.inceptai.dobby.DobbyApplication.USE_FAKES;
 
@@ -31,9 +32,11 @@ public class PingAnalyzerFactory {
                                                DobbyThreadpool dobbyThreadpool,
                                                DobbyEventBus eventBus) {
         if (USE_FAKES.get()) {
+            DobbyLog.v("Returning fake ping instance");
             return getFakeInstance(ipLayerInfo, dobbyThreadpool, eventBus);
         } else {
             // return real instance.
+            DobbyLog.v("Returning real ping instance");
             return getRealInstance(ipLayerInfo, dobbyThreadpool, eventBus);
         }
     }

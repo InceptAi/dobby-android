@@ -101,6 +101,12 @@ public class FakeWifiAnalyzer extends WifiAnalyzer {
 
     @Override
     public ListenableFuture<List<ScanResult>> startWifiScan(int maxAgeToRetriggerWifiScanMs) {
+        DobbyLog.v("Coming in fake startWifiScan");
+        if (FAKE_WIFI_SCAN_CONFIG.fakeWifiProblemMode == WifiState.WifiLinkMode.UNKNOWN) {
+            DobbyLog.v("Coming in fake startWifiScan and returning null");
+            return null;
+        }
+
         fakeWifiScanFuture = threadpool.getListeningScheduledExecutorService().schedule(new Callable<List<ScanResult>>() {
             @Override
             public List<ScanResult> call() {

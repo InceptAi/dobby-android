@@ -31,6 +31,8 @@ import static com.inceptai.dobby.fake.FakePingAnalyzer.PingStatsMode.EXTERNAL_SE
 import static com.inceptai.dobby.fake.FakePingAnalyzer.PingStatsMode.EXTERNAL_SERVER_UNREACHABLE;
 import static com.inceptai.dobby.fake.FakePingAnalyzer.PingStatsMode.GATEWAY_SLOW;
 import static com.inceptai.dobby.fake.FakePingAnalyzer.PingStatsMode.GATEWAY_UNREACHABLE;
+import static com.inceptai.dobby.fake.FakePingAnalyzer.PingStatsMode.HTTP_DOWNLOAD_FUNCTIONALITY_NOT_AVAILABLE;
+import static com.inceptai.dobby.fake.FakePingAnalyzer.PingStatsMode.PING_FUNCTIONALITY_NOT_AVAILABLE;
 
 /**
  * Created by vivek on 4/8/17.
@@ -87,7 +89,8 @@ public class FakePingAnalyzer extends PingAnalyzer {
             PingStatsMode.GATEWAY_SLOW, PingStatsMode.EXTERNAL_SERVER_UNREACHABLE,
             PingStatsMode.EXTERNAL_SERVER_SLOW, PingStatsMode.DNS_UNREACHABLE,
             PingStatsMode.DNS_SLOW, PingStatsMode.DNS_UNREACHABLE_ALTERNATIVE_AVAILABLE,
-            PingStatsMode.DNS_SLOW_ALTERNATIVE_FAST, PingStatsMode.MAX_STATES})
+            PingStatsMode.DNS_SLOW_ALTERNATIVE_FAST, PingStatsMode.PING_FUNCTIONALITY_NOT_AVAILABLE,
+            PingStatsMode.HTTP_DOWNLOAD_FUNCTIONALITY_NOT_AVAILABLE, PingStatsMode.MAX_STATES})
     public @interface PingStatsMode {
         int DEFAULT_WORKING_STATE = 0;
         int GATEWAY_UNREACHABLE = 1;
@@ -98,7 +101,9 @@ public class FakePingAnalyzer extends PingAnalyzer {
         int DNS_SLOW = 6;
         int DNS_UNREACHABLE_ALTERNATIVE_AVAILABLE = 7;
         int DNS_SLOW_ALTERNATIVE_FAST = 8;
-        int MAX_STATES = 9;
+        int PING_FUNCTIONALITY_NOT_AVAILABLE = 9;
+        int HTTP_DOWNLOAD_FUNCTIONALITY_NOT_AVAILABLE = 10;
+        int MAX_STATES = 11;
     }
 
     public static String getPingStatsModeName(@PingStatsMode int mode) {
@@ -121,6 +126,10 @@ public class FakePingAnalyzer extends PingAnalyzer {
                 return "DNS_UNREACHABLE_ALTERNATIVE_AVAILABLE";
             case DNS_SLOW_ALTERNATIVE_FAST:
                 return "DNS_SLOW_ALTERNATIVE_FAST";
+            case PING_FUNCTIONALITY_NOT_AVAILABLE:
+                return "PING_FUNCTIONALITY_NOT_AVAILABLE";
+            case HTTP_DOWNLOAD_FUNCTIONALITY_NOT_AVAILABLE:
+                return "HTTP_DOWNLOAD_FUNCTIONALITY_NOT_AVAILABLE";
             default:
                 return "Unknown";
         }
@@ -341,8 +350,11 @@ public class FakePingAnalyzer extends PingAnalyzer {
     }
 
     public HashMap<String, PingStats> generateFakePingStats() {
-        HashMap<String, PingStats> pingStatsHashMap = new HashMap<>();
         DobbyLog.v("FAKE Generating fake ping for mode " + getPingStatsModeName(FakePingAnalyzer.pingStatsMode));
+        if (FakePingAnalyzer.pingStatsMode == PingStatsMode.PING_FUNCTIONALITY_NOT_AVAILABLE) {
+            return null;
+        }
+        HashMap<String, PingStats> pingStatsHashMap = new HashMap<>();
         FakePingConfig fakePingConfig = new FakePingConfig(FakePingAnalyzer.pingStatsMode);
         PingStats gatewayPingStats = generateIndividualPingStats(ipLayerInfo.gateway,
                 fakePingConfig.gatewayLatencyRangeMs, fakePingConfig.gatewayLossRangePercent);
@@ -368,23 +380,26 @@ public class FakePingAnalyzer extends PingAnalyzer {
         return pingStatsHashMap;
     }
 
-    public ListenableFuture<HashMap<String, PingStats>> scheduleEssentialPingTestsAsyncSafely() throws IllegalStateException {
+    @Override
+    public ListenableFuture<HashMap<String, PingStats>> scheduleEssentialPingTestsAsyncSafely(int maxAgeToReTriggerPingMs) throws IllegalStateException {
+        final int maxAgeMs = maxAgeToReTriggerPingMs;
         if (fakePingResultsFuture != null && !fakePingResultsFuture.isDone()) {
             AsyncFunction<HashMap<String, PingStats>, HashMap<String, PingStats>> redoPing = new
                     AsyncFunction<HashMap<String, PingStats>, HashMap<String, PingStats>>() {
                         @Override
                         public ListenableFuture<HashMap<String, PingStats>> apply(HashMap<String, PingStats> input) throws Exception {
-                            return scheduleEssentialPingTestsAsync();
+                            return scheduleEssentialPingTestsAsync(maxAgeMs);
                         }
                     };
             ListenableFuture<HashMap<String, PingStats>> newPingResultsFuture = Futures.transformAsync(fakePingResultsFuture, redoPing);
             return newPingResultsFuture;
         } else {
-            return scheduleEssentialPingTestsAsync();
+            return scheduleEssentialPingTestsAsync(maxAgeToReTriggerPingMs);
         }
     }
 
-    private ListenableFuture<HashMap<String, PingStats>> scheduleEssentialPingTestsAsync() throws IllegalStateException {
+    @Override
+    protected ListenableFuture<HashMap<String, PingStats>> scheduleEssentialPingTestsAsync(int maxAgeToReTriggerPingMs) throws IllegalStateException {
         eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.PING_STARTED));
         if (ipLayerInfo == null) {
             //Try to get new iplayerInfo
@@ -404,6 +419,7 @@ public class FakePingAnalyzer extends PingAnalyzer {
         return fakePingResultsFuture;
     }
 
+    @Override
     public ListenableFuture<PingStats> scheduleRouterDownloadLatencyTestSafely() throws IllegalStateException {
         if (fakeGatewayDownloadTestFuture != null && !fakeGatewayDownloadTestFuture.isDone()) {
             AsyncFunction<PingStats, PingStats> redoDownloadLatencyTest = new
@@ -420,7 +436,8 @@ public class FakePingAnalyzer extends PingAnalyzer {
         }
     }
 
-    private ListenableFuture<PingStats> scheduleGatewayDownloadLatencyTest() throws IllegalStateException {
+    @Override
+    protected ListenableFuture<PingStats> scheduleGatewayDownloadLatencyTest() throws IllegalStateException {
         fakeGatewayDownloadTestFuture = dobbyThreadpool.getListeningScheduledExecutorService().schedule(new Callable<PingStats>() {
             @Override
             public PingStats call() {
@@ -435,6 +452,9 @@ public class FakePingAnalyzer extends PingAnalyzer {
 
     private PingStats generateFakeGatewayStats() {
         DobbyLog.v("FAKE Generating fake gateway http latency for mode " + getPingStatsModeName(FakePingAnalyzer.pingStatsMode));
+        if (FakePingAnalyzer.pingStatsMode == PingStatsMode.HTTP_DOWNLOAD_FUNCTIONALITY_NOT_AVAILABLE) {
+            return null;
+        }
         FakePingConfig fakePingConfig = new FakePingConfig(FakePingAnalyzer.pingStatsMode);
         PingStats gatewayLatencyStats = generateIndividualPingStats(ipLayerInfo.gateway,
                 fakePingConfig.gatewayLatencyRangeMs, fakePingConfig.gatewayLossRangePercent);
