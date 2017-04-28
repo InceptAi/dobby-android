@@ -48,12 +48,12 @@ public class SuggestionCreator {
         private String convertListToStringMessage(boolean useLongSuggestions) {
             //Use short suggestion by default.
             List<String> suggestionList;
+            StringBuilder sb = new StringBuilder();
             if (useLongSuggestions) {
                 suggestionList = longSuggestionList;
             } else {
                 suggestionList = shortSuggestionList;
             }
-            StringBuilder sb = new StringBuilder();
             if (suggestionList.size() == 0) {
                 sb.append(NO_CONDITION_MESSAGE);
             } else if (suggestionList.size() == 1) {
@@ -61,13 +61,12 @@ public class SuggestionCreator {
             } else {
                 //Multiple conditions
                 sb.append(MULTIPLE_CONDITIONS_PREFIX);
-                sb.append("\n");
                 int index = 1;
                 for(String suggestion: suggestionList) {
-                    sb.append(index);
+                    sb.append("\n");
+                    sb.append(String.valueOf(index));
                     sb.append(". ");
                     sb.append(suggestion);
-                    sb.append("\n");
                     index++;
                 }
             }
@@ -77,10 +76,12 @@ public class SuggestionCreator {
         @Override
         public String toString() {
             StringBuilder sb = new StringBuilder();
+            sb.append("TITLE: ");
             sb.append(getTitle());
             sb.append("\n");
-            //Use short suggestion by default.
-            sb.append(convertListToStringMessage(false));
+            sb.append("DETAILS: ");
+            //Use long suggestion by default.
+            sb.append(convertListToStringMessage(true));
             return sb.toString();
         }
     }
@@ -122,12 +123,10 @@ public class SuggestionCreator {
     static Suggestion get(List<Integer> conditionList, SuggestionCreatorParams params) {
         Suggestion suggestionToReturn = new Suggestion();
         suggestionToReturn.title = getTitle(conditionList, params);
-        List<String> longSuggestionList = new ArrayList<>();
-        List<String> shortSuggestionList = new ArrayList<>();
         for (int index=0; index < conditionList.size(); index++) {
             @Condition int condition  = conditionList.get(index);
-            longSuggestionList.add(getSuggestionForCondition(condition, params));
-            shortSuggestionList.add(getShortSuggestionForCondition(condition, params));
+            suggestionToReturn.longSuggestionList.add(getSuggestionForCondition(condition, params));
+            suggestionToReturn.shortSuggestionList.add(getShortSuggestionForCondition(condition, params));
         }
         return suggestionToReturn;
     }
@@ -184,15 +183,11 @@ public class SuggestionCreator {
         String titleToReturn = Utils.EMPTY_STRING;
         if (conditionList.size() > 0) {
             @Condition int condition = conditionList.get(0);
-            titleToReturn = getShortSuggestionForCondition(condition, params);
+            titleToReturn = getTitleForCondition(condition, params);
         } else {
-            titleToReturn = "We don't see any key issues with your Wifi network. " +
-                    "We performed speed tests, pings and wifi scans on your network and didn't find any issues." +
-                    "You are getting " + String.format("%.2f", params.downloadBandwidthMbps) +
-                    " Mbps download / " + String.format("%.2f", params.uploadBandwidthMbps) +
-                    " Mbps upload speed. You connection to your wifi is about " + Utils.convertSignalDbmToPercent(params.currentSignal) +
-                    " % strong. Since wifi network problems are sometimes transient, it might be good if you run " +
-                    "this test a few times so we can catch an issue if it shows up. Hope this helps :)";
+            titleToReturn = "Overall, we don't see any key issues with your Wifi network. " +
+                    "Since wifi network problems are sometimes transient, it might be good if you run " +
+                    "this test a few times so we can catch an issue if it shows up.";
         }
         return titleToReturn;
     }
@@ -218,9 +213,9 @@ public class SuggestionCreator {
                 baseMessage = "Your signal to your wireless router is very weak (about "
                         + Utils.convertSignalDbmToPercent(params.currentSignal) + "/100) " +
                         ", this could lead to poor speeds and bad experience in streaming etc. " +
-                        "If you are close to your router while doing this test (within 20ft), then your router is not " +
-                        "providing enough signal. Make sure your router is not obstructed and if " +
-                        "that doesn't help, you should try replacing the router. If you are " +
+                        "\n a. If you are close to your router while doing this test (within 20ft), then your router is not " +
+                        "providing enough signal. \n b. Make sure your router is not obstructed and if " +
+                        "that doesn't help, you should try replacing the router. \n c. If you are " +
                         "actually far from your router during the test, then your router is not " +
                         "strong enough to cover the current testing area and you should look into " +
                         "a stronger router or a mesh Wifi solution which can provide better coverage.";
@@ -260,12 +255,14 @@ public class SuggestionCreator {
                 baseMessage = Utils.EMPTY_STRING;
                 return ""; // Not sure what to say here
             case Condition.ROUTER_WIFI_INTERFACE_FAULT:
+                baseMessage = "Seems like your router could be in a bad state, since are seeing that your phone is having issued staying connected to the router. " +
+                        "Try rebooting the router and hopefully it will get rid of some weird state that the router might be in. ";
             case Condition.ROUTER_SOFTWARE_FAULT:
-                baseMessage =  "Seems like your router could be in a bad state, since your phone is unable " +
-                        "to connect to the wifi. Can you try rebooting the router and hopefully it will connect without problem.";
+                baseMessage =  "Seems like your router could be in a bad state, since we are seeing high latencies to it in our tests. " +
+                        "Try rebooting the router and re-test. ";
                 break;
             case Condition.ISP_INTERNET_DOWN:
-                baseMessage =  "Your wifi is fine but looks like your Internet service is down. " +
+                baseMessage =  "Looks like your Internet service is down. " +
                         "We are unable to reach external servers for any bandwidth testing as well.";
                 if (!params.isp.equals(Utils.EMPTY_STRING)) {
                     conditionalMessage = "You should contact " + params.isp + " to see if they know about any outage " +
@@ -273,7 +270,7 @@ public class SuggestionCreator {
                 }
                 break;
             case Condition.ISP_INTERNET_SLOW:
-                baseMessage = "Your wifi is fine but looks like your Internet service is really slow. " +
+                baseMessage = "Looks like your Internet service is really slow. " +
                         "You are getting about " + String.format("%.2f", params.downloadBandwidthMbps) + " Mbps download and " +
                         String.format("%.2f", params.uploadBandwidthMbps) + " Mbps upload. If these speeds seem low as per your " +
                         "contract, you should reach out to " + params.isp + " and see why you are getting such low speeds. " +
@@ -281,7 +278,7 @@ public class SuggestionCreator {
                         "latency to access Internet is very high.";
                 break;
             case Condition.ISP_INTERNET_SLOW_DOWNLOAD:
-                baseMessage = "Your wifi is fine but looks like your Internet download speed is very low " +
+                baseMessage = "Looks like your Internet download speed is very low " +
                         "(around " + String.format("%.2f", params.downloadBandwidthMbps) + " Mbps), especially given you are getting a good " +
                         "upload speed ( " + String.format("%.2f", params.uploadBandwidthMbps) + " Mbps. Since most of the data " +
                         "consumed by streaming, browsing etc. is download, you will experience slow Internet on your devices. " +
@@ -291,7 +288,7 @@ public class SuggestionCreator {
                         "download speed is very low (esp. compared to upload).";
                 break;
             case Condition.ISP_INTERNET_SLOW_UPLOAD:
-                baseMessage = "Your wifi is fine but looks like your Internet upload speed is very low " +
+                baseMessage = "Looks like your Internet upload speed is very low " +
                         "(around " + String.format("%.2f", params.uploadBandwidthMbps) + " Mbps), especially given you are getting a good " +
                         "download speed (~ " + String.format("%.2f", params.downloadBandwidthMbps) + "  Mbps). You will have trouble uploading " +
                         "content like posting photos, sending email attachments etc. " +
@@ -301,7 +298,7 @@ public class SuggestionCreator {
                         "upload speed is very low (esp. compared to download).";
                 break;
             case Condition.DNS_RESPONSE_SLOW:
-                baseMessage = "Your wifi network is fine but your current DNS server is acting slow to respond to queries, " +
+                baseMessage = "Your current DNS server is acting slow to respond to queries, " +
                         "which can cause an initial lag during the load time of an app or a new webpage.";
                 if (!params.alternateDNS.equals(Utils.EMPTY_STRING)) {
                     conditionalMessage = "Our tests show that using other public DNSs than the one you " +
@@ -354,8 +351,130 @@ public class SuggestionCreator {
     }
 
 
-    public static String getShortSuggestionForCondition(@InferenceMap.Condition int condition,
+    public static String getTitleForCondition(@InferenceMap.Condition int condition,
                                                    SuggestionCreatorParams params) {
+        StringBuilder suggestionToReturn = new StringBuilder();
+        String baseMessage = Utils.EMPTY_STRING;
+        String conditionalMessage = Utils.EMPTY_STRING;
+        switch (condition) {
+            case Condition.WIFI_CHANNEL_CONGESTION:
+                baseMessage = "Your wifi is operating on a very congested channel, " +
+                        "which can cause slowness.";
+                if (params.bestWifiChannel > 0 && params.bestWifiChannel != params.currentWifiChannel) {
+                    conditionalMessage = "Try changing your channel to " + params.bestWifiChannel + " for better performance.";
+                }
+                break;
+            case Condition.WIFI_CHANNEL_BAD_SIGNAL:
+                baseMessage = "Your current signal to your wireless router is very weak, only about  " + Utils.convertSignalDbmToPercent(params.currentSignal) + " %." +
+                        " Try moving closer to the wifi router to get better speeds.";
+                break;
+            case Condition.WIFI_INTERFACE_ON_PHONE_OFFLINE:
+                break; //find a good explanation
+            case Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE:
+                baseMessage = "Your wifi on your phone seems to be in a bad state, " +
+                        "try turning it off/on and see if that helps. ";
+                break;
+            case Condition.WIFI_INTERFACE_ON_PHONE_TURNED_OFF:
+                baseMessage = "Wifi on your phone is turned off, try turning it on and running " +
+                        "the tests again.";
+                break;
+            case Condition.WIFI_LINK_DHCP_ISSUE:
+            case Condition.WIFI_LINK_ASSOCIATION_ISSUE:
+                baseMessage = "Your phone is unable to get on your wifi network. Try turning your " +
+                        "phone's wifi off/on and if it still doesn't connect, then reboot your router.";
+                break;
+            case Condition.WIFI_LINK_AUTH_ISSUE:
+                baseMessage =  "Your phone is unable to get on your wifi network due to some authentication " +
+                        "issue. Make sure you have the right password. If the problem still persists, try rebooting " +
+                        "the router.";
+                break;
+            case Condition.ROUTER_GOOD_SIGNAL_USING_SLOW_DATA_RATE:
+                baseMessage =  "Even though your signal to wifi router is strong (~" + Utils.convertSignalDbmToPercent(params.currentSignal) + " %), " +
+                        "router is using low speeds for transferring data. Make sure Mixed mode or 802.11n mode is on if " +
+                        "your router supports it. ";
+                break;
+            case Condition.ROUTER_FAULT_WIFI_OK:
+                break; // Not sure what to say here
+            case Condition.ROUTER_WIFI_INTERFACE_FAULT:
+                baseMessage = "Seems like your router could be in a bad state, since are seeing that your phone is having issued staying connected to the router. " +
+                        "Try rebooting the router and hopefully it will get rid of some weird state that the router might be in. ";
+                break;
+            case Condition.ROUTER_SOFTWARE_FAULT:
+                baseMessage =  "Seems like your router could be in a bad state, since we are seeing high latencies to it in our tests. " +
+                        "Try rebooting the router and re-test. ";
+                break;
+            case Condition.ISP_INTERNET_DOWN:
+                baseMessage =  "Looks like your Internet service is down. ";
+                if (!params.isp.equals(Utils.EMPTY_STRING)) {
+                    conditionalMessage = "You should contact " + params.isp + " to see if they know about any outage " +
+                            "in your area. ";
+                }
+                break;
+            case Condition.ISP_INTERNET_SLOW:
+                baseMessage = "Looks like your Internet service is really slow. ";
+                if (!params.isp.equals(Utils.EMPTY_STRING)) {
+                    conditionalMessage = "You should contact " + params.isp + " to see if they know about any outage " +
+                            "in your area. ";
+                }
+                break;
+            case Condition.ISP_INTERNET_SLOW_DOWNLOAD:
+                baseMessage = "Looks like your Internet download speed is very low. ";
+                if (!params.isp.equals(Utils.EMPTY_STRING)) {
+                    conditionalMessage = "You should contact " + params.isp + " to see if they know about any outage " +
+                            "in your area. ";
+                }
+                break;
+            case Condition.ISP_INTERNET_SLOW_UPLOAD:
+                baseMessage = "Looks like your Internet upload speed is very low. ";
+                if (!params.isp.equals(Utils.EMPTY_STRING)) {
+                    conditionalMessage = "You should contact " + params.isp + " to see if they know about any outage " +
+                            "in your area. ";
+                }
+            case Condition.DNS_RESPONSE_SLOW:
+                baseMessage = "Your current DNS server is acting slow to respond to queries. ";
+                if (!params.alternateDNS.equals(Utils.EMPTY_STRING)) {
+                    conditionalMessage = "Try changing primary DNS to " +  params.alternateDNS +
+                            " which is working and re-run the test. ";
+                }
+                break;
+            case Condition.DNS_SLOW_TO_REACH:
+                baseMessage = "Your current DNS server has a high latency, " +
+                        "which can cause an initial lag during the load time of an app or a " +
+                        "webpage. ";
+                if (!params.alternateDNS.equals(Utils.EMPTY_STRING)) {
+                    conditionalMessage = "Try changing primary DNS to " +  params.alternateDNS +
+                            " which is working and re-run the test. ";
+                }
+                break;
+            case Condition.DNS_UNREACHABLE:
+                baseMessage = "We are unable to reach your DNS server, which means you can't access " +
+                        "the Internet on your phone and other devices.";
+                if (!params.alternateDNS.equals(Utils.EMPTY_STRING)) {
+                    conditionalMessage = "Try changing primary DNS to " +  params.alternateDNS +
+                            " which is working and re-run the test. ";
+                }
+                break;
+            case Condition.CABLE_MODEM_FAULT:
+                baseMessage = "We think your cable modem might be faulty. You should try resetting " +
+                        "it to see if improves the performance. ";
+                break;
+            case Condition.CAPTIVE_PORTAL_NO_INTERNET:
+                baseMessage = "You are behind a captive portal -- " +
+                        "basically the wifi you are connected to " + params.currentWifiSSID + " is managed " +
+                        "by someone who restricts access unless you sign in.";
+                break;
+            case Condition.REMOTE_SERVER_IS_SLOW_TO_RESPOND:
+                baseMessage = "Currently we believe that external servers that host different " +
+                        "Internet services are bit slow to respond to our tests.";
+                break;
+        }
+        suggestionToReturn.append(baseMessage);
+        suggestionToReturn.append(conditionalMessage);
+        return suggestionToReturn.toString();
+    }
+
+    public static String getShortSuggestionForCondition(@InferenceMap.Condition int condition,
+                                                        SuggestionCreatorParams params) {
         StringBuilder suggestionToReturn = new StringBuilder();
         String baseMessage = Utils.EMPTY_STRING;
         String conditionalMessage = Utils.EMPTY_STRING;
@@ -395,12 +514,15 @@ public class SuggestionCreator {
             case Condition.ROUTER_FAULT_WIFI_OK:
                 return ""; // Not sure what to say here
             case Condition.ROUTER_WIFI_INTERFACE_FAULT:
+                baseMessage =  "Seems like your router could be in a bad state, since are seeing that your phone is having issued staying connected to the router. " +
+                        "Try rebooting the router and hopefully it will get rid of some weird state that the router might be in. ";
+                break;
             case Condition.ROUTER_SOFTWARE_FAULT:
-                baseMessage =  "Seems like your router could be in a bad state, since your phone is unable " +
-                        "to connect to the wifi. Can you try rebooting the router and hopefully it will connect without problem.";
+                baseMessage =  "Seems like your router could be in a bad state, since we are seeing high latencies to it in our tests. " +
+                        "Try rebooting the router and re-test. ";
                 break;
             case Condition.ISP_INTERNET_DOWN:
-                baseMessage =  "Your wifi is fine but looks like your Internet service is down. " +
+                baseMessage =  "Looks like your Internet service is down. " +
                         "We are unable to reach external servers for any bandwidth testing as well.";
                 if (!params.isp.equals(Utils.EMPTY_STRING)) {
                     conditionalMessage = "You should contact " + params.isp + " to see if they know about any outage " +
@@ -408,17 +530,17 @@ public class SuggestionCreator {
                 }
                 break;
             case Condition.ISP_INTERNET_SLOW:
-                baseMessage = "Your wifi is fine but looks like your Internet service is really slow. " +
+                baseMessage = "Looks like your Internet service is really slow. " +
                         "You are getting about " + String.format("%.2f", params.downloadBandwidthMbps) + " Mbps download and " +
                         String.format("%.2f", params.uploadBandwidthMbps) + " Mbps upload";
                 break;
             case Condition.ISP_INTERNET_SLOW_DOWNLOAD:
-                baseMessage = "Your wifi is fine but looks like your Internet download speed is very low " +
+                baseMessage = "Looks like your Internet download speed is very low " +
                         "(around " + String.format("%.2f", params.downloadBandwidthMbps) + " Mbps), especially given you are getting a good " +
                         "upload speed ( " + String.format("%.2f", params.uploadBandwidthMbps) + " Mbps";
                 break;
             case Condition.ISP_INTERNET_SLOW_UPLOAD:
-                baseMessage = "Your wifi is fine but looks like your Internet upload speed is very low " +
+                baseMessage = "Looks like your Internet upload speed is very low " +
                         "(around " + String.format("%.2f", params.uploadBandwidthMbps) + " Mbps), especially given you are getting a good " +
                         "download speed (~ " + String.format("%.2f", params.downloadBandwidthMbps) + "  Mbps).";
                 break;
@@ -459,4 +581,5 @@ public class SuggestionCreator {
         suggestionToReturn.append(conditionalMessage);
         return suggestionToReturn.toString();
     }
+
 }

@@ -111,12 +111,12 @@ public class InferenceMap {
         //Check if both download and upload are good
         PossibleConditions conditions = new PossibleConditions();
 
-        if (DataInterpreter.isGoodOrExcellent(bandwidthGrade.getDownloadBandwidthMetric()) &&
-                DataInterpreter.isGoodOrExcellent(bandwidthGrade.getUploadBandwidthMetric())) {
+        if (DataInterpreter.isGoodOrExcellentOrAverage(bandwidthGrade.getDownloadBandwidthMetric()) &&
+                DataInterpreter.isGoodOrExcellentOrAverage(bandwidthGrade.getUploadBandwidthMetric())) {
             conditions.exclude(ISP_CONDITIONS);
             //We can exclude WIFI CONDITIONS here but what about FREQUENCT DISCONNECTIONS etc.
             //TODO: Decide whether to exclude wifi conditions here
-            //conditions.exclude(WIFI_CONDITIONS);
+            conditions.exclude(WIFI_CONDITIONS);
             return conditions;
         }
 
@@ -184,7 +184,6 @@ public class InferenceMap {
             //It could be that client Wifi interface is not connecting or user needs to issue explicit command to connect
             conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE, 0.3);
             //It could be that the right network is not showing up in the scans.
-            conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.7);
             conditions.include(Condition.ROUTER_WIFI_INTERFACE_FAULT, 0.7);
         }  else if (DataInterpreter.isPoorOrAbysmal(wifiGrade.primaryApSignalMetric)) {
             //poor signal and high congestion
@@ -193,12 +192,12 @@ public class InferenceMap {
                 conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.5);
             }
             if (wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.FREQUENT_DISCONNECTIONS){
-                conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.8);
+                conditions.include(Condition.ROUTER_WIFI_INTERFACE_FAULT, 0.8);
             } else if (wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.HANGING_ON_AUTHENTICATING ||
                     wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.HANGING_ON_DHCP){
-                conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 1.0);
+                conditions.include(Condition.ROUTER_WIFI_INTERFACE_FAULT, 1.0);
             }
-        } else if (DataInterpreter.isGoodOrExcellentorAverage(wifiGrade.primaryApSignalMetric)){
+        } else if (DataInterpreter.isGoodOrExcellentOrAverage(wifiGrade.primaryApSignalMetric)){
             conditions.exclude(Condition.WIFI_CHANNEL_BAD_SIGNAL);
             if (DataInterpreter.isAverageOrPoorOrNonFunctional(wifiGrade.primaryApLinkSpeedMetric)) {
                 conditions.include(Condition.ROUTER_GOOD_SIGNAL_USING_SLOW_DATA_RATE, 0.2);
@@ -209,7 +208,7 @@ public class InferenceMap {
             if (wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.FREQUENT_DISCONNECTIONS ||
                     wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.HANGING_ON_AUTHENTICATING ||
                     wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.HANGING_ON_DHCP){
-                conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 1.0);
+                conditions.include(Condition.ROUTER_WIFI_INTERFACE_FAULT, 1.0);
             }
         }
 
@@ -238,12 +237,12 @@ public class InferenceMap {
         //Router is quick
         if (DataInterpreter.isGoodOrExcellent(pingGrade.routerLatencyMetric)) {
             //conditions.exclude(ROUTER_CONDITIONS);
-            if (DataInterpreter.isGoodOrExcellentorAverage(pingGrade.dnsServerLatencyMetric)) {
+            if (DataInterpreter.isGoodOrExcellentOrAverage(pingGrade.dnsServerLatencyMetric)) {
 
                 conditions.exclude(DNS_CONDITIONS);
 
                 //Good Router / dns latency but poor external server latency
-                if (DataInterpreter.isPoorOrAbysmal(pingGrade.externalServerLatencyMetric)) {
+                if (DataInterpreter.isAbysmal(pingGrade.externalServerLatencyMetric)) {
                     conditions.include(Condition.ISP_INTERNET_SLOW, 0.7);
                     conditions.include(Condition.CABLE_MODEM_FAULT, 0.3);
                     conditions.include(Condition.REMOTE_SERVER_IS_SLOW_TO_RESPOND, 0.05);
@@ -273,7 +272,6 @@ public class InferenceMap {
             //Router has average latency to respond to ping
             conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.2);
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.8);
-            conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.2);
             if (DataInterpreter.isNonFunctional(pingGrade.dnsServerLatencyMetric)) {
                 conditions.include(Condition.DNS_UNREACHABLE, 0.1);
             }
