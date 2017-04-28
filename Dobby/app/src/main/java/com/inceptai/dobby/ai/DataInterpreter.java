@@ -609,6 +609,9 @@ public class DataInterpreter {
 
     public static PingGrade interpret(HashMap<String, PingStats> pingStatsHashMap, IPLayerInfo ipLayerInfo) {
         PingGrade pingGrade = new PingGrade();
+        if (pingStatsHashMap == null || ipLayerInfo == null) {
+            return pingGrade;
+        }
         //Get external server stats
         pingGrade.primaryDns = ipLayerInfo.dns1;
         HashMap<String, PingStats> externalServerStats = new HashMap<>();
@@ -686,6 +689,9 @@ public class DataInterpreter {
 
     public static HttpGrade interpret(PingStats httpRouterStats) {
         HttpGrade httpGrade = new HttpGrade();
+        if (httpRouterStats == null) {
+            return httpGrade;
+        }
         httpGrade.httpDownloadLatencyMetric = getGradeLowerIsBetter(httpRouterStats.avgLatencyMs,
                 HTTP_LATENCY_ROUTER_STEPS_MS,
                 httpRouterStats.avgLatencyMs > 0.0, httpRouterStats.avgLatencyMs > MAX_LATENCY_FOR_BEING_NONFUNCTIONAL_MS);
