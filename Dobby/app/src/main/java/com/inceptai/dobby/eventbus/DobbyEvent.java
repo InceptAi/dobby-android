@@ -178,6 +178,8 @@ public class DobbyEvent {
                 return "HANGING_ON_SCANNING";
             case EventType.FREQUENT_DISCONNECTIONS:
                 return "FREQUENT_DISCONNECTIONS";
+            case EventType.SUGGESTIONS_AVAILABLE:
+                return "SUGGESTIONS_AVAILABLE";
             default:
                 return "UNKNOWN EVENT TYPE:" + eventType;
         }
