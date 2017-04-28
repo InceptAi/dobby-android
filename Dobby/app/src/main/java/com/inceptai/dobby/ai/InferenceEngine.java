@@ -185,7 +185,7 @@ public class InferenceEngine {
 
     public void notifyBandwidthTestResult(@BandwithTestCodes.TestMode int testMode,
                                           double bandwidth, String clientIsp, String clientExternalIp) {
-        if (bandwidth > 0) {
+        if (bandwidth >= 0) {
             sendResponseOnlyAction(testModeToString(testMode) + " Overall Bandwidth = " + String.format("%.2f", bandwidth / 1000000) + " Mbps");
         } else {
             sendResponseOnlyAction(testModeToString(testMode) + " Bandwidth error -- can't do bandwidth test.");

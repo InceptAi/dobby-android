@@ -132,13 +132,15 @@ public class SuggestionCreator {
     }
 
     private static String getNoConditionMessage(SuggestionCreatorParams params) {
-        return "We don't see any key issues with your Wifi network at the moment. " +
+        return "We don't see any key issues with your wifi network at the moment. " +
                 "We performed speed tests, pings and wifi scans on your network. " +
                 "You are getting " + String.format("%.2f", params.downloadBandwidthMbps) +
-                " Mbps download / " + String.format("%.2f", params.uploadBandwidthMbps) +
-                " Mbps upload speed. You connection to your wifi is quite good at about " +
+                " Mbps download and " + String.format("%.2f", params.uploadBandwidthMbps) +
+                " Mbps upload speed on your phone, which is pretty good. " +
+                "You connection to your wifi is also strong at about " +
                 Utils.convertSignalDbmToPercent(params.currentSignal) +
-                "% strength (100% means very very high signal). Since wifi network problems are " +
+                "% strength (100% means very high signal, usually when you " +
+                "are right next to wifi router). Since wifi network problems are " +
                 "sometimes transient, it might be good if you run " +
                 "this test a few times so we can catch an issue if it shows up. Hope this helps :)";
     }

@@ -166,7 +166,9 @@ public class InferenceMap {
             conditions.include(Condition.CAPTIVE_PORTAL_NO_INTERNET, 1.0);
         } else if (wifiGrade.wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_OFFLINE) {
             //Connected but offline -- we can't download http://client3.google.com/204
-            conditions.include(Condition.ISP_INTERNET_DOWN, 0.8);
+            conditions.include(Condition.ISP_INTERNET_DOWN, 0.7);
+            conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.2);
+            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.2);
             conditions.include(Condition.DNS_UNREACHABLE, 0.2);
         } else if (wifiGrade.wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.OFF) {
             //Wifi is off. Need to turn it on.
@@ -185,9 +187,12 @@ public class InferenceMap {
             conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE, 0.3);
             //It could be that the right network is not showing up in the scans.
             conditions.include(Condition.ROUTER_WIFI_INTERFACE_FAULT, 0.7);
-        }  else if (DataInterpreter.isPoorOrAbysmal(wifiGrade.primaryApSignalMetric)) {
+        }  else if (DataInterpreter.isPoorOrAbysmalOrNonFunctional(wifiGrade.primaryApSignalMetric)) {
             //poor signal and high congestion
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 1.0);
+            //TODO: Discuss this with Arunesh in Inference Map
+            //conditions.exclude(ISP_CONDITIONS);
+            //conditions.exclude(DNS_CONDITIONS);
             if (DataInterpreter.isAverageOrPoorOrNonFunctional(wifiGrade.primaryLinkChannelOccupancyMetric)) {
                 conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.5);
             }
@@ -237,10 +242,10 @@ public class InferenceMap {
         //Router is quick
         if (DataInterpreter.isGoodOrExcellent(pingGrade.routerLatencyMetric)) {
             //conditions.exclude(ROUTER_CONDITIONS);
+            //TODO: Discuss this with Arunesh in Inference Map
+            //conditions.exclude(WIFI_CONDITIONS);
             if (DataInterpreter.isGoodOrExcellentOrAverage(pingGrade.dnsServerLatencyMetric)) {
-
                 conditions.exclude(DNS_CONDITIONS);
-
                 //Good Router / dns latency but poor external server latency
                 if (DataInterpreter.isAbysmal(pingGrade.externalServerLatencyMetric)) {
                     conditions.include(Condition.ISP_INTERNET_SLOW, 0.7);
@@ -280,7 +285,14 @@ public class InferenceMap {
             conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.2);
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.7);
             conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.7);
+            conditions.exclude(ISP_CONDITIONS);
+            conditions.exclude(DNS_CONDITIONS);
         }
+
+        if (DataInterpreter.isNonFunctional(pingGrade.dnsServerLatencyMetric)) {
+            conditions.exclude(ISP_CONDITIONS);
+        }
+
         return conditions;
     }
 
@@ -299,6 +311,8 @@ public class InferenceMap {
         } else if (DataInterpreter.isNonFunctional(httpGrade.httpDownloadLatencyMetric)) {
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
             conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.7);
+            conditions.exclude(ISP_CONDITIONS);
+            conditions.exclude(DNS_CONDITIONS);
         }
         return conditions;
     }
