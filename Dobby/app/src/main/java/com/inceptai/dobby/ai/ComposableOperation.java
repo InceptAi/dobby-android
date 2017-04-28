@@ -46,6 +46,7 @@ public abstract class ComposableOperation {
                 } catch (InterruptedException | ExecutionException e) {
                     DobbyLog.w("Exception getting result for:" + getName() +
                             " e = " + e.getStackTrace().toString());
+                    setResult(new OperationResult(OperationResult.FAILED));
                 }
             }
         }, threadpool.getExecutor());

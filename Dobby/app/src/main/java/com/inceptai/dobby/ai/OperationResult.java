@@ -10,6 +10,7 @@ package com.inceptai.dobby.ai;
 public class OperationResult {
     public static final int SUCCESS = 0;
     public static final int FAILED_TO_START = 1;
+    public static final int FAILED = 2;
 
     private int status;
     private Object payload;
