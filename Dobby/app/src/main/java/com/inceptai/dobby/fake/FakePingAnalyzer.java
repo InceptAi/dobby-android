@@ -143,8 +143,8 @@ public class FakePingAnalyzer extends PingAnalyzer {
             int MAX = 1000;
             int VERY_HIGH = 200;
             int HIGH = 100;
-            int MEDIUM = 50;
-            int LOW = 30;
+            int MEDIUM = 40;
+            int LOW = 20;
             int VERY_LOW = 10;
             int UNDEFINED = -1;
         }
@@ -226,11 +226,11 @@ public class FakePingAnalyzer extends PingAnalyzer {
                     gatewayLossRangePercent = LossRangePercent.LOW;
                     break;
                 case PingStatsMode.DNS_SLOW:
-                    gatewayLatencyRangeMs = LatencyRangeMs.LOW;
+                    gatewayLatencyRangeMs = LatencyRangeMs.VERY_LOW;
                     dns1LatencyRangeMs = LatencyRangeMs.HIGH;
                     dns2LatencyRangeMs = LatencyRangeMs.HIGH;
-                    externalServer1LatencyRangeMs = LatencyRangeMs.HIGH;
-                    externalServer2LatencyRangeMs = LatencyRangeMs.HIGH;
+                    externalServer1LatencyRangeMs = LatencyRangeMs.LOW;
+                    externalServer2LatencyRangeMs = LatencyRangeMs.LOW;
                     publicDns1LatencyRangeMs = LatencyRangeMs.HIGH;
                     publicDns2LatencyRangeMs = LatencyRangeMs.HIGH;
                     break;
@@ -247,11 +247,11 @@ public class FakePingAnalyzer extends PingAnalyzer {
                     externalServer2LossRangePercent = LossRangePercent.HIGH;
                     break;
                 case PingStatsMode.DNS_SLOW_ALTERNATIVE_FAST:
-                    gatewayLatencyRangeMs = LatencyRangeMs.LOW;
+                    gatewayLatencyRangeMs = LatencyRangeMs.VERY_LOW;
                     dns1LatencyRangeMs = LatencyRangeMs.HIGH;
                     dns2LatencyRangeMs = LatencyRangeMs.HIGH;
-                    externalServer1LatencyRangeMs = LatencyRangeMs.HIGH;
-                    externalServer2LatencyRangeMs = LatencyRangeMs.HIGH;
+                    externalServer1LatencyRangeMs = LatencyRangeMs.LOW;
+                    externalServer2LatencyRangeMs = LatencyRangeMs.LOW;
                     publicDns1LatencyRangeMs = LatencyRangeMs.VERY_LOW;
                     publicDns2LatencyRangeMs = LatencyRangeMs.VERY_LOW;
                     publicDns1LossRangePercent = LossRangePercent.LOW;
@@ -259,7 +259,7 @@ public class FakePingAnalyzer extends PingAnalyzer {
                     break;
                 case PingStatsMode.DNS_UNREACHABLE_ALTERNATIVE_AVAILABLE:
                     InitializeAllLatenciesToUndefined();
-                    gatewayLatencyRangeMs = LatencyRangeMs.LOW;
+                    gatewayLatencyRangeMs = LatencyRangeMs.VERY_LOW;
                     InitializeAllLossRatesPercentToUnreachable();
                     gatewayLossRangePercent = LossRangePercent.LOW;
                     publicDns1LatencyRangeMs = LatencyRangeMs.LOW;
