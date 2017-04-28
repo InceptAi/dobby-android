@@ -23,5 +23,6 @@
     <color name="darkGray">#595959</color>
     <color name="lessDarkGray">#808080</color>
     <color name="lessDarkGray2">#A0A0A0</color>
-
+    <color name="indicator_unselected">#808080</color>
+    <color name="half_opacity">#80000000</color>
 </resources>

@@ -13,6 +13,19 @@
         tools:replace="android:theme"
         >
         <activity android:name=".ui.WifiDocActivity" android:screenOrientation="portrait">
+            <!--
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            -->
+        </activity>
+        <activity
+            android:name=".ui.WifiDocOnboardingActivity"
+            android:screenOrientation="portrait"
+            android:label="@string/wifidoc_app_name"
+            android:theme="@style/AppThemeOrangeDark.NoActionBar.Compat">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

@@ -2,6 +2,7 @@ package com.inceptai.dobby.utils;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -43,6 +44,8 @@ public class Utils {
     private static final int READ_TIMEOUT_MS = 10000;
     private static final int CONNECTION_TIMEOUT_MS = 15000;
     private static Random random = new Random();
+
+    public static final String PREFERENCES_FILE = "wifi_tester_settings";
 
     private Utils() {}
 
@@ -512,5 +515,17 @@ public class Utils {
         } else {
             view.setImageDrawable(context.getResources().getDrawable(resourceId));
         }
+    }
+
+    public static String readSharedSetting(Context ctx, String settingName, String defaultValue) {
+        SharedPreferences sharedPref = ctx.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE);
+        return sharedPref.getString(settingName, defaultValue);
+    }
+
+    public static void saveSharedSetting(Context ctx, String settingName, String settingValue) {
+        SharedPreferences sharedPref = ctx.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putString(settingName, settingValue);
+        editor.apply();
     }
 }

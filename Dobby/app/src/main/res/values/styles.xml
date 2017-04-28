@@ -30,6 +30,14 @@
         <item name="colorAccent">@color/orangeLighter</item>
     </style>
 
+    <style name="AppThemeOrangeDark.NoActionBar.Compat" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/orangeMedium</item>
+        <item name="colorPrimaryDark">@color/orangeDark</item>
+        <item name="colorAccent">@color/orangeLighter</item>
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
 
     <style name="AppTheme.NoActionBar">
         <item name="windowActionBar">false</item>
@@ -39,5 +47,35 @@
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+    <style name="AppThemeOrangeDark.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="AppThemeOrangeDark.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="AppThemeOrangeDark.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+    <!--
+    <style name="MaterialTapTargetPromptTheme">
+        <item name="backgroundColour">@color/colorAccent</item>
+        <item name="focalColour">@color/colorPrimary</item>
+        <item name="primaryTextColour">@android:color/white</item>
+        <item name="secondaryTextColour">@android:color/white</item>
+        <item name="focalRadius">88dp</item>
+        <item name="primaryTextSize">10sp</item>
+        <item name="secondaryTextSize">22sp</item>
+        <item name="maxTextWidth">600dp</item>
+        <item name="textPadding">80dp</item>
+        <item name="focalToTextPadding">8dp</item>
+        <item name="textSeparation">0dp</item>
+        <item name="primaryTextTypeface">serif</item>
+        <item name="secondaryTextTypeface">monospace</item>
+        <item name="secondaryTextStyle">italic</item>
+        <item name="iconColourFilter">@color/green_200</item>
+
+    </style>
+    -->
 
 </resources>

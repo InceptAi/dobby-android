@@ -1,5 +1,6 @@
 package com.inceptai.dobby.ui;
 
+import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -20,9 +21,12 @@ import com.inceptai.dobby.utils.Utils;
 
 import javax.inject.Inject;
 
+import uk.co.samuelwall.materialtaptargetprompt.MaterialTapTargetPrompt;
+
 import static com.inceptai.dobby.DobbyApplication.TAG;
 
 public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFragment.OnFragmentInteractionListener {
+    public static final String PREF_FIRST_TIME_USER = "WifiTesterNewbie";
 
     private WifiDocMainFragment mainFragment;
     @Inject
@@ -35,7 +39,6 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
     NetworkLayer networkLayer;
     @Inject
     DobbyEventBus eventBus;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
