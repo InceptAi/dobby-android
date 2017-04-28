@@ -63,7 +63,6 @@ public class ConnectivityAnalyzer {
     protected DobbyThreadpool threadpool;
     protected DobbyEventBus eventBus;
     protected ConnectivityManager connectivityManager;
-    protected ConnectivityAnalyzerNetworkCallback networkCallback;
 
     protected ConnectivityAnalyzer(Context context, ConnectivityManager connectivityManager,
                                  DobbyThreadpool threadpool, DobbyEventBus eventBus) {
@@ -75,10 +74,10 @@ public class ConnectivityAnalyzer {
         this.eventBus = eventBus;
         this.connectivityManager = connectivityManager;
         wifiConnectivityMode = WifiConnectivityMode.UNKNOWN;
-        networkCallback = new ConnectivityAnalyzerNetworkCallback();
+
         // Make sure we're running on Honeycomb or higher to use ActionBar APIs
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            this.connectivityManager.registerDefaultNetworkCallback(this.networkCallback);
+            this.connectivityManager.registerDefaultNetworkCallback(new ConnectivityAnalyzerNetworkCallback());
         }
     }
 

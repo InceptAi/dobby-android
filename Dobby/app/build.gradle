@@ -34,8 +34,8 @@ android {
     productFlavors {
         wifidoc {
             applicationIdSuffix ".wifidoc"
-            versionCode 2
-            versionName "1.1-wifitester"
+            versionCode 3
+            versionName "1.1-wifitester-beta3"
         }
         dobby {
             applicationIdSuffix ".ai"
@@ -99,6 +99,7 @@ dependencies {
     //compile 'fr.bmartel:jspeedtest:1.25'
     compile 'fr.bmartel:http-endec:1.04'
     compile 'commons-net:commons-net:3.6'
+    compile 'uk.co.samuelwall:material-tap-target-prompt:1.1.4'
 }
 
 

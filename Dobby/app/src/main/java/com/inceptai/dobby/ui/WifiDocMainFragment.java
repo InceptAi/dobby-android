@@ -15,8 +15,10 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v4.view.animation.FastOutSlowInInterpolator;
 import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -38,6 +40,8 @@ import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 
 import java.util.List;
+
+import uk.co.samuelwall.materialtaptargetprompt.MaterialTapTargetPrompt;
 
 import static com.inceptai.dobby.ai.DataInterpreter.MetricType.ABYSMAL;
 import static com.inceptai.dobby.ai.DataInterpreter.MetricType.AVERAGE;
@@ -102,6 +106,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private Handler handler;
 
     private SuggestionCreator.Suggestion currentSuggestion;
+    MaterialTapTargetPrompt fabPrompt;
 
     public WifiDocMainFragment() {
         // Required empty public constructor
@@ -133,7 +138,35 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         populateViews(view);
         resetData();
         requestPermissions();
+        showTapOnboarding(view);
         return view;
+    }
+
+    private void showTapOnboarding(View rootView) {
+        fabPrompt = new MaterialTapTargetPrompt.Builder(getActivity())
+                .setTarget(rootView.findViewById(R.id.main_fab_button))
+                .setFocalToTextPadding(R.dimen.dp40)
+                .setPrimaryText("Run some tests")
+                .setSecondaryText("Tap the button to let Wifi Tester run some tests.")
+                .setAnimationInterpolator(new FastOutSlowInInterpolator())
+                .setBackgroundColourFromRes(R.color.orangeMediumLight1)
+                .setOnHidePromptListener(new MaterialTapTargetPrompt.OnHidePromptListener()
+                {
+                    @Override
+                    public void onHidePrompt(MotionEvent event, boolean tappedTarget)
+                    {
+                        fabPrompt = null;
+                        //Do something such as storing a value so that this prompt is never shown again
+                    }
+
+                    @Override
+                    public void onHidePromptComplete()
+                    {
+                        // Run tests.
+                    }
+                })
+                .create();
+        fabPrompt.show();
     }
 
     public void onButtonPressed(Uri uri) {

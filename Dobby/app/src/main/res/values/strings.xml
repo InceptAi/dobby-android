@@ -57,5 +57,14 @@
         <item>Low</item>
         <item>Fringe</item>
     </string-array>
-
+    <string name="title_activity_wifi_doc_onboarding">WifiDocOnboardingActivity</string>
+    <string name="section_format">Hello World from section: %1$d</string>
+    <string name="onboarding_one_desc1">How good is your wifi connectivity ?</string>
+    <string name="onboarding_one_desc2">This app can run some tests on your phone to find out. It can also suggest remedies for issues found.</string>
+    <string name="onboarding_two_desc1">Wifi Tester can run a speed test to show your upload and download speeds.</string>
+    <string name="onboarding_two_desc2">It can also see if your DNS servers or your routers are slow.</string>
+    <string name="onboarding_three_desc1">Wifi Tester can perform Wifi scans to see if your wifi environment is congested or if your signal is poor.</string>
+    <string name="onboarding_three_desc2">This optional test requires you to grant the Location permission.</string>
+    <string name="slow_internet_q">Slow Internet ?</string>
+    <string name="bad_wifi_signal">Bad Wifi signal ?</string>
 </resources>
