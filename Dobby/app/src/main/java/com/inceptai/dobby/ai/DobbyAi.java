@@ -4,7 +4,6 @@ import android.content.Context;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.google.android.gms.tasks.RuntimeExecutionException;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.DobbyThreadpool;
@@ -16,6 +15,7 @@ import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.speedtest.BandwidthResult;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
 import com.inceptai.dobby.utils.DobbyLog;
+import com.inceptai.dobby.utils.Utils;
 
 import java.util.HashMap;
 
@@ -177,11 +177,20 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         wifiScan.getFuture().addListener(new Runnable() {
             @Override
             public void run() {
-                // Handle failed wifi scan using OperationResult.
-                DataInterpreter.WifiGrade wifiGrade = inferenceEngine.notifyWifiState(networkLayer.getWifiState(),
-                        networkLayer.getWifiLinkMode(),
-                        networkLayer.getCurrentConnectivityMode());
-                eventBus.postEvent(DobbyEvent.EventType.WIFI_GRADE_AVAILABLE, wifiGrade);
+                try {
+                    OperationResult result = wifiScan.getFuture().get();
+                }catch (Exception e) {
+                    e.printStackTrace(System.out);
+                    DobbyLog.w("Exception getting wifi results: " + e.getStackTrace().toString());
+                    //Informing inference engine of the error.
+                } finally {
+                    DataInterpreter.WifiGrade wifiGrade = inferenceEngine.notifyWifiState(networkLayer.getWifiState(),
+                            networkLayer.getWifiLinkMode(),
+                            networkLayer.getCurrentConnectivityMode());
+                    if (wifiGrade != null) {
+                        eventBus.postEvent(DobbyEvent.EventType.WIFI_GRADE_AVAILABLE, wifiGrade);
+                    }
+                }
             }
         }, threadpool.getExecutor());
 
@@ -191,18 +200,22 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 try {
                     OperationResult result = ping.getFuture().get();
                     HashMap<String, PingStats> payload = (HashMap<String, PingStats>) result.getPayload();
-                    if (payload != null) {
-                        DataInterpreter.PingGrade pingGrade = inferenceEngine.notifyPingStats(payload, networkLayer.getIpLayerInfo());
-                        if (pingGrade != null) {
-                            eventBus.postEvent(DobbyEvent.EventType.PING_GRADE_AVAILABLE, pingGrade);
-                        }
-                    } else {
-                        // Error.
+                    if (payload == null) {
+                        //Error.
                         DobbyLog.i("Error starting ping.");
                     }
+                    //We notify inferencing engine in any case so it knows that ping
+                    // failed and can make the inferencing based on other measurements.
+                    DataInterpreter.PingGrade pingGrade = inferenceEngine.notifyPingStats(payload, networkLayer.getIpLayerInfo());
+                    if (pingGrade != null) {
+                        eventBus.postEvent(DobbyEvent.EventType.PING_GRADE_AVAILABLE, pingGrade);
+                    }
+
                 } catch (Exception e) {
                     e.printStackTrace(System.out);
                     DobbyLog.w("Exception getting ping results: " + e.getStackTrace().toString());
+                    //Informing inference engine of the error.
+                    inferenceEngine.notifyPingStats(null, networkLayer.getIpLayerInfo());
                 }
             }
         }, threadpool.getExecutor());
@@ -213,18 +226,18 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 try {
                     OperationResult result = gatewayLatencyTest.getFuture().get();
                     PingStats payload = (PingStats) result.getPayload();
-                    if (payload != null) {
-                        DataInterpreter.HttpGrade httpGrade = inferenceEngine.notifyGatewayHttpStats(payload);
-                        if (httpGrade != null) {
-                            eventBus.postEvent(DobbyEvent.EventType.GATEWAY_HTTP_GRADE_AVAILABLE, httpGrade);
-                        }
-                    } else {
+                    DataInterpreter.HttpGrade httpGrade = inferenceEngine.notifyGatewayHttpStats(payload);
+                    if (httpGrade != null) {
+                        eventBus.postEvent(DobbyEvent.EventType.GATEWAY_HTTP_GRADE_AVAILABLE, httpGrade);
+                    }
+                    if (payload == null) {
                         // Error.
                         DobbyLog.i("Error starting ping.");
                     }
                 } catch (Exception e) {
                     e.printStackTrace(System.out);
                     DobbyLog.w("Exception getting gateway latency results: " + e.getStackTrace().toString());
+                    inferenceEngine.notifyGatewayHttpStats(null);
                 }
             }
         }, threadpool.getExecutor());
@@ -293,6 +306,14 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         BandwidthObserver observer = networkLayer.startBandwidthTest(testMode);
         if (observer == null) {
             Log.w(TAG, "Null observer returned from NL, abandoning bandwidth test.");
+            //Notify inference engine of negative bandwidth numbers or that we don't have valid answers for it.
+            threadpool.submit(new Runnable() {
+                @Override
+                public void run() {
+                    inferenceEngine.notifyBandwidthTestResult(BandwithTestCodes.TestMode.DOWNLOAD, -1.0, Utils.EMPTY_STRING, Utils.EMPTY_STRING);
+                    inferenceEngine.notifyBandwidthTestResult(BandwithTestCodes.TestMode.UPLOAD, -1.0, Utils.EMPTY_STRING, Utils.EMPTY_STRING);
+                }
+            });
             return null;
         }
         observer.setInferenceEngine(inferenceEngine);
