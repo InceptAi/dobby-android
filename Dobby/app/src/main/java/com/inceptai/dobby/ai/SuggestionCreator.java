@@ -515,8 +515,8 @@ public class SuggestionCreator {
             case Condition.DNS_RESPONSE_SLOW:
                 baseMessage = "Your current DNS server is acting slow to respond to queries. ";
                 if (isAlternateDNSBetter(params)) {
-                    conditionalMessage = "Try changing primary DNS to " +  params.pingGrade.getAlternativeDns() +
-                            " which is working (latency of about ~ " + params.pingGrade.getAlternativeDnsLatencyMs() +
+                    conditionalMessage = "Try changing your primary DNS to " +  params.pingGrade.getAlternativeDns() +
+                            " which has much lower latency (~ " + params.pingGrade.getAlternativeDnsLatencyMs() + " ms) " +
                             "and re-run the test. ";
                 }
                 break;
@@ -531,8 +531,9 @@ public class SuggestionCreator {
                         "which can cause an initial lag during the load time of an app or a " +
                         "webpage. ";
                 if (isAlternateDNSBetter(params)) {
-                    conditionalMessage = "Try changing primary DNS to " +  params.pingGrade.getAlternativeDns() +
-                            " which is working and re-run the test. ";
+                    conditionalMessage = "Try changing your primary DNS to " +  params.pingGrade.getAlternativeDns() +
+                            " which has much lower latency (~ " + params.pingGrade.getAlternativeDnsLatencyMs() + " ms) " +
+                            "and re-run the test. ";
                 }
                 break;
             case Condition.DNS_UNREACHABLE:
@@ -545,8 +546,9 @@ public class SuggestionCreator {
                 baseMessage += "are unable to reach your DNS server, which means you can't access " +
                         "the Internet on your phone and other devices.";
                 if (isAlternateDNSBetter(params)) {
-                    conditionalMessage = "Try changing primary DNS to " +  params.pingGrade.getAlternativeDns() +
-                            " which is working and re-run the test. ";
+                    conditionalMessage = "Try changing your primary DNS to " +  params.pingGrade.getAlternativeDns() +
+                            " which has much lower latency (~ " + params.pingGrade.getAlternativeDnsLatencyMs() + " ms) " +
+                            "and re-run the test. ";
                 }
                 break;
             case Condition.CABLE_MODEM_FAULT:
@@ -655,10 +657,10 @@ public class SuggestionCreator {
                 }
                 baseMessage += "current DNS server is acting slow to respond to queries. ";
                 if (isAlternateDNSBetter(params)) {
-                    conditionalMessage = "Try changing primary DNS to " +  params.pingGrade.getAlternativeDns() +
-                            " which is working and re-run the test. ";
+                    conditionalMessage = "Try changing your primary DNS to " +  params.pingGrade.getAlternativeDns() +
+                            " which has much lower latency (~ " + params.pingGrade.getAlternativeDnsLatencyMs() + " ms) " +
+                            "and re-run the test. ";
                 }
-                break;
             case Condition.DNS_SLOW_TO_REACH:
                 if (!baseMessage.equals(Utils.EMPTY_STRING)) {
                     baseMessage += " However, your ";
@@ -678,8 +680,9 @@ public class SuggestionCreator {
                 baseMessage += "We are unable to reach your DNS server, which means you can't access " +
                         "the Internet on your phone and other devices.";
                 if (isAlternateDNSBetter(params)) {
-                    conditionalMessage = "Try changing primary DNS to " +  params.pingGrade.getAlternativeDns() +
-                            " which is working and re-run the test. ";
+                    conditionalMessage = "Try changing your primary DNS to " +  params.pingGrade.getAlternativeDns() +
+                            " which has much lower latency (~ " + params.pingGrade.getAlternativeDnsLatencyMs() + " ms) " +
+                            "and re-run the test. ";
                 }
                 break;
             case Condition.CABLE_MODEM_FAULT:
