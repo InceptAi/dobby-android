@@ -43,7 +43,7 @@
     <string name="ping_latency">PING LATENCY</string>
     <string name="wifi_quality">WIFI LINK</string>
     <string name="router_ping"> Router</string>
-    <string name="dns_primary_ping">Main DNS</string>
+    <string name="dns_primary_ping">Your DNS</string>
     <string name="dns_second_ping">DNS 2</string>
     <string name="web_ping">Google </string>
     <string name="download_bw">Download</string>
