@@ -61,7 +61,7 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
         }
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.replace(R.id.wifi_doc_placeholder_fl, existingFragment, TAG);
-        fragmentTransaction.addToBackStack(null);
+        // fragmentTransaction.addToBackStack(null);
         fragmentTransaction.commit();
         mainFragment = (WifiDocMainFragment) existingFragment;
     }
