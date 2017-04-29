@@ -114,7 +114,7 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
     public synchronized void onTestFinished(@BandwithTestCodes.TestMode int testMode, BandwidthStats stats) {
         DobbyLog.v("BandwidthObserver onTestFinished");
         if (inferenceEngine != null) {
-            inferenceEngine.notifyBandwidthTestResult(testMode, stats.getPercentile90(), clientIsp, clientExternalIp);
+            inferenceEngine.notifyBandwidthTestResult(testMode, stats.getOverallBandwidth(), clientIsp, clientExternalIp);
         }
 
         HashSet<RtDataListener<Float>> listenerSet = testMode == BandwithTestCodes.TestMode.UPLOAD ? listenersUpload : listenersDownload;

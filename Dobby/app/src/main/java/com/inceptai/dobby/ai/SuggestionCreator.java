@@ -196,6 +196,15 @@ public class SuggestionCreator {
                 params.pingGrade.dnsServerLatencyMetric) > 0);
     }
 
+    private static String getAlternateDNSMessage(SuggestionCreatorParams params) {
+        if (isAlternateDNSBetter(params)) {
+            return "Try changing your primary DNS to " +  params.pingGrade.getAlternativeDns() +
+                    " which has much lower latency (" + params.pingGrade.getAlternativeDnsLatencyMs() +
+                    " ms vs. " + params.pingGrade.getDnsServerLatencyMs() + " ms) " +
+                    "and see if things are faster to load. ";
+        }
+        return Utils.EMPTY_STRING;
+    }
 
     private static String getSuggestionForCondition(@InferenceMap.Condition int condition,
                                                    SuggestionCreatorParams params) {
@@ -514,11 +523,7 @@ public class SuggestionCreator {
                 break;
             case Condition.DNS_RESPONSE_SLOW:
                 baseMessage = "Your current DNS server is acting slow to respond to queries. ";
-                if (isAlternateDNSBetter(params)) {
-                    conditionalMessage = "Try changing primary DNS to " +  params.pingGrade.getAlternativeDns() +
-                            " which is working (latency of about ~ " + params.pingGrade.getAlternativeDnsLatencyMs() +
-                            "and re-run the test. ";
-                }
+                conditionalMessage = getAlternateDNSMessage(params);
                 break;
             case Condition.DNS_SLOW_TO_REACH:
                 baseMessage = getMessageAboutWifiLink(params);
@@ -530,10 +535,7 @@ public class SuggestionCreator {
                 baseMessage += "current DNS server has a high latency, " +
                         "which can cause an initial lag during the load time of an app or a " +
                         "webpage. ";
-                if (isAlternateDNSBetter(params)) {
-                    conditionalMessage = "Try changing primary DNS to " +  params.pingGrade.getAlternativeDns() +
-                            " which is working and re-run the test. ";
-                }
+                conditionalMessage = getAlternateDNSMessage(params);
                 break;
             case Condition.DNS_UNREACHABLE:
                 baseMessage = getMessageAboutWifiLink(params);
@@ -544,10 +546,7 @@ public class SuggestionCreator {
                 }
                 baseMessage += "are unable to reach your DNS server, which means you can't access " +
                         "the Internet on your phone and other devices.";
-                if (isAlternateDNSBetter(params)) {
-                    conditionalMessage = "Try changing primary DNS to " +  params.pingGrade.getAlternativeDns() +
-                            " which is working and re-run the test. ";
-                }
+                conditionalMessage = getAlternateDNSMessage(params);
                 break;
             case Condition.CABLE_MODEM_FAULT:
                 baseMessage = "We think your cable modem might be faulty. You should try resetting " +
@@ -654,10 +653,7 @@ public class SuggestionCreator {
                     baseMessage = "Your ";
                 }
                 baseMessage += "current DNS server is acting slow to respond to queries. ";
-                if (isAlternateDNSBetter(params)) {
-                    conditionalMessage = "Try changing primary DNS to " +  params.pingGrade.getAlternativeDns() +
-                            " which is working and re-run the test. ";
-                }
+                conditionalMessage = getAlternateDNSMessage(params);
                 break;
             case Condition.DNS_SLOW_TO_REACH:
                 if (!baseMessage.equals(Utils.EMPTY_STRING)) {
@@ -677,10 +673,7 @@ public class SuggestionCreator {
                 }
                 baseMessage += "We are unable to reach your DNS server, which means you can't access " +
                         "the Internet on your phone and other devices.";
-                if (isAlternateDNSBetter(params)) {
-                    conditionalMessage = "Try changing primary DNS to " +  params.pingGrade.getAlternativeDns() +
-                            " which is working and re-run the test. ";
-                }
+                conditionalMessage = getAlternateDNSMessage(params);
                 break;
             case Condition.CABLE_MODEM_FAULT:
                 baseMessage = "We think your cable modem might be faulty. You should try resetting " +

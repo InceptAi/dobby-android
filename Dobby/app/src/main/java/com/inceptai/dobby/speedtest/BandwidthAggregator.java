@@ -198,9 +198,10 @@ public class BandwidthAggregator {
             double max = instantBandwidthList.get(instantBandwidthList.size() - 1);
             double median = Utils.computePercentileFromSortedList(instantBandwidthList, 50);
             double percentile90 = Utils.computePercentileFromSortedList(instantBandwidthList, 90);
+            double percentile75 = Utils.computePercentileFromSortedList(instantBandwidthList, 75);
             double percentile10 = Utils.computePercentileFromSortedList(instantBandwidthList, 10);
             stats = new BandwidthStats(numThreads, max, min,
-                    median, percentile90, percentile10);
+                    median, percentile90, percentile75, percentile10);
         }
         return stats;
     }
