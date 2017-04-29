@@ -50,6 +50,7 @@ import static com.inceptai.dobby.ai.DataInterpreter.MetricType.POOR;
 
 public class WifiDocMainFragment extends Fragment implements View.OnClickListener, NewBandwidthAnalyzer.ResultsCallback, Handler.Callback{
     public static final String TAG = "WifiDocMainFragment";
+    private static final String ZERO_POINT_ZERO = "0.0";
     private static final int PERMISSION_COARSE_LOCATION_REQUEST_CODE = 101;
     private static final String ARG_PARAM1 = "param1";
     private static final int MSG_UPDATED_CIRCULAR_GAUGE = 1001;
@@ -535,6 +536,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         downloadCircularGauge.setValue(0);
         wifiCongestionValueTv.setText(String.valueOf(0));
         wifiSignalValueTv.setText(String.valueOf(0));
+        uploadGaugeTv.setText(ZERO_POINT_ZERO);
+        downloadGaugeTv.setText(ZERO_POINT_ZERO);
     }
 
     private void setImage(ImageView view, int resourceId) {
