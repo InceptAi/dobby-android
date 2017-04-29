@@ -2,7 +2,10 @@ package com.inceptai.dobby.model;
 
 import android.net.DhcpInfo;
 
+import com.google.common.collect.ImmutableMap;
 import com.inceptai.dobby.utils.Utils;
+
+import java.util.Map;
 
 /**
  * Created by vivek on 4/8/17.
@@ -17,8 +20,10 @@ public class IPLayerInfo {
     public static final String GOOGLE_SECONDARY_DNS_SERVER = "8.8.4.4";
     public static final String VERISIGN_PRIMARY_DNS_SERVER = "64.6.64.6";
     public static final String VERISIGN_SECONDARY_DNS_SERVER = "64.6.65.6";
-
-
+    public static final Map<String, String> dnsIpToName = ImmutableMap.of(
+            LEVEL3_PRIMARY_DNS_SERVER, "Level3 DNS",
+            GOOGLE_PRIMARY_DNS_SERVER, "Google DNS",
+            VERISIGN_PRIMARY_DNS_SERVER, "Verisign");
 
     public String dns1;
     public String dns2;
