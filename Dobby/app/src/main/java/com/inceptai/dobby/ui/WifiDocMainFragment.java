@@ -137,7 +137,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
         populateViews(view);
         resetData();
-        requestPermissions();
+        // requestPermissions();
         showTapOnboarding(view);
         return view;
     }

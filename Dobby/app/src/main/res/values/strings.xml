@@ -45,7 +45,7 @@
     <string name="router_ping"> Router</string>
     <string name="dns_primary_ping">Main DNS</string>
     <string name="dns_second_ping">DNS 2</string>
-    <string name="web_ping">Web </string>
+    <string name="web_ping">Google </string>
     <string name="download_bw">Download</string>
     <string name="upload_bw">Upload</string>
     <string name="percent">%</string>
