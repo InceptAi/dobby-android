@@ -272,11 +272,11 @@ public class PingAnalyzer {
             try {
                 dataFromUrl = Utils.getDataFromUrl(gatewayURLToDownload, MAX_STRING_LENGTH);
                 if (dataFromUrl.length() > 0) {
-                    latencyMeasurementsMs.add(Double.valueOf((double)System.currentTimeMillis() - startTime));
+                    latencyMeasurementsMs.add(Double.valueOf(System.currentTimeMillis() - startTime));
                 }
             } catch (Utils.HTTPReturnCodeException e) {
                 DobbyLog.v("HTTP Return code: " + e.httpReturnCode);
-                latencyMeasurementsMs.add(Double.valueOf((double)System.currentTimeMillis() - startTime));
+                latencyMeasurementsMs.add(Double.valueOf(System.currentTimeMillis() - startTime));
             } catch (IOException e) {
                 String errorString = "Exception while performing latencyMs test: " + e;
                 DobbyLog.v(errorString);
@@ -310,8 +310,7 @@ public class PingAnalyzer {
                             return scheduleGatewayDownloadLatencyTest();
                         }
                     };
-            ListenableFuture<PingStats> newGatewayDownloadTestFuture = Futures.transformAsync(gatewayDownloadTestFuture, redoDownloadLatencyTest);
-            return newGatewayDownloadTestFuture;
+            return Futures.transformAsync(gatewayDownloadTestFuture, redoDownloadLatencyTest);
         } else {
             return scheduleGatewayDownloadLatencyTest();
         }
