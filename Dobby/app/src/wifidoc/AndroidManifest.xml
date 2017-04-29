@@ -12,7 +12,9 @@
         android:theme="@style/AppThemeOrangeDark"
         tools:replace="android:theme"
         >
-        <activity android:name=".ui.WifiDocActivity" android:screenOrientation="portrait">
+        <activity android:name=".ui.WifiDocActivity"
+            android:theme="@style/AppThemeOrangeDark.NoActionBar.Compat"
+            android:screenOrientation="portrait">
             <!--
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
