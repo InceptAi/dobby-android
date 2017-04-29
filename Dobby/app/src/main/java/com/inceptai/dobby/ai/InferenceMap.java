@@ -92,7 +92,7 @@ public class InferenceMap {
     private static int[] DNS_CONDITIONS = {
         Condition.DNS_RESPONSE_SLOW,
         Condition.DNS_SLOW_TO_REACH,
-        Condition.DNS_UNREACHABLE,
+        Condition.DNS_UNREACHABLE
     };
 
 
@@ -100,6 +100,7 @@ public class InferenceMap {
         Condition.ROUTER_FAULT_WIFI_OK,
         Condition.ROUTER_SOFTWARE_FAULT,
         Condition.ROUTER_WIFI_INTERFACE_FAULT,
+        Condition.CABLE_MODEM_FAULT
     };
 
 
@@ -160,47 +161,58 @@ public class InferenceMap {
             return conditions;
         }
 
-        //Connectivity mode
+        //wifi Connectivity mode
         if (wifiGrade.wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL) {
             //Connected but offline -- we are getting 302 download google.com
             conditions.include(Condition.CAPTIVE_PORTAL_NO_INTERNET, 1.0);
+            conditions.exclude(ISP_CONDITIONS);
+            conditions.exclude(DNS_CONDITIONS);
         } else if (wifiGrade.wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_OFFLINE) {
             //Connected but offline -- we can't download http://client3.google.com/204
-            conditions.include(Condition.ISP_INTERNET_DOWN, 0.7);
-            conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.2);
-            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.2);
-            conditions.include(Condition.DNS_UNREACHABLE, 0.2);
+            conditions.include(Condition.ISP_INTERNET_DOWN, 0.3);
+            conditions.include(Condition.CABLE_MODEM_FAULT, 0.3);
+            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
+            conditions.include(Condition.DNS_UNREACHABLE, 0.3);
         } else if (wifiGrade.wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.OFF) {
             //Wifi is off. Need to turn it on.
             conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_TURNED_OFF, 1.0);
         }
 
-        //Wifi signal
-        if (DataInterpreter.isUnknown(wifiGrade.primaryApSignalMetric) ||
-                wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.HANGING_ON_SCANNING ||
-                wifiGrade.wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.ON_AND_DISCONNECTED ||
+        //Wifi link mode
+        if (wifiGrade.wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.ON_AND_DISCONNECTED  &&
+                (wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.HANGING_ON_SCANNING ||
                 wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.FREQUENT_DISCONNECTIONS ||
                 wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.HANGING_ON_AUTHENTICATING ||
-                wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.HANGING_ON_DHCP) {
+                wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.HANGING_ON_DHCP)) {
             // Wifi is on but not connected to the router
             //It could be that client Wifi interface is not connecting or user needs to issue explicit command to connect
             conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE, 0.3);
             //It could be that the right network is not showing up in the scans.
-            conditions.include(Condition.ROUTER_WIFI_INTERFACE_FAULT, 0.7);
-        }  else if (DataInterpreter.isPoorOrAbysmalOrNonFunctional(wifiGrade.primaryApSignalMetric)) {
+            conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.7);
+            conditions.exclude(ISP_CONDITIONS);
+            conditions.exclude(DNS_CONDITIONS);
+            return conditions;
+        }
+
+        //Wifi signal
+        if (DataInterpreter.isAbysmalOrNonFunctional(wifiGrade.primaryApSignalMetric)) {
             //poor signal and high congestion
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 1.0);
             //TODO: Discuss this with Arunesh in Inference Map
+            conditions.exclude(ROUTER_CONDITIONS);
             //conditions.exclude(ISP_CONDITIONS);
             //conditions.exclude(DNS_CONDITIONS);
-            if (DataInterpreter.isAverageOrPoorOrNonFunctional(wifiGrade.primaryLinkChannelOccupancyMetric)) {
-                conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.5);
+            if (DataInterpreter.isAbysmalOrNonFunctional(wifiGrade.primaryLinkChannelOccupancyMetric)) {
+                conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.7);
             }
-            if (wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.FREQUENT_DISCONNECTIONS){
-                conditions.include(Condition.ROUTER_WIFI_INTERFACE_FAULT, 0.8);
-            } else if (wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.HANGING_ON_AUTHENTICATING ||
-                    wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.HANGING_ON_DHCP){
-                conditions.include(Condition.ROUTER_WIFI_INTERFACE_FAULT, 1.0);
+        } else if (DataInterpreter.isPoor(wifiGrade.primaryApSignalMetric)) {
+            //poor signal and high congestion
+            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.7);
+            if (DataInterpreter.isAbysmalOrNonFunctional(wifiGrade.primaryLinkChannelOccupancyMetric)) {
+                conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
+            }
+            if (wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.FREQUENT_DISCONNECTIONS) {
+                conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.2);
             }
         } else if (DataInterpreter.isGoodOrExcellentOrAverage(wifiGrade.primaryApSignalMetric)){
             conditions.exclude(Condition.WIFI_CHANNEL_BAD_SIGNAL);
@@ -210,10 +222,8 @@ public class InferenceMap {
             if (DataInterpreter.isAverageOrPoorOrNonFunctional(wifiGrade.primaryLinkChannelOccupancyMetric)) {
                 conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.2);
             }
-            if (wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.FREQUENT_DISCONNECTIONS ||
-                    wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.HANGING_ON_AUTHENTICATING ||
-                    wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.HANGING_ON_DHCP){
-                conditions.include(Condition.ROUTER_WIFI_INTERFACE_FAULT, 1.0);
+            if (wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.FREQUENT_DISCONNECTIONS) {
+                conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.7);
             }
         }
 
@@ -227,6 +237,7 @@ public class InferenceMap {
             conditions.include(Condition.WIFI_LINK_DHCP_ISSUE, 1.0);
         }
         */
+
         return conditions;
     }
 
@@ -270,7 +281,7 @@ public class InferenceMap {
                 conditions.include(Condition.DNS_SLOW_TO_REACH, 0.5);
                 conditions.include(Condition.CABLE_MODEM_FAULT, 0.2);
             } else if (DataInterpreter.isNonFunctional(pingGrade.dnsServerLatencyMetric)) {
-                conditions.include(Condition.DNS_UNREACHABLE, 0.5);
+                conditions.include(Condition.DNS_UNREACHABLE, 0.8);
                 conditions.include(Condition.CABLE_MODEM_FAULT, 0.2);
             }
         } else if (DataInterpreter.isPoor(pingGrade.routerLatencyMetric)) {
@@ -278,7 +289,8 @@ public class InferenceMap {
             conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.2);
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.8);
             if (DataInterpreter.isNonFunctional(pingGrade.dnsServerLatencyMetric)) {
-                conditions.include(Condition.DNS_UNREACHABLE, 0.1);
+                conditions.include(Condition.DNS_UNREACHABLE, 0.8);
+                conditions.include(Condition.CABLE_MODEM_FAULT, 0.2);
             }
         } else if (DataInterpreter.isNonFunctional(pingGrade.routerLatencyMetric)) {
             //Router ping is Non functional -- loss rate could be 100%
@@ -291,7 +303,11 @@ public class InferenceMap {
 
         if (DataInterpreter.isNonFunctional(pingGrade.dnsServerLatencyMetric)) {
             conditions.exclude(ISP_CONDITIONS);
+            if (DataInterpreter.isGoodOrExcellentOrAverage(pingGrade.alternativeDnsMetric)) {
+                conditions.exclude(Condition.CABLE_MODEM_FAULT);
+            }
         }
+
 
         return conditions;
     }
