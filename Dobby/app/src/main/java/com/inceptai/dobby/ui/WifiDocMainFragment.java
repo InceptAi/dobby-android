@@ -5,7 +5,6 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
-import android.graphics.PorterDuff;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -284,7 +283,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
     @Override
     public void onTestFinished(@BandwithTestCodes.TestMode int testMode, BandwidthStats stats) {
-        Message.obtain(handler, MSG_UPDATED_CIRCULAR_GAUGE, BandwidthValue.from(testMode, (stats.getPercentile90() / 1.0e6))).sendToTarget();
+        Message.obtain(handler, MSG_UPDATED_CIRCULAR_GAUGE, BandwidthValue.from(testMode, (stats.getOverallBandwidth() / 1.0e6))).sendToTarget();
     }
 
     @Override

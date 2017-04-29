@@ -7,7 +7,6 @@ import android.os.Looper;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.SwitchCompat;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,7 +37,6 @@ import java.util.concurrent.ExecutionException;
 
 import javax.inject.Inject;
 
-import static com.inceptai.dobby.DobbyApplication.TAG;
 import static com.inceptai.dobby.speedtest.BandwithTestCodes.TestMode.DOWNLOAD;
 import static com.inceptai.dobby.speedtest.BandwithTestCodes.TestMode.DOWNLOAD_AND_UPLOAD;
 import static com.inceptai.dobby.speedtest.BandwithTestCodes.TestMode.IDLE;
@@ -261,7 +259,7 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
 
     @Override
     public void onTestFinished(@BandwithTestCodes.TestMode int testMode, BandwidthStats stats) {
-        addConsoleText("Bandwidth Test finished: " + stats.getPercentile90() / 1.0E6 + " Mbps.");
+        addConsoleText("Bandwidth Test finished: " + stats.getOverallBandwidth() / 1.0E6 + " Mbps.");
         bwDisplayTs = 0;
         if (scheduleFollowupBandwidthTest) {
             followupBandwidthTest();
