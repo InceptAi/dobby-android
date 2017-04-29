@@ -127,34 +127,10 @@ public class MetricsDb {
 
     public SuggestionCreator.SuggestionCreatorParams getParamsForSuggestions() {
         SuggestionCreator.SuggestionCreatorParams params = new SuggestionCreator.SuggestionCreatorParams();
-
-        if (wifiGrade.hasValidData()) {
-            params.currentSignal = wifiGrade.primaryApSignal;
-            params.currentWifiChannel = wifiGrade.primaryApChannel;
-            params.currentWifiSSID = wifiGrade.primaryApSsid;
-            //Only set best wifi channel if not equal to primary AP channel
-            if (wifiGrade.leastOccupiedChannel != wifiGrade.primaryApChannel) {
-                params.bestWifiChannel = wifiGrade.leastOccupiedChannel;
-            }
-        }
-
-        if (pingGrade.hasValidData() && DataInterpreter.compareMetric(pingGrade.alternativeDnsMetric,
-                pingGrade.dnsServerLatencyMetric) > 0) {
-            params.alternateDNS = pingGrade.alternativeDns;
-        }
-
-        if (bandwidthGrade.hasValidDownload()) {
-            params.downloadBandwidthMbps = bandwidthGrade.getDownloadMbps();
-        }
-
-        if (bandwidthGrade.hasValidUpload()) {
-            params.uploadBandwidthMbps = bandwidthGrade.getUploadMbps();
-        }
-
-        if (bandwidthGrade.hasValidUpload() || bandwidthGrade.hasValidDownload()) {
-            params.isp = bandwidthGrade.isp;
-        }
-
+        params.wifiGrade = wifiGrade;
+        params.bandwidthGrade = bandwidthGrade;
+        params.pingGrade = pingGrade;
+        params.httpGrade = httpGrade;
         return params;
     }
 

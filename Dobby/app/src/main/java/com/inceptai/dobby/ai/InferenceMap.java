@@ -165,6 +165,8 @@ public class InferenceMap {
         if (wifiGrade.wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL) {
             //Connected but offline -- we are getting 302 download google.com
             conditions.include(Condition.CAPTIVE_PORTAL_NO_INTERNET, 1.0);
+            conditions.exclude(ISP_CONDITIONS);
+            conditions.exclude(DNS_CONDITIONS);
         } else if (wifiGrade.wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_OFFLINE) {
             //Connected but offline -- we can't download http://client3.google.com/204
             conditions.include(Condition.ISP_INTERNET_DOWN, 0.3);

@@ -430,6 +430,10 @@ public class DataInterpreter {
         public HttpGrade() {
         }
 
+        public boolean hasValidData() {
+            return updatedAtMs > 0.0 && DataInterpreter.isFresh(updatedAtMs);
+        }
+
         public void clear() {
             updatedAtMs = 0;
         }
