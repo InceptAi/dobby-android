@@ -6,6 +6,7 @@ import com.inceptai.dobby.utils.Utils;
 import com.inceptai.dobby.wifi.WifiState;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import static com.inceptai.dobby.utils.Utils.convertSignalDbmToPercent;
@@ -22,12 +23,16 @@ public class SuggestionCreator {
         String title;
         List<String> longSuggestionList;
         List<String> shortSuggestionList;
+        HashMap<Integer, Double> conditionsMap;
+        SuggestionCreatorParams suggestionCreatorParams;
         long creationTimestampMs;
 
         Suggestion() {
             title = Utils.EMPTY_STRING;
             longSuggestionList = new ArrayList<>();
             shortSuggestionList = new ArrayList<>();
+            conditionsMap = new HashMap<>();
+            suggestionCreatorParams = new SuggestionCreatorParams();
             creationTimestampMs = System.currentTimeMillis();
         }
 
@@ -113,8 +118,11 @@ public class SuggestionCreator {
         return channelString;
     }
 
-    static Suggestion get(List<Integer> conditionList, SuggestionCreatorParams params) {
+    static Suggestion get(HashMap<Integer, Double> conditionMap, SuggestionCreatorParams params) {
         Suggestion suggestionToReturn = new Suggestion();
+        suggestionToReturn.suggestionCreatorParams = params;
+        suggestionToReturn.conditionsMap = conditionMap;
+        List<Integer> conditionList = new ArrayList<Integer>(conditionMap.keySet());
         suggestionToReturn.title = getTitle(conditionList, params);
         for (int index=0; index < conditionList.size(); index++) {
             @Condition int condition  = conditionList.get(index);
@@ -180,7 +188,6 @@ public class SuggestionCreator {
 
     private static String getTitle(List<Integer> conditionList,
                                   SuggestionCreatorParams params) {
-
         String titleToReturn = Utils.EMPTY_STRING;
         if (conditionList.size() > 0) {
             @Condition int condition = conditionList.get(0);

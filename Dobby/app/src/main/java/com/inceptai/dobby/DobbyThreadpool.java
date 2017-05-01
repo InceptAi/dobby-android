@@ -10,6 +10,7 @@ import com.inceptai.dobby.ui.UiThreadExecutor;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
@@ -37,7 +38,7 @@ public class DobbyThreadpool {
     // A queue of Runnables
     private final BlockingQueue<Runnable> workQueue;
 
-    private ThreadPoolExecutor dobbyThreadPool;
+    private ThreadPoolExecutor threadPoolExecutor;
     private ListeningExecutorService listeningExecutorService;
     private ListeningScheduledExecutorService scheduledExecutorService;
 
@@ -56,14 +57,14 @@ public class DobbyThreadpool {
         // Thread.setDefaultUncaughtExceptionHandler(newHandler);
 
         // Creates a thread pool manager
-        dobbyThreadPool = new ThreadPoolExecutor(
+        threadPoolExecutor = new ThreadPoolExecutor(
                 INTIAL_POOL_SIZE,       // Initial pool size
                 2 * NUMBER_OF_CORES,       // Max pool size
                 KEEP_ALIVE_TIME,
                 KEEP_ALIVE_TIME_UNIT,
                 workQueue, new DobbyThreadFactory(newHandler));
 
-        listeningExecutorService = MoreExecutors.listeningDecorator(dobbyThreadPool);
+        listeningExecutorService = MoreExecutors.listeningDecorator(threadPoolExecutor);
         scheduledExecutorService = MoreExecutors.listeningDecorator(Executors.newSingleThreadScheduledExecutor());
         uiThreadExecutor = new UiThreadExecutor();
         networkLayerExecutorService = MoreExecutors.listeningDecorator(Executors.newSingleThreadScheduledExecutor());
@@ -71,15 +72,16 @@ public class DobbyThreadpool {
     }
 
     public void submit(Runnable runnable) {
-        dobbyThreadPool.submit(runnable);
+        threadPoolExecutor.submit(runnable);
     }
 
     public ListeningExecutorService getListeningExecutorService() {
         return listeningExecutorService;
     }
 
+    public ExecutorService getExecutorService() { return threadPoolExecutor; }
     public Executor getExecutor() {
-        return dobbyThreadPool;
+        return threadPoolExecutor;
     }
 
     public ScheduledExecutorService getScheduledExecutorService() {

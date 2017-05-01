@@ -8,6 +8,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.NetworkLayer;
+import com.inceptai.dobby.database.DatabaseWriter;
 import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.PingStats;
@@ -52,11 +53,12 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         void showRtGraph(RtDataSource<Float, Integer> rtDataSource);
     }
 
-    public DobbyAi(Context context, DobbyThreadpool threadpool) {
+    public DobbyAi(Context context, DobbyThreadpool threadpool, DatabaseWriter databaseWriter) {
         this.context = context;
         this.threadpool = threadpool;
         useApiAi = DobbyApplication.isDobbyFlavor();
-        inferenceEngine = new InferenceEngine(threadpool.getScheduledExecutorService(), this);
+        inferenceEngine = new InferenceEngine(threadpool.getScheduledExecutorService(),
+                this, databaseWriter);
         if (useApiAi) {
             initApiAiClient();
         }
@@ -132,10 +134,6 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         } else {
             DobbyLog.w("Ignoring text query for Wifi doc version :" + text);
         }
-    }
-
-    public SuggestionCreator.Suggestion getSuggestions() {
-        return inferenceEngine.suggest();
     }
 
     public void cleanup() {
