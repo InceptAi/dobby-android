@@ -259,16 +259,28 @@
         android:background="@android:color/white">
     </android.support.v7.widget.Toolbar>
 
+    <com.github.jorgecastilloprz.FABProgressCircle
+        android:id="@+id/fabProgressCircle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:arcColor="@color/white"
+        app:arcWidth="5dp"
+        app:finalIcon="@drawable/ic_done"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:reusable="true"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:backgroundTint="@color/orangeMediumLight1"
+        >
+
     <android.support.design.widget.FloatingActionButton
         android:layout_width="70dp"
         android:layout_height="70dp"
         android:id="@+id/main_fab_button"
         android:src="@mipmap/wifi_meter"
         app:backgroundTint="@color/orangeMediumLight1"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
         app:elevation="7dp"
         app:rippleColor="@color/orangeLighter"
-        android:clickable="true"
-        app:layout_constraintLeft_toLeftOf="parent" />
+        android:clickable="true" />
+    </com.github.jorgecastilloprz.FABProgressCircle>
 </android.support.constraint.ConstraintLayout>

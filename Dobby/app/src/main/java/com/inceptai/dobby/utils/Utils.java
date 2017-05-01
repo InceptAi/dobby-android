@@ -41,6 +41,8 @@ import static com.inceptai.dobby.DobbyApplication.TAG;
 
 public class Utils {
     public static final String EMPTY_STRING = "";
+    public static final String TRUE_STRING = "true";
+    public static final String FALSE_STRING = "false";
     private static final int READ_TIMEOUT_MS = 10000;
     private static final int CONNECTION_TIMEOUT_MS = 15000;
     private static Random random = new Random();

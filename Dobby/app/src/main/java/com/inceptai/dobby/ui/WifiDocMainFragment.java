@@ -25,6 +25,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.github.jorgecastilloprz.FABProgressCircle;
 import com.google.common.eventbus.Subscribe;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.ai.DataInterpreter;
@@ -77,6 +78,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private OnFragmentInteractionListener mListener;
 
     private FloatingActionButton mainFab;
+    private FABProgressCircle fabProgressCircle;
+
     private CircularGauge downloadCircularGauge;
     private TextView downloadGaugeTv;
     private TextView downloadGaugeTitleTv;
@@ -441,6 +444,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         mainFab = (FloatingActionButton) rootView.findViewById(R.id.main_fab_button);
         mainFab.setOnClickListener(this);
 
+        fabProgressCircle = (FABProgressCircle) rootView.findViewById(R.id.fabProgressCircle);
+
         yourNetworkCv = (CardView) rootView.findViewById(R.id.net_cardview);
         pingCv = (CardView) rootView.findViewById(R.id.ping_cardview);
         statusCv = (CardView) rootView.findViewById(R.id.status_cardview);
@@ -611,6 +616,15 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     }
 
     private void switchState(int newState) {
+        if ((uiState == UI_STATE_INIT_AND_READY || uiState == UI_STATE_READY_WITH_RESULTS )
+                && newState == UI_STATE_RUNNING_TESTS) {
+            // Tests starting.
+            fabProgressCircle.show();
+        }
+
+        if (uiState == UI_STATE_RUNNING_TESTS && newState == UI_STATE_READY_WITH_RESULTS) {
+            fabProgressCircle.beginFinalAnimation();
+        }
         uiState = newState;
         if (newState == UI_STATE_RUNNING_TESTS) {
             statusTv.setText(R.string.running_tests);

@@ -18,6 +18,7 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 
+import com.google.common.primitives.Booleans;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.utils.Utils;
 
@@ -48,6 +49,9 @@ public class WifiDocOnboardingActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (isOnboardingDone()) {
+            finishAndStartWifiDoc();
+        }
         setContentView(R.layout.activity_wifi_doc_onboarding);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -92,8 +96,7 @@ public class WifiDocOnboardingActivity extends AppCompatActivity {
         skipButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Utils.saveSharedSetting(WifiDocOnboardingActivity.this,
-                        WifiDocActivity.PREF_FIRST_TIME_USER, "false");
+                saveOnboardingDone();
                 finishAndStartWifiDoc();
             }
         });
@@ -101,8 +104,7 @@ public class WifiDocOnboardingActivity extends AppCompatActivity {
         finishButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Utils.saveSharedSetting(WifiDocOnboardingActivity.this,
-                        WifiDocActivity.PREF_FIRST_TIME_USER, "false");
+                saveOnboardingDone();
                 finishAndStartWifiDoc();
             }
         });
@@ -124,6 +126,16 @@ public class WifiDocOnboardingActivity extends AppCompatActivity {
                     i == position ? R.drawable.indicator_selected : R.drawable.indicator_unselected
             );
         }
+    }
+
+    private void saveOnboardingDone() {
+        Utils.saveSharedSetting(WifiDocOnboardingActivity.this,
+                WifiDocActivity.PREF_FIRST_TIME_USER, Utils.TRUE_STRING);
+    }
+
+    private boolean isOnboardingDone() {
+        return Boolean.valueOf(Utils.readSharedSetting(WifiDocOnboardingActivity.this,
+                WifiDocActivity.PREF_FIRST_TIME_USER, Utils.FALSE_STRING));
     }
 
     private void finishAndStartWifiDoc() {
