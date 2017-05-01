@@ -56,21 +56,31 @@ public class DatabaseWriter {
     private ValueEventListener postListener = new ValueEventListener() {
         @Override
         public void onDataChange(DataSnapshot dataSnapshot) {
+            final DataSnapshot snapshot = dataSnapshot;
             // Get Post object and use the values to update the UI
-            InferenceRecord inferenceRecord = dataSnapshot.getValue(InferenceRecord.class);
-            if (inferenceRecord != null) {
-                DobbyLog.v("Wrote to record: " + inferenceRecord.toString());
-            } else {
-                DobbyLog.v("Got null record from db");
-            }
-            // ...
+            executorService.submit(new Runnable() {
+                @Override
+                public void run() {
+                    InferenceRecord inferenceRecord = snapshot.getValue(InferenceRecord.class);
+                    if (inferenceRecord != null) {
+                        DobbyLog.v("Wrote to record: " + inferenceRecord.toString());
+                    } else {
+                        DobbyLog.v("Got null record from db");
+                    }
+                }
+            });
         }
 
         @Override
         public void onCancelled(DatabaseError databaseError) {
             // Getting Post failed, log a message
-            DobbyLog.w("loadPost:onCancelled" + databaseError.toException());
-            // ...
+            final DatabaseError error = databaseError;
+            executorService.submit(new Runnable() {
+                @Override
+                public void run() {
+                    DobbyLog.w("loadPost:onCancelled" + error.toException());
+                }
+            });
         }
     };
 }
