@@ -2,7 +2,6 @@ package com.inceptai.dobby.database;
 
 import com.google.firebase.database.Exclude;
 import com.google.firebase.database.IgnoreExtraProperties;
-import com.inceptai.dobby.ai.DataInterpreter;
 
 import java.util.HashMap;
 import java.util.List;
@@ -15,15 +14,17 @@ import java.util.Map;
 @IgnoreExtraProperties
 public class InferenceRecord {
     public String uid;
-    public String phoneId;
+    public String phoneInfo;
     public String titleMessage;
-    public List<String> detailedMessageList;
     public long timestamp;
-    public DataInterpreter.BandwidthGrade bandwidthGrade;
-    public DataInterpreter.WifiGrade wifiGrade;
-    public DataInterpreter.PingGrade pingGrade;
-    public DataInterpreter.HttpGrade httpGrade;
-    public HashMap<Integer, Double> conditionsUsedForInference;
+    public String bandwidthGradeJson;
+    public String wifiGradeJson;
+    public String pingGradeJson;
+    public String httpGradeJson;
+
+    public List<String> detailedMessageList;
+
+    public String conditionsUsedForInference;
 
     public InferenceRecord() {}
 
@@ -31,16 +32,59 @@ public class InferenceRecord {
     public Map<String, Object> toMap() {
         HashMap<String, Object> result = new HashMap<>();
         result.put("uid", uid);
-        result.put("phoneId", phoneId);
-        result.put("title", titleMessage);
-        result.put("detailed", detailedMessageList);
-        result.put("ts", timestamp);
-        result.put("bw", bandwidthGrade);
-        result.put("wifi", wifiGrade);
-        result.put("ping", pingGrade);
-        result.put("http", httpGrade);
-        result.put("pc", conditionsUsedForInference);
+        result.put("phoneInfo", phoneInfo);
+        result.put("titleMessage", titleMessage);
+        result.put("detailedMessageList", detailedMessageList);
+        result.put("timestamp", timestamp);
+        result.put("bandwidthGradeJson", bandwidthGradeJson);
+        result.put("wifiGradeJson", wifiGradeJson);
+        result.put("pingGradeJson", pingGradeJson);
+        result.put("httpGradeJson", httpGradeJson);
+        result.put("conditionsUsedForInference", conditionsUsedForInference);
+
         return result;
+    }
+
+    public String getUid() {
+        return uid;
+    }
+
+    public String getPhoneInfo() {
+        return phoneInfo;
+    }
+
+    public String getTitleMessage() {
+        return titleMessage;
+    }
+
+
+    public List<String> getDetailedMessageList() {
+        return detailedMessageList;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public String getBandwidthGradeJson() {
+        return bandwidthGradeJson;
+    }
+
+    public String getWifiGradeJson() {
+        return wifiGradeJson;
+    }
+
+    public String getPingGradeJson() {
+        return pingGradeJson;
+    }
+
+    public String getHttpGradeJson() {
+        return httpGradeJson;
+    }
+
+
+    public String getConditionsUsedForInference() {
+        return conditionsUsedForInference;
     }
 
 }

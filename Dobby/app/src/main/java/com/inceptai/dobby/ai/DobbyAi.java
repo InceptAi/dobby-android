@@ -47,18 +47,19 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     @Inject
     DobbyEventBus eventBus;
 
-
     public interface ResponseCallback {
         void showResponse(String text);
         void showRtGraph(RtDataSource<Float, Integer> rtDataSource);
     }
 
-    public DobbyAi(Context context, DobbyThreadpool threadpool, DatabaseWriter databaseWriter) {
-        this.context = context;
+    public DobbyAi(DobbyThreadpool threadpool,
+                   DatabaseWriter databaseWriter,
+                   DobbyApplication dobbyApplication) {
+        this.context = dobbyApplication.getApplicationContext();
         this.threadpool = threadpool;
         useApiAi = DobbyApplication.isDobbyFlavor();
         inferenceEngine = new InferenceEngine(threadpool.getScheduledExecutorService(),
-                this, databaseWriter);
+                this, databaseWriter, dobbyApplication);
         if (useApiAi) {
             initApiAiClient();
         }

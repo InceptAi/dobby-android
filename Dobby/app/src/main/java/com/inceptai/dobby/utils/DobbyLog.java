@@ -18,9 +18,9 @@ public class DobbyLog {
 
     public static void checkCrashHandler() {
         Thread.UncaughtExceptionHandler handler = Thread.getDefaultUncaughtExceptionHandler();
-        Log.i(TAG, "DobbyLog: Current handler:" + handler.getClass().getCanonicalName());
+        //Log.i(TAG, "DobbyLog: Current handler:" + handler.getClass().getCanonicalName());
         handler = Thread.currentThread().getUncaughtExceptionHandler();
-        Log.i(TAG, "DobbyLog: Current Thread's handler:" + handler.getClass().getCanonicalName());
+        //Log.i(TAG, "DobbyLog: Current Thread's handler:" + handler.getClass().getCanonicalName());
     }
 
     public static void i(String message) {

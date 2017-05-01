@@ -1,6 +1,7 @@
 package com.inceptai.dobby;
 
 import android.app.Application;
+import android.os.Build;
 import android.util.Log;
 
 import com.inceptai.dobby.dagger.DaggerProdComponent;
@@ -8,7 +9,7 @@ import com.inceptai.dobby.dagger.ProdComponent;
 import com.inceptai.dobby.dagger.ProdModule;
 import com.inceptai.dobby.utils.Utils;
 
-import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -37,6 +38,7 @@ public class DobbyApplication extends Application {
         Thread.UncaughtExceptionHandler handler = Thread.getDefaultUncaughtExceptionHandler();
         Log.i("Dobby", "DobbyApplication: Old handler:" + handler.getClass().getCanonicalName());
         // Thread.setDefaultUncaughtExceptionHandler(new DobbyThreadpool.DobbyUncaughtExceptionHandler(handler));
+        fetchUuid();
     }
 
     private synchronized void fetchUuid() {
@@ -63,4 +65,13 @@ public class DobbyApplication extends Application {
     public String getUserUuid() {
         return userUuid.get();
     }
+
+    public String getPhoneInfo() {
+        HashMap<String, String> phoneInfo = new HashMap<>();
+        phoneInfo.put("manufacturer", Build.MANUFACTURER);
+        phoneInfo.put("model", Build.MODEL);
+        return Utils.convertHashMapToJson(phoneInfo);
+    }
+
+
 }

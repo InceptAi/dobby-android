@@ -391,8 +391,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         }
         setWifiResult(wifiSignalValueTv, String.valueOf(wifiGrade.getPrimaryApSignal()),
                 wifiSignalIconIv, wifiGrade.getPrimaryApSignalMetric());
-        // String availability = String.format("%2.1f", 100.0 *(wifiGrade.getPrimaryLinkCongestionPercentage()));
-        // setWifiResult(wifiCongestionValueTv, availability, wifiCongestionIconIv, wifiGrade.getPrimaryLinkChannelOccupancyMetric());
+        // String availability = String.format("%2.1f", 100.0 *(wifiGradeJson.getPrimaryLinkCongestionPercentage()));
+        // setWifiResult(wifiCongestionValueTv, availability, wifiCongestionIconIv, wifiGradeJson.getPrimaryLinkChannelOccupancyMetric());
     }
 
     private void showPingResults(DataInterpreter.PingGrade pingGrade) {

@@ -126,7 +126,7 @@ public class SuggestionCreator {
         Suggestion suggestionToReturn = new Suggestion();
         suggestionToReturn.suggestionCreatorParams = params;
         suggestionToReturn.conditionsMap = conditionMap;
-        List<Integer> conditionList = new ArrayList<Integer>(conditionMap.keySet());
+        List<Integer> conditionList = new ArrayList<>(conditionMap.keySet());
         suggestionToReturn.title = getTitle(conditionList, params);
         for (int index=0; index < conditionList.size(); index++) {
             @Condition int condition  = conditionList.get(index);
