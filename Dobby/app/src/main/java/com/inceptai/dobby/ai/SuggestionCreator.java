@@ -80,6 +80,10 @@ public class SuggestionCreator {
             return sb.toString();
         }
 
+        public String getIsp() {
+            return suggestionCreatorParams.bandwidthGrade.isp;
+        }
+
         @Override
         public String toString() {
             StringBuilder sb = new StringBuilder();
