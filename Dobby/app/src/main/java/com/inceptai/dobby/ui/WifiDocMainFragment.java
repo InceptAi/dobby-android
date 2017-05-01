@@ -22,10 +22,10 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.github.jorgecastilloprz.FABProgressCircle;
 import com.google.common.eventbus.Subscribe;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.ai.DataInterpreter;
@@ -78,7 +78,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private OnFragmentInteractionListener mListener;
 
     private FloatingActionButton mainFab;
-    private FABProgressCircle fabProgressCircle;
+    private ProgressBar progressBarFab;
 
     private CircularGauge downloadCircularGauge;
     private TextView downloadGaugeTv;
@@ -416,7 +416,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     }
 
     private void showSuggestion(SuggestionCreator.Suggestion suggestion) {
-        sendSwitchStateMessage(UI_STATE_READY_WITH_RESULTS);
+        ispNameTv.setText(suggestion.getIsp());
         if (suggestion == null) {
             DobbyLog.w("Null suggestion received from eventbus.");
             return;
@@ -444,7 +444,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         mainFab = (FloatingActionButton) rootView.findViewById(R.id.main_fab_button);
         mainFab.setOnClickListener(this);
 
-        fabProgressCircle = (FABProgressCircle) rootView.findViewById(R.id.fabProgressCircle);
+        progressBarFab = (ProgressBar) rootView.findViewById(R.id.fab_progress_bar);
 
         yourNetworkCv = (CardView) rootView.findViewById(R.id.net_cardview);
         pingCv = (CardView) rootView.findViewById(R.id.ping_cardview);
@@ -562,6 +562,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             case POOR:
                 setImage(gradeIv, R.drawable.poor_icon);
                 break;
+            case ABYSMAL:
+                setImage(gradeIv, R.drawable.poor_icon);
+                break;
             default:
                 setImage(gradeIv, R.drawable.non_functional);
                 break;
@@ -600,6 +603,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         wifiSignalValueTv.setText(String.valueOf(0));
         uploadGaugeTv.setText(ZERO_POINT_ZERO);
         downloadGaugeTv.setText(ZERO_POINT_ZERO);
+        ispNameTv.setText("");
     }
 
     private void setImage(ImageView view, int resourceId) {
@@ -615,15 +619,17 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         Message.obtain(handler, MSG_SWITCH_STATE, newState, 0).sendToTarget();
     }
 
-    private void switchState(int newState) {
-        if ((uiState == UI_STATE_INIT_AND_READY || uiState == UI_STATE_READY_WITH_RESULTS )
+    private synchronized void switchState(int newState) {
+        if ((uiState == UI_STATE_INIT_AND_READY || uiState == UI_STATE_READY_WITH_RESULTS)
                 && newState == UI_STATE_RUNNING_TESTS) {
             // Tests starting.
-            fabProgressCircle.show();
+            // Disable fab.
+            progressBarFab.setVisibility(View.VISIBLE);
         }
 
         if (uiState == UI_STATE_RUNNING_TESTS && newState == UI_STATE_READY_WITH_RESULTS) {
-            fabProgressCircle.beginFinalAnimation();
+            // Enable FAB.
+            progressBarFab.setVisibility(View.INVISIBLE);
         }
         uiState = newState;
         if (newState == UI_STATE_RUNNING_TESTS) {
