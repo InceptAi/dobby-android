@@ -2,6 +2,7 @@ package com.inceptai.dobby.ai;
 
 import android.support.annotation.IntDef;
 
+import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.connectivity.ConnectivityAnalyzer;
 import com.inceptai.dobby.database.DatabaseWriter;
 import com.inceptai.dobby.database.InferenceRecord;
@@ -30,9 +31,6 @@ import java.util.concurrent.TimeUnit;
 public class InferenceEngine {
     private static final String CANNED_RESPONSE = "We are working on it.";
 
-    private static final String DUMMY_USER_ID = "DUMMY_UID";
-    private static final String DUMMY_PHONE_ID = "PHONE_ID";
-
     private static final int MAX_SUGGESTIONS_TO_SHOW = 2;
     private static final double MAX_GAP_IN_SUGGESTION_WEIGHT = 0.2;
     private static final boolean LONG_SUGGESTION_MODE = true;
@@ -54,6 +52,7 @@ public class InferenceEngine {
     private PossibleConditions currentConditions = PossibleConditions.NOOP_CONDITION;
     private boolean firstRun = true;
     private DatabaseWriter databaseWriter;
+    private DobbyApplication dobbyApplication;
 
     public interface ActionListener {
         void takeAction(Action action);
@@ -73,12 +72,14 @@ public class InferenceEngine {
 
     InferenceEngine(ScheduledExecutorService scheduledExecutorService,
                     ActionListener actionListener,
-                    DatabaseWriter databaseWriter) {
+                    DatabaseWriter databaseWriter,
+                    DobbyApplication dobbyApplication) {
         bandwidthTestState = STATE_BANDWIDTH_TEST_NONE;
         this.scheduledExecutorService = scheduledExecutorService;
         this.actionListener = actionListener;
         metricsDb = new MetricsDb();
         this.databaseWriter = databaseWriter;
+        this.dobbyApplication = dobbyApplication;
     }
 
     public Action addGoal(@Goal int goal) {
@@ -178,8 +179,9 @@ public class InferenceEngine {
 
     private InferenceRecord createInferenceRecord(SuggestionCreator.Suggestion suggestion) {
         InferenceRecord inferenceRecord = new InferenceRecord();
-        inferenceRecord.uid = DUMMY_USER_ID;
-        inferenceRecord.phoneId = DUMMY_PHONE_ID;
+        HashMap<String, String> phoneInfo = new HashMap<>();
+        inferenceRecord.uid = dobbyApplication.getUserUuid();
+        inferenceRecord.phoneInfo = dobbyApplication.getPhoneInfo();
 
         //Assign all the grades
         inferenceRecord.bandwidthGradeJson = suggestion.suggestionCreatorParams.bandwidthGrade.toJson();

@@ -14,7 +14,7 @@ import java.util.Map;
 @IgnoreExtraProperties
 public class InferenceRecord {
     public String uid;
-    public String phoneId;
+    public String phoneInfo;
     public String titleMessage;
     public long timestamp;
     public String bandwidthGradeJson;
@@ -32,7 +32,7 @@ public class InferenceRecord {
     public Map<String, Object> toMap() {
         HashMap<String, Object> result = new HashMap<>();
         result.put("uid", uid);
-        result.put("phoneId", phoneId);
+        result.put("phoneInfo", phoneInfo);
         result.put("titleMessage", titleMessage);
         result.put("detailedMessageList", detailedMessageList);
         result.put("timestamp", timestamp);
@@ -41,7 +41,6 @@ public class InferenceRecord {
         result.put("pingGradeJson", pingGradeJson);
         result.put("httpGradeJson", httpGradeJson);
         result.put("conditionsUsedForInference", conditionsUsedForInference);
-        //result.put("conditionsUsedForInference", "dummy_conditions");
 
         return result;
     }
@@ -50,8 +49,8 @@ public class InferenceRecord {
         return uid;
     }
 
-    public String getPhoneId() {
-        return phoneId;
+    public String getPhoneInfo() {
+        return phoneInfo;
     }
 
     public String getTitleMessage() {

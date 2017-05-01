@@ -51,8 +51,7 @@ public class ProdModule {
     public DobbyAi providesDobbyAi(DobbyApplication application,
                                    DobbyThreadpool threadpool,
                                    DatabaseWriter databaseWriter) {
-        DobbyAi dobbyAi = new DobbyAi(application.getApplicationContext(),
-                threadpool, databaseWriter);
+        DobbyAi dobbyAi = new DobbyAi(threadpool, databaseWriter, application);
         application.getProdComponent().inject(dobbyAi);
         return dobbyAi;
     }

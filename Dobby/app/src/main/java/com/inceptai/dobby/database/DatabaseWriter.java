@@ -28,8 +28,6 @@ public class DatabaseWriter {
     public DatabaseWriter(DobbyThreadpool dobbyThreadpool) {
         mDatabase = FirebaseDatabase.getInstance().getReference();
         executorService = dobbyThreadpool.getExecutorService();
-        mDatabase.addValueEventListener(postListener);
-
     }
 
     private void writeNewInference(InferenceRecord inferenceRecord) {
@@ -40,6 +38,7 @@ public class DatabaseWriter {
         DobbyLog.i("Inference key: " + inferenceKey);
         Map<String, Object> inferenceValues = inferenceRecord.toMap();
         childUpdates.put("/" + INFERENCE_DB_ROOT + "/" + inferenceKey, inferenceValues);
+        mDatabase.child(INFERENCE_DB_ROOT).child(inferenceKey).addValueEventListener(postListener);
         mDatabase.updateChildren(childUpdates);
         //TODO: Update the user index with the inference. Create a user if it doesn't exist.
         //String keyForUserInferenceList = mDatabase.child("users").child(inferenceRecord.uid).child("inferences").push().getKey();
@@ -54,13 +53,13 @@ public class DatabaseWriter {
         });
     }
 
-    ValueEventListener postListener = new ValueEventListener() {
+    private ValueEventListener postListener = new ValueEventListener() {
         @Override
         public void onDataChange(DataSnapshot dataSnapshot) {
             // Get Post object and use the values to update the UI
             InferenceRecord inferenceRecord = dataSnapshot.getValue(InferenceRecord.class);
             if (inferenceRecord != null) {
-                DobbyLog.v("Wrote to record: " + inferenceRecord.toMap());
+                DobbyLog.v("Wrote to record: " + inferenceRecord.toString());
             } else {
                 DobbyLog.v("Got null record from db");
             }

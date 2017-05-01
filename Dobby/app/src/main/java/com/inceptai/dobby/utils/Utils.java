@@ -534,4 +534,8 @@ public class Utils {
         return gson.toJson(integerDoubleHashMap);
     }
 
+    public static String convertHashMapToJson(Map<?, ?> hashMap) {
+        Gson gson = new Gson();
+        return gson.toJson(hashMap);
+    }
 }
