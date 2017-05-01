@@ -684,10 +684,14 @@ public class DataInterpreter {
 
 
         //putting in the values
-        pingGrade.routerLatencyMs = routerStats.avgLatencyMs;
-        pingGrade.alternativeDnsLatencyMs = lowerAlternativeDnsStats.avgLatencyMs;
-        pingGrade.dnsServerLatencyMs = primaryDnsStats.avgLatencyMs;
-        pingGrade.externalServerLatencyMs = avgExternalServerLatencyMs;
+        pingGrade.routerLatencyMs = getEffectivePingLatency(routerStats.avgLatencyMs,
+                routerStats.lossRatePercent);
+        pingGrade.alternativeDnsLatencyMs = getEffectivePingLatency(lowerAlternativeDnsStats.avgLatencyMs,
+                lowerAlternativeDnsStats.lossRatePercent);
+        pingGrade.dnsServerLatencyMs = getEffectivePingLatency(primaryDnsStats.avgLatencyMs,
+                primaryDnsStats.lossRatePercent);
+        pingGrade.externalServerLatencyMs = getEffectivePingLatency(avgExternalServerLatencyMs, avgExternalServerLossPercent);
+
         return pingGrade;
     }
 
@@ -751,13 +755,9 @@ public class DataInterpreter {
 
     @MetricType
     private static int getPingGradeLowerIsBetter(double latencyMs, double lossRatePercent, double[] steps) {
-        @MetricType int lossRateMetric = getGradeLowerIsBetter(lossRatePercent, PKT_LOSS_RATE_STEPS, lossRatePercent >= 0, lossRatePercent == 100.0);
-        if (DataInterpreter.isAbysmalOrNonFunctional(lossRateMetric)) {
-            return MetricType.NONFUNCTIONAL;
-        }
-        double effectiveLatencyMs = latencyMs * (1.0 / (1.0 - (lossRatePercent/100)));
-        @MetricType int latencyMetric = getGradeLowerIsBetter(effectiveLatencyMs, steps,
-                effectiveLatencyMs > 0, effectiveLatencyMs > MAX_LATENCY_FOR_BEING_NONFUNCTIONAL_MS);
+        double effectiveLatencyMs = getEffectivePingLatency(latencyMs, lossRatePercent);
+        @MetricType int latencyMetric = getGradeLowerIsBetter(getEffectivePingLatency(latencyMs, lossRatePercent), steps,
+                effectiveLatencyMs > 0, effectiveLatencyMs >= MAX_LATENCY_FOR_BEING_NONFUNCTIONAL_MS);
         return latencyMetric;
     }
 
@@ -782,5 +782,12 @@ public class DataInterpreter {
         else if (value > steps[2]) return MetricType.AVERAGE;
         else if (value > steps[3]) return MetricType.POOR;
         else return MetricType.ABYSMAL;
+    }
+
+    private static double getEffectivePingLatency(double latencyMs, double lossRatePercent) {
+        if (lossRatePercent == 100.0) {
+            return MAX_LATENCY_FOR_BEING_NONFUNCTIONAL_MS;
+        }
+        return latencyMs * (1.0 / (1.0 - (lossRatePercent/100)));
     }
 }
