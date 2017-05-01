@@ -238,6 +238,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         }
         if (mListener != null) {
             if (uiState == UI_STATE_INIT_AND_READY) {
+                showStatusMessage("Starting bandwidth test ...");
                 sendSwitchStateMessage(UI_STATE_RUNNING_TESTS);
             }
             mListener.onMainButtonClick();
@@ -304,16 +305,17 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     @Override
     public void onConfigFetch(SpeedTestConfig config) {
         bwTestState = BW_CONFIG_FETCH;
-    }
-
-    @Override
-    public void onServerInformationFetch(ServerInformation serverInformation) {
         showStatusMessage("Finding closest server..");
     }
 
     @Override
-    public void onClosestServersSelected(List<ServerInformation.ServerDetails> closestServers) {
+    public void onServerInformationFetch(ServerInformation serverInformation) {
 
+    }
+
+    @Override
+    public void onClosestServersSelected(List<ServerInformation.ServerDetails> closestServers) {
+        showStatusMessage("Starting Download test ..");
     }
 
     @Override
