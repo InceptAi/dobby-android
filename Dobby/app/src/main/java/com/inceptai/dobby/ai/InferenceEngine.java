@@ -3,6 +3,8 @@ package com.inceptai.dobby.ai;
 import android.support.annotation.IntDef;
 
 import com.inceptai.dobby.connectivity.ConnectivityAnalyzer;
+import com.inceptai.dobby.database.DatabaseWriter;
+import com.inceptai.dobby.database.InferenceRecord;
 import com.inceptai.dobby.model.DobbyWifiInfo;
 import com.inceptai.dobby.model.IPLayerInfo;
 import com.inceptai.dobby.model.PingStats;
@@ -14,7 +16,6 @@ import com.inceptai.dobby.wifi.WifiState;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.HashMap;
-import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -28,6 +29,9 @@ import java.util.concurrent.TimeUnit;
 
 public class InferenceEngine {
     private static final String CANNED_RESPONSE = "We are working on it.";
+
+    private static final String DUMMY_USER_ID = "DUMMY_UID";
+    private static final String DUMMY_PHONE_ID = "PHONE_UID";
 
     private static final int MAX_SUGGESTIONS_TO_SHOW = 2;
     private static final double MAX_GAP_IN_SUGGESTION_WEIGHT = 0.2;
@@ -49,6 +53,7 @@ public class InferenceEngine {
     private MetricsDb metricsDb;
     private PossibleConditions currentConditions = PossibleConditions.NOOP_CONDITION;
     private boolean firstRun = true;
+    private DatabaseWriter databaseWriter;
 
     public interface ActionListener {
         void takeAction(Action action);
@@ -66,11 +71,14 @@ public class InferenceEngine {
         int GOAL_DIAGNOSE_JITTERY_STREAMING = 3;
     }
 
-    InferenceEngine(ScheduledExecutorService scheduledExecutorService, ActionListener actionListener) {
+    InferenceEngine(ScheduledExecutorService scheduledExecutorService,
+                    ActionListener actionListener,
+                    DatabaseWriter databaseWriter) {
         bandwidthTestState = STATE_BANDWIDTH_TEST_NONE;
         this.scheduledExecutorService = scheduledExecutorService;
         this.actionListener = actionListener;
         metricsDb = new MetricsDb();
+        this.databaseWriter = databaseWriter;
     }
 
     public Action addGoal(@Goal int goal) {
@@ -140,30 +148,54 @@ public class InferenceEngine {
         return httpGrade;
     }
 
+
     public SuggestionCreator.Suggestion suggest() {
-        List<Integer> conditionArray = currentConditions.getTopConditions(MAX_SUGGESTIONS_TO_SHOW,
-                MAX_GAP_IN_SUGGESTION_WEIGHT);
-        return SuggestionCreator.get(conditionArray, metricsDb.getParamsForSuggestions());
+        HashMap<Integer, Double> conditionMapToUse = currentConditions.getTopConditionsMap(
+                MAX_SUGGESTIONS_TO_SHOW, MAX_GAP_IN_SUGGESTION_WEIGHT);
+        return SuggestionCreator.get(conditionMapToUse, metricsDb.getParamsForSuggestions());
     }
 
-    public String getSuggestions(int maxSuggestions, double maxGapInWeight, boolean getLongSuggestions) {
-        List<Integer> conditionArray = currentConditions.getTopConditions(maxSuggestions, maxGapInWeight);
-        return SuggestionCreator.getSuggestionString(conditionArray,
-                metricsDb.getParamsForSuggestions(), getLongSuggestions);
-    }
-
-    public void checkAndSendSuggestions() {
+    private void checkAndSendSuggestions() {
         if (metricsDb.hasValidUpload() && metricsDb.hasValidDownload() &&
                 metricsDb.hasFreshPingGrade() &&
                 metricsDb.hasFreshWifiGrade() &&
                 metricsDb.hasFreshHttpGrade()) {
             SuggestionCreator.Suggestion suggestion = suggest();
+
             if (actionListener != null) {
                 DobbyLog.i("Sending suggestions to DobbyAi");
                 actionListener.suggestionsAvailable(suggestion);
             }
             sendResponseOnlyAction(suggestion.toString());
+
+            //Write the suggestion and inferencing parameters to DB
+            InferenceRecord newInferenceRecord = createInferenceRecord(suggestion);
+            databaseWriter.writeInferenceToDatabase(newInferenceRecord);
+
         }
+    }
+
+    private InferenceRecord createInferenceRecord(SuggestionCreator.Suggestion suggestion) {
+        InferenceRecord inferenceRecord = new InferenceRecord();
+        inferenceRecord.uid = DUMMY_USER_ID;
+        inferenceRecord.phoneId = DUMMY_PHONE_ID;
+
+        //Assign all the grades
+        inferenceRecord.bandwidthGrade = suggestion.suggestionCreatorParams.bandwidthGrade;
+        inferenceRecord.wifiGrade = suggestion.suggestionCreatorParams.wifiGrade;
+        inferenceRecord.pingGrade = suggestion.suggestionCreatorParams.pingGrade;
+        inferenceRecord.httpGrade = suggestion.suggestionCreatorParams.httpGrade;
+
+        //Assign the possible conditions
+        inferenceRecord.conditionsUsedForInference = suggestion.conditionsMap;
+
+        //Assign the title and detailed message
+        inferenceRecord.titleMessage = suggestion.title;
+        inferenceRecord.detailedMessageList = suggestion.longSuggestionList;
+
+        //Assign the timestamp
+        inferenceRecord.timestamp = System.currentTimeMillis();
+        return inferenceRecord;
     }
 
     // Bandwidth test notifications:
