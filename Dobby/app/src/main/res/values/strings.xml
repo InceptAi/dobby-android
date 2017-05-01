@@ -40,8 +40,7 @@
     <string name="fake_connectivity_setting">Connectivity Mode Settings</string>
     <string name="fake_wifi_problem_setting">Wifi Problem Mode Setting</string>
     <string name="fake_wifi_problem_mode_selector">Wifi Problem Mode Settings</string>
-    <string name="ping_latency">PING LATENCY</string>
-    <string name="wifi_quality">WIFI LINK</string>
+    <string name="ping_latency">Ping Latency</string>
     <string name="router_ping"> Router</string>
     <string name="dns_primary_ping">Your DNS</string>
     <string name="dns_second_ping">DNS 2</string>
@@ -50,7 +49,8 @@
     <string name="upload_bw">Upload</string>
     <string name="percent">%</string>
     <string name="congestion">Congestion</string>
-    <string name="suggestions">SUGGESTIONS</string>
+    <string name="your_net">Your Network</string>
+    <string name="running_tests">Running tests..</string>
     <string-array name="rssi_level_array">
         <item>High</item>
         <item>Medium</item>
@@ -67,4 +67,7 @@
     <string name="onboarding_three_desc2">This optional test requires you to grant the Location permission.</string>
     <string name="slow_internet_q">Slow Internet ?</string>
     <string name="bad_wifi_signal">Bad Wifi signal ?</string>
+    <string name="wifi_quality">Wifi Link</string>
+    <string name="suggestions">Suggestions</string>
+    <string name="ready_status_message">Ready to run tests.</string>
 </resources>

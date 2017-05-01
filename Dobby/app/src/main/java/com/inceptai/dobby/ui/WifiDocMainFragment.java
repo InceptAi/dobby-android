@@ -16,12 +16,14 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.animation.FastOutSlowInInterpolator;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.CardView;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.common.eventbus.Subscribe;
 import com.inceptai.dobby.R;
@@ -57,7 +59,20 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private static final int MSG_WIFI_GRADE_AVAILABLE = 1002;
     private static final int MSG_PING_GRADE_AVAILABLE = 1003;
     private static final int MSG_SUGGESTION_AVAILABLE = 1004;
+    private static final int MSG_SHOW_STATUS = 1005;
+    private static final int MSG_SWITCH_STATE = 1006;
     private static final long SUGGESTION_FRESHNESS_TS_MS = 30000; // 30 seconds
+
+    private static final int UI_STATE_INIT_AND_READY = 101; // Ready to run tests. Initial state.
+    private static final int UI_STATE_RUNNING_TESTS = 102; // Running tests.
+    private static final int UI_STATE_READY_WITH_RESULTS = 103;
+    private int uiState = UI_STATE_INIT_AND_READY;
+
+    private static final int BW_CONFIG_FETCH = 201;
+    private static final int BW_UPLOAD = 202;
+    private static final int BW_DOWNLOAD = 203;
+    private static final int BW_IDLE = 204;
+    private int bwTestState = BW_IDLE;
 
     private OnFragmentInteractionListener mListener;
 
@@ -69,6 +84,12 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private CircularGauge uploadCircularGauge;
     private TextView uploadGaugeTv;
     private TextView uploadGaugeTitleTv;
+
+    private CardView yourNetworkCv;
+    private CardView pingCv;
+    private CardView statusCv;
+
+    private TextView statusTv;
 
     private TextView pingRouterTitleTv;
     private TextView pingRouterValueTv;
@@ -86,17 +107,11 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private TextView pingWebValueTv;
     private ImageView pingWebGradeIv;
 
-    private TextView wifiTitleTv;
-
     private TextView wifiSsidTv;
-    private TextView wifiSignalTitleTv;
     private TextView wifiSignalValueTv;
     private ImageView wifiSignalIconIv;
-
-    private TextView wifiCongestionTitleTv;
-    private TextView wifiCongestionValueTv;
-    private ImageView wifiCongestionIconIv;
-    private TextView wifiCongestionUnitTv;
+    private TextView routerIpTv;
+    private TextView ispNameTv;
 
     private TextView suggestionsValueTv;
 
@@ -133,13 +148,30 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                              Bundle savedInstanceState) {
         handler = new Handler(this);
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_wifi_doc_main, container, false);
+        View view = inflater.inflate(R.layout.fragment_wifi_doc_main_2, container, false);
 
-        populateViews(view);
+        fetchViewInstances(view);
         resetData();
-        // requestPermissions();
         showTapOnboarding(view);
+        // requestPermissions();
+        uiStateVisibilityChanges();
         return view;
+    }
+
+    private void uiStateVisibilityChanges() {
+        if (uiState == UI_STATE_INIT_AND_READY) {
+            yourNetworkCv.setVisibility(View.INVISIBLE);
+            pingCv.setVisibility(View.INVISIBLE);
+            statusCv.setVisibility(View.VISIBLE);
+        } else if (uiState == UI_STATE_READY_WITH_RESULTS) {
+            yourNetworkCv.setVisibility(View.VISIBLE);
+            pingCv.setVisibility(View.VISIBLE);
+            statusCv.setVisibility(View.INVISIBLE);
+        } else if (uiState == UI_STATE_RUNNING_TESTS) {
+            yourNetworkCv.setVisibility(View.INVISIBLE);
+            pingCv.setVisibility(View.INVISIBLE);
+            statusCv.setVisibility(View.VISIBLE);
+        }
     }
 
     private void showTapOnboarding(View rootView) {
@@ -200,7 +232,14 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
     @Override
     public void onClick(View v) {
+        if (uiState == UI_STATE_RUNNING_TESTS) {
+            Toast.makeText(getContext(), "Tests already running.", Toast.LENGTH_SHORT).show();
+            return;
+        }
         if (mListener != null) {
+            if (uiState == UI_STATE_INIT_AND_READY) {
+                sendSwitchStateMessage(UI_STATE_RUNNING_TESTS);
+            }
             mListener.onMainButtonClick();
         }
         resetData();
@@ -264,12 +303,12 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
     @Override
     public void onConfigFetch(SpeedTestConfig config) {
-
+        bwTestState = BW_CONFIG_FETCH;
     }
 
     @Override
     public void onServerInformationFetch(ServerInformation serverInformation) {
-
+        showStatusMessage("Finding closest server..");
     }
 
     @Override
@@ -285,10 +324,21 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     @Override
     public void onTestFinished(@BandwithTestCodes.TestMode int testMode, BandwidthStats stats) {
         Message.obtain(handler, MSG_UPDATED_CIRCULAR_GAUGE, BandwidthValue.from(testMode, (stats.getOverallBandwidth() / 1.0e6))).sendToTarget();
+        if (testMode == BandwithTestCodes.TestMode.UPLOAD) {
+            showStatusMessage("Finished bandwidth tests.");
+            sendSwitchStateMessage(UI_STATE_READY_WITH_RESULTS);
+        }
     }
 
     @Override
     public void onTestProgress(@BandwithTestCodes.TestMode int testMode, double instantBandwidth) {
+        if (testMode == BandwithTestCodes.TestMode.DOWNLOAD && bwTestState != BW_DOWNLOAD) {
+            bwTestState = BW_DOWNLOAD;
+            showStatusMessage("Download test ...");
+        } else if (testMode == BandwithTestCodes.TestMode.UPLOAD && bwTestState != BW_UPLOAD) {
+            bwTestState = BW_UPLOAD;
+            showStatusMessage("Upload test ...");
+        }
         Message.obtain(handler, MSG_UPDATED_CIRCULAR_GAUGE, BandwidthValue.from(testMode, (instantBandwidth / 1.0e6))).sendToTarget();
     }
 
@@ -312,8 +362,18 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             case MSG_SUGGESTION_AVAILABLE:
                 showSuggestion((SuggestionCreator.Suggestion) msg.obj);
                 break;
+            case MSG_SHOW_STATUS:
+                // TODO Animate this if needed.
+                String message = (String) msg.obj;
+                statusTv.setText(message);
+                break;
+            case MSG_SWITCH_STATE:
+                switchState(msg.arg1);
+                break;
+            default:
+                return false;
         }
-        return false;
+        return true;
     }
 
     private void showWifiResults(DataInterpreter.WifiGrade wifiGrade) {
@@ -326,8 +386,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         }
         setWifiResult(wifiSignalValueTv, String.valueOf(wifiGrade.getPrimaryApSignal()),
                 wifiSignalIconIv, wifiGrade.getPrimaryApSignalMetric());
-        String availability = String.format("%2.1f", 100.0 *(wifiGrade.getPrimaryLinkCongestionPercentage()));
-        setWifiResult(wifiCongestionValueTv, availability, wifiCongestionIconIv, wifiGrade.getPrimaryLinkChannelOccupancyMetric());
+        // String availability = String.format("%2.1f", 100.0 *(wifiGrade.getPrimaryLinkCongestionPercentage()));
+        // setWifiResult(wifiCongestionValueTv, availability, wifiCongestionIconIv, wifiGrade.getPrimaryLinkChannelOccupancyMetric());
     }
 
     private void showPingResults(DataInterpreter.PingGrade pingGrade) {
@@ -351,7 +411,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     }
 
     private void showSuggestion(SuggestionCreator.Suggestion suggestion) {
-
+        sendSwitchStateMessage(UI_STATE_READY_WITH_RESULTS);
         if (suggestion == null) {
             DobbyLog.w("Null suggestion received from eventbus.");
             return;
@@ -366,7 +426,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         for(String line : suggestion.getShortSuggestionList()) {
             stringBuilder.append(line + "\n");
         }
-        suggestionsValueTv.setText(stringBuilder.toString());
+        // suggestionsValueTv.setText(stringBuilder.toString());
         DobbyLog.i("Received suggestions:" + stringBuilder.toString());
     }
 
@@ -375,9 +435,13 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         return (System.currentTimeMillis() - suggestion.getCreationTimestampMs()) < SUGGESTION_FRESHNESS_TS_MS;
     }
 
-    private void populateViews(View rootView) {
+    private void fetchViewInstances(View rootView) {
         mainFab = (FloatingActionButton) rootView.findViewById(R.id.main_fab_button);
         mainFab.setOnClickListener(this);
+
+        yourNetworkCv = (CardView) rootView.findViewById(R.id.net_cardview);
+        pingCv = (CardView) rootView.findViewById(R.id.ping_cardview);
+        statusCv = (CardView) rootView.findViewById(R.id.status_cardview);
 
         View downloadView = rootView.findViewById(R.id.cg_download);
         downloadCircularGauge = (CircularGauge) downloadView.findViewById(R.id.bw_gauge);
@@ -390,8 +454,6 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         uploadGaugeTv = (TextView) uploadView.findViewById(R.id.gauge_tv);
         uploadGaugeTitleTv = (TextView) uploadView.findViewById(R.id.title_tv);
         uploadGaugeTitleTv.setText(R.string.upload_bw);
-
-        wifiTitleTv = (TextView) uploadView.findViewById(R.id.wifi_quality_title_tv);
 
         View row1View = rootView.findViewById(R.id.ping_latency_row_inc1);
         pingRouterTitleTv = (TextView) row1View.findViewById(R.id.left_title_tv);
@@ -419,20 +481,14 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         // Populate wifi card views
         wifiSsidTv = (TextView) rootView.findViewById(R.id.wifi_ssid_tv);
 
-        View wifiRow1View = rootView.findViewById(R.id.wifi_row_1);
-        wifiSignalTitleTv = (TextView) wifiRow1View.findViewById(R.id.title_tv);
-        wifiSignalValueTv = (TextView) wifiRow1View.findViewById(R.id.value_tv);
-        wifiSignalIconIv = (ImageView) wifiRow1View.findViewById(R.id.icon_iv);
+        wifiSignalValueTv = (TextView) rootView.findViewById(R.id.value_tv);
+        wifiSignalIconIv = (ImageView) rootView.findViewById(R.id.icon_iv);
+        ispNameTv = (TextView) rootView.findViewById(R.id.isp_name_tv);
+        routerIpTv = (TextView) rootView.findViewById(R.id.router_ip_tv);
 
-        View wifiRow2View = rootView.findViewById(R.id.wifi_row_2);
-        wifiCongestionTitleTv = (TextView) wifiRow2View.findViewById(R.id.title_tv);
-        wifiCongestionValueTv = (TextView) wifiRow2View.findViewById(R.id.value_tv);
-        wifiCongestionIconIv = (ImageView) wifiRow2View.findViewById(R.id.icon_iv);
-        wifiCongestionUnitTv = (TextView) wifiRow2View.findViewById(R.id.unit_tv);
-        wifiCongestionUnitTv.setText(R.string.percent);
-        wifiCongestionTitleTv.setText(R.string.congestion);
+        statusTv = (TextView) rootView.findViewById(R.id.status_tv);
 
-        suggestionsValueTv = (TextView)rootView.findViewById(R.id.suggestion_value_tv);
+        // suggestionsValueTv = (TextView)rootView.findViewById(R.id.suggestion_value_tv);
     }
 
     private void updateBandwidthGauge(Message msg) {
@@ -534,7 +590,6 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private void resetData() {
         uploadCircularGauge.setValue(0);
         downloadCircularGauge.setValue(0);
-        wifiCongestionValueTv.setText(String.valueOf(0));
         wifiSignalValueTv.setText(String.valueOf(0));
         uploadGaugeTv.setText(ZERO_POINT_ZERO);
         downloadGaugeTv.setText(ZERO_POINT_ZERO);
@@ -542,5 +597,22 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
     private void setImage(ImageView view, int resourceId) {
         Utils.setImage(getContext(), view, resourceId);
+    }
+
+    private void showStatusMessage(String message) {
+        Message msg = Message.obtain(handler, MSG_SHOW_STATUS, message);
+        handler.sendMessageDelayed(msg, 500);
+    }
+
+    private void sendSwitchStateMessage(int newState) {
+        Message.obtain(handler, MSG_SWITCH_STATE, newState, 0).sendToTarget();
+    }
+
+    private void switchState(int newState) {
+        uiState = newState;
+        if (newState == UI_STATE_RUNNING_TESTS) {
+            statusTv.setText(R.string.running_tests);
+        }
+        uiStateVisibilityChanges();
     }
 }

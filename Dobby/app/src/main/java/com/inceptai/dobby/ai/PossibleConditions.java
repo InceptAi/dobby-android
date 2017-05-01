@@ -1,5 +1,6 @@
 package com.inceptai.dobby.ai;
 
+import com.google.common.collect.Sets;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 
@@ -9,6 +10,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by arunesh on 4/18/17.
@@ -17,12 +19,12 @@ import java.util.Set;
 public class PossibleConditions {
     public static final PossibleConditions NOOP_CONDITION = new PossibleConditions();
 
-    private HashMap<Integer, Double> inclusionMap;
+    private Map<Integer, Double> inclusionMap;
     private Set<Integer> exclusionSet;
 
     PossibleConditions() {
-        inclusionMap = new HashMap<>();
-        exclusionSet = new HashSet<>();
+        inclusionMap = new ConcurrentHashMap();
+        exclusionSet = Sets.newConcurrentHashSet();
     }
 
     void clearConditions() {
@@ -52,7 +54,7 @@ public class PossibleConditions {
         return exclusionSet;
     }
 
-    HashMap<Integer, Double> inclusionMap() {
+    Map<Integer, Double> inclusionMap() {
         return inclusionMap;
     }
 
@@ -63,7 +65,7 @@ public class PossibleConditions {
     void mergeIn(PossibleConditions mergeFrom) {
         DobbyLog.i("Removing conditions: " + InferenceMap.toString(mergeFrom.exclusionSet()));
         exclusionSet.addAll(mergeFrom.exclusionSet());
-        HashMap<Integer, Double> mergeMap = mergeFrom.inclusionMap();
+        Map<Integer, Double> mergeMap = mergeFrom.inclusionMap();
         for (int condition : mergeMap.keySet()) {
             Double incumbentWeight = inclusionMap.get(condition);
             Double totalWeight = mergeMap.get(condition);
