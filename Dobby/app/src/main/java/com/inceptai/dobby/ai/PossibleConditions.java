@@ -6,7 +6,6 @@ import com.inceptai.dobby.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -133,6 +132,22 @@ public class PossibleConditions {
             }
         }
         return topConditionsList;
+    }
+
+    public HashMap<Integer, Double> getTopConditionsMap(int maxConditionsToReturn, double maxGap) {
+        HashMap<Integer, Double> topConditionsMap = new HashMap<>();
+        normalizeWeights();
+        Map<Integer, Double> sortedHashMap = Utils.sortHashMapByValueDescending(finalizeInference());
+        double maxWeight = 0;
+        for (HashMap.Entry<Integer, Double> entry : sortedHashMap.entrySet()) {
+            if (maxWeight == 0) {
+                maxWeight = entry.getValue();
+            }
+            if (maxWeight - entry.getValue() < maxGap && topConditionsMap.size() <= maxConditionsToReturn) {
+                topConditionsMap.put(entry.getKey(), entry.getValue());
+            }
+        }
+        return topConditionsMap;
     }
 
 }
