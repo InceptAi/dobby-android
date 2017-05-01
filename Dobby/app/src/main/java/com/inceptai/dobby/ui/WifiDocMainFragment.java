@@ -308,7 +308,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     @Override
     public void onConfigFetch(SpeedTestConfig config) {
         bwTestState = BW_CONFIG_FETCH;
-        showStatusMessage("Finding closest server..");
+        showStatusMessage("Finding closest server ...");
     }
 
     @Override
@@ -339,10 +339,10 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     public void onTestProgress(@BandwithTestCodes.TestMode int testMode, double instantBandwidth) {
         if (testMode == BandwithTestCodes.TestMode.DOWNLOAD && bwTestState != BW_DOWNLOAD) {
             bwTestState = BW_DOWNLOAD;
-            showStatusMessage("Download test ...");
+            showStatusMessage("Running Download test ...");
         } else if (testMode == BandwithTestCodes.TestMode.UPLOAD && bwTestState != BW_UPLOAD) {
             bwTestState = BW_UPLOAD;
-            showStatusMessage("Upload test ...");
+            showStatusMessage("Running Upload test ...");
         }
         Message.obtain(handler, MSG_UPDATED_CIRCULAR_GAUGE, BandwidthValue.from(testMode, (instantBandwidth / 1.0e6))).sendToTarget();
     }
