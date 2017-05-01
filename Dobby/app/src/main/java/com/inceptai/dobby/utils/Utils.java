@@ -9,7 +9,6 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.widget.ImageView;
 
 import com.google.common.net.InetAddresses;
@@ -26,14 +25,12 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.stream.Collectors;
-
-import static com.inceptai.dobby.DobbyApplication.TAG;
 
 /**
  * Utils class.
@@ -530,4 +527,11 @@ public class Utils {
         editor.putString(settingName, settingValue);
         editor.apply();
     }
+
+
+    public static String convertIntegerDoubleHashMapToJsonString(HashMap<Integer, Double> integerDoubleHashMap) {
+        Gson gson = new Gson();
+        return gson.toJson(integerDoubleHashMap);
+    }
+
 }

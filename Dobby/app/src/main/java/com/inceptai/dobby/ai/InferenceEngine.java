@@ -31,7 +31,7 @@ public class InferenceEngine {
     private static final String CANNED_RESPONSE = "We are working on it.";
 
     private static final String DUMMY_USER_ID = "DUMMY_UID";
-    private static final String DUMMY_PHONE_ID = "PHONE_UID";
+    private static final String DUMMY_PHONE_ID = "PHONE_ID";
 
     private static final int MAX_SUGGESTIONS_TO_SHOW = 2;
     private static final double MAX_GAP_IN_SUGGESTION_WEIGHT = 0.2;
@@ -141,7 +141,7 @@ public class InferenceEngine {
         metricsDb.updateHttpGrade(httpGrade);
         PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(httpGrade);
         currentConditions.mergeIn(conditions);
-        DobbyLog.i("InferenceEngine httpGrade: " + httpGrade.toString());
+        DobbyLog.i("InferenceEngine httpGradeJson: " + httpGrade.toString());
         DobbyLog.i("InferenceEngine which gives conditions: " + conditions.toString());
         DobbyLog.i("InferenceEngine After merging: " + currentConditions.toString());
         checkAndSendSuggestions();
@@ -175,19 +175,20 @@ public class InferenceEngine {
         }
     }
 
+
     private InferenceRecord createInferenceRecord(SuggestionCreator.Suggestion suggestion) {
         InferenceRecord inferenceRecord = new InferenceRecord();
         inferenceRecord.uid = DUMMY_USER_ID;
         inferenceRecord.phoneId = DUMMY_PHONE_ID;
 
         //Assign all the grades
-        inferenceRecord.bandwidthGrade = suggestion.suggestionCreatorParams.bandwidthGrade;
-        inferenceRecord.wifiGrade = suggestion.suggestionCreatorParams.wifiGrade;
-        inferenceRecord.pingGrade = suggestion.suggestionCreatorParams.pingGrade;
-        inferenceRecord.httpGrade = suggestion.suggestionCreatorParams.httpGrade;
+        inferenceRecord.bandwidthGradeJson = suggestion.suggestionCreatorParams.bandwidthGrade.toJson();
+        inferenceRecord.wifiGradeJson = suggestion.suggestionCreatorParams.wifiGrade.toJson();
+        inferenceRecord.pingGradeJson = suggestion.suggestionCreatorParams.pingGrade.toJson();
+        inferenceRecord.httpGradeJson = suggestion.suggestionCreatorParams.httpGrade.toJson();
 
         //Assign the possible conditions
-        inferenceRecord.conditionsUsedForInference = suggestion.conditionsMap;
+        inferenceRecord.conditionsUsedForInference = Utils.convertIntegerDoubleHashMapToJsonString(suggestion.conditionsMap);
 
         //Assign the title and detailed message
         inferenceRecord.titleMessage = suggestion.title;
@@ -235,7 +236,7 @@ public class InferenceEngine {
             metricsDb.updateBandwidthGrade(bandwidthGrade);
             PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(bandwidthGrade);
             currentConditions.mergeIn(conditions);
-            DobbyLog.i("InferenceEngine bandwidthGrade: " + bandwidthGrade.toString());
+            DobbyLog.i("InferenceEngine bandwidthGradeJson: " + bandwidthGrade.toString());
             DobbyLog.i("InferenceEngine which gives conditions: " + conditions.toString());
             DobbyLog.i("InferenceEngine After merging: " + currentConditions.toString());
             checkAndSendSuggestions();

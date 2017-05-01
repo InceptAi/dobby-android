@@ -229,11 +229,11 @@ public class InferenceMap {
 
         /*
         //Based on wifi problem mode
-        if (wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.FREQUENT_DISCONNECTIONS) {
+        if (wifiGradeJson.wifiLinkMode == WifiState.WifiLinkMode.FREQUENT_DISCONNECTIONS) {
             conditions.include(Condition.WIFI_LINK_ASSOCIATION_ISSUE, 1.0);
-        } else if (wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.HANGING_ON_AUTHENTICATING) {
+        } else if (wifiGradeJson.wifiLinkMode == WifiState.WifiLinkMode.HANGING_ON_AUTHENTICATING) {
             conditions.include(Condition.WIFI_LINK_AUTH_ISSUE, 1.0);
-        } else if (wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.HANGING_ON_DHCP) {
+        } else if (wifiGradeJson.wifiLinkMode == WifiState.WifiLinkMode.HANGING_ON_DHCP) {
             conditions.include(Condition.WIFI_LINK_DHCP_ISSUE, 1.0);
         }
         */

@@ -1,8 +1,12 @@
 package com.inceptai.dobby.database;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.inceptai.dobby.DobbyThreadpool;
+import com.inceptai.dobby.utils.DobbyLog;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,6 +20,7 @@ import javax.inject.Singleton;
  */
 @Singleton
 public class DatabaseWriter {
+    private static final String INFERENCE_DB_ROOT = "inferences";
     private DatabaseReference mDatabase;
     private ExecutorService executorService;
 
@@ -23,22 +28,21 @@ public class DatabaseWriter {
     public DatabaseWriter(DobbyThreadpool dobbyThreadpool) {
         mDatabase = FirebaseDatabase.getInstance().getReference();
         executorService = dobbyThreadpool.getExecutorService();
+        mDatabase.addValueEventListener(postListener);
+
     }
 
     private void writeNewInference(InferenceRecord inferenceRecord) {
-        // Create new inference record at /inferences/$inferenceid
-        
+        // Create new inference record at /inferences/$inference-id
         Map<String, Object> childUpdates = new HashMap<>();
         //Update the inferencing
-        String inferenceKey = mDatabase.child("inferences").push().getKey();
+        String inferenceKey = mDatabase.child(INFERENCE_DB_ROOT).push().getKey();
+        DobbyLog.i("Inference key: " + inferenceKey);
         Map<String, Object> inferenceValues = inferenceRecord.toMap();
-        childUpdates.put("/inferences/" + inferenceKey, inferenceValues);
+        childUpdates.put("/" + INFERENCE_DB_ROOT + "/" + inferenceKey, inferenceValues);
+        mDatabase.updateChildren(childUpdates);
         //TODO: Update the user index with the inference. Create a user if it doesn't exist.
         //String keyForUserInferenceList = mDatabase.child("users").child(inferenceRecord.uid).child("inferences").push().getKey();
-        //childUpdates.put("/inferences/" + inferenceRecord.uid + "/" + key, inferenceValues);
-        mDatabase.updateChildren(childUpdates);
-
-        //mDatabase.child("inferences").setValue("Hello World");
     }
 
     public void writeInferenceToDatabase(final InferenceRecord inferenceRecord) {
@@ -50,4 +54,24 @@ public class DatabaseWriter {
         });
     }
 
+    ValueEventListener postListener = new ValueEventListener() {
+        @Override
+        public void onDataChange(DataSnapshot dataSnapshot) {
+            // Get Post object and use the values to update the UI
+            InferenceRecord inferenceRecord = dataSnapshot.getValue(InferenceRecord.class);
+            if (inferenceRecord != null) {
+                DobbyLog.v("Wrote to record: " + inferenceRecord.toMap());
+            } else {
+                DobbyLog.v("Got null record from db");
+            }
+            // ...
+        }
+
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+            // Getting Post failed, log a message
+            DobbyLog.w("loadPost:onCancelled" + databaseError.toException());
+            // ...
+        }
+    };
 }
