@@ -17,6 +17,7 @@ public class DobbyApplication extends Application {
     public static final String TAG = "Dobby";
     public static final String DOBBY_FLAVOR = "dobby";
     public static final String WIFIDOC_FLAVOR = "wifidoc";
+    public static final String USER_UUID = "userUuid";
     public static final AtomicBoolean USE_FAKES = new AtomicBoolean(false);
 
     private ProdComponent prodComponent;
