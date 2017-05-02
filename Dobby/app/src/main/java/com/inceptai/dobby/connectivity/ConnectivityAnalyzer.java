@@ -222,20 +222,20 @@ public class ConnectivityAnalyzer {
 
     public void processDobbyBusEvents(DobbyEvent event) {
         int eventType = event.getEventType();
-        DobbyLog.v("Got event: " + event);
+        DobbyLog.v("ConnectivityAnalyzer Got event: " + event);
         switch(eventType) {
-            case DobbyEvent.EventType.WIFI_STATE_ENABLED:
             case DobbyEvent.EventType.WIFI_NOT_CONNECTED:
                 wifiConnectivityMode = WifiConnectivityMode.ON_AND_DISCONNECTED;
                 break;
             case DobbyEvent.EventType.WIFI_STATE_DISABLED:
             case DobbyEvent.EventType.WIFI_STATE_DISABLING:
-            case DobbyEvent.EventType.WIFI_STATE_ENABLING:
                 wifiConnectivityMode = WifiConnectivityMode.OFF;
                 break;
             case DobbyEvent.EventType.WIFI_STATE_UNKNOWN:
                 wifiConnectivityMode = WifiConnectivityMode.UNKNOWN;
                 break;
+            case DobbyEvent.EventType.WIFI_STATE_ENABLING:
+            case DobbyEvent.EventType.WIFI_STATE_ENABLED:
             case DobbyEvent.EventType.WIFI_CONNECTED:
             case DobbyEvent.EventType.WIFI_RSSI_CHANGED:
             case DobbyEvent.EventType.DHCP_INFO_AVAILABLE:

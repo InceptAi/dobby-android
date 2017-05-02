@@ -73,13 +73,14 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private static final int UI_STATE_READY_WITH_RESULTS = 103;
     private int uiState = UI_STATE_INIT_AND_READY;
 
-    private static final int BW_CONFIG_FETCH = 201;
-    private static final int BW_UPLOAD = 202;
-    private static final int BW_DOWNLOAD = 203;
-    private static final int BW_SERVER_INFO_FETCH = 204;
-    private static final int BW_BEST_SERVER = 205;
-    private static final int BW_IDLE = 206;
-
+    private static final int BW_TEST_INITIATED = 200;
+    private static final int BW_CONFIG_FETCHED = 201;
+    private static final int BW_UPLOAD_RUNNING = 202;
+    private static final int BW_DOWNLOAD_RUNNING = 203;
+    private static final int BW_SERVER_INFO_FETCHED = 204;
+    private static final int BW_BEST_SERVER_DETERMINED = 205;
+    private static final int BW_CLOSEST_SERVERS_DETERMINED = 206;
+    private static final int BW_IDLE = 207;
 
     private int bwTestState = BW_IDLE;
 
@@ -145,6 +146,15 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         fragment.setArguments(args);
         return fragment;
     }
+
+    public int getBwTestState() {
+        return bwTestState;
+    }
+
+    public void setBwTestState(int bwTestState) {
+        this.bwTestState = bwTestState;
+    }
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -250,7 +260,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         }
         if (mListener != null) {
             if (uiState == UI_STATE_INIT_AND_READY) {
-                showStatusMessageAsync("Starting bandwidth test ...");
+                setBwTestState(BW_TEST_INITIATED);
+                showStatusMessage("Preparing for tests, fetching config for servers to test your speed ...");
+                DobbyLog.v("WifiDoc: Issued command for starting bw tests");
                 sendSwitchStateMessage(UI_STATE_RUNNING_TESTS);
             }
             mListener.onMainButtonClick();
@@ -316,25 +328,38 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
     @Override
     public void onConfigFetch(SpeedTestConfig config) {
-        bwTestState = BW_CONFIG_FETCH;
-        showStatusMessageAsync("Getting server information ...");
+        if (getBwTestState() == BW_TEST_INITIATED) {
+            showStatusMessage("Got speed test config, getting list of servers for testing ...");
+        }
+        setBwTestState(BW_CONFIG_FETCHED);
+        DobbyLog.v("WifiDoc: Fetched config");
     }
+
 
     @Override
     public void onServerInformationFetch(ServerInformation serverInformation) {
-        bwTestState = BW_SERVER_INFO_FETCH;
-        showStatusMessageAsync("Got " + serverInformation.serverList.size() + " server option for testing. Determining closest servers to you ...");
+        if (getBwTestState() == BW_CONFIG_FETCHED) {
+            showStatusMessage("Got " + serverInformation.serverList.size() + " servers for testing. Determining closest servers to you ...");
+        }
+        setBwTestState(BW_SERVER_INFO_FETCHED);
+        DobbyLog.v("WifiDoc: Fetched server info");
     }
 
     @Override
     public void onClosestServersSelected(List<ServerInformation.ServerDetails> closestServers) {
-        showStatusMessageAsync("Running latency tests for best server selection ...");
+        //if (getBwTestState() == BW_SERVER_INFO_FETCHED) {
+        //    showStatusMessage("Running latency tests for best server selection ...");
+        //}
+        DobbyLog.v("WifiDoc: Closest servers");
     }
 
     @Override
     public void onBestServerSelected(ServerInformation.ServerDetails bestServer) {
-        bwTestState = BW_BEST_SERVER;
-        showStatusMessageAsync("Found closest server in " + bestServer.name + " with a latency of " + String.format("%.2f", bestServer.latencyMs) + " ms. Starting Download test ...");
+        if (getBwTestState() == BW_SERVER_INFO_FETCHED) {
+            showStatusMessage("Found closest server in " + bestServer.name + " with a latency of " + String.format("%.2f", bestServer.latencyMs) + " ms.");
+        }
+        setBwTestState(BW_BEST_SERVER_DETERMINED);
+        DobbyLog.v("WifiDoc: Best server");
     }
 
     @Override
@@ -348,12 +373,12 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
     @Override
     public void onTestProgress(@BandwithTestCodes.TestMode int testMode, double instantBandwidth) {
-        if (testMode == BandwithTestCodes.TestMode.DOWNLOAD && bwTestState != BW_DOWNLOAD) {
-            bwTestState = BW_DOWNLOAD;
-            showStatusMessageAsync("Running Download test ...");
-        } else if (testMode == BandwithTestCodes.TestMode.UPLOAD && bwTestState != BW_UPLOAD) {
-            bwTestState = BW_UPLOAD;
-            showStatusMessageAsync("Running Upload test ...");
+        if (testMode == BandwithTestCodes.TestMode.DOWNLOAD && getBwTestState() != BW_DOWNLOAD_RUNNING) {
+            setBwTestState(BW_DOWNLOAD_RUNNING);
+            showStatusMessage("Running Download test ...");
+        } else if (testMode == BandwithTestCodes.TestMode.UPLOAD && getBwTestState() != BW_UPLOAD_RUNNING) {
+            setBwTestState(BW_UPLOAD_RUNNING);
+            showStatusMessage("Running Upload test ...");
         }
         Message.obtain(handler, MSG_UPDATED_CIRCULAR_GAUGE, BandwidthValue.from(testMode, (instantBandwidth / 1.0e6))).sendToTarget();
     }

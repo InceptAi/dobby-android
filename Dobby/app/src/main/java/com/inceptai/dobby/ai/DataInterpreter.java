@@ -651,24 +651,22 @@ public class DataInterpreter {
 
         double avgExternalServerLatencyMs = 0.0;
         double avgExternalServerLossPercent = 0.0;
-        int countLatencyValues = 0;
-        int countLossValues = 0;
+        int count = 0;
         for(PingStats pingStats : externalServerStats.values()) {
             if (pingStats.avgLatencyMs > 0.0){
                 avgExternalServerLatencyMs += pingStats.avgLatencyMs;
-                countLatencyValues ++;
-            }
-            if (pingStats.lossRatePercent >= 0.0){
                 avgExternalServerLossPercent += pingStats.lossRatePercent;
-                countLossValues ++;
+                count ++;
             }
         }
-        avgExternalServerLatencyMs /= (double) countLatencyValues;
-        if (countLossValues > 0) {
-            avgExternalServerLossPercent /= (double) countLossValues;
+        if (count > 0) {
+            avgExternalServerLatencyMs /= (double) count;
+            avgExternalServerLossPercent /= (double) count;
         } else {
             avgExternalServerLossPercent = -1.0;
+            avgExternalServerLatencyMs = 0.0;
         }
+
 
         pingGrade.externalServerLatencyMetric = getPingGradeLowerIsBetter(avgExternalServerLatencyMs,
                 avgExternalServerLossPercent, PING_LATENCY_EXTSERVER_STEPS_MS);

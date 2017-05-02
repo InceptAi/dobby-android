@@ -28,10 +28,10 @@ public class IPLayerInfo {
     public String dns1;
     public String dns2;
     public String gateway;
-    public int leaseDuration;
-    public String netMask;
-    public String serverAddress;
-    public String ownIPAddress;
+    private int leaseDuration;
+    private String netMask;
+    private String serverAddress;
+    private String ownIPAddress;
     public String referenceExternalAddress1;
     public String referenceExternalAddress2;
     public String publicDns1;

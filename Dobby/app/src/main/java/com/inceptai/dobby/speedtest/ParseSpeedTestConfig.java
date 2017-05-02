@@ -2,6 +2,7 @@ package com.inceptai.dobby.speedtest;
 
 import android.support.annotation.Nullable;
 
+import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 
 import java.io.IOException;
@@ -53,7 +54,9 @@ public class ParseSpeedTestConfig {
     public SpeedTestConfig getConfigFromUrlString (String urlString) {
         SpeedTestConfig config = null;
         try {
+            DobbyLog.v("PSTC downloadAndParseConfig start");
             config = downloadAndParseConfig(urlString);
+            DobbyLog.v("PSTC downloadAndParseConfig end");
             if (resultsCallback != null) {
                 this.resultsCallback.onConfigFetch(config);
             }
@@ -63,9 +66,9 @@ public class ParseSpeedTestConfig {
             if (this.resultsCallback != null) {
                 this.resultsCallback.onConfigFetchError(outputErrorMessage);
             }
-        } finally {
-            return config;
+            return null;
         }
+        return config;
     }
 
     public SpeedTestConfig downloadAndParseConfig(String urlString) throws IOException {
