@@ -50,7 +50,6 @@ public class InferenceEngine {
     private long lastBandwidthUpdateTimestampMs = 0;
     private MetricsDb metricsDb;
     private PossibleConditions currentConditions = PossibleConditions.NOOP_CONDITION;
-    private boolean firstRun = true;
     private DatabaseWriter databaseWriter;
     private DobbyApplication dobbyApplication;
 
@@ -83,13 +82,14 @@ public class InferenceEngine {
     }
 
     public Action addGoal(@Goal int goal) {
-        if (!firstRun) {
-            metricsDb.clearAllGrades();
-            currentConditions.clearConditions();
-        }
-        firstRun = false;
         return new Action(Utils.EMPTY_STRING, Action.ActionType.ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS);
     }
+
+    public void clearConditionsAndMetrics() {
+        metricsDb.clearAllGrades();
+        currentConditions.clearConditions();
+    }
+
 
     private String testModeToString(@BandwithTestCodes.TestMode int testMode) {
         String testModeString = "UNKNOWN";

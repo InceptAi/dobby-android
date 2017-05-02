@@ -19,6 +19,7 @@ import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 
 import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
 
@@ -41,7 +42,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     private ResponseCallback responseCallback;
     private InferenceEngine inferenceEngine;
     private boolean useApiAi = false; // We do not use ApiAi for the WifiDoc app.
-    private int bwWifiPingActionCount = 0;
+    private AtomicBoolean repeatBwWifiPingAction;
 
     @Inject
     NetworkLayer networkLayer;
@@ -64,7 +65,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         if (useApiAi) {
             initApiAiClient();
         }
-        bwWifiPingActionCount = 0;
+        repeatBwWifiPingAction = new AtomicBoolean(false);
     }
 
     public void setResponseCallback(ResponseCallback responseCallback) {
@@ -121,13 +122,12 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             return;
         }
         if (action.getAction() == Action.ActionType.ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS) {
-            if (bwWifiPingActionCount > 0) {
+            if (repeatBwWifiPingAction.getAndSet(true)) {
                 //Clear the ping/wifi cache to get fresh results.
-                networkLayer.clearStatsCache();
+                clearCache();
             }
             DobbyLog.i("Going into postAllOperations()");
             postAllOperations();
-            bwWifiPingActionCount++;
         }
     }
 
@@ -149,6 +149,15 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         inferenceEngine.cleanup();
         if (useApiAi) {
             apiAiClient.cleanup();
+        }
+    }
+
+    private void clearCache() {
+        if (networkLayer != null) {
+            networkLayer.clearStatsCache();
+        }
+        if (inferenceEngine != null) {
+            inferenceEngine.clearConditionsAndMetrics();
         }
     }
 
