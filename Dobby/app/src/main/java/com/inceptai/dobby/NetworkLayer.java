@@ -35,11 +35,11 @@ import static com.inceptai.dobby.wifi.WifiAnalyzerFactory.getWifiAnalyzer;
  */
 
 public class NetworkLayer {
-    public static final int MIN_TIME_GAP_TO_RETRIGGER_PING_MS = 10000; //10sec
-    public static final int MIN_PKT_LOSS_RATE_TO_RETRIGGER_PING_PERCENT = 50;
-    public static final int MIN_CHECKS_CONNECTIIVITY = 3;
-    public static final int MAX_AGE_GAP_TO_RETRIGGER_PING_MS = 120000; // 2 mins
-    public static final int MAX_AGE_GAP_TO_RETRIGGER_WIFI_SCAN_MS = 120000; // 2 mins
+    private static final int MIN_PKT_LOSS_RATE_TO_RETRIGGER_PING_PERCENT = 50;
+    private static final int MIN_CHECKS_CONNECTIIVITY = 3;
+    private static final int MAX_AGE_GAP_TO_RETRIGGER_PING_MS = 120000; // 2 mins
+    private static final int MAX_AGE_GAP_TO_RETRIGGER_WIFI_SCAN_MS = 120000; // 2 mins
+    private static final boolean RETRIGGER_PING_AUTOMATICALLY = false;
 
     private Context context;
     private DobbyThreadpool threadpool;
@@ -204,7 +204,10 @@ public class NetworkLayer {
                 startPing();
                 break;
             case DobbyEvent.EventType.WIFI_INTERNET_CONNECTIVITY_ONLINE:
-                if (getPingAnalyzerInstance().checkIfShouldRedoPingStats(MIN_TIME_GAP_TO_RETRIGGER_PING_MS, MIN_PKT_LOSS_RATE_TO_RETRIGGER_PING_PERCENT)) {
+                if (RETRIGGER_PING_AUTOMATICALLY &&
+                        getPingAnalyzerInstance().checkIfShouldRedoPingStats(
+                                MAX_AGE_GAP_TO_RETRIGGER_PING_MS,
+                                MIN_PKT_LOSS_RATE_TO_RETRIGGER_PING_PERCENT)) {
                     startPing();
                 }
                 break;
