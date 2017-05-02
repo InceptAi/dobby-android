@@ -137,7 +137,7 @@
 
                     <TextView
                         android:layout_width="wrap_content"
-                        android:text="192.168.1.1"
+                        android:text="your IP"
                         android:textSize="12sp"
                         android:id="@+id/router_ip_tv"
                         android:textStyle="bold"
@@ -299,7 +299,7 @@
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="10dp"
                 android:textColor="@android:color/holo_blue_light"
-                android:textSize="18sp"
+                android:textSize="12sp"
                 android:layout_gravity="center_horizontal"
                 android:fontFamily="sans-serif-condensed"
                 tools:text="Ready to run tests."

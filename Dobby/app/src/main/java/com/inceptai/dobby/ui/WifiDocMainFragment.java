@@ -72,7 +72,11 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private static final int BW_CONFIG_FETCH = 201;
     private static final int BW_UPLOAD = 202;
     private static final int BW_DOWNLOAD = 203;
-    private static final int BW_IDLE = 204;
+    private static final int BW_SERVER_INFO_FETCH = 204;
+    private static final int BW_BEST_SERVER = 205;
+    private static final int BW_IDLE = 206;
+
+
     private int bwTestState = BW_IDLE;
 
     private OnFragmentInteractionListener mListener;
@@ -118,6 +122,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
     private TextView suggestionsValueTv;
 
+    private String statusMessage;
     private String mParam1;
     private DobbyEventBus eventBus;
     private BandwidthObserver bandwidthObserver;
@@ -144,6 +149,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         if (getArguments() != null) {
             mParam1 = getArguments().getString(ARG_PARAM1);
         }
+        statusMessage = Utils.EMPTY_STRING;
     }
 
     @Override
@@ -308,22 +314,24 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     @Override
     public void onConfigFetch(SpeedTestConfig config) {
         bwTestState = BW_CONFIG_FETCH;
-        showStatusMessage("Finding closest server ...");
+        showStatusMessage("Getting server information ...");
     }
 
     @Override
     public void onServerInformationFetch(ServerInformation serverInformation) {
-
+        bwTestState = BW_SERVER_INFO_FETCH;
+        showStatusMessage("Got " + serverInformation.serverList.size() + " server option for testing. Determining closest servers to you ...");
     }
 
     @Override
     public void onClosestServersSelected(List<ServerInformation.ServerDetails> closestServers) {
-        showStatusMessage("Starting Download test ..");
+        showStatusMessage("Running latency tests for best server selection ...");
     }
 
     @Override
     public void onBestServerSelected(ServerInformation.ServerDetails bestServer) {
-
+        bwTestState = BW_BEST_SERVER;
+        showStatusMessage("Found closest server in " + bestServer.name + " with a latency of " + String.format("%.2f", bestServer.latencyMs) + " ms. Starting Download test ...");
     }
 
     @Override
@@ -370,7 +378,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             case MSG_SHOW_STATUS:
                 // TODO Animate this if needed.
                 String message = (String) msg.obj;
-                statusTv.setText(message);
+                statusMessage = statusMessage + "\n" + message;
+                statusTv.setText(statusMessage);
                 break;
             case MSG_SWITCH_STATE:
                 switchState(msg.arg1);
@@ -411,12 +420,13 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         setPingResult(pingDnsSecondValueTv,  String.format("%2.1f", pingGrade.getAlternativeDnsLatencyMs()),
                 pingDnsSecondGradeIv, pingGrade.getAlternativeDnsMetric());
 
-        setPingResult(pingWebValueTv, String.format("%2.2f", pingGrade.getExternalServerLatencyMs()),
+        setPingResult(pingWebValueTv, String.format("%2.1f", pingGrade.getExternalServerLatencyMs()),
                 pingWebGradeIv, pingGrade.getExternalServerLatencyMetric());
     }
 
     private void showSuggestion(SuggestionCreator.Suggestion suggestion) {
         ispNameTv.setText(suggestion.getIsp());
+        routerIpTv.setText(suggestion.getExternalIp());
         if (suggestion == null) {
             DobbyLog.w("Null suggestion received from eventbus.");
             return;
@@ -603,7 +613,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         wifiSignalValueTv.setText(String.valueOf(0));
         uploadGaugeTv.setText(ZERO_POINT_ZERO);
         downloadGaugeTv.setText(ZERO_POINT_ZERO);
-        ispNameTv.setText("");
+        //ispNameTv.setText("");
     }
 
     private void setImage(ImageView view, int resourceId) {
@@ -612,7 +622,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
     private void showStatusMessage(String message) {
         Message msg = Message.obtain(handler, MSG_SHOW_STATUS, message);
-        handler.sendMessageDelayed(msg, 500);
+        handler.sendMessageDelayed(msg, 100);
     }
 
     private void sendSwitchStateMessage(int newState) {
