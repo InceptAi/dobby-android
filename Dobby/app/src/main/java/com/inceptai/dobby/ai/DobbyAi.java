@@ -41,6 +41,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     private ResponseCallback responseCallback;
     private InferenceEngine inferenceEngine;
     private boolean useApiAi = false; // We do not use ApiAi for the WifiDoc app.
+    private int bwWifiPingActionCount = 0;
 
     @Inject
     NetworkLayer networkLayer;
@@ -63,6 +64,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         if (useApiAi) {
             initApiAiClient();
         }
+        bwWifiPingActionCount = 0;
     }
 
     public void setResponseCallback(ResponseCallback responseCallback) {
@@ -119,8 +121,13 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             return;
         }
         if (action.getAction() == Action.ActionType.ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS) {
+            if (bwWifiPingActionCount > 0) {
+                //Clear the ping/wifi cache to get fresh results.
+                networkLayer.clearStatsCache();
+            }
             DobbyLog.i("Going into postAllOperations()");
             postAllOperations();
+            bwWifiPingActionCount++;
         }
     }
 

@@ -137,6 +137,10 @@ public class NetworkLayer {
         return null;
     }
 
+    public void clearStatsCache() {
+        getWifiAnalyzerInstance().clearWifiScanCache();
+        getPingAnalyzerInstance().clearPingStatsCache();
+    }
 
     public synchronized BandwidthObserver startBandwidthTest(final @BandwithTestCodes.TestMode int mode) {
         if (bandwidthObserver != null && bandwidthObserver.testsRunning()) {

@@ -62,6 +62,9 @@ public class PingAnalyzer {
     }
 
     private void initializePingStats(IPLayerInfo ipLayerInfo) {
+        if (ipLayerInfo == null) {
+            return;
+        }
         ipLayerPingStats.put(ipLayerInfo.gateway, new PingStats(ipLayerInfo.gateway));
         ipLayerPingStats.put(ipLayerInfo.dns1, new PingStats(ipLayerInfo.dns1));
         ipLayerPingStats.put(ipLayerInfo.dns2, new PingStats(ipLayerInfo.dns2));
@@ -139,6 +142,11 @@ public class PingAnalyzer {
 
     public void updateIPLayerInfo(IPLayerInfo updatedInfo) {
         this.ipLayerInfo = updatedInfo;
+    }
+
+    public void clearPingStatsCache() {
+        ipLayerPingStats.clear();
+        initializePingStats(ipLayerInfo);
     }
 
     private void schedulePingAndReturn(String[] pingAddressList) {

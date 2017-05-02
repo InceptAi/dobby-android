@@ -82,6 +82,11 @@ public class WifiAnalyzer {
         return null;
     }
 
+    public void clearWifiScanCache() {
+        combinedScanResult.clear();
+        lastScanCompletionTimestampMs = 0;
+    }
+
     /**
      * @return An instance of a {@link ListenableFuture<List<ScanResult>>} or null on immediate failure.
      */
