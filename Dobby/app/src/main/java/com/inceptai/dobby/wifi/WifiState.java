@@ -32,6 +32,8 @@ public class WifiState {
     private static final int THRESHOLD_FOR_FLAGGING_FREQUENT_STATE_CHANGES = 5;
     private static final int THRESHOLD_FOR_COUNTING_FREQUENT_STATE_CHANGES_MS = 10000;
     private static final int MAX_AGE_FOR_SIGNAL_UPDATING_MS = 40000;
+    private static final int ANDROID_INVALID_RSSI = -127;
+    private static final String DEFAULT_MAC_ADDRESS = "02:00:00:00:00:00";
 
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({SignalStrengthZones.HIGH, SignalStrengthZones.MEDIUM,
@@ -70,6 +72,9 @@ public class WifiState {
                 return "HANGING_ON_SCANNING";
             case WifiLinkMode.FREQUENT_DISCONNECTIONS:
                 return "FREQUENT_DISCONNECTIONS";
+            case WifiLinkMode.MAX_MODES:
+                return "MAX_MODES";
+            case WifiLinkMode.UNKNOWN:
             default:
                 return "Unknown";
         }
@@ -94,15 +99,15 @@ public class WifiState {
 
     public class ChannelInfo {
         public int channelFrequency;
-        public int numberAPs;
         public int similarStrengthAPs;
         public int higherStrengthAps;
         public int highestStrengthAps;
-        public int lowerStrengthAps;
-        public int lowestStrengthAps;
-        public double contentionMetric;
+        int numberAPs;
+        int lowerStrengthAps;
+        int lowestStrengthAps;
+        double contentionMetric;
 
-        public ChannelInfo(int channelFrequency) {
+        ChannelInfo(int channelFrequency) {
             this.channelFrequency = channelFrequency;
         }
 
@@ -110,66 +115,10 @@ public class WifiState {
             return toJson();
         }
 
-        public String toJson() {
+        String toJson() {
             Gson gson = new Gson();
-            String json = gson.toJson(this);
-            return json;
+            return gson.toJson(this);
         }
-    }
-
-    public class WifiStateInfo {
-        public NetworkInfo.DetailedState detailedState;
-        public long startTimestampMs;
-        public long endTimestampMs;
-
-        public WifiStateInfo(NetworkInfo.DetailedState detailedState,
-                             long startTimestampMs, long endTimestampMs) {
-            this.detailedState = detailedState;
-            this.startTimestampMs = startTimestampMs;
-            this.endTimestampMs = endTimestampMs;
-        }
-
-        public String toJson() {
-            Gson gson = new Gson();
-            String json = gson.toJson(this);
-            return json;
-        }
-
-    }
-
-    public WifiState() {
-        linkBSSID = Utils.EMPTY_STRING;
-        linkSSID = Utils.EMPTY_STRING;
-        channelInfoMap = new HashMap<>();
-        detailedWifiStateStats = new HashMap<>();
-        wifiProblemMode = WifiLinkMode.UNKNOWN;
-        lastWifiState = NetworkInfo.DetailedState.IDLE;
-        lastWifiStateTimestampMs = 0;
-        movingSignalAverage = new HashMap<>();
-        lastSeenSignalTimestamp = new HashMap<>();
-    }
-
-    public void clearWifiConnectionInfo() {
-        linkSSID = Utils.EMPTY_STRING;
-        linkBSSID = Utils.EMPTY_STRING;
-        linkFrequency = 0;
-        linkSpeedMbps = 0;
-        linkSignal = 0;
-    }
-
-    public boolean updateSignal(int updatedSignal) {
-        if (updatedSignal == 0) {
-            return false;
-        }
-        if (Math.abs(updatedSignal - linkSignal) >= MIN_SIGNAL_CHANGE_FOR_CLEARING_CHANNEL_STATS) {
-            channelInfoMap.clear();
-            linkSignal = updatedSignal;
-            //TODO -- reissue a scan request.
-            //Recompute the contention metric here
-            //updateWithScanResult(lastWifiScanResult);
-            return true;
-        }
-        return false;
     }
 
     @WifiLinkMode
@@ -189,48 +138,6 @@ public class WifiState {
         return channelMapToReturn;
     }
 
-
-
-    @WifiLinkMode
-    synchronized protected int updateDetailedWifiStateInfo(NetworkInfo.DetailedState detailedWifiState, long timestampMs) {
-        if (lastWifiState != detailedWifiState) {
-            if (lastWifiStateTimestampMs != 0) {
-                WifiStateInfo lastWifiStateInfo = new WifiStateInfo(lastWifiState,
-                        lastWifiStateTimestampMs, timestampMs);
-                List<WifiStateInfo> currentList = detailedWifiStateStats.get(lastWifiState);
-                if (currentList == null) {
-                    currentList = new ArrayList<>();
-                    detailedWifiStateStats.put(lastWifiState, currentList);
-                }
-                currentList.add(lastWifiStateInfo);
-                DobbyLog.v("updateDetailedWifiStateInfo current state is: " +
-                        detailedWifiState.name() + " last state,lasted: " +
-                        lastWifiState.name() + "," + (timestampMs - lastWifiStateTimestampMs) + "ms");
-            }
-            lastWifiState = detailedWifiState;
-            lastWifiStateTimestampMs = timestampMs;
-        } else if (lastWifiStateTimestampMs == 0) {
-                lastWifiStateTimestampMs = timestampMs;
-        }
-        // Update the wifi problem mode if any
-        return updateWifiProblemMode();
-        // printHashMap();
-    }
-
-    private int getNumberOfTimesWifiInState(NetworkInfo.DetailedState detailedState, long timeIntervalMs) {
-        int count = 0;
-        List<WifiStateInfo> list = detailedWifiStateStats.get(detailedState);
-        if (list == null) {
-            return 0;
-        }
-        for (WifiStateInfo wifiStateInfo: list) {
-            if (wifiStateInfo.endTimestampMs >= (System.currentTimeMillis() - timeIntervalMs)) {
-                count++;
-            }
-        }
-        return count;
-    }
-
     public Utils.PercentileStats getStatsForDetailedState(NetworkInfo.DetailedState detailedState,
                                                           long timeIntervalMs) {
         List<Double> duration = new ArrayList<>();
@@ -246,26 +153,13 @@ public class WifiState {
         return new Utils.PercentileStats(duration);
     }
 
-    public int averageOf(int currentSignal, int previousSignal, long currentSeen, long previousSeen, int maxAge) {
-        if (currentSeen == 0) {
-            currentSeen = System.currentTimeMillis();
-        }
-        long age = currentSeen - previousSeen;
-        if (previousSeen > 0 && age > 0 && age < maxAge/2) {
-            // Average the RSSI with previously seen instances of this scan result
-            double alpha = 0.5 - (double) age / (double) maxAge;
-            currentSignal = (int) ((double) currentSignal * (1 - alpha) + (double) previousSignal * alpha);
-        }
-        return currentSignal;
-    }
-
     public void updateWifiStats(@Nullable DobbyWifiInfo wifiInfo, @Nullable List<ScanResult> scanResultList) {
         if (wifiInfo != null) {
-            linkSSID = wifiInfo.getSSID();
-            linkBSSID = wifiInfo.getBSSID();
-            linkSignal = wifiInfo.getRssi();
-            macAddress = wifiInfo.getMacAddress();
-            linkSpeedMbps = wifiInfo.getLinkSpeed();
+            setLinkSSID(wifiInfo.getSSID());
+            setLinkBSSID(wifiInfo.getBSSID());
+            setLinkSignal(wifiInfo.getRssi());
+            setMacAddress(wifiInfo.getMacAddress());
+            setLinkSpeedMbps(wifiInfo.getLinkSpeed());
         }
         if (scanResultList != null) {
             if (linkFrequency == 0) {
@@ -343,6 +237,147 @@ public class WifiState {
         return wifiStateInfo.endTimestampMs - wifiStateInfo.startTimestampMs;
     }
 
+    private void setLinkSignal(int linkSignal) {
+        if (linkSignal != ANDROID_INVALID_RSSI) {
+            this.linkSignal = linkSignal;
+        }
+    }
+
+    private void setLinkSSID(String linkSSID) {
+        if (linkSSID != null) {
+            this.linkSSID = linkSSID;
+        }
+    }
+
+    private void setLinkBSSID(String linkBSSID) {
+        if (linkBSSID != null) {
+            this.linkBSSID = linkBSSID;
+        }
+    }
+
+
+    private void setMacAddress(String macAddress) {
+        if (macAddress != null && !macAddress.equals(DEFAULT_MAC_ADDRESS)) {
+            this.macAddress = macAddress;
+        }
+    }
+
+    private void setLinkFrequency(int linkFrequency) {
+        if (linkFrequency > 0) {
+            this.linkFrequency = linkFrequency;
+        }
+    }
+
+    private void setLinkSpeedMbps(int linkSpeedMbps) {
+        if (linkSpeedMbps > 0) {
+            this.linkSpeedMbps = linkSpeedMbps;
+        }
+    }
+
+    public void setLastWifiState(NetworkInfo.DetailedState lastWifiState) {
+        this.lastWifiState = lastWifiState;
+    }
+
+    public void setLastWifiStateTimestampMs(long lastWifiStateTimestampMs) {
+        this.lastWifiStateTimestampMs = lastWifiStateTimestampMs;
+    }
+
+    //private stuff
+
+    private class WifiStateInfo {
+        NetworkInfo.DetailedState detailedState;
+        long startTimestampMs;
+        long endTimestampMs;
+
+        WifiStateInfo(NetworkInfo.DetailedState detailedState,
+                             long startTimestampMs, long endTimestampMs) {
+            this.detailedState = detailedState;
+            this.startTimestampMs = startTimestampMs;
+            this.endTimestampMs = endTimestampMs;
+        }
+
+        String toJson() {
+            Gson gson = new Gson();
+            return gson.toJson(this);
+        }
+    }
+
+    WifiState() {
+        linkBSSID = Utils.EMPTY_STRING;
+        linkSSID = Utils.EMPTY_STRING;
+        channelInfoMap = new HashMap<>();
+        detailedWifiStateStats = new HashMap<>();
+        wifiProblemMode = WifiLinkMode.UNKNOWN;
+        lastWifiState = NetworkInfo.DetailedState.IDLE;
+        lastWifiStateTimestampMs = 0;
+        movingSignalAverage = new HashMap<>();
+        lastSeenSignalTimestamp = new HashMap<>();
+    }
+
+    void clearWifiConnectionInfo() {
+        linkSSID = Utils.EMPTY_STRING;
+        linkBSSID = Utils.EMPTY_STRING;
+        linkFrequency = 0;
+        linkSpeedMbps = 0;
+        linkSignal = 0;
+    }
+
+    boolean updateSignal(int updatedSignal) {
+        if (updatedSignal == 0) {
+            return false;
+        }
+        if (Math.abs(updatedSignal - linkSignal) >= MIN_SIGNAL_CHANGE_FOR_CLEARING_CHANNEL_STATS) {
+            channelInfoMap.clear();
+            setLinkSignal(updatedSignal);
+            //TODO -- reissue a scan request.
+            //Recompute the contention metric here
+            //updateWithScanResult(lastWifiScanResult);
+            return true;
+        }
+        return false;
+    }
+
+    @WifiLinkMode
+    synchronized protected int updateDetailedWifiStateInfo(NetworkInfo.DetailedState detailedWifiState, long timestampMs) {
+        if (lastWifiState != detailedWifiState) {
+            if (lastWifiStateTimestampMs != 0) {
+                WifiStateInfo lastWifiStateInfo = new WifiStateInfo(lastWifiState,
+                        lastWifiStateTimestampMs, timestampMs);
+                List<WifiStateInfo> currentList = detailedWifiStateStats.get(lastWifiState);
+                if (currentList == null) {
+                    currentList = new ArrayList<>();
+                    detailedWifiStateStats.put(lastWifiState, currentList);
+                }
+                currentList.add(lastWifiStateInfo);
+                DobbyLog.v("updateDetailedWifiStateInfo current state is: " +
+                        detailedWifiState.name() + " last state,lasted: " +
+                        lastWifiState.name() + "," + (timestampMs - lastWifiStateTimestampMs) + "ms");
+            }
+            lastWifiState = detailedWifiState;
+            lastWifiStateTimestampMs = timestampMs;
+        } else if (lastWifiStateTimestampMs == 0) {
+                lastWifiStateTimestampMs = timestampMs;
+        }
+        // Update the wifi problem mode if any
+        return updateWifiProblemMode();
+        // printHashMap();
+    }
+
+    private int getNumberOfTimesWifiInState(NetworkInfo.DetailedState detailedState, long timeIntervalMs) {
+        int count = 0;
+        List<WifiStateInfo> list = detailedWifiStateStats.get(detailedState);
+        if (list == null) {
+            return 0;
+        }
+        for (WifiStateInfo wifiStateInfo: list) {
+            if (wifiStateInfo.endTimestampMs >= (System.currentTimeMillis() - timeIntervalMs)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+
     private NetworkInfo.DetailedState getCurrentState() {
         return lastWifiState;
     }
@@ -357,8 +392,7 @@ public class WifiState {
 
     private String toJson() {
         Gson gson = new Gson();
-        String json = gson.toJson(this);
-        return json;
+        return gson.toJson(this);
     }
 
     private void updateWithScanResult(List<ScanResult> scanResultList) {
@@ -385,7 +419,7 @@ public class WifiState {
                 lastSeenSignalTimestamp.put(keyForSignalUpdating, System.currentTimeMillis());
             } else {
                 long currentTimestamp = System.currentTimeMillis();
-                signal = averageOf(scanResult.level, signal, currentTimestamp, timestamp, MAX_AGE_FOR_SIGNAL_UPDATING_MS);
+                signal = Utils.computeMovingAverageSignal(scanResult.level, signal, currentTimestamp, timestamp, MAX_AGE_FOR_SIGNAL_UPDATING_MS);
                 movingSignalAverage.put(keyForSignalUpdating, signal);
                 lastSeenSignalTimestamp.put(keyForSignalUpdating, currentTimestamp);
             }
@@ -420,7 +454,7 @@ public class WifiState {
         }
         for (ScanResult scanResult: scanResultList) {
             if (scanResult.BSSID.equals(linkBSSID) || scanResult.SSID.equals(linkSSID)) {
-                linkFrequency = scanResult.frequency;
+                setLinkFrequency(scanResult.frequency);
                 break;
             }
         }
