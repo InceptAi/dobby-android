@@ -2,6 +2,7 @@ package com.inceptai.dobby.ui;
 
 import android.Manifest;
 import android.annotation.TargetApi;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
@@ -17,12 +18,15 @@ import android.support.v4.app.Fragment;
 import android.support.v4.view.animation.FastOutSlowInInterpolator;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.CardView;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -82,8 +86,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private OnFragmentInteractionListener mListener;
 
     private FloatingActionButton mainFab;
-    private ProgressBar progressBarFab;
-
+    private BottomDialog bottomDialog;
     private CircularGauge downloadCircularGauge;
     private TextView downloadGaugeTv;
     private TextView downloadGaugeTitleTv;
@@ -247,7 +250,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         }
         if (mListener != null) {
             if (uiState == UI_STATE_INIT_AND_READY) {
-                showStatusMessage("Starting bandwidth test ...");
+                showStatusMessageAsync("Starting bandwidth test ...");
                 sendSwitchStateMessage(UI_STATE_RUNNING_TESTS);
             }
             mListener.onMainButtonClick();
@@ -314,31 +317,31 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     @Override
     public void onConfigFetch(SpeedTestConfig config) {
         bwTestState = BW_CONFIG_FETCH;
-        showStatusMessage("Getting server information ...");
+        showStatusMessageAsync("Getting server information ...");
     }
 
     @Override
     public void onServerInformationFetch(ServerInformation serverInformation) {
         bwTestState = BW_SERVER_INFO_FETCH;
-        showStatusMessage("Got " + serverInformation.serverList.size() + " server option for testing. Determining closest servers to you ...");
+        showStatusMessageAsync("Got " + serverInformation.serverList.size() + " server option for testing. Determining closest servers to you ...");
     }
 
     @Override
     public void onClosestServersSelected(List<ServerInformation.ServerDetails> closestServers) {
-        showStatusMessage("Running latency tests for best server selection ...");
+        showStatusMessageAsync("Running latency tests for best server selection ...");
     }
 
     @Override
     public void onBestServerSelected(ServerInformation.ServerDetails bestServer) {
         bwTestState = BW_BEST_SERVER;
-        showStatusMessage("Found closest server in " + bestServer.name + " with a latency of " + String.format("%.2f", bestServer.latencyMs) + " ms. Starting Download test ...");
+        showStatusMessageAsync("Found closest server in " + bestServer.name + " with a latency of " + String.format("%.2f", bestServer.latencyMs) + " ms. Starting Download test ...");
     }
 
     @Override
     public void onTestFinished(@BandwithTestCodes.TestMode int testMode, BandwidthStats stats) {
         Message.obtain(handler, MSG_UPDATED_CIRCULAR_GAUGE, BandwidthValue.from(testMode, (stats.getOverallBandwidth() / 1.0e6))).sendToTarget();
         if (testMode == BandwithTestCodes.TestMode.UPLOAD) {
-            showStatusMessage("Finished bandwidth tests.");
+            showStatusMessageAsync("Finished bandwidth tests.");
             sendSwitchStateMessage(UI_STATE_READY_WITH_RESULTS);
         }
     }
@@ -347,10 +350,10 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     public void onTestProgress(@BandwithTestCodes.TestMode int testMode, double instantBandwidth) {
         if (testMode == BandwithTestCodes.TestMode.DOWNLOAD && bwTestState != BW_DOWNLOAD) {
             bwTestState = BW_DOWNLOAD;
-            showStatusMessage("Running Download test ...");
+            showStatusMessageAsync("Running Download test ...");
         } else if (testMode == BandwithTestCodes.TestMode.UPLOAD && bwTestState != BW_UPLOAD) {
             bwTestState = BW_UPLOAD;
-            showStatusMessage("Running Upload test ...");
+            showStatusMessageAsync("Running Upload test ...");
         }
         Message.obtain(handler, MSG_UPDATED_CIRCULAR_GAUGE, BandwidthValue.from(testMode, (instantBandwidth / 1.0e6))).sendToTarget();
     }
@@ -376,10 +379,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                 showSuggestion((SuggestionCreator.Suggestion) msg.obj);
                 break;
             case MSG_SHOW_STATUS:
-                // TODO Animate this if needed.
-                String message = (String) msg.obj;
-                statusMessage = statusMessage + "\n" + message;
-                statusTv.setText(statusMessage);
+                showStatusMessage((String) msg.obj);
                 break;
             case MSG_SWITCH_STATE:
                 switchState(msg.arg1);
@@ -453,8 +453,6 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private void fetchViewInstances(View rootView) {
         mainFab = (FloatingActionButton) rootView.findViewById(R.id.main_fab_button);
         mainFab.setOnClickListener(this);
-
-        progressBarFab = (ProgressBar) rootView.findViewById(R.id.fab_progress_bar);
 
         yourNetworkCv = (CardView) rootView.findViewById(R.id.net_cardview);
         pingCv = (CardView) rootView.findViewById(R.id.ping_cardview);
@@ -620,7 +618,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         Utils.setImage(getContext(), view, resourceId);
     }
 
-    private void showStatusMessage(String message) {
+    private void showStatusMessageAsync(String message) {
         Message msg = Message.obtain(handler, MSG_SHOW_STATUS, message);
         handler.sendMessageDelayed(msg, 100);
     }
@@ -629,22 +627,73 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         Message.obtain(handler, MSG_SWITCH_STATE, newState, 0).sendToTarget();
     }
 
+    // TODO UI thread annotation.
+    private void showStatusMessage(String message) {
+        // TODO Animate this if needed.
+        statusMessage = statusMessage + "\n" + message;
+        statusTv.setText(statusMessage);
+    }
+
     private synchronized void switchState(int newState) {
         if ((uiState == UI_STATE_INIT_AND_READY || uiState == UI_STATE_READY_WITH_RESULTS)
                 && newState == UI_STATE_RUNNING_TESTS) {
             // Tests starting.
             // Disable fab.
-            progressBarFab.setVisibility(View.VISIBLE);
         }
 
         if (uiState == UI_STATE_RUNNING_TESTS && newState == UI_STATE_READY_WITH_RESULTS) {
             // Enable FAB.
-            progressBarFab.setVisibility(View.INVISIBLE);
         }
         uiState = newState;
         if (newState == UI_STATE_RUNNING_TESTS) {
             statusTv.setText(R.string.running_tests);
         }
         uiStateVisibilityChanges();
+    }
+
+    private BottomDialog createBottomDialog() {
+        BottomDialog dialog = new BottomDialog(getContext());
+        bottomDialog = dialog;
+        dialog.show();
+        return dialog;
+    }
+
+    static final class BottomDialog {
+        private ImageView vIcon ;
+        private TextView vTitle ;
+        private TextView vContent;
+        private FrameLayout vCustomView;
+        private Button vNegative ;
+        private Button vPositive;
+
+        BottomDialog(Context context) {
+            Dialog dialog = new Dialog(context, R.style.BottomDialogs);
+            View view = LayoutInflater.from(context).inflate(R.layout.bottom_dialog_wifidoc, null);
+            vIcon = (ImageView) view.findViewById(R.id.bottomDialog_icon);
+            vTitle = (TextView) view.findViewById(R.id.bottomDialog_title);
+            vContent = (TextView) view.findViewById(R.id.bottomDialog_content);
+            vCustomView = (FrameLayout) view.findViewById(R.id.bottomDialog_custom_view);
+            vNegative = (Button) view.findViewById(R.id.bottomDialog_cancel);
+            vPositive = (Button) view.findViewById(R.id.bottomDialog_ok);
+            dialog.setContentView(view);
+            dialog.setCancelable(true);
+            dialog.getWindow().setLayout(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            dialog.getWindow().setGravity(Gravity.BOTTOM);
+        }
+
+        void show() {
+            vIcon.setVisibility(View.VISIBLE);
+            vTitle.setVisibility(View.VISIBLE);
+            vPositive.setVisibility(View.VISIBLE);
+            vNegative.setVisibility(View.VISIBLE);
+        }
+
+        void setTitle(String title) {
+            vTitle.setText(title);
+        }
+
+        void setContent(String content) {
+            vContent.setText(content);
+        }
     }
 }
