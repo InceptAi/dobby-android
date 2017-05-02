@@ -130,7 +130,7 @@ public class NetworkLayer {
     @Nullable
     public ListenableFuture<PingStats> startGatewayDownloadLatencyTest() {
         try {
-            return getPingAnalyzerInstance().scheduleRouterDownloadLatencyTestSafely();
+            return getPingAnalyzerInstance().scheduleRouterDownloadLatencyTestSafely(MAX_AGE_GAP_TO_RETRIGGER_PING_MS);
         } catch (IllegalStateException e) {
             DobbyLog.v("Exception while scheduling ping tests: " + e);
         }
