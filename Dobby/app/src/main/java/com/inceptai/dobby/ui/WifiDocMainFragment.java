@@ -13,6 +13,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.UiThread;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.animation.FastOutSlowInInterpolator;
@@ -57,6 +58,7 @@ import static com.inceptai.dobby.ai.DataInterpreter.MetricType.POOR;
 
 public class WifiDocMainFragment extends Fragment implements View.OnClickListener, NewBandwidthAnalyzer.ResultsCallback, Handler.Callback{
     public static final String TAG = "WifiDocMainFragment";
+    private static final String UNKNOWN_LATENCY_STRING = "--";
     private static final String ZERO_POINT_ZERO = "0.0";
     private static final int PERMISSION_COARSE_LOCATION_REQUEST_CODE = 101;
     private static final String ARG_PARAM1 = "param1";
@@ -79,7 +81,6 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private static final int BW_DOWNLOAD_RUNNING = 203;
     private static final int BW_SERVER_INFO_FETCHED = 204;
     private static final int BW_BEST_SERVER_DETERMINED = 205;
-    private static final int BW_CLOSEST_SERVERS_DETERMINED = 206;
     private static final int BW_IDLE = 207;
 
     private int bwTestState = BW_IDLE;
@@ -261,7 +262,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         if (mListener != null) {
             if (uiState == UI_STATE_INIT_AND_READY) {
                 setBwTestState(BW_TEST_INITIATED);
-                showStatusMessage("Preparing for tests, fetching config for servers to test your speed ...");
+                showStatusMessageAsync("Preparing for tests, fetching config for servers to test your speed ...");
                 DobbyLog.v("WifiDoc: Issued command for starting bw tests");
                 sendSwitchStateMessage(UI_STATE_RUNNING_TESTS);
             }
@@ -329,7 +330,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     @Override
     public void onConfigFetch(SpeedTestConfig config) {
         if (getBwTestState() == BW_TEST_INITIATED) {
-            showStatusMessage("Got speed test config, getting list of servers for testing ...");
+            showStatusMessageAsync("Got speed test config, getting list of servers for testing ...");
         }
         setBwTestState(BW_CONFIG_FETCHED);
         DobbyLog.v("WifiDoc: Fetched config");
@@ -339,7 +340,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     @Override
     public void onServerInformationFetch(ServerInformation serverInformation) {
         if (getBwTestState() == BW_CONFIG_FETCHED) {
-            showStatusMessage("Got " + serverInformation.serverList.size() + " servers for testing. Determining closest servers to you ...");
+            showStatusMessageAsync("Got " + serverInformation.serverList.size() + " servers for testing. Determining closest servers to you ...");
         }
         setBwTestState(BW_SERVER_INFO_FETCHED);
         DobbyLog.v("WifiDoc: Fetched server info");
@@ -356,7 +357,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     @Override
     public void onBestServerSelected(ServerInformation.ServerDetails bestServer) {
         if (getBwTestState() == BW_SERVER_INFO_FETCHED) {
-            showStatusMessage("Found closest server in " + bestServer.name + " with a latency of " + String.format("%.2f", bestServer.latencyMs) + " ms.");
+            showStatusMessageAsync("Found closest server in " + bestServer.name + " with a latency of " + String.format("%.2f", bestServer.latencyMs) + " ms.");
         }
         setBwTestState(BW_BEST_SERVER_DETERMINED);
         DobbyLog.v("WifiDoc: Best server");
@@ -375,10 +376,10 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     public void onTestProgress(@BandwithTestCodes.TestMode int testMode, double instantBandwidth) {
         if (testMode == BandwithTestCodes.TestMode.DOWNLOAD && getBwTestState() != BW_DOWNLOAD_RUNNING) {
             setBwTestState(BW_DOWNLOAD_RUNNING);
-            showStatusMessage("Running Download test ...");
+            showStatusMessageAsync("Running Download test ...");
         } else if (testMode == BandwithTestCodes.TestMode.UPLOAD && getBwTestState() != BW_UPLOAD_RUNNING) {
             setBwTestState(BW_UPLOAD_RUNNING);
-            showStatusMessage("Running Upload test ...");
+            showStatusMessageAsync("Running Upload test ...");
         }
         Message.obtain(handler, MSG_UPDATED_CIRCULAR_GAUGE, BandwidthValue.from(testMode, (instantBandwidth / 1.0e6))).sendToTarget();
     }
@@ -436,16 +437,16 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             return;
         }
 
-        setPingResult(pingRouterValueTv, String.format("%2.1f", pingGrade.getRouterLatencyMs()),
+        setPingResult(pingRouterValueTv, String.format("%02.1f", pingGrade.getRouterLatencyMs()),
                 pingRouterGradeIv, pingGrade.getRouterLatencyMetric());
 
-        setPingResult(pingDnsPrimaryValueTv, String.format("%2.1f", pingGrade.getDnsServerLatencyMs()),
+        setPingResult(pingDnsPrimaryValueTv, String.format("%02.1f", pingGrade.getDnsServerLatencyMs()),
                 pingDnsPrimaryGradeIv, pingGrade.getDnsServerLatencyMetric());
 
-        setPingResult(pingDnsSecondValueTv,  String.format("%2.1f", pingGrade.getAlternativeDnsLatencyMs()),
+        setPingResult(pingDnsSecondValueTv,  String.format("%02.1f", pingGrade.getAlternativeDnsLatencyMs()),
                 pingDnsSecondGradeIv, pingGrade.getAlternativeDnsMetric());
 
-        setPingResult(pingWebValueTv, String.format("%2.1f", pingGrade.getExternalServerLatencyMs()),
+        setPingResult(pingWebValueTv, String.format("%02.1f", pingGrade.getExternalServerLatencyMs()),
                 pingWebGradeIv, pingGrade.getExternalServerLatencyMetric());
     }
 
@@ -600,9 +601,11 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                 break;
             default:
                 setImage(gradeIv, R.drawable.non_functional);
+                valueTv.setText(UNKNOWN_LATENCY_STRING);
                 break;
 
         }
+        pingCv.requestLayout();
     }
 
     private void setWifiResult(TextView valueTv, String value, ImageView gradeIv, @DataInterpreter.MetricType int grade) {
@@ -652,11 +655,14 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         Message.obtain(handler, MSG_SWITCH_STATE, newState, 0).sendToTarget();
     }
 
-    // TODO UI thread annotation.
+    @UiThread
     private void showStatusMessage(String message) {
         // TODO Animate this if needed.
         statusMessage = statusMessage + "\n" + message;
         statusTv.setText(statusMessage);
+        if (bottomDialog != null) {
+            bottomDialog.setContent(statusMessage);
+        }
     }
 
     private synchronized void switchState(int newState) {
@@ -664,21 +670,29 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                 && newState == UI_STATE_RUNNING_TESTS) {
             // Tests starting.
             // Disable fab.
+            if (bottomDialog == null) {
+                bottomDialog = createBottomDialog(getContext());
+                bottomDialog.show();
+            }
         }
 
         if (uiState == UI_STATE_RUNNING_TESTS && newState == UI_STATE_READY_WITH_RESULTS) {
             // Enable FAB.
+            yourNetworkCv.requestLayout();
+            pingCv.requestLayout();
         }
         uiState = newState;
         if (newState == UI_STATE_RUNNING_TESTS) {
             statusTv.setText(R.string.running_tests);
+            if (bottomDialog != null) {
+                bottomDialog.dismiss();
+            }
         }
         uiStateVisibilityChanges();
     }
 
-    private BottomDialog createBottomDialog() {
-        BottomDialog dialog = new BottomDialog(getContext());
-        bottomDialog = dialog;
+    private static BottomDialog createBottomDialog(Context context) {
+        BottomDialog dialog = new BottomDialog(context);
         dialog.show();
         return dialog;
     }
@@ -690,9 +704,10 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         private FrameLayout vCustomView;
         private Button vNegative ;
         private Button vPositive;
+        private Dialog dialog;
 
         BottomDialog(Context context) {
-            Dialog dialog = new Dialog(context, R.style.BottomDialogs);
+            dialog = new Dialog(context, R.style.BottomDialogs);
             View view = LayoutInflater.from(context).inflate(R.layout.bottom_dialog_wifidoc, null);
             vIcon = (ImageView) view.findViewById(R.id.bottomDialog_icon);
             vTitle = (TextView) view.findViewById(R.id.bottomDialog_title);
@@ -719,6 +734,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
         void setContent(String content) {
             vContent.setText(content);
+        }
+        void dismiss() {
+            dialog.dismiss();
         }
     }
 }

@@ -83,14 +83,14 @@
                 android:visibility="gone"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                style="@style/Button.Flat"
+                style="@style/MyButton.Flat"
                 android:text="@android:string/cancel"/>
             <Button
                 android:id="@+id/bottomDialog_ok"
                 android:visibility="gone"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                style="@style/Button"
+                style="@style/MyButton"
                 android:text="@android:string/ok"/>
 
         </LinearLayout>
