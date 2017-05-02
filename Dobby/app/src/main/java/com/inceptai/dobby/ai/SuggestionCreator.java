@@ -84,6 +84,10 @@ public class SuggestionCreator {
             return suggestionCreatorParams.bandwidthGrade.isp;
         }
 
+        public String getExternalIp() {
+            return suggestionCreatorParams.bandwidthGrade.externalIP;
+        }
+
         @Override
         public String toString() {
             StringBuilder sb = new StringBuilder();

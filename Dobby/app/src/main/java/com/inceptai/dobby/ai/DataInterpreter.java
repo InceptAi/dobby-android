@@ -50,8 +50,8 @@ public class DataInterpreter {
     };
 
     private static final double[] PING_LATENCY_ROUTER_STEPS_MS = { /* lower is better */
-            4.0, /* excellent */
-            8.0, /* good */
+            5.0, /* excellent */
+            10.0, /* good */
             20.0, /* average */
             100.0 /* poor */
     };
@@ -702,7 +702,8 @@ public class DataInterpreter {
         }
         httpGrade.httpDownloadLatencyMetric = getGradeLowerIsBetter(httpRouterStats.avgLatencyMs,
                 HTTP_LATENCY_ROUTER_STEPS_MS,
-                httpRouterStats.avgLatencyMs > 0.0, httpRouterStats.avgLatencyMs > MAX_LATENCY_FOR_BEING_NONFUNCTIONAL_MS);
+                httpRouterStats.avgLatencyMs > 0.0,
+                httpRouterStats.avgLatencyMs > MAX_LATENCY_FOR_BEING_NONFUNCTIONAL_MS);
         return  httpGrade;
     }
 
