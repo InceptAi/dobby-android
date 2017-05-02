@@ -34,6 +34,7 @@ import static com.inceptai.dobby.DobbyApplication.TAG;
  */
 
 public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.ActionListener {
+    private static final boolean CLEAR_STATS_EVERY_TIME_USER_ASKS_TO_RUN_TESTS = true;
     private Context context;
     private DobbyThreadpool threadpool;
     private ApiAiClient apiAiClient;
@@ -122,7 +123,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             return;
         }
         if (action.getAction() == Action.ActionType.ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS) {
-            if (repeatBwWifiPingAction.getAndSet(true)) {
+            if (CLEAR_STATS_EVERY_TIME_USER_ASKS_TO_RUN_TESTS && repeatBwWifiPingAction.getAndSet(true)) {
                 //Clear the ping/wifi cache to get fresh results.
                 clearCache();
             }
