@@ -71,11 +71,11 @@
         <item name="android:windowExitAnimation">@anim/sheet_hide</item>
     </style>
 
-    <style name="Button" parent="Button.Base" />
+    <style name="MyButton" parent="MyButton.Base" />
 
-    <style name="Button.Flat" parent="Button.Flat.Base" />
+    <style name="MyButton.Flat" parent="MyButton.Flat.Base" />
 
-    <style name="Button.Base" parent="Base.TextAppearance.AppCompat.Button">
+    <style name="MyButton.Base" parent="Base.TextAppearance.AppCompat.Button">
         <item name="android:textColor">@android:color/white</item>
         <item name="android:textSize">13sp</item>
         <item name="android:minHeight">@dimen/btn_min_height</item>
@@ -89,7 +89,7 @@
         <item name="android:layout_marginRight">@dimen/btn_margin</item>
     </style>
 
-    <style name="Button.Flat.Base" parent="Base.TextAppearance.AppCompat.Button">
+    <style name="MyButton.Flat.Base" parent="Base.TextAppearance.AppCompat.Button">
         <item name="android:background">@drawable/btn_flat_selector</item>
         <item name="android:minWidth">@dimen/btn_min_width</item>
         <item name="android:minHeight">@dimen/btn_min_height</item>
