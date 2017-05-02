@@ -21,6 +21,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Collections;
@@ -351,6 +352,24 @@ public class Utils {
             throw e;
         } finally {
             return outputStringBuilder.toString();
+        }
+    }
+
+    /**
+     * Run linux system command
+     * @param command
+     */
+    public static Reader getInputStreamForCommand(String command) throws Exception {
+        StringBuilder outputStringBuilder = new StringBuilder();
+        try {
+            Process p = Runtime.getRuntime().exec(command);
+            BufferedReader bufferedReader= new BufferedReader(
+                    new InputStreamReader(p.getInputStream()));
+            return bufferedReader;
+
+        } catch (IOException e) {
+            DobbyLog.e(e.getStackTrace().toString());
+            throw e;
         }
     }
 
