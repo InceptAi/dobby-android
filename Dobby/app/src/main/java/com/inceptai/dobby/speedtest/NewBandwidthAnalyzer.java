@@ -101,7 +101,7 @@ public class NewBandwidthAnalyzer {
         this.dobbyThreadpool = dobbyThreadpool;
         lastConfigFetchTimestampMs = 0;
         lastBestServerDeterminationTimestampMs = 0;
-        DobbyLog.e("NEW BANDWIDTH ANALYZER INSTANCE CREATED.");
+        DobbyLog.v("NEW BANDWIDTH ANALYZER INSTANCE CREATED.");
     }
 
     /**
