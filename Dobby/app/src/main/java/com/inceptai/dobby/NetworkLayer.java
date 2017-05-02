@@ -65,6 +65,7 @@ public class NetworkLayer {
         }
         eventBus.registerListener(this);
         getConnectivityAnalyzerInstance().rescheduleConnectivityTest(MIN_CHECKS_CONNECTIIVITY);
+        DobbyLog.v("NL initialized");
     }
 
     public ListenableFuture<List<ScanResult>> wifiScan() {

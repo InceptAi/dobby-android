@@ -142,13 +142,14 @@ public class NewBandwidthAnalyzer {
 
     public void processDobbyBusEvents(DobbyEvent event) {
         int eventType = event.getEventType();
-        DobbyLog.v("Got event: " + event);
+        DobbyLog.v("NBA Got event: " + event);
         if (event.getEventType() == DobbyEvent.EventType.WIFI_INTERNET_CONNECTIVITY_ONLINE) {
             dobbyThreadpool.submit(new Runnable() {
                 @Override
                 public void run() {
                     fetchSpeedTestConfigIfNeeded();
-                    fetchServerConfigAndDetermineBestServerIfNeeded();            }
+                    fetchServerConfigAndDetermineBestServerIfNeeded();
+                }
             });
         }
     }
@@ -157,7 +158,9 @@ public class NewBandwidthAnalyzer {
         final String downloadMode = "http";
         //Get config if not fresh
         if (System.currentTimeMillis() - lastConfigFetchTimestampMs > MAX_AGE_FOR_FRESHNESS_MS) {
+            DobbyLog.v("Config not fresh enough, fetching again");
             speedTestConfig = parseSpeedTestConfig.getConfig(downloadMode);
+            DobbyLog.v("Fetched new config");
             if (speedTestConfig == null) {
                 if (resultsCallback != null) {
                      resultsCallback.onBandwidthTestError(BandwithTestCodes.TestMode.CONFIG_FETCH,
@@ -392,12 +395,16 @@ public class NewBandwidthAnalyzer {
         }
         DobbyLog.i("Starting bandwidth tests in NewBandwidthAnalyzer.");
         this.testMode = testMode;
+        DobbyLog.i("NBA Fetching config.");
         fetchSpeedTestConfigIfNeeded();
+        DobbyLog.i("NBA getting servers and determining best.");
         fetchServerConfigAndDetermineBestServerIfNeeded();
         if (testMode == TestMode.DOWNLOAD_AND_UPLOAD || testMode == BandwithTestCodes.TestMode.DOWNLOAD) {
+            DobbyLog.i("NBA starting download.");
             performDownload();
         }
         if (testMode == BandwithTestCodes.TestMode.UPLOAD) {
+            DobbyLog.i("NBA starting upload.");
             performUpload();
         }
     }
