@@ -168,9 +168,8 @@ public class PingAnalyzer {
 
     private String[] getAddressListToPing(int maxAgeToReTriggerPingMs) {
         HashMap<String, Boolean> addressToPingMap = new HashMap<>();
-        String[] addressList = {ipLayerInfo.gateway, ipLayerInfo.dns1, ipLayerInfo.dns2,
-                ipLayerInfo.referenceExternalAddress1, ipLayerInfo.referenceExternalAddress2,
-                ipLayerInfo.publicDns1, ipLayerInfo.publicDns2};
+        String[] addressList = {ipLayerInfo.gateway,
+                ipLayerInfo.dns1, ipLayerInfo.referenceExternalAddress1, ipLayerInfo.publicDns1};
 
         //By default ping everyone
         for (String address: addressList) {
@@ -178,7 +177,7 @@ public class PingAnalyzer {
         }
         //Mark ones with fresh enough timestamp as false
         for (PingStats stats: ipLayerPingStats.values()) {
-            if (stats.updatedAt > 0 && (System.currentTimeMillis() - stats.updatedAt < maxAgeToReTriggerPingMs)) {
+            if (stats.getUpdatedAt() > 0 && (System.currentTimeMillis() - stats.getUpdatedAt() < maxAgeToReTriggerPingMs)) {
                 if (addressToPingMap.get(stats.ipAddress) != null) {
                     addressToPingMap.put(stats.ipAddress, false);
                 }

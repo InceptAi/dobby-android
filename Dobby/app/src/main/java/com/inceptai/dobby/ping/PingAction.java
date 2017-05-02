@@ -161,7 +161,7 @@ public class PingAction {
         if (pktsMatcher.find()) {
             String[] matchingStrings = pktsMatcher.group(0).split(" ");
             if (matchingStrings.length >= 3) {
-                pingStatsToReturn.lossRatePercent = Utils.parseDoubleWithDefault(-1, matchingStrings[0].split("%")[0]);
+                pingStatsToReturn.lossRatePercent = Utils.parseDoubleWithDefault(-1.0, matchingStrings[0].split("%")[0]);
             }
         }
 
@@ -172,10 +172,10 @@ public class PingAction {
             if (matchingStrings.length >= 3) {
                 String[] latencies = matchingStrings[2].split("/");
                 if (latencies.length >= 4) {
-                    pingStatsToReturn.minLatencyMs = Utils.parseDoubleWithDefault(-1.0, latencies[0]);
-                    pingStatsToReturn.avgLatencyMs = Utils.parseDoubleWithDefault(-1.0, latencies[1]);
-                    pingStatsToReturn.maxLatencyMs = Utils.parseDoubleWithDefault(-1.0, latencies[2]);
-                    pingStatsToReturn.deviationMs = Utils.parseDoubleWithDefault(-1.0, latencies[3]);
+                    pingStatsToReturn.minLatencyMs = Utils.parseDoubleWithDefault(0, latencies[0]);
+                    pingStatsToReturn.avgLatencyMs = Utils.parseDoubleWithDefault(0, latencies[1]);
+                    pingStatsToReturn.maxLatencyMs = Utils.parseDoubleWithDefault(0, latencies[2]);
+                    pingStatsToReturn.deviationMs = Utils.parseDoubleWithDefault(0, latencies[3]);
                 }
             }
         }
