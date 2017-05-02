@@ -168,7 +168,7 @@ public class PingAnalyzer {
 
     private String[] getAddressListToPing(int maxAgeToReTriggerPingMs) {
         HashMap<String, Boolean> addressToPingMap = new HashMap<>();
-        String[] addressList = {ipLayerInfo.gateway, ipLayerInfo.dns1,ipLayerInfo.dns2,
+        String[] addressList = {ipLayerInfo.gateway, ipLayerInfo.dns1, ipLayerInfo.dns2,
                 ipLayerInfo.referenceExternalAddress1, ipLayerInfo.referenceExternalAddress2,
                 ipLayerInfo.publicDns1, ipLayerInfo.publicDns2};
 
