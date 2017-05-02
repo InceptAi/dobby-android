@@ -78,6 +78,7 @@ public class BestServerSelector {
         closeList = info.serverList.subList(0, closeServerLength);
         if (this.resultsCallback != null) {
             this.resultsCallback.onClosestServersSelected(closeList);
+            DobbyLog.v("BestServerSelector onClosestServersSelected callback");
         }
         return closeList;
     }
@@ -121,6 +122,7 @@ public class BestServerSelector {
         }
         if (this.resultsCallback != null) {
             this.resultsCallback.onBestServerSelected(bestServer);
+            DobbyLog.v("BestServerSelector onBestServerSelected callback");
         }
         return bestServer;
     }
