@@ -48,6 +48,16 @@ public class BestServerSelector {
         this.resultsCallback = resultsCallback;
     }
 
+    private void unregisterCallback() {
+        resultsCallback = null;
+    }
+
+    public void cleanup() {
+        unregisterCallback();
+        config = null;
+        info = null;
+    }
+
     /**
      * Closest set of MAX_CLOSEST_SERVERS
      *

@@ -362,7 +362,9 @@ public class NewBandwidthAnalyzer {
     private ServerInformation.ServerDetails getBestServer(SpeedTestConfig config,
                                                           ServerInformation info) {
         BestServerSelector serverSelector = new BestServerSelector(config, info, this.bandwidthTestListener);
-        return serverSelector.getBestServer();
+        ServerInformation.ServerDetails serverDetails = serverSelector.getBestServer();
+        serverSelector.cleanup();
+        return serverDetails;
     }
 
     private void performDownload() {
