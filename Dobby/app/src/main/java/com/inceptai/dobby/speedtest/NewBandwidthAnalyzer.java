@@ -38,7 +38,7 @@ public class NewBandwidthAnalyzer {
     @IntDef({BandwidthAnalyzerState.STOPPED, BandwidthAnalyzerState.RUNNING,
             BandwidthAnalyzerState.CANCELLING, BandwidthAnalyzerState.CANCELLED})
     @Retention(RetentionPolicy.SOURCE)
-    public @interface BandwidthAnalyzerState {
+    @interface BandwidthAnalyzerState {
         int STOPPED = 0;
         int RUNNING = 1;
         int CANCELLING = 2;
@@ -89,6 +89,20 @@ public class NewBandwidthAnalyzer {
         void onBandwidthTestError(@BandwithTestCodes.TestMode int testMode,
                                   @ErrorCodes int errorCode,
                                   @Nullable String errorMessage);
+    }
+
+    synchronized private void setSpeedTestConfig(SpeedTestConfig speedTestConfig) {
+        this.speedTestConfig = speedTestConfig;
+        lastConfigFetchTimestampMs = System.currentTimeMillis();
+    }
+
+    synchronized private void setServerInformation(ServerInformation serverInformation) {
+        this.serverInformation = serverInformation;
+    }
+
+    synchronized private void setBestServer(ServerInformation.ServerDetails bestServer) {
+        this.bestServer = bestServer;
+        lastBestServerDeterminationTimestampMs = System.currentTimeMillis();
     }
 
     @Inject
@@ -154,12 +168,24 @@ public class NewBandwidthAnalyzer {
         }
     }
 
-    synchronized private void fetchSpeedTestConfigIfNeeded() {
+    private SpeedTestConfig getSpeedTestConfig() {
+        return speedTestConfig;
+    }
+
+    private ServerInformation getServerInformation() {
+        return serverInformation;
+    }
+
+    private ServerInformation.ServerDetails getBestServer() {
+        return bestServer;
+    }
+
+    private void fetchSpeedTestConfigIfNeeded() {
         final String downloadMode = "http";
         //Get config if not fresh
         if (System.currentTimeMillis() - lastConfigFetchTimestampMs > MAX_AGE_FOR_FRESHNESS_MS) {
             DobbyLog.v("Config not fresh enough, fetching again");
-            speedTestConfig = parseSpeedTestConfig.getConfig(downloadMode);
+            SpeedTestConfig speedTestConfig = parseSpeedTestConfig.getConfig(downloadMode);
             DobbyLog.v("Fetched new config");
             if (speedTestConfig == null) {
                 if (resultsCallback != null) {
@@ -168,20 +194,20 @@ public class NewBandwidthAnalyzer {
                 }
                 return;
             }
-            //Update lastConfigFetch timestamp
-            lastConfigFetchTimestampMs = System.currentTimeMillis();
+            //Update speed test config
+            setSpeedTestConfig(speedTestConfig);
         } else { //we already have a fresh config. Do nothing. Use speedTestConfig.
             //Inform if anyone is listening for this.
             if (resultsCallback != null) {
-                resultsCallback.onConfigFetch(speedTestConfig);
+                resultsCallback.onConfigFetch(getSpeedTestConfig());
             }
         }
     }
 
-    synchronized private void fetchServerConfigAndDetermineBestServerIfNeeded() {
+    private void fetchServerConfigAndDetermineBestServerIfNeeded() {
         //Get best server information if stale
         if (System.currentTimeMillis() - lastBestServerDeterminationTimestampMs > MAX_AGE_FOR_FRESHNESS_MS) {
-            serverInformation = parseServerInformation.getServerInfo();
+            ServerInformation serverInformation = parseServerInformation.getServerInfo();
             if (serverInformation == null) {
                 if (resultsCallback != null) {
                     resultsCallback.onBandwidthTestError(BandwithTestCodes.TestMode.SERVER_FETCH,
@@ -192,7 +218,7 @@ public class NewBandwidthAnalyzer {
             }
 
             //Get best server
-            bestServer = getBestServer(speedTestConfig, serverInformation);
+            ServerInformation.ServerDetails bestServer = getBestServer(getSpeedTestConfig(), serverInformation);
             if (bestServer == null) {
                 if (resultsCallback != null) {
                     resultsCallback.onBandwidthTestError(BandwithTestCodes.TestMode.SERVER_FETCH,
@@ -201,11 +227,12 @@ public class NewBandwidthAnalyzer {
                 }
                 return;
             }
-            lastBestServerDeterminationTimestampMs = System.currentTimeMillis();
+            //Set best server
+            setBestServer(bestServer);
         } else { //Use the existing best server for testing.
             if (resultsCallback != null) {
-                resultsCallback.onServerInformationFetch(serverInformation);
-                resultsCallback.onBestServerSelected(bestServer);
+                resultsCallback.onServerInformationFetch(getServerInformation());
+                resultsCallback.onBestServerSelected(getBestServer());
             }
         }
     }
@@ -213,7 +240,7 @@ public class NewBandwidthAnalyzer {
     /**
      * Un Registers callback -- sets to null
      */
-    public void unRegisterCallback() {
+    private void unRegisterCallback() {
         this.resultsCallback = null;
     }
 
@@ -221,7 +248,7 @@ public class NewBandwidthAnalyzer {
         unRegisterCallback();
     }
 
-    public class BandwidthTestListener implements ParseSpeedTestConfig.ResultsCallback,
+    private class BandwidthTestListener implements ParseSpeedTestConfig.ResultsCallback,
             ParseServerInformation.ResultsCallback, NewDownloadAnalyzer.ResultsCallback,
             NewUploadAnalyzer.ResultsCallback {
 
