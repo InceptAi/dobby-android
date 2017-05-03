@@ -145,7 +145,6 @@ public class SuggestionCreator {
         return suggestionToReturn;
     }
 
-
     private static List<String> getNoConditionMessageList(SuggestionCreatorParams params) {
         List<String> noConditionMessageList = new ArrayList<>();
         noConditionMessageList.add("We performed speed tests, pings and wifi scans on your network. ");
