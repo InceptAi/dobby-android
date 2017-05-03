@@ -180,10 +180,10 @@ public class NewBandwidthAnalyzer {
         return bestServer;
     }
 
-    private void fetchSpeedTestConfigIfNeeded() {
+    private SpeedTestConfig fetchSpeedTestConfigIfNeeded() {
         final String downloadMode = "http";
         //Get config if not fresh
-        if (System.currentTimeMillis() - lastConfigFetchTimestampMs > MAX_AGE_FOR_FRESHNESS_MS) {
+        if (getSpeedTestConfig() == null || System.currentTimeMillis() - lastConfigFetchTimestampMs > MAX_AGE_FOR_FRESHNESS_MS) {
             DobbyLog.v("NBA Config not fresh enough, fetching again");
             SpeedTestConfig speedTestConfig = parseSpeedTestConfig.getConfig(downloadMode);
             DobbyLog.v("NBA Fetched new config");
@@ -192,7 +192,7 @@ public class NewBandwidthAnalyzer {
                      resultsCallback.onBandwidthTestError(BandwithTestCodes.TestMode.CONFIG_FETCH,
                              ErrorCodes.ERROR_FETCHING_CONFIG, "Config fetch returned null");
                 }
-                return;
+                return null;
             }
             //Update speed test config
             setSpeedTestConfig(speedTestConfig);
@@ -202,11 +202,12 @@ public class NewBandwidthAnalyzer {
                 resultsCallback.onConfigFetch(getSpeedTestConfig());
             }
         }
+        return getSpeedTestConfig();
     }
 
-    private void fetchServerConfigAndDetermineBestServerIfNeeded() {
+    private ServerInformation.ServerDetails fetchServerConfigAndDetermineBestServerIfNeeded() {
         //Get best server information if stale
-        if (System.currentTimeMillis() - lastBestServerDeterminationTimestampMs > MAX_AGE_FOR_FRESHNESS_MS) {
+        if (bestServer == null || System.currentTimeMillis() - lastBestServerDeterminationTimestampMs > MAX_AGE_FOR_FRESHNESS_MS) {
             DobbyLog.v("NBA Server info not fresh, getting again");
             ServerInformation serverInformation = parseServerInformation.getServerInfo();
             if (serverInformation == null) {
@@ -215,21 +216,21 @@ public class NewBandwidthAnalyzer {
                             ErrorCodes.ERROR_FETCHING_SERVER_INFO,
                             "Server info fetch returned null");
                 }
-                return;
+                return null;
             }
             //Set server information
             setServerInformation(serverInformation);
 
             //Get best server
             DobbyLog.v("NBA Getting best server again, since not fresh");
-            ServerInformation.ServerDetails bestServer = getBestServer(getSpeedTestConfig(), getServerInformation());
+            ServerInformation.ServerDetails bestServer = computeBestServer(getSpeedTestConfig(), getServerInformation());
             if (bestServer == null) {
                 if (resultsCallback != null) {
                     resultsCallback.onBandwidthTestError(BandwithTestCodes.TestMode.SERVER_FETCH,
                             ErrorCodes.ERROR_SELECTING_BEST_SERVER,
                             "best server returned as null");
                 }
-                return;
+                return null;
             }
             //Set best server
             setBestServer(bestServer);
@@ -241,6 +242,7 @@ public class NewBandwidthAnalyzer {
                 DobbyLog.v("NBA Calling onBestServerSelected with cached info");
             }
         }
+        return getBestServer();
     }
 
     /**
@@ -270,6 +272,7 @@ public class NewBandwidthAnalyzer {
         @Override
         public void onConfigFetchError(String error) {
             DobbyLog.v("NBA Speed test config fetched error: " + error);
+            cancelBandwidthTests();
             if (resultsCallback != null) {
                 resultsCallback.onBandwidthTestError(BandwithTestCodes.TestMode.CONFIG_FETCH,
                         ErrorCodes.ERROR_FETCHING_CONFIG,
@@ -294,6 +297,7 @@ public class NewBandwidthAnalyzer {
 
         @Override
         public void onServerInformationFetchError(String error) {
+            cancelBandwidthTests();
             if (resultsCallback != null) {
                 resultsCallback.onBandwidthTestError(BandwithTestCodes.TestMode.SERVER_FETCH,
                         ErrorCodes.ERROR_FETCHING_SERVER_INFO,
@@ -311,6 +315,7 @@ public class NewBandwidthAnalyzer {
 
         @Override
         public void onBestServerSelectionError(String error) {
+            cancelBandwidthTests();
             if (resultsCallback != null)
                 resultsCallback.onBandwidthTestError(BandwithTestCodes.TestMode.SERVER_FETCH,
                         ErrorCodes.ERROR_SELECTING_BEST_SERVER, error);
@@ -352,6 +357,8 @@ public class NewBandwidthAnalyzer {
 
         @Override
         public void onError(@BandwithTestCodes.TestMode int callbackTestMode, SpeedTestError speedTestError, String errorMessage) {
+            //Cancel bandwidth tests.
+            cancelBandwidthTests();
             if (resultsCallback != null) {
                 resultsCallback.onBandwidthTestError(callbackTestMode,
                         convertToBandwidthTestCodes(speedTestError), errorMessage);
@@ -359,8 +366,8 @@ public class NewBandwidthAnalyzer {
         }
     }
 
-    private ServerInformation.ServerDetails getBestServer(SpeedTestConfig config,
-                                                          ServerInformation info) {
+    private ServerInformation.ServerDetails computeBestServer(SpeedTestConfig config,
+                                                              ServerInformation info) {
         BestServerSelector serverSelector = new BestServerSelector(config, info, this.bandwidthTestListener);
         ServerInformation.ServerDetails serverDetails = serverSelector.getBestServer();
         serverSelector.cleanup();
@@ -439,9 +446,17 @@ public class NewBandwidthAnalyzer {
         DobbyLog.i("Starting bandwidth tests in NewBandwidthAnalyzer.");
         this.testMode = testMode;
         DobbyLog.i("NBA Fetching config.");
-        fetchSpeedTestConfigIfNeeded();
+        if(fetchSpeedTestConfigIfNeeded() == null) {
+            DobbyLog.e("Could not fetch config for speed test. Aborting");
+            cancelBandwidthTests();
+            return;
+        }
         DobbyLog.i("NBA getting servers and determining best.");
-        fetchServerConfigAndDetermineBestServerIfNeeded();
+        if (fetchServerConfigAndDetermineBestServerIfNeeded() == null) {
+            DobbyLog.e("Could not fetch server information for speed test. Aborting");
+            cancelBandwidthTests();
+            return;
+        }
         if (testMode == TestMode.DOWNLOAD_AND_UPLOAD || testMode == BandwithTestCodes.TestMode.DOWNLOAD) {
             DobbyLog.i("NBA starting download.");
             performDownload();
