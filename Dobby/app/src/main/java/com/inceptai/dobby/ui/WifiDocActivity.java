@@ -86,4 +86,9 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
     public DobbyEventBus getEventBus() {
         return eventBus;
     }
+
+    @Override
+    public void cancelTests() {
+        networkLayer.cancelBandwidthTests();
+    }
 }

@@ -251,8 +251,8 @@
         app:cardMaxElevation="5dp"
         android:visibility="gone"
         app:layout_constraintTop_toBottomOf="@+id/bw_gauge_fl"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintVertical_bias="0.3"
+        app:layout_constraintBottom_toTopOf="@+id/bottom_dialog_inc"
+        app:layout_constraintVertical_bias="0.4"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent">
 
@@ -446,6 +446,7 @@
                     android:alpha="0.7"
                     android:fontFamily="sans-serif-condensed"
                     android:maxLines="15"
+                    android:minLines="15"
                     android:gravity="top|left"
                     android:textColor="@color/darkGray"
                     android:textSize="12sp" />

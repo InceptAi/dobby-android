@@ -193,7 +193,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private void uiStateVisibilityChanges(View rootView) {
         if (uiState == UI_STATE_INIT_AND_READY) {
             yourNetworkCv.setVisibility(View.INVISIBLE);
-            pingCv.setVisibility(View.INVISIBLE);
+            pingCv.setVisibility(View.GONE);
             statusCv.setVisibility(View.VISIBLE);
         } else if (uiState == UI_STATE_READY_WITH_RESULTS) {
             yourNetworkCv.setVisibility(View.VISIBLE);
@@ -201,7 +201,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             statusCv.setVisibility(View.INVISIBLE);
         } else if (uiState == UI_STATE_RUNNING_TESTS) {
             yourNetworkCv.setVisibility(View.INVISIBLE);
-            pingCv.setVisibility(View.INVISIBLE);
+            pingCv.setVisibility(View.GONE);
             statusCv.setVisibility(View.VISIBLE);
         }
         rootView.requestLayout();
@@ -285,6 +285,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
         void onMainButtonClick();
+        void cancelTests();
     }
 
 
@@ -701,16 +702,20 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             if (bottomDialog == null) {
                 bottomDialog = createBottomDialog();
                 bottomDialog.show();
+            } else if (!bottomDialog.isVisible()) {
+                bottomDialog.show();
             }
+            bottomDialog.setModeStatus();
         }
 
         if (uiState == UI_STATE_RUNNING_TESTS && newState == UI_STATE_READY_WITH_RESULTS) {
-            // Enable FAB.
         }
 
         uiState = newState;
         if (newState == UI_STATE_RUNNING_TESTS) {
             statusTv.setText(R.string.running_tests);
+        } else if (newState == UI_STATE_INIT_AND_READY) {
+            statusTv.setText(R.string.ready_status_message);
         }
         uiStateVisibilityChanges(getView());
     }
@@ -722,16 +727,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         }
         bottomDialog.setTitle("Suggestions");
         String suggestions = currentSuggestion.getTitle();
-        // Toast.makeText(getContext(), suggestions, Toast.LENGTH_SHORT).show();
         bottomDialog.setModeSuggestion();
         bottomDialog.setSuggestion(suggestions);
-//        if (suggestions != null && !suggestions.isEmpty()) {
-//            if (suggestions.length() > 100) {
-//                su'' = ssid.substring(0, 10);
-//            }
-//            wifiSsidTv.setText(ssid);
-//        }
-        // bottomDialog.setContent(currentSuggestion.getShortSuggestionList().toString());
         bottomDialog.showMoreDismissButtons();
     }
 
@@ -758,6 +755,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         private FloatingActionButton fab;
         private RelativeLayout bottomToolbar;
         private int mode = MODE_STATUS;
+        private boolean isVisible = false;
 
         BottomDialog(final Context context, View parentView) {
             this.context = context;
@@ -790,12 +788,13 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         }
 
         void show() {
+            if (isVisible) {
+                return;
+            }
             LayoutTransition transition = rootLayout.getLayoutTransition();
             transition.setDuration(1000);
             transition.setInterpolator(LayoutTransition.APPEARING, new AccelerateDecelerateInterpolator());
             transition.setInterpolator(LayoutTransition.DISAPPEARING, new AccelerateDecelerateInterpolator());
-            // Animator animator = AnimatorInflater.loadAnimator(context, R.animator.show_view);
-            // animator.setTarget(rootView);
             rootView.setVisibility(View.VISIBLE);
             vIcon.setVisibility(View.VISIBLE);
             vTitle.setVisibility(View.VISIBLE);
@@ -804,7 +803,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             fab.setVisibility(View.INVISIBLE);
             bottomToolbar.setVisibility(View.INVISIBLE);
             rootLayout.requestLayout();
-            // animator.start();
+            isVisible = true;
         }
 
         void setTitle(String title) {
@@ -827,8 +826,16 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             vContent.setText(suggestion);
         }
 
+        boolean isVisible() {
+            return isVisible;
+        }
+
         void setModeSuggestion() {
             mode = MODE_SUGGESTION;
+        }
+
+        void setModeStatus() {
+            mode = MODE_STATUS;
         }
 
         void showMoreDismissButtons() {
@@ -856,6 +863,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                 @Override
                 public void onAnimationEnd(Animator animation) {
                     dismissAndShowCanonicalViews();
+                    isVisible = false;
+                    setModeStatus();
                 }
 
                 @Override
@@ -905,5 +914,13 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private void showFeedbackForm() {
         WifiDocDialogFragment fragment = WifiDocDialogFragment.forFeedback();
         fragment.show(getActivity().getSupportFragmentManager(), "Feedback");
+    }
+
+    private void cancelTests() {
+        if (mListener != null) {
+            mListener.cancelTests();
+        }
+        showStatusMessage("Tests Cancelled !");
+        sendSwitchStateMessage(UI_STATE_INIT_AND_READY);
     }
  }

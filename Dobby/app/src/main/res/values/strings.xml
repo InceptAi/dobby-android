@@ -71,5 +71,4 @@
     <string name="suggestions">Suggestions</string>
     <string name="ready_status_message">Ready to run tests.</string>
     <string name="about_string">This app is offered by InceptAI. Copyright &#169; 2017.</string>
-    <string name="privacy_string">Privacy Policy: Please click here to read about our privacy policy.</string>
 </resources>
