@@ -48,13 +48,13 @@ public class ParseServerInformation {
         try {
             info = downloadAndParseServerInformation(defaultServerListUrl1);
         } catch (IOException e) {
-            DobbyLog.v("Exception thrown while fetching config: " + e);
+            DobbyLog.v("Exception thrown while fetching server information try 1: " + e);
         }
         if (info == null) {
             try {
                 info = downloadAndParseServerInformation(defaultServerListUrl2);
             } catch (IOException e) {
-                String exceptionString = "Exception thrown while fetching config: " + e;
+                String exceptionString = "Exception thrown while fetching server information try 2: " + e;
                 DobbyLog.v(exceptionString);
                 if (this.resultsCallback != null) {
                     this.resultsCallback.onServerInformationFetchError(exceptionString);
