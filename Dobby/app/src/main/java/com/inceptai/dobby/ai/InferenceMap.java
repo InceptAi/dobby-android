@@ -121,14 +121,13 @@ public class InferenceMap {
             return conditions;
         }
 
-
-        if (DataInterpreter.isGoodOrExcellent(bandwidthGrade.getDownloadBandwidthMetric()) &&
+        if (DataInterpreter.isGoodOrExcellentOrAverage(bandwidthGrade.getDownloadBandwidthMetric()) &&
                 DataInterpreter.isPoorOrAbysmal(bandwidthGrade.getUploadBandwidthMetric())) {
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
             conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
             conditions.include(Condition.ISP_INTERNET_SLOW_UPLOAD, 0.7);
         } else if (DataInterpreter.isPoorOrAbysmal(bandwidthGrade.getDownloadBandwidthMetric()) &&
-                DataInterpreter.isGoodOrExcellent(bandwidthGrade.getUploadBandwidthMetric())) {
+                DataInterpreter.isGoodOrExcellentOrAverage(bandwidthGrade.getUploadBandwidthMetric())) {
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
             conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
             conditions.include(Condition.ISP_INTERNET_SLOW_DOWNLOAD, 0.7);
