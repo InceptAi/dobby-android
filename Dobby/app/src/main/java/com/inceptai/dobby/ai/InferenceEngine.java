@@ -4,7 +4,7 @@ import android.support.annotation.IntDef;
 
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.connectivity.ConnectivityAnalyzer;
-import com.inceptai.dobby.database.DatabaseWriter;
+import com.inceptai.dobby.database.InferenceDatabaseWriter;
 import com.inceptai.dobby.database.InferenceRecord;
 import com.inceptai.dobby.model.DobbyWifiInfo;
 import com.inceptai.dobby.model.IPLayerInfo;
@@ -50,7 +50,7 @@ public class InferenceEngine {
     private long lastBandwidthUpdateTimestampMs = 0;
     private MetricsDb metricsDb;
     private PossibleConditions currentConditions = PossibleConditions.NOOP_CONDITION;
-    private DatabaseWriter databaseWriter;
+    private InferenceDatabaseWriter inferenceDatabaseWriter;
     private DobbyApplication dobbyApplication;
 
     public interface ActionListener {
@@ -71,13 +71,13 @@ public class InferenceEngine {
 
     InferenceEngine(ScheduledExecutorService scheduledExecutorService,
                     ActionListener actionListener,
-                    DatabaseWriter databaseWriter,
+                    InferenceDatabaseWriter inferenceDatabaseWriter,
                     DobbyApplication dobbyApplication) {
         bandwidthTestState = STATE_BANDWIDTH_TEST_NONE;
         this.scheduledExecutorService = scheduledExecutorService;
         this.actionListener = actionListener;
         metricsDb = new MetricsDb();
-        this.databaseWriter = databaseWriter;
+        this.inferenceDatabaseWriter = inferenceDatabaseWriter;
         this.dobbyApplication = dobbyApplication;
     }
 
@@ -171,7 +171,7 @@ public class InferenceEngine {
 
             //Write the suggestion and inferencing parameters to DB
             InferenceRecord newInferenceRecord = createInferenceRecord(suggestion);
-            databaseWriter.writeInferenceToDatabase(newInferenceRecord);
+            inferenceDatabaseWriter.writeInferenceToDatabase(newInferenceRecord);
 
         }
     }

@@ -15,12 +15,15 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
+import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.R;
+import com.inceptai.dobby.database.FeedbackDatabaseWriter;
+import com.inceptai.dobby.database.FeedbackRecord;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+
+import javax.inject.Inject;
 
 
 public class WifiDocDialogFragment extends DialogFragment {
@@ -50,16 +53,19 @@ public class WifiDocDialogFragment extends DialogFragment {
     };
 
     private static final String PRIVACY_POLICY = "Privacy Policy: Please click <a href=\"http://inceptai.com/privacy.html\"> here </a> to read about our privacy policy.";
-
     private View rootView;
     private String suggestionTitle;
     private ArrayList<String> suggestionList;
+
+    @Inject
+    FeedbackDatabaseWriter feedbackDatabaseWriter;
 
     public WifiDocDialogFragment() {
     }
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
+        ((DobbyApplication) getActivity().getApplication()).getProdComponent().inject(this);
         Bundle bundle = getArguments();
         int dialogType = bundle.getInt(DIALOG_TYPE);
         switch (dialogType) {
@@ -173,6 +179,11 @@ public class WifiDocDialogFragment extends DialogFragment {
             public void onClick(View v) {
                 FrameLayout fl = (FrameLayout) getActivity().findViewById(R.id.wifi_doc_placeholder_fl);
                 Snackbar.make(fl, "Feedback submitted. Thanks for your comments !", Snackbar.LENGTH_SHORT).show();
+
+                //Write the feedback to database
+                FeedbackRecord feedbackRecord = new FeedbackRecord(((DobbyApplication) getActivity().getApplication()).getUserUuid());
+                feedbackDatabaseWriter.writeFeedbackToDatabase(feedbackRecord);
+
                 dismiss();
             }
         });

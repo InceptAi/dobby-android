@@ -19,41 +19,39 @@ import javax.inject.Singleton;
  * Created by vivek on 4/30/17.
  */
 @Singleton
-public class DatabaseWriter {
-    private static final String INFERENCE_DB_ROOT = "inferences";
+public class FeedbackDatabaseWriter {
+    private static final String FEEDBACK_DB_ROOT = "feedbacks";
     private DatabaseReference mDatabase;
     private ExecutorService executorService;
 
     @Inject
-    public DatabaseWriter(DobbyThreadpool dobbyThreadpool) {
+    public FeedbackDatabaseWriter(DobbyThreadpool dobbyThreadpool) {
         mDatabase = FirebaseDatabase.getInstance().getReference();
         executorService = dobbyThreadpool.getExecutorService();
     }
 
-    private void writeNewInference(InferenceRecord inferenceRecord) {
+    private void writeNewFeedback(FeedbackRecord feedbackRecord) {
         // Create new inference record at /inferences/$inference-id
         Map<String, Object> childUpdates = new HashMap<>();
         //Update the inferencing
-        String inferenceKey = mDatabase.child(INFERENCE_DB_ROOT).push().getKey();
-        DobbyLog.i("Inference key: " + inferenceKey);
-        Map<String, Object> inferenceValues = inferenceRecord.toMap();
-        childUpdates.put("/" + INFERENCE_DB_ROOT + "/" + inferenceKey, inferenceValues);
-        mDatabase.child(INFERENCE_DB_ROOT).child(inferenceKey).addValueEventListener(postListener);
+        String feedbackKey = mDatabase.child(FEEDBACK_DB_ROOT).push().getKey();
+        DobbyLog.i("feedback key: " + feedbackKey);
+        Map<String, Object> feedbackValues = feedbackRecord.toMap();
+        childUpdates.put("/" + FEEDBACK_DB_ROOT + "/" + feedbackKey, feedbackValues);
+        mDatabase.child(FEEDBACK_DB_ROOT).child(feedbackKey).addValueEventListener(feedbackPostListener);
         mDatabase.updateChildren(childUpdates);
-        //TODO: Update the user index with the inference. Create a user if it doesn't exist.
-        //String keyForUserInferenceList = mDatabase.child("users").child(inferenceRecord.uid).child("inferences").push().getKey();
     }
 
-    public void writeInferenceToDatabase(final InferenceRecord inferenceRecord) {
+    public void writeFeedbackToDatabase(final FeedbackRecord feedbackRecord) {
         executorService.submit(new Runnable() {
             @Override
             public void run() {
-                writeNewInference(inferenceRecord);
+                writeNewFeedback(feedbackRecord);
             }
         });
     }
 
-    private ValueEventListener postListener = new ValueEventListener() {
+    private ValueEventListener feedbackPostListener = new ValueEventListener() {
         @Override
         public void onDataChange(DataSnapshot dataSnapshot) {
             final DataSnapshot snapshot = dataSnapshot;
@@ -61,9 +59,9 @@ public class DatabaseWriter {
             executorService.submit(new Runnable() {
                 @Override
                 public void run() {
-                    InferenceRecord inferenceRecord = snapshot.getValue(InferenceRecord.class);
-                    if (inferenceRecord != null) {
-                        DobbyLog.v("Wrote to record: " + inferenceRecord.toString());
+                    FeedbackRecord feedbackRecord = snapshot.getValue(FeedbackRecord.class);
+                    if (feedbackRecord != null) {
+                        DobbyLog.v("Wrote to record: " + feedbackRecord.toString());
                     } else {
                         DobbyLog.v("Got null record from db");
                     }
