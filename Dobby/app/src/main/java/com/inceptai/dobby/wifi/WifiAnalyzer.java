@@ -107,7 +107,7 @@ public class WifiAnalyzer {
         } else {
             //Return the last result
             wifiScanFuture = SettableFuture.create();
-            wifiScanFuture.set(combinedScanResult);
+            setWifiScanFuture(combinedScanResult);
             return wifiScanFuture;
         }
         return null;
@@ -158,22 +158,29 @@ public class WifiAnalyzer {
             currentScans = 0;
         }
 
-        synchronized public void onScanReceive(Intent intent) {
-            final Intent intentToProcess = intent;
+        synchronized public void onScanReceive() {
             currentScans++;
             final boolean doScanAgain = (currentScans < MIN_WIFI_SCANS_NEEDED);
             threadpool.submit(new Runnable() {
                 @Override
                 public void run() {
-                    List<ScanResult> wifiList = wifiManager.getScanResults();
+                    List<ScanResult> wifiList;
+                    try {
+                        wifiList = wifiManager.getScanResults();
+                    } catch (SecurityException e) {
+                        DobbyLog.e("Security exception while getting scan results: " + e);
+                        setWifiScanFuture(combinedScanResult);
+                        unregisterScanReceiver();
+                        resetCurrentScans();
+                        return;
+                    }
                     combinedScanResult.addAll(wifiList);
                     printScanResults(wifiList);
-
                     if (doScanAgain && wifiManager.startScan()) {
                         DobbyLog.v("Starting Wifi Scan again, currentScans: " + currentScans);
                     } else {
                         updateWifiScanResults();
-                        DobbyLog.v("Unregistering Scan Receiver");
+                        DobbyLog.v("Un-registering Scan Receiver");
                         unregisterScanReceiver();
                         resetCurrentScans();
                     }
@@ -183,7 +190,6 @@ public class WifiAnalyzer {
 
         public void onWifiStateChange(Intent intent) {
             final Intent intentToProcess = intent;
-            final String action = intent.getAction();
             threadpool.submit(new Runnable() {
                 @Override
                 public void run() {
@@ -195,10 +201,9 @@ public class WifiAnalyzer {
 
         @Override
         public void onReceive(Context c, Intent intent) {
-            final Intent intentToProcess = intent;
             final String action = intent.getAction();
             if (action.equals(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)) {
-                onScanReceive(intent);
+                onScanReceive();
             } else if (action.equals(WifiManager.RSSI_CHANGED_ACTION)
                     || action.equals(WifiManager.WIFI_STATE_CHANGED_ACTION)
                     || action.equals(WifiManager.NETWORK_STATE_CHANGED_ACTION)) {
@@ -217,13 +222,17 @@ public class WifiAnalyzer {
         DobbyLog.i("Wifi scan result: " + sb.toString());
     }
 
+    private void setWifiScanFuture(List<ScanResult> scanResultList) {
+        if (wifiScanFuture != null) {
+            boolean setResult = wifiScanFuture.set(scanResultList);
+            DobbyLog.v("Setting wifi scan future: return value: " + setResult);
+        }
+    }
+
     private void updateWifiScanResults() {
         StringBuilder sb = new StringBuilder();
         wifiState.updateWifiStats(null, combinedScanResult);
-        if (wifiScanFuture != null) {
-            boolean setResult = wifiScanFuture.set(combinedScanResult);
-            DobbyLog.v("Setting wifi scan future: return value: " + setResult);
-        }
+        setWifiScanFuture(combinedScanResult);
         lastScanCompletionTimestampMs = System.currentTimeMillis();
         /*
         if (wifiList.size() == 0) {
