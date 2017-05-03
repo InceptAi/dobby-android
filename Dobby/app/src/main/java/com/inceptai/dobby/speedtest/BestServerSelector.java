@@ -2,7 +2,6 @@ package com.inceptai.dobby.speedtest;
 
 import android.support.annotation.Nullable;
 
-import com.google.common.base.Preconditions;
 import com.google.common.primitives.Ints;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
@@ -39,10 +38,9 @@ public class BestServerSelector {
         void onBestServerSelectionError(String error);
     }
 
-    public BestServerSelector(SpeedTestConfig config, ServerInformation info,
+    public BestServerSelector(@Nullable SpeedTestConfig config,
+                              @Nullable ServerInformation info,
                               @Nullable ResultsCallback resultsCallback) {
-        Preconditions.checkNotNull(config);
-        Preconditions.checkNotNull(info);
         this.config = config;
         this.info = info;
         this.resultsCallback = resultsCallback;
@@ -86,7 +84,7 @@ public class BestServerSelector {
         //Take the top MAX_CLOSEST_SERVERS
         int closeServerLength = Math.min(MAX_CLOSEST_SERVERS, info.serverList.size());
         closeList = info.serverList.subList(0, closeServerLength);
-        if (this.resultsCallback != null) {
+        if (closeList.size() > 0 && this.resultsCallback != null) {
             this.resultsCallback.onClosestServersSelected(closeList);
             DobbyLog.v("BestServerSelector onClosestServersSelected callback");
         }
@@ -130,14 +128,17 @@ public class BestServerSelector {
                 DobbyLog.v(errorString);
             }
         }
-        if (this.resultsCallback != null) {
+        if (bestServer != null && this.resultsCallback != null) {
             this.resultsCallback.onBestServerSelected(bestServer);
             DobbyLog.v("BestServerSelector onBestServerSelected callback");
         }
         return bestServer;
     }
 
-    public ServerInformation.ServerDetails getBestServer() {
+    ServerInformation.ServerDetails getBestServer() {
+        if (config == null || info == null || info.serverList.size() == 0) {
+            return null;
+        }
         return getBestServerFromClosestServers(getClosestServers(this.config, this.info));
     }
 }
