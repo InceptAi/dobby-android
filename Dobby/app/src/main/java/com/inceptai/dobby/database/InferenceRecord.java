@@ -21,9 +21,7 @@ public class InferenceRecord {
     public String wifiGradeJson;
     public String pingGradeJson;
     public String httpGradeJson;
-
     public List<String> detailedMessageList;
-
     public String conditionsUsedForInference;
 
     public InferenceRecord() {}
@@ -57,7 +55,6 @@ public class InferenceRecord {
         return titleMessage;
     }
 
-
     public List<String> getDetailedMessageList() {
         return detailedMessageList;
     }
@@ -81,7 +78,6 @@ public class InferenceRecord {
     public String getHttpGradeJson() {
         return httpGradeJson;
     }
-
 
     public String getConditionsUsedForInference() {
         return conditionsUsedForInference;

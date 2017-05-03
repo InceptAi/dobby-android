@@ -8,7 +8,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.NetworkLayer;
-import com.inceptai.dobby.database.DatabaseWriter;
+import com.inceptai.dobby.database.InferenceDatabaseWriter;
 import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.PingStats;
@@ -56,13 +56,13 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     }
 
     public DobbyAi(DobbyThreadpool threadpool,
-                   DatabaseWriter databaseWriter,
+                   InferenceDatabaseWriter inferenceDatabaseWriter,
                    DobbyApplication dobbyApplication) {
         this.context = dobbyApplication.getApplicationContext();
         this.threadpool = threadpool;
         useApiAi = DobbyApplication.isDobbyFlavor();
         inferenceEngine = new InferenceEngine(threadpool.getScheduledExecutorService(),
-                this, databaseWriter, dobbyApplication);
+                this, inferenceDatabaseWriter, dobbyApplication);
         if (useApiAi) {
             initApiAiClient();
         }
