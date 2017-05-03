@@ -701,7 +701,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         }
         bottomDialog.setTitle("Suggestions");
         String suggestions = currentSuggestion.getTitle();
-        Toast.makeText(getContext(), suggestions, Toast.LENGTH_SHORT).show();
+        // Toast.makeText(getContext(), suggestions, Toast.LENGTH_SHORT).show();
         bottomDialog.setModeSuggestion();
         bottomDialog.setSuggestion(suggestions);
 //        if (suggestions != null && !suggestions.isEmpty()) {
