@@ -22,7 +22,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.view.animation.FastOutSlowInInterpolator;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.CardView;
-import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -31,6 +30,8 @@ import android.view.ViewTreeObserver;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -48,8 +49,6 @@ import com.inceptai.dobby.speedtest.ServerInformation;
 import com.inceptai.dobby.speedtest.SpeedTestConfig;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
-
-import org.parceler.Parcels;
 
 import java.util.List;
 
@@ -133,6 +132,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private TextView ispNameTv;
 
     private TextView suggestionsValueTv;
+
+    private LinearLayout aboutLayout;
+    private LinearLayout feedbackLayout;
 
     private String statusMessage;
     private String mParam1;
@@ -539,6 +541,22 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
         statusTv = (TextView) rootView.findViewById(R.id.status_tv);
 
+        aboutLayout = (LinearLayout) rootView.findViewById(R.id.about_ll);
+        feedbackLayout = (LinearLayout) rootView.findViewById(R.id.feedback_ll);
+        aboutLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showAboutAndPrivacyPolicy();
+            }
+        });
+
+        feedbackLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showFeedbackForm();
+            }
+        });
+
         // suggestionsValueTv = (TextView)rootView.findViewById(R.id.suggestion_value_tv);
     }
 
@@ -723,10 +741,6 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         return dialog;
     }
 
-    private void buildMoreSuggestionAlertDialog() {
-
-    }
-
     final class BottomDialog implements Button.OnClickListener{
         private static final String TAG_CANCEL_BUTTON = "neg";
         private static final String TAG_DISMISS_BUTTON = "dismiss";
@@ -742,13 +756,13 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         private Context context;
         private ConstraintLayout rootLayout;
         private FloatingActionButton fab;
-        private Toolbar toolbar;
+        private RelativeLayout bottomToolbar;
         private int mode = MODE_STATUS;
 
         BottomDialog(final Context context, View parentView) {
             this.context = context;
             rootLayout = (ConstraintLayout) parentView.findViewById(R.id.root_constraint_layout);
-            toolbar = (Toolbar) parentView.findViewById(R.id.toolbar);
+            bottomToolbar = (RelativeLayout) parentView.findViewById(R.id.bottom_toolbar_rl);
             fab = (FloatingActionButton) parentView.findViewById(R.id.main_fab_button);
             rootView = parentView.findViewById(R.id.bottom_dialog_inc);
             vIcon = (ImageView) rootView.findViewById(R.id.bottomDialog_icon);
@@ -788,7 +802,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             vPositive.setVisibility(View.GONE);
             vNegative.setVisibility(View.VISIBLE);
             fab.setVisibility(View.INVISIBLE);
-            toolbar.setVisibility(View.INVISIBLE);
+            bottomToolbar.setVisibility(View.INVISIBLE);
             rootLayout.requestLayout();
             // animator.start();
         }
@@ -859,7 +873,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         void dismissAndShowCanonicalViews() {
             rootView.setVisibility(GONE);
             fab.setVisibility(View.VISIBLE);
-            toolbar.setVisibility(View.VISIBLE);
+            bottomToolbar.setVisibility(View.VISIBLE);
         }
 
         @Override
@@ -882,4 +896,14 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                 currentSuggestion.getLongSuggestionList());
         fragment.show(getActivity().getSupportFragmentManager(), "Suggestions");
     }
-}
+
+    private void showAboutAndPrivacyPolicy() {
+        WifiDocDialogFragment fragment = WifiDocDialogFragment.forAboutAndPrivacyPolicy();
+        fragment.show(getActivity().getSupportFragmentManager(), "About");
+    }
+
+    private void showFeedbackForm() {
+        WifiDocDialogFragment fragment = WifiDocDialogFragment.forFeedback();
+        fragment.show(getActivity().getSupportFragmentManager(), "Feedback");
+    }
+ }

@@ -19,7 +19,7 @@
 
         <TextView
             android:layout_width="match_parent"
-            android:text="Summary and suggestions"
+            android:text="About"
             android:textSize="16sp"
             android:gravity="center_vertical"
             android:layout_gravity="center_vertical"
@@ -28,21 +28,39 @@
             android:layout_height="wrap_content" />
     </LinearLayout>
 
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/lessDarkGray2"
+        android:textSize="12sp"
+        android:text="@string/about_string"
+        android:padding="15dp"
+        android:id="@+id/about_tv"
+        />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="12sp"
+        android:textColor="@color/lessDarkGray2"
+        android:padding="15dp"
+        android:id="@+id/privacy_tv"
+        />
+    <!--
     <ListView
         android:layout_width="match_parent"
-        android:id="@+id/more_suggest_listview"
-        android:padding="10dp"
+        android:id="@+id/privacy_policy_listview"
         android:layout_height="wrap_content">
-
     </ListView>
+    -->
 
     <Button
         android:layout_width="wrap_content"
         android:layout_gravity="center_horizontal"
         android:text="DISMISS"
         style="@style/MyButton.Flat"
-        android:padding="10dp"
-        android:id="@+id/more_suggestions_dismiss_button"
+        android:paddingTop="8dp"
+        android:id="@+id/privacy_policy_dismiss_button"
         android:layout_height="wrap_content" />
 
 </LinearLayout>
