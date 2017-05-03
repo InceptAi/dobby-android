@@ -33,8 +33,8 @@ public class DobbyThreadpool {
 
     private static int NUMBER_OF_CORES =
             Runtime.getRuntime().availableProcessors();
-    private static int INTIAL_POOL_SIZE = Math.min(NUMBER_OF_CORES, 6);  // Upper bound by 4
-    private static final int MAX_POOL_SIZE = Math.max(NUMBER_OF_CORES * 2, 10); //10 threads or more at the max
+    private static int INTIAL_POOL_SIZE = Math.max(NUMBER_OF_CORES, 4);  // Lower bound by 4
+    private static final int MAX_POOL_SIZE = Math.max(NUMBER_OF_CORES * 2, 10); //Lower bound by 10
 
     // A queue of Runnables
     private final BlockingQueue<Runnable> workQueue;
@@ -60,7 +60,7 @@ public class DobbyThreadpool {
         // Creates a thread pool manager
         threadPoolExecutor = new ThreadPoolExecutor(
                 INTIAL_POOL_SIZE,       // Initial pool size
-                2 * NUMBER_OF_CORES,       // Max pool size
+                MAX_POOL_SIZE,       // Max pool size
                 KEEP_ALIVE_TIME,
                 KEEP_ALIVE_TIME_UNIT,
                 workQueue, new DobbyThreadFactory(newHandler));

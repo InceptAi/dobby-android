@@ -164,9 +164,10 @@ public class WifiAnalyzer {
             threadpool.submit(new Runnable() {
                 @Override
                 public void run() {
-                    List<ScanResult> wifiList;
                     try {
-                        wifiList = wifiManager.getScanResults();
+                        List<ScanResult> wifiList = wifiManager.getScanResults();
+                        combinedScanResult.addAll(wifiList);
+                        printScanResults(wifiList);
                     } catch (SecurityException e) {
                         DobbyLog.e("Security exception while getting scan results: " + e);
                         setWifiScanFuture(combinedScanResult);
@@ -174,8 +175,7 @@ public class WifiAnalyzer {
                         resetCurrentScans();
                         return;
                     }
-                    combinedScanResult.addAll(wifiList);
-                    printScanResults(wifiList);
+                    //We got some results back from getScanResults -- so presumably we have location
                     if (doScanAgain && wifiManager.startScan()) {
                         DobbyLog.v("Starting Wifi Scan again, currentScans: " + currentScans);
                     } else {
