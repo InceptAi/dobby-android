@@ -420,24 +420,25 @@ public class FakePingAnalyzer extends PingAnalyzer {
     }
 
     @Override
-    public ListenableFuture<PingStats> scheduleRouterDownloadLatencyTestSafely() throws IllegalStateException {
+    public ListenableFuture<PingStats> scheduleRouterDownloadLatencyTestSafely(int maxAgeToRetriggerTest) throws IllegalStateException {
+        final int maxAge = maxAgeToRetriggerTest;
         if (fakeGatewayDownloadTestFuture != null && !fakeGatewayDownloadTestFuture.isDone()) {
             AsyncFunction<PingStats, PingStats> redoDownloadLatencyTest = new
                     AsyncFunction<PingStats, PingStats>() {
                         @Override
                         public ListenableFuture<PingStats> apply(PingStats input) throws Exception {
-                            return scheduleGatewayDownloadLatencyTest();
+                            return scheduleGatewayDownloadLatencyTest(maxAge);
                         }
                     };
             ListenableFuture<PingStats> newGatewayDownloadTestFuture = Futures.transformAsync(fakeGatewayDownloadTestFuture, redoDownloadLatencyTest);
             return newGatewayDownloadTestFuture;
         } else {
-            return scheduleGatewayDownloadLatencyTest();
+            return scheduleGatewayDownloadLatencyTest(maxAge);
         }
     }
 
     @Override
-    protected ListenableFuture<PingStats> scheduleGatewayDownloadLatencyTest() throws IllegalStateException {
+    protected ListenableFuture<PingStats> scheduleGatewayDownloadLatencyTest(int maxAgeToRetriggerTest) throws IllegalStateException {
         fakeGatewayDownloadTestFuture = dobbyThreadpool.getListeningScheduledExecutorService().schedule(new Callable<PingStats>() {
             @Override
             public PingStats call() {

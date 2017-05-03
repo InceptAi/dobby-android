@@ -359,14 +359,13 @@ public class Utils {
      * Run linux system command
      * @param command
      */
-    public static Reader getInputStreamForCommand(String command) throws Exception {
+    public static Reader getReaderForSystemCommand(String command) throws Exception {
         StringBuilder outputStringBuilder = new StringBuilder();
         try {
             Process p = Runtime.getRuntime().exec(command);
             BufferedReader bufferedReader= new BufferedReader(
                     new InputStreamReader(p.getInputStream()));
             return bufferedReader;
-
         } catch (IOException e) {
             DobbyLog.e(e.getStackTrace().toString());
             throw e;

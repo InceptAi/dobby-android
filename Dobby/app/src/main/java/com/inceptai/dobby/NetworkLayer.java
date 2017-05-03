@@ -130,13 +130,17 @@ public class NetworkLayer {
     @Nullable
     public ListenableFuture<PingStats> startGatewayDownloadLatencyTest() {
         try {
-            return getPingAnalyzerInstance().scheduleRouterDownloadLatencyTestSafely();
+            return getPingAnalyzerInstance().scheduleRouterDownloadLatencyTestSafely(MAX_AGE_GAP_TO_RETRIGGER_PING_MS);
         } catch (IllegalStateException e) {
             DobbyLog.v("Exception while scheduling ping tests: " + e);
         }
         return null;
     }
 
+    public void clearStatsCache() {
+        getWifiAnalyzerInstance().clearWifiScanCache();
+        getPingAnalyzerInstance().clearPingStatsCache();
+    }
 
     public synchronized BandwidthObserver startBandwidthTest(final @BandwithTestCodes.TestMode int mode) {
         if (bandwidthObserver != null && bandwidthObserver.testsRunning()) {

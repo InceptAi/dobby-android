@@ -315,17 +315,17 @@ public class SuggestionCreator {
                         "latency to access Internet is very high.";
                 break;
             case Condition.ISP_INTERNET_SLOW_DOWNLOAD:
-                baseMessage = "Looks like your Internet download speed is very low " +
+                baseMessage = "Looks like your Internet download speed is slow " +
                         "(around " + String.format("%.2f", params.bandwidthGrade.getDownloadBandwidth()) + " Mbps), especially given you are getting a good " +
                         "upload speed ( " + String.format("%.2f", params.bandwidthGrade.getUploadBandwidth()) + " Mbps. Since most of the data " +
                         "consumed by streaming, browsing etc. is download, you will experience slow Internet on your devices. " +
                         "If these speeds seem low as per your contract, you should " +
                         "reach out to " + params.bandwidthGrade.isp + " and see why you are getting such low speeds. " +
                         "You should tell them that your wifi network latency is low but the " +
-                        "download speed is very low (esp. compared to upload).";
+                        "download speed is slow (esp. compared to upload).";
                 break;
             case Condition.ISP_INTERNET_SLOW_UPLOAD:
-                baseMessage = "Looks like your Internet upload speed is very low " +
+                baseMessage = "Looks like your Internet upload speed is slow " +
                         "(around " + String.format("%.2f", params.bandwidthGrade.getUploadBandwidth()) +
                         " Mbps), especially given you are getting a good " +
                         "download speed (~ " + String.format("%.2f", params.bandwidthGrade.getDownloadBandwidth()) +
@@ -334,7 +334,7 @@ public class SuggestionCreator {
                         "If these speeds seem low as per your contract, you should " +
                         "reach out to " + params.bandwidthGrade.isp + "  and see why you are getting such low speeds. " +
                         "You should tell them that your wifi network latency is low but the " +
-                        "upload speed is very low (esp. compared to download).";
+                        "upload speed is slow (esp. compared to download).";
                 break;
             case Condition.DNS_RESPONSE_SLOW:
                 baseMessage = "Your current DNS server is acting slow to respond to queries, " +
@@ -523,14 +523,14 @@ public class SuggestionCreator {
                 }
                 break;
             case Condition.ISP_INTERNET_SLOW_DOWNLOAD:
-                baseMessage = "Looks like your Internet download speed is very low. ";
+                baseMessage = "Looks like your Internet download speed is slow. ";
                 if (!params.bandwidthGrade.isp.equals(Utils.EMPTY_STRING)) {
                     conditionalMessage = "You should contact " + params.bandwidthGrade.isp +
                             " to see if they know about any outage in your area. ";
                 }
                 break;
             case Condition.ISP_INTERNET_SLOW_UPLOAD:
-                baseMessage = "Looks like your Internet upload speed is very low. ";
+                baseMessage = "Looks like your Internet upload speed is slow. ";
                 if (!params.bandwidthGrade.isp.equals(Utils.EMPTY_STRING)) {
                     conditionalMessage = "You should contact " + params.bandwidthGrade.isp +
                             " to see if they know about any outage in your area. ";
@@ -644,7 +644,7 @@ public class SuggestionCreator {
                         " Mbps upload";
                 break;
             case Condition.ISP_INTERNET_SLOW_DOWNLOAD:
-                baseMessage = "Looks like your Internet download speed is very low " +
+                baseMessage = "Looks like your Internet download speed is slow " +
                         "(around " +
                         String.format("%.2f", params.bandwidthGrade.getDownloadMbps()) +
                         " Mbps), especially given you are getting a good " +
@@ -652,7 +652,7 @@ public class SuggestionCreator {
                         String.format("%.2f", params.bandwidthGrade.getUploadMbps()) + " Mbps";
                 break;
             case Condition.ISP_INTERNET_SLOW_UPLOAD:
-                baseMessage = "Looks like your Internet upload speed is very low " +
+                baseMessage = "Looks like your Internet upload speed is slow " +
                         "(around " +
                         String.format("%.2f", params.bandwidthGrade.getUploadMbps()) +
                         " Mbps), especially given you are getting a good " +
