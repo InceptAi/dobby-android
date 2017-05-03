@@ -13,10 +13,9 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@android:color/white"
-        android:padding="20dp"
-        android:paddingBottom="16dp"
-        android:paddingStart="26dp"
-        android:paddingEnd="26dp"
+        android:paddingTop="5dp"
+        android:paddingStart="5dp"
+        android:paddingLeft="5dp"
         android:orientation="vertical">
 
         <LinearLayout
@@ -28,54 +27,47 @@
             <ImageView
                 android:id="@+id/bottomDialog_icon"
                 android:visibility="gone"
-                android:layout_width="42dp"
-                android:layout_height="42dp"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
                 android:src="@mipmap/wifi_doc_launcher"
-                android:layout_marginEnd="20dp"
-                android:layout_marginRight="20dp" />
+                android:layout_marginEnd="10dp"
+                android:layout_marginRight="10dp" />
             <TextView
                 android:id="@+id/bottomDialog_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@android:color/black"
-                android:textSize="20sp"
-                android:textStyle="bold"
+                android:textColor="@android:color/holo_blue_dark"
+                android:textSize="14sp"
                 android:text="Test Status"
                 android:fontFamily="sans-serif-condensed-thin"
                 android:alpha="0.8" />
 
         </LinearLayout>
 
-        <LinearLayout
+        <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp">
+            android:animateLayoutChanges="true"
+            android:layout_weight="0.8"
+            android:layout_height="0dp">
 
             <TextView
                 android:id="@+id/bottomDialog_content"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@android:color/black"
-                android:textSize="16sp"
+                android:textColor="@color/darkGray"
+                android:fontFamily="sans-serif-condensed"
+                android:textSize="12sp"
+                android:maxLines="10"
+                android:ellipsize="marquee"
                 android:alpha="0.7" />
 
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-            <FrameLayout
-                android:id="@+id/bottomDialog_custom_view"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-            </FrameLayout>
-        </LinearLayout>
+        </ScrollView>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:gravity="center_vertical|end"
+            android:layout_marginTop="5dp"
+            android:gravity="bottom|end"
             android:orientation="horizontal">
 
             <Button
@@ -90,8 +82,9 @@
                 android:visibility="gone"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                style="@style/MyButton"
-                android:text="@android:string/ok"/>
+                style="@style/MyButton.Flat"
+                android:textColor="@android:color/holo_blue_dark"
+                android:text="MORE"/>
 
         </LinearLayout>
 

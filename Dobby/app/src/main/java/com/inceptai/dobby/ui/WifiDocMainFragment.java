@@ -1,8 +1,11 @@
 package com.inceptai.dobby.ui;
 
 import android.Manifest;
+import android.animation.Animator;
+import android.animation.AnimatorInflater;
+import android.animation.LayoutTransition;
+import android.animation.TimeInterpolator;
 import android.annotation.TargetApi;
-import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
@@ -14,20 +17,22 @@ import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.UiThread;
+import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.FloatingActionButton;
+import android.support.transition.Transition;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.animation.FastOutSlowInInterpolator;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.CardView;
-import android.view.Gravity;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -50,6 +55,7 @@ import java.util.List;
 
 import uk.co.samuelwall.materialtaptargetprompt.MaterialTapTargetPrompt;
 
+import static android.view.View.GONE;
 import static com.inceptai.dobby.ai.DataInterpreter.MetricType.ABYSMAL;
 import static com.inceptai.dobby.ai.DataInterpreter.MetricType.AVERAGE;
 import static com.inceptai.dobby.ai.DataInterpreter.MetricType.EXCELLENT;
@@ -89,6 +95,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
     private FloatingActionButton mainFab;
     private BottomDialog bottomDialog;
+
     private CircularGauge downloadCircularGauge;
     private TextView downloadGaugeTv;
     private TextView downloadGaugeTitleTv;
@@ -177,11 +184,11 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         resetData();
         showTapOnboarding(view);
         // requestPermissions();
-        uiStateVisibilityChanges();
+        uiStateVisibilityChanges(view);
         return view;
     }
 
-    private void uiStateVisibilityChanges() {
+    private void uiStateVisibilityChanges(View rootView) {
         if (uiState == UI_STATE_INIT_AND_READY) {
             yourNetworkCv.setVisibility(View.INVISIBLE);
             pingCv.setVisibility(View.INVISIBLE);
@@ -195,6 +202,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             pingCv.setVisibility(View.INVISIBLE);
             statusCv.setVisibility(View.VISIBLE);
         }
+        rootView.requestLayout();
     }
 
     private void showTapOnboarding(View rootView) {
@@ -262,7 +270,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         if (mListener != null) {
             if (uiState == UI_STATE_INIT_AND_READY) {
                 setBwTestState(BW_TEST_INITIATED);
-                showStatusMessageAsync("Preparing for tests, fetching config for servers to test your speed ...");
+                showStatusMessageAsync("Fetching server configuration ...");
                 DobbyLog.v("WifiDoc: Issued command for starting bw tests");
                 sendSwitchStateMessage(UI_STATE_RUNNING_TESTS);
             }
@@ -330,7 +338,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     @Override
     public void onConfigFetch(SpeedTestConfig config) {
         if (getBwTestState() == BW_TEST_INITIATED) {
-            showStatusMessageAsync("Got speed test config, getting list of servers for testing ...");
+            showStatusMessageAsync("Fetching list of servers ...");
         }
         setBwTestState(BW_CONFIG_FETCHED);
         DobbyLog.v("WifiDoc: Fetched config");
@@ -340,7 +348,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     @Override
     public void onServerInformationFetch(ServerInformation serverInformation) {
         if (getBwTestState() == BW_CONFIG_FETCHED) {
-            showStatusMessageAsync("Got " + serverInformation.serverList.size() + " servers for testing. Determining closest servers to you ...");
+            showStatusMessageAsync("Computing closest out of " + serverInformation.serverList.size() + " servers ...");
         }
         setBwTestState(BW_SERVER_INFO_FETCHED);
         DobbyLog.v("WifiDoc: Fetched server info");
@@ -357,7 +365,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     @Override
     public void onBestServerSelected(ServerInformation.ServerDetails bestServer) {
         if (getBwTestState() == BW_SERVER_INFO_FETCHED) {
-            showStatusMessageAsync("Found closest server in " + bestServer.name + " with a latency of " + String.format("%.2f", bestServer.latencyMs) + " ms.");
+            showStatusMessageAsync("Closest server in " + bestServer.name + " has a latency of " + String.format("%.2f", bestServer.latencyMs) + " ms.");
         }
         setBwTestState(BW_BEST_SERVER_DETERMINED);
         DobbyLog.v("WifiDoc: Best server");
@@ -462,12 +470,14 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             DobbyLog.i("Already have a fresh enough suggestion, ignoring new suggestion");
             return;
         }
+        currentSuggestion = suggestion;
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(suggestion.getTitle() + "\n");
         for(String line : suggestion.getShortSuggestionList()) {
             stringBuilder.append(line + "\n");
         }
         // suggestionsValueTv.setText(stringBuilder.toString());
+        showSuggestionsUi();
         DobbyLog.i("Received suggestions:" + stringBuilder.toString());
     }
 
@@ -659,7 +669,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private void showStatusMessage(String message) {
         // TODO Animate this if needed.
         statusMessage = statusMessage + "\n" + message;
-        statusTv.setText(statusMessage);
+        // statusTv.setText(statusMessage);
         if (bottomDialog != null) {
             bottomDialog.setContent(statusMessage);
         }
@@ -671,28 +681,42 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             // Tests starting.
             // Disable fab.
             if (bottomDialog == null) {
-                bottomDialog = createBottomDialog(getContext());
+                bottomDialog = createBottomDialog();
                 bottomDialog.show();
             }
         }
 
         if (uiState == UI_STATE_RUNNING_TESTS && newState == UI_STATE_READY_WITH_RESULTS) {
             // Enable FAB.
-            yourNetworkCv.requestLayout();
-            pingCv.requestLayout();
         }
+
         uiState = newState;
         if (newState == UI_STATE_RUNNING_TESTS) {
             statusTv.setText(R.string.running_tests);
-            if (bottomDialog != null) {
-                bottomDialog.dismiss();
-            }
         }
-        uiStateVisibilityChanges();
+        uiStateVisibilityChanges(getView());
     }
 
-    private static BottomDialog createBottomDialog(Context context) {
-        BottomDialog dialog = new BottomDialog(context);
+    private void showSuggestionsUi() {
+        if (currentSuggestion == null) {
+            Toast.makeText(getContext(), "Unable to show suggestions.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        bottomDialog.setTitle("Suggestions");
+        String suggestions = currentSuggestion.getTitle();
+        bottomDialog.setContent(suggestions);
+//        if (suggestions != null && !suggestions.isEmpty()) {
+//            if (suggestions.length() > 100) {
+//                su'' = ssid.substring(0, 10);
+//            }
+//            wifiSsidTv.setText(ssid);
+//        }
+        // bottomDialog.setContent(currentSuggestion.getShortSuggestionList().toString());
+        bottomDialog.showMoreDismissButtons();
+    }
+
+    private BottomDialog createBottomDialog() {
+        BottomDialog dialog = new BottomDialog(getContext(), getView());
         dialog.show();
         return dialog;
     }
@@ -701,31 +725,43 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         private ImageView vIcon ;
         private TextView vTitle ;
         private TextView vContent;
-        private FrameLayout vCustomView;
         private Button vNegative ;
         private Button vPositive;
-        private Dialog dialog;
+        private View rootView;
+        private Context context;
+        private ConstraintLayout rootLayout;
+        private FloatingActionButton fab;
+        private Toolbar toolbar;
 
-        BottomDialog(Context context) {
-            dialog = new Dialog(context, R.style.BottomDialogs);
-            View view = LayoutInflater.from(context).inflate(R.layout.bottom_dialog_wifidoc, null);
-            vIcon = (ImageView) view.findViewById(R.id.bottomDialog_icon);
-            vTitle = (TextView) view.findViewById(R.id.bottomDialog_title);
-            vContent = (TextView) view.findViewById(R.id.bottomDialog_content);
-            vCustomView = (FrameLayout) view.findViewById(R.id.bottomDialog_custom_view);
-            vNegative = (Button) view.findViewById(R.id.bottomDialog_cancel);
-            vPositive = (Button) view.findViewById(R.id.bottomDialog_ok);
-            dialog.setContentView(view);
-            dialog.setCancelable(true);
-            dialog.getWindow().setLayout(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-            dialog.getWindow().setGravity(Gravity.BOTTOM);
+        BottomDialog(Context context, View parentView) {
+            this.context = context;
+            rootLayout = (ConstraintLayout) parentView.findViewById(R.id.root_constraint_layout);
+            toolbar = (Toolbar) parentView.findViewById(R.id.toolbar);
+            fab = (FloatingActionButton) parentView.findViewById(R.id.main_fab_button);
+            rootView = parentView.findViewById(R.id.bottom_dialog_inc);
+            vIcon = (ImageView) rootView.findViewById(R.id.bottomDialog_icon);
+            vTitle = (TextView) rootView.findViewById(R.id.bottomDialog_title);
+            vContent = (TextView) rootView.findViewById(R.id.bottomDialog_content);
+            vNegative = (Button) rootView.findViewById(R.id.bottomDialog_cancel);
+            vPositive = (Button) rootView.findViewById(R.id.bottomDialog_ok);
         }
 
         void show() {
+            LayoutTransition transition = rootLayout.getLayoutTransition();
+            transition.setDuration(1000);
+            transition.setInterpolator(LayoutTransition.APPEARING, new AccelerateDecelerateInterpolator());
+            transition.setInterpolator(LayoutTransition.DISAPPEARING, new AccelerateDecelerateInterpolator());
+            // Animator animator = AnimatorInflater.loadAnimator(context, R.animator.show_view);
+            // animator.setTarget(rootView);
+            rootView.setVisibility(View.VISIBLE);
             vIcon.setVisibility(View.VISIBLE);
             vTitle.setVisibility(View.VISIBLE);
-            vPositive.setVisibility(View.VISIBLE);
+            vPositive.setVisibility(View.GONE);
             vNegative.setVisibility(View.VISIBLE);
+            fab.setVisibility(View.INVISIBLE);
+            toolbar.setVisibility(View.INVISIBLE);
+            rootLayout.requestLayout();
+            // animator.start();
         }
 
         void setTitle(String title) {
@@ -735,8 +771,23 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         void setContent(String content) {
             vContent.setText(content);
         }
+
+        void showMoreDismissButtons() {
+            vNegative.setText("DISMISS");
+            vNegative.setVisibility(View.VISIBLE);
+            vPositive.setVisibility(View.VISIBLE);
+        }
+
+        void showOnlyDismissButton() {
+            vNegative.setText("DISMISS");
+            vNegative.setVisibility(View.VISIBLE);
+            vPositive.setVisibility(View.INVISIBLE);
+        }
+
         void dismiss() {
-            dialog.dismiss();
+            rootView.setVisibility(GONE);
+            fab.setVisibility(View.VISIBLE);
+            toolbar.setVisibility(View.VISIBLE);
         }
     }
 }
