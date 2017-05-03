@@ -756,7 +756,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                 public void onGlobalLayout() {
                     float targetY = rootView.getY();
                     float maxY = rootLayout.getHeight();
-                    Toast.makeText(context, "targetY = " + targetY + " maxY =" + maxY, Toast.LENGTH_SHORT ).show();
+                    // Toast.makeText(context, "targetY = " + targetY + " maxY =" + maxY, Toast.LENGTH_SHORT ).show();
                     ObjectAnimator.ofFloat(rootView, "y", maxY, targetY).setDuration(1000).start();
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                         rootView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
