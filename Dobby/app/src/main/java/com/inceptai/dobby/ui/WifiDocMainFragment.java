@@ -1,10 +1,8 @@
 package com.inceptai.dobby.ui;
 
 import android.Manifest;
-import android.animation.Animator;
-import android.animation.AnimatorInflater;
 import android.animation.LayoutTransition;
-import android.animation.TimeInterpolator;
+import android.animation.ObjectAnimator;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -19,7 +17,6 @@ import android.support.annotation.Nullable;
 import android.support.annotation.UiThread;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.FloatingActionButton;
-import android.support.transition.Transition;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.animation.FastOutSlowInInterpolator;
 import android.support.v7.app.AlertDialog;
@@ -29,9 +26,9 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.Button;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -704,7 +701,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         }
         bottomDialog.setTitle("Suggestions");
         String suggestions = currentSuggestion.getTitle();
-        bottomDialog.setContent(suggestions);
+        Toast.makeText(getContext(), suggestions, Toast.LENGTH_SHORT).show();
+        bottomDialog.setModeSuggestion();
+        bottomDialog.setSuggestion(suggestions);
 //        if (suggestions != null && !suggestions.isEmpty()) {
 //            if (suggestions.length() > 100) {
 //                su'' = ssid.substring(0, 10);
@@ -721,19 +720,25 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         return dialog;
     }
 
-    static final class BottomDialog {
-        private ImageView vIcon ;
-        private TextView vTitle ;
+    static final class BottomDialog implements Button.OnClickListener{
+        private static final String TAG_CANCEL_BUTTON = "neg";
+        private static final String TAG_DISMISS_BUTTON = "dismiss";
+        private static final String TAG_POSITIVE_BUTTON = "pos";
+        private static final int MODE_STATUS = 1001;
+        private static final int MODE_SUGGESTION = 1002;
+        private ImageView vIcon;
+        private TextView vTitle;
         private TextView vContent;
-        private Button vNegative ;
+        private Button vNegative;
         private Button vPositive;
         private View rootView;
         private Context context;
         private ConstraintLayout rootLayout;
         private FloatingActionButton fab;
         private Toolbar toolbar;
+        private int mode = MODE_STATUS;
 
-        BottomDialog(Context context, View parentView) {
+        BottomDialog(final Context context, View parentView) {
             this.context = context;
             rootLayout = (ConstraintLayout) parentView.findViewById(R.id.root_constraint_layout);
             toolbar = (Toolbar) parentView.findViewById(R.id.toolbar);
@@ -743,7 +748,25 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             vTitle = (TextView) rootView.findViewById(R.id.bottomDialog_title);
             vContent = (TextView) rootView.findViewById(R.id.bottomDialog_content);
             vNegative = (Button) rootView.findViewById(R.id.bottomDialog_cancel);
+            vNegative.setTag(TAG_CANCEL_BUTTON);
             vPositive = (Button) rootView.findViewById(R.id.bottomDialog_ok);
+            vPositive.setTag(TAG_POSITIVE_BUTTON);
+            rootView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                @Override
+                public void onGlobalLayout() {
+                    float targetY = rootView.getY();
+                    float maxY = rootLayout.getHeight();
+                    Toast.makeText(context, "targetY = " + targetY + " maxY =" + maxY, Toast.LENGTH_SHORT ).show();
+                    ObjectAnimator.ofFloat(rootView, "y", maxY, targetY).setDuration(1000).start();
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                        rootView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                    } else {
+                        rootView.getViewTreeObserver().removeGlobalOnLayoutListener(this);
+                    }
+                }
+            });
+            vNegative.setOnClickListener(this);
+            vPositive.setOnClickListener(this);
         }
 
         void show() {
@@ -769,11 +792,28 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         }
 
         void setContent(String content) {
+            if (mode != MODE_STATUS) {
+                DobbyLog.i("Ignoring status message in dialog.");
+                return;
+            }
             vContent.setText(content);
+        }
+
+        void setSuggestion(String suggestion) {
+            if (mode != MODE_SUGGESTION) {
+                DobbyLog.i("Ignoring status message in dialog.");
+                return;
+            }
+            vContent.setText(suggestion);
+        }
+
+        void setModeSuggestion() {
+            mode = MODE_SUGGESTION;
         }
 
         void showMoreDismissButtons() {
             vNegative.setText("DISMISS");
+            vNegative.setTag(TAG_DISMISS_BUTTON);
             vNegative.setVisibility(View.VISIBLE);
             vPositive.setVisibility(View.VISIBLE);
         }
@@ -788,6 +828,17 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             rootView.setVisibility(GONE);
             fab.setVisibility(View.VISIBLE);
             toolbar.setVisibility(View.VISIBLE);
+        }
+
+        @Override
+        public void onClick(View v) {
+            if (TAG_POSITIVE_BUTTON.equals((String) v.getTag())) {
+                dismiss();
+            } else if (TAG_CANCEL_BUTTON.equals((String) v.getTag())) {
+                dismiss();
+            } else if (TAG_DISMISS_BUTTON.equals((String) v.getTag())) {
+                dismiss();
+            }
         }
     }
 }
