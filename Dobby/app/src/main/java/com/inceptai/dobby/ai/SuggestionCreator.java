@@ -132,33 +132,46 @@ public class SuggestionCreator {
         suggestionToReturn.conditionsMap = conditionMap;
         List<Integer> conditionList = new ArrayList<>(conditionMap.keySet());
         suggestionToReturn.title = getTitle(conditionList, params);
-        for (int index=0; index < conditionList.size(); index++) {
-            @Condition int condition  = conditionList.get(index);
-            suggestionToReturn.longSuggestionList.add(getSuggestionForCondition(condition, params));
-            suggestionToReturn.shortSuggestionList.add(getShortSuggestionForCondition(condition, params));
+        if (conditionList.size() > 0) {
+            for (int index = 0; index < conditionList.size(); index++) {
+                @Condition int condition = conditionList.get(index);
+                suggestionToReturn.longSuggestionList.add(getSuggestionForCondition(condition, params));
+                suggestionToReturn.shortSuggestionList.add(getShortSuggestionForCondition(condition, params));
+            }
+        } else {
+            suggestionToReturn.longSuggestionList = getNoConditionMessageList(params);
+            suggestionToReturn.shortSuggestionList = getNoConditionMessageList(params);
         }
         return suggestionToReturn;
     }
 
 
-    private static String getNoConditionMessage(SuggestionCreatorParams params) {
-        return "We don't see any key issues with your wifi network at the moment. " +
-                "We performed speed tests, pings and wifi scans on your network. " +
-                "You are getting " + String.format("%.2f", params.bandwidthGrade.getDownloadBandwidth()) +
+    private static List<String> getNoConditionMessageList(SuggestionCreatorParams params) {
+        List<String> noConditionMessageList = new ArrayList<>();
+        noConditionMessageList.add("We performed speed tests, pings and wifi scans on your network. ");
+        noConditionMessageList.add("You are getting " + String.format("%.2f", params.bandwidthGrade.getDownloadBandwidth()) +
                 " Mbps download and " + String.format("%.2f", params.bandwidthGrade.getUploadBandwidth()) +
-                " Mbps upload speed on your phone, which is pretty good. " +
-                "You connection to your wifi is also strong at about " +
+                " Mbps upload speed on your phone, which is pretty good. ");
+        noConditionMessageList.add("You connection to your wifi is also strong at about " +
                 Utils.convertSignalDbmToPercent(params.wifiGrade.getPrimaryApSignal()) +
                 "% strength (100% means very high signal, usually when you " +
-                "are right next to wifi router). Since wifi network problems are " +
-                "sometimes transient, it might be good if you run " +
-                "this test a few times so we can catch an issue if it shows up. Hope this helps :)";
+                "are right next to wifi router).");
+        noConditionMessageList.add("Since wifi network problems are sometimes transient, " +
+                "it might be good if you run this test a few times so we can catch an issue " +
+                "if it shows up. Hope this helps :)");
+        return noConditionMessageList;
+    }
+
+    private static String getShortNoConditionMessage(SuggestionCreatorParams params) {
+        return "We don't see any key issues with your wifi network at the moment. " +
+                "Your Internet speeds are good and your wifi network is working " +
+                "well as per our tests.";
     }
 
     public static String getSuggestionString(List<Integer> conditionList,
                                               SuggestionCreatorParams params,
                                               boolean getLongSuggestions) {
-        final String NO_CONDITION_MESSAGE = getNoConditionMessage(params);
+        final String NO_CONDITION_MESSAGE = getShortNoConditionMessage(params);
 
         List<String> suggestionList = new ArrayList<>();
 
@@ -201,7 +214,7 @@ public class SuggestionCreator {
             @Condition int condition = conditionList.get(0);
             titleToReturn = getTitleForCondition(condition, params);
         } else {
-            titleToReturn = getNoConditionMessage(params);
+            titleToReturn = getShortNoConditionMessage(params);
         }
         return titleToReturn;
     }
