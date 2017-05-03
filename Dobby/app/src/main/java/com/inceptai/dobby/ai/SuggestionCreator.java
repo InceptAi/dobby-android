@@ -5,6 +5,8 @@ import com.inceptai.dobby.connectivity.ConnectivityAnalyzer;
 import com.inceptai.dobby.utils.Utils;
 import com.inceptai.dobby.wifi.WifiState;
 
+import org.parceler.Parcel;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -14,7 +16,6 @@ import static com.inceptai.dobby.utils.Utils.convertSignalDbmToPercent;
 /**
  * Created by vivek on 4/19/17.
  */
-
 public class SuggestionCreator {
     private static final String MULTIPLE_CONDITIONS_PREFIX = "There a few things which can be causing problems for your network.";
     private static final String NO_CONDITION_MESSAGE = "We performed speed tests, DNS pings and wifi tests on your network and did not see anything amiss.";
@@ -44,8 +45,8 @@ public class SuggestionCreator {
             return creationTimestampMs;
         }
 
-        public List<String> getLongSuggestionList() {
-            return longSuggestionList;
+        public ArrayList<String> getLongSuggestionList() {
+            return new ArrayList<>(longSuggestionList);
         }
 
         public List<String> getShortSuggestionList() {

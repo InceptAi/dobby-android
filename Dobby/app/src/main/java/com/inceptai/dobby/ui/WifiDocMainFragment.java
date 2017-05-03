@@ -1,6 +1,7 @@
 package com.inceptai.dobby.ui;
 
 import android.Manifest;
+import android.animation.Animator;
 import android.animation.LayoutTransition;
 import android.animation.ObjectAnimator;
 import android.annotation.TargetApi;
@@ -47,6 +48,8 @@ import com.inceptai.dobby.speedtest.ServerInformation;
 import com.inceptai.dobby.speedtest.SpeedTestConfig;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
+
+import org.parceler.Parcels;
 
 import java.util.List;
 
@@ -695,7 +698,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     }
 
     private void showSuggestionsUi() {
-        if (currentSuggestion == null) {
+        if (currentSuggestion == null || bottomDialog == null) {
             Toast.makeText(getContext(), "Unable to show suggestions.", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -720,7 +723,11 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         return dialog;
     }
 
-    static final class BottomDialog implements Button.OnClickListener{
+    private void buildMoreSuggestionAlertDialog() {
+
+    }
+
+    final class BottomDialog implements Button.OnClickListener{
         private static final String TAG_CANCEL_BUTTON = "neg";
         private static final String TAG_DISMISS_BUTTON = "dismiss";
         private static final String TAG_POSITIVE_BUTTON = "pos";
@@ -756,7 +763,6 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                 public void onGlobalLayout() {
                     float targetY = rootView.getY();
                     float maxY = rootLayout.getHeight();
-                    // Toast.makeText(context, "targetY = " + targetY + " maxY =" + maxY, Toast.LENGTH_SHORT ).show();
                     ObjectAnimator.ofFloat(rootView, "y", maxY, targetY).setDuration(1000).start();
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                         rootView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
@@ -825,6 +831,32 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         }
 
         void dismiss() {
+            float targetY = rootView.getY();
+            float maxY = rootLayout.getHeight();
+            ObjectAnimator animator = ObjectAnimator.ofFloat(rootView, "y", targetY, maxY).setDuration(1000);
+            animator.addListener(new Animator.AnimatorListener() {
+                @Override
+                public void onAnimationStart(Animator animation) {
+                }
+
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    dismissAndShowCanonicalViews();
+                }
+
+                @Override
+                public void onAnimationCancel(Animator animation) {
+                    dismissAndShowCanonicalViews();
+                }
+
+                @Override
+                public void onAnimationRepeat(Animator animation) {
+                }
+            });
+            animator.start();
+        }
+
+        void dismissAndShowCanonicalViews() {
             rootView.setVisibility(GONE);
             fab.setVisibility(View.VISIBLE);
             toolbar.setVisibility(View.VISIBLE);
@@ -832,13 +864,22 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
         @Override
         public void onClick(View v) {
-            if (TAG_POSITIVE_BUTTON.equals((String) v.getTag())) {
+            if (TAG_POSITIVE_BUTTON.equals(v.getTag())) {
+                showMoreSuggestions();
+            } else if (TAG_CANCEL_BUTTON.equals(v.getTag())) {
                 dismiss();
-            } else if (TAG_CANCEL_BUTTON.equals((String) v.getTag())) {
-                dismiss();
-            } else if (TAG_DISMISS_BUTTON.equals((String) v.getTag())) {
+            } else if (TAG_DISMISS_BUTTON.equals(v.getTag())) {
                 dismiss();
             }
         }
+    }
+
+    private void showMoreSuggestions() {
+        if (currentSuggestion == null) {
+            DobbyLog.e("Attempting to show more suggestions when currentSuggestions are null.");
+        }
+        WifiDocDialogFragment fragment = WifiDocDialogFragment.forSuggestion(currentSuggestion.getTitle(),
+                currentSuggestion.getLongSuggestionList());
+        fragment.show(getActivity().getSupportFragmentManager(), "Suggestions");
     }
 }
