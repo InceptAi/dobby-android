@@ -129,7 +129,9 @@ public class ConnectivityAnalyzer {
                 }
             } catch (IOException e) {
                 DobbyLog.v("Unable to fetch: " + URL_FOR_CONNECTIVITY_AND_PORTAL_TEST + " Except: " + e);
-                mode = WifiConnectivityMode.CONNECTED_AND_OFFLINE;
+                if (!isWifiInCaptivePortal()) {
+                    mode = WifiConnectivityMode.CONNECTED_AND_OFFLINE;
+                }
             } catch (Exception e) {
                 DobbyLog.v("Exception : " + e);
             }

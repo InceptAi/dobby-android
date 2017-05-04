@@ -69,6 +69,9 @@ public class NetworkLayer {
     }
 
     public ListenableFuture<List<ScanResult>> wifiScan() {
+        if (getConnectivityAnalyzerInstance().isWifiInCaptivePortal()) {
+            return null;
+        }
         return getWifiAnalyzerInstance().startWifiScan(MAX_AGE_GAP_TO_RETRIGGER_WIFI_SCAN_MS);
     }
 

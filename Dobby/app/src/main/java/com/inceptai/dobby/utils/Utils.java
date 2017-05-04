@@ -34,6 +34,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Utils class.
@@ -332,29 +335,49 @@ public class Utils {
     }
 
     /**
+     * Run linux system command
+     * @param command
+     */
+    public static Process getPingProcess(String command) throws Exception {
+        try {
+            return Runtime.getRuntime().exec(command);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
+    }
+
+
+    /**
      * Run linux system command with timeout
      * @param command
      */
-    public static String runSystemCommand(String command, int timeoutSeconds) throws Exception {
+    public static String runSystemCommand(final String command,
+                                          ScheduledExecutorService scheduledExecutorService,
+                                          int timeoutMs) throws Exception {
         StringBuilder outputStringBuilder = new StringBuilder();
-        try {
-            Process p = Runtime.getRuntime().exec(command);
-            BufferedReader inputStream = new BufferedReader(
-                    new InputStreamReader(p.getInputStream()));
+        final Process pingProcess = getPingProcess(command);
+        ScheduledFuture<?> pingCommandFuture = scheduledExecutorService.schedule(new Runnable() {
+            @Override
+            public void run() {
+                DobbyLog.v("Utils: KILLING process " + pingProcess.toString() + " for command " + command);
+                pingProcess.destroy();
+            }
+        }, timeoutMs, TimeUnit.MILLISECONDS);
 
+        try {
+            BufferedReader inputStream = new BufferedReader(
+                    new InputStreamReader(pingProcess.getInputStream()));
             String s;
             // reading output stream of the command
             while ((s = inputStream.readLine()) != null) {
                 outputStringBuilder.append(s);
-                //DobbyLog.v("ping response: " + s);
             }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
         } finally {
-            return outputStringBuilder.toString();
+            DobbyLog.v("Utils: Cancelling pingCommandFuture");
+            pingCommandFuture.cancel(true);
         }
+        return outputStringBuilder.toString();
     }
 
     /**
