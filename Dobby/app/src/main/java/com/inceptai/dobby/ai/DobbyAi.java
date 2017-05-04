@@ -169,14 +169,13 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
 
     private void postAllOperations() {
         final ComposableOperation bwTest = bandwidthOperation();
-        bwTest.post();
         final ComposableOperation wifiScan = wifiScanOperation();
-        bwTest.uponCompletion(wifiScan);
         final ComposableOperation ping = pingOperation();
-        wifiScan.uponCompletion(ping);
         final ComposableOperation gatewayLatencyTest = gatewayLatencyTestOperation();
+        bwTest.uponCompletion(wifiScan);
+        wifiScan.uponCompletion(ping);
         ping.uponCompletion(gatewayLatencyTest);
-
+        bwTest.post();
 
         /*
         final ComposableOperation wifiScan = wifiScanOperation();
