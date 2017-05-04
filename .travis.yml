@@ -9,4 +9,5 @@ android:
     - extra-android-m2repository
 
 script:
-   - ./Dobby/gradlew build
+   - ./Dobby/gradlew build assemble assembleDebug assembleRelease
+
