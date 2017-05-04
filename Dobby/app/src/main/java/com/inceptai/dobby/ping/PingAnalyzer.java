@@ -97,6 +97,8 @@ public class PingAnalyzer {
     public void cleanup() {
     }
 
+    //Example of Futures.transform
+
     public ListenableFuture<HashMap<String, PingStats>> scheduleEssentialPingTestsAsyncSafely(int maxAgeToReTriggerPingMs) throws IllegalStateException {
         DobbyLog.v("In real ping Analyzer");
         final int maxAge = maxAgeToReTriggerPingMs;
@@ -110,6 +112,17 @@ public class PingAnalyzer {
                     };
             ListenableFuture<HashMap<String, PingStats>> newPingResultsFuture = Futures.transformAsync(pingResultsFuture, redoPing);
             return newPingResultsFuture;
+        } else {
+            return scheduleEssentialPingTestsAsync(maxAge);
+        }
+    }
+
+
+    public ListenableFuture<HashMap<String, PingStats>> schedulePingsIfNeeded(int maxAgeToReTriggerPingMs) throws IllegalStateException {
+        DobbyLog.v("In real ping Analyzer");
+        final int maxAge = maxAgeToReTriggerPingMs;
+        if (pingResultsFuture != null && !pingResultsFuture.isDone()) {
+            return pingResultsFuture;
         } else {
             return scheduleEssentialPingTestsAsync(maxAge);
         }
@@ -332,6 +345,15 @@ public class PingAnalyzer {
                         }
                     };
             return Futures.transformAsync(gatewayDownloadTestFuture, redoDownloadLatencyTest);
+        } else {
+            return scheduleGatewayDownloadLatencyTest(maxAge);
+        }
+    }
+
+    public ListenableFuture<PingStats> scheduleRouterDownloadLatencyIfNeeded(int maxAgeToRetriggerTest) throws IllegalStateException {
+        final int maxAge = maxAgeToRetriggerTest;
+        if (gatewayDownloadTestFuture != null && !gatewayDownloadTestFuture.isDone()) {
+            return gatewayDownloadTestFuture;
         } else {
             return scheduleGatewayDownloadLatencyTest(maxAge);
         }
