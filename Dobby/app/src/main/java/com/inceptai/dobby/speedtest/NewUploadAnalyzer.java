@@ -4,6 +4,9 @@ import android.support.annotation.Nullable;
 
 import com.inceptai.dobby.model.BandwidthStats;
 import com.inceptai.dobby.speedtest.BandwithTestCodes.TestMode;
+import com.inceptai.dobby.utils.DobbyLog;
+
+import java.util.concurrent.ExecutorService;
 
 import fr.bmartel.speedtest.SpeedTestSocket;
 import fr.bmartel.speedtest.model.SpeedTestError;
@@ -26,7 +29,6 @@ public class NewUploadAnalyzer {
 
     //Results callback
     private ResultsCallback resultsCallback;
-    private UploadTestListener uploadTestListener;
 
     /**
      * Callback interface for results. More methods to follow.
@@ -44,8 +46,6 @@ public class NewUploadAnalyzer {
         this.serverUrlPrefix = getServerUrlForUploadTest(serverDetails.url);
         this.resultsCallback = resultsCallback;
         this.uploadUri = getUriForFileUpload(serverDetails.url);
-        this.uploadTestListener = new UploadTestListener();
-        this.bandwidthAggregator = new BandwidthAggregator(this.uploadTestListener);
     }
 
     /**
@@ -94,7 +94,16 @@ public class NewUploadAnalyzer {
     }
 
 
-    public void uploadTestWithMultipleThreads(int numThreads, int reportIntervalMs) {
+    void uploadTestWithMultipleThreads(int numThreads, int reportIntervalMs) {
+        if (uploadConfig == null) {
+            DobbyLog.e("Upload config is null while starting upload test. Exiting");
+            return;
+        }
+        if (bandwidthAggregator != null) {
+            DobbyLog.e("Upload is already in progress. Cancel it first before running again");
+            return;
+        }
+        bandwidthAggregator = new BandwidthAggregator(new UploadTestListener());
         int threadsToRun = Math.min(numThreads, uploadConfig.threads);
         for (int threadCountIndex = 0; threadCountIndex < threadsToRun; threadCountIndex++) {
             SpeedTestSocket speedTestSocket = this.bandwidthAggregator.getSpeedTestSocket(threadCountIndex);
@@ -102,11 +111,23 @@ public class NewUploadAnalyzer {
                     uploadConfig.testLength * 1000, //converting to ms
                     reportIntervalMs, DEFAULT_UPLOAD_FILE_SIZE,
                     bandwidthAggregator.getListener(threadCountIndex));
+            DobbyLog.v("Started upload speedtest with socket: " + speedTestSocket.toString());
+
         }
     }
 
-    public boolean cancelAllTests() {
-        return this.bandwidthAggregator.cancelActiveSockets();
+    void cancelAllTests(ExecutorService executorService) {
+        if (bandwidthAggregator != null) {
+            bandwidthAggregator.cancelTestsAndCleanupAsync(executorService);
+        }
+        bandwidthAggregator = null;
+    }
+
+    private void cleanup() {
+        if (bandwidthAggregator != null) {
+            bandwidthAggregator.cleanUp();
+        }
+        bandwidthAggregator = null;
     }
 
     private class UploadTestListener implements BandwidthAggregator.ResultsCallback {
@@ -115,6 +136,7 @@ public class NewUploadAnalyzer {
             if (resultsCallback != null) {
                 resultsCallback.onFinish(BandwithTestCodes.TestMode.UPLOAD, stats);
             }
+            cleanup();
         }
 
         @Override
@@ -122,6 +144,7 @@ public class NewUploadAnalyzer {
             if (resultsCallback != null) {
                 resultsCallback.onError(TestMode.UPLOAD, speedTestError, errorMessage);
             }
+            cleanup();
         }
 
         @Override

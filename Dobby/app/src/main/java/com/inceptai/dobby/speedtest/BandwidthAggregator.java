@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import fr.bmartel.speedtest.SpeedTestReport;
@@ -25,15 +26,13 @@ import fr.bmartel.speedtest.model.SpeedTestError;
  */
 
 public class BandwidthAggregator {
-    private int MAX_THREADS = 10;
-
+    private final static int MAX_THREADS = 10;
     private HashMap<Integer, BandwidthInfo> aggregateBandwidthInfo;
     private double currentTransferRate;
     private ResultsCallback resultsCallback;
     private boolean[] testInFlight;
     private AtomicBoolean anyThreadFinished;
     private List<Double> instantBandwidthList;
-    private AtomicBoolean cancelling;
 
     /**
      * Callback interface for results. More methods to follow.
@@ -44,7 +43,7 @@ public class BandwidthAggregator {
         void onError(SpeedTestError speedTestError, String errorMessage);
     }
 
-    public BandwidthAggregator(@Nullable ResultsCallback resultsCallback) {
+    BandwidthAggregator(@Nullable ResultsCallback resultsCallback) {
         //TODO: Convert Hashmap to sparseArray for performance
         aggregateBandwidthInfo = new HashMap<>();
         currentTransferRate = 0;
@@ -53,41 +52,68 @@ public class BandwidthAggregator {
         anyThreadFinished = new AtomicBoolean(false);
         this.resultsCallback = resultsCallback;
         instantBandwidthList = new ArrayList<>();
-        cancelling = new AtomicBoolean(false);
+    }
+
+    //Get socket
+    SpeedTestSocket getSpeedTestSocket(int id) {
+        SpeedTestSocket socket = null;
+        BandwidthInfo bandwidthInfo = getBandwidthInfo(id);
+        if (bandwidthInfo == null) {
+            DobbyLog.v("Adding new bandwidth info with id: " + id);
+            bandwidthInfo = addNewBandwidthInfo(id);
+        }
+        socket = bandwidthInfo.speedTestSocket;
+        DobbyLog.v("Returning socket with socketid, id " + socket.toString() + "," + id);
+        return socket;
+    }
+
+    //Get socket
+    AggregatorListener getListener(int id) {
+        AggregatorListener listener = null;
+        BandwidthInfo bandwidthInfo = getBandwidthInfo(id);
+        if (bandwidthInfo == null) {
+            bandwidthInfo = addNewBandwidthInfo(id);
+        }
+        listener = bandwidthInfo.aggregatorListener;
+        DobbyLog.v("Returning listener with uuid, id " + listener.uuid + "," + id);
+        return listener;
+    }
+
+    void cancelTestsAndCleanupAsync(ExecutorService executorService) {
+        cleanUp();
+        executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+                cancelActiveSocketsSync();
+            }
+        });
+    }
+
+    void cleanUp() {
+        DobbyLog.v("BA: Calling cleanup");
+        for (BandwidthInfo bandwidthInfo: aggregateBandwidthInfo.values()) {
+            bandwidthInfo.disableCallbackForListener();
+        }
+    }
+
+    //Get socket
+    private void cancelActiveSocketsSync() {
+        List<SpeedTestSocket> activeSocketList = getActiveSockets();
+        for (SpeedTestSocket socket: activeSocketList) {
+            DobbyLog.v("BandwidthAggregator forceStopping speedtest socket: " + socket.toString());
+            socket.forceStopTask();
+        }
     }
 
     private BandwidthInfo addNewBandwidthInfo(int id) throws InvalidParameterException {
         if (id > MAX_THREADS) {
             throw new InvalidParameterException("Max thread count is: " + MAX_THREADS);
         }
-        BandwidthInfo bandwidthInfo = new BandwidthInfo(id);
+        BandwidthInfo bandwidthInfo = new BandwidthInfo(id, resultsCallback);
         aggregateBandwidthInfo.put(id, bandwidthInfo);
         bandwidthInfo.speedTestSocket.addSpeedTestListener(bandwidthInfo.aggregatorListener);
         return bandwidthInfo;
     }
-
-    //Get socket
-    public SpeedTestSocket getSpeedTestSocket(int id) {
-        SpeedTestSocket socket = null;
-        BandwidthInfo bandwidthInfo = aggregateBandwidthInfo.get(id);
-        if (bandwidthInfo == null) {
-            bandwidthInfo = addNewBandwidthInfo(id);
-        }
-        socket = bandwidthInfo.speedTestSocket;
-        return socket;
-    }
-
-    //Get socket
-    public AggregatorListener getListener(int id) {
-        AggregatorListener listener = null;
-        BandwidthInfo bandwidthInfo = aggregateBandwidthInfo.get(id);
-        if (bandwidthInfo == null) {
-            bandwidthInfo = addNewBandwidthInfo(id);
-        }
-        listener = bandwidthInfo.aggregatorListener;
-        return listener;
-    }
-
 
     private void updateCurrentTransferRate() {
         // Iterating over values only
@@ -102,13 +128,18 @@ public class BandwidthAggregator {
 
 
     private void updateRate(int id, double newRate) {
-        BandwidthInfo bandwidthInfo = aggregateBandwidthInfo.get(id);
-        if (bandwidthInfo == null) {
-            bandwidthInfo = new BandwidthInfo(id);
-            aggregateBandwidthInfo.put(id, bandwidthInfo);
+        BandwidthInfo bandwidthInfo = getBandwidthInfo(id);
+        if (bandwidthInfo != null) {
+            bandwidthInfo.updateRate(newRate);
         }
-        bandwidthInfo.updateRate(newRate);
         updateCurrentTransferRate();
+    }
+
+    private BandwidthInfo getBandwidthInfo(int id) {
+        if (aggregateBandwidthInfo != null) {
+            return aggregateBandwidthInfo.get(id);
+        }
+        return null;
     }
 
     //Test in flight variables
@@ -143,7 +174,7 @@ public class BandwidthAggregator {
     }
 
     //Get socket
-    synchronized public List<SpeedTestSocket> getActiveSockets() {
+    synchronized private List<SpeedTestSocket> getActiveSockets() {
         List<SpeedTestSocket> activeSocketList = new ArrayList<>();
         for (BandwidthInfo info : aggregateBandwidthInfo.values()) {
             if(checkIfThreadHasStarted(info.id)) {
@@ -153,39 +184,10 @@ public class BandwidthAggregator {
         return activeSocketList;
     }
 
-    private void cleanUpOnCancellationOrFinish() {
-        aggregateBandwidthInfo.clear();
-        instantBandwidthList.clear();
-        currentTransferRate = 0;
-        Arrays.fill(testInFlight, false);
-        anyThreadFinished.set(false);
-        cancelling.set(false);
-    }
 
-    //Get socket
-    public boolean cancelActiveSockets() {
-        cancelling.set(true);
-        final int WAIT_TIMEOUT_FOR_CANCELLATION_MS = 50;
-        List<SpeedTestSocket> activeSocketList = getActiveSockets();
-        for (SpeedTestSocket socket: activeSocketList) {
-            socket.forceStopTask();
-        }
-        //blocking call
-        while(!checkIfAllThreadsDone()) {
-            try {
-                Thread.sleep(WAIT_TIMEOUT_FOR_CANCELLATION_MS);                 //1000 milliseconds is one second.
-            } catch(InterruptedException e) {
-                DobbyLog.v("Interrupted while sleeping: " + e);
-                Thread.currentThread().interrupt();
-                return false;
-            }
-        }
-        cleanUpOnCancellationOrFinish();
-        return true;
-    }
 
     // Generate final stats
-    public BandwidthStats getFinalBandwidthStats() {
+    private BandwidthStats getFinalBandwidthStats() {
         BandwidthStats stats = BandwidthStats.EMPTY_STATS;
         int numThreads = 0;
         // Iterating over values only
@@ -212,37 +214,42 @@ public class BandwidthAggregator {
         private AggregatorListener aggregatorListener;
         private List<Double> transferRates;
 
-        public BandwidthInfo(int id) {
+        BandwidthInfo(int id, @Nullable ResultsCallback aggregatorCallback) {
             this.id = id;
             // this.speedTestSocket = new SpeedTestSocket();
             this.speedTestSocket = SpeedTestSocketFactory.newSocket();
-            this.aggregatorListener = new AggregatorListener(id);
+            this.aggregatorListener = new AggregatorListener(id, aggregatorCallback);
             this.transferRates = new ArrayList<>();
         }
 
-        public void updateRate(double rate) {
+        void updateRate(double rate) {
             this.transferRates.add(rate);
+        }
+
+        void disableCallbackForListener() {
+            aggregatorListener.markListenerAsCancelled();
         }
     }
 
-
-    public class AggregatorListener implements ISpeedTestListener, IRepeatListener {
+    private class AggregatorListener implements ISpeedTestListener, IRepeatListener {
 
         private int id;
         private boolean cancelled;
+        private ResultsCallback aggregatorCallback;
+        private String uuid;
 
 
-        public AggregatorListener(int id) {
+        AggregatorListener(int id, @Nullable ResultsCallback aggregatorCallback) {
             this.id = id;
             this.cancelled = false;
-        }
-
-        public int getListenerId() {
-            return id;
+            this.aggregatorCallback = aggregatorCallback;
+            uuid = Utils.generateUUID();
+            DobbyLog.v("Initializing new AL with id " + id + " uuid " + uuid);
         }
 
         private void markListenerAsCancelled() {
             cancelled = true;
+            aggregatorCallback = null;
         }
 
         private boolean isListenerCancelled() {
@@ -255,7 +262,7 @@ public class BandwidthAggregator {
             // called when a download report is dispatched
             // called to notify download progress
             //Update transfer rate
-            DobbyLog.v("onReport id " + id);
+            DobbyLog.v("onReport id " + id + " uuid: " + uuid);
             if (isListenerCancelled()) {
                 return;
             }
@@ -263,8 +270,8 @@ public class BandwidthAggregator {
             if (!anyThreadFinished.get()) {
                 updateRate(id, report.getTransferRateBit().doubleValue());
             }
-            if (resultsCallback != null) {
-                resultsCallback.onProgress(currentTransferRate);
+            if (aggregatorCallback != null) {
+                aggregatorCallback.onProgress(currentTransferRate);
             }
         }
 
@@ -273,24 +280,22 @@ public class BandwidthAggregator {
             // called when repeat task is finished
             // called to notify download progress
             // If we are trying to cancel, return now.
-            DobbyLog.v("OnFinish id: " + id);
+            DobbyLog.v("OnFinish id: " + id + " uuid: " + uuid);
             updateTestAsDone(id);
             if (isListenerCancelled()) {
                 return;
             }
             anyThreadFinished.set(true);
             if (checkIfAllThreadsDone()) {
-                if (resultsCallback != null) {
-                    resultsCallback.onFinish(getFinalBandwidthStats());
+                if (aggregatorCallback != null) {
+                    aggregatorCallback.onFinish(getFinalBandwidthStats());
                 }
-                cleanUpOnCancellationOrFinish();
             }
         }
 
         @Override
         public void onDownloadFinished(SpeedTestReport report) {
             // called when download is finished
-            DobbyLog.v("SpeedTest: [DL FINISHED] rate in bit/s   : " + report.getTransferRateBit());
         }
 
         @Override
@@ -300,8 +305,8 @@ public class BandwidthAggregator {
 
         @Override
         public void onDownloadError(SpeedTestError speedTestError, String errorMessage) {
-            if (resultsCallback != null) {
-                resultsCallback.onError(speedTestError, errorMessage);
+            if (aggregatorCallback != null) {
+                aggregatorCallback.onError(speedTestError, errorMessage);
             }
         }
 
@@ -312,8 +317,8 @@ public class BandwidthAggregator {
 
         @Override
         public void onUploadError(SpeedTestError speedTestError, String errorMessage) {
-            if (resultsCallback != null) {
-                resultsCallback.onError(speedTestError, errorMessage);
+            if (aggregatorCallback != null) {
+                aggregatorCallback.onError(speedTestError, errorMessage);
             }
         }
 
@@ -324,13 +329,10 @@ public class BandwidthAggregator {
 
         @Override
         public void onInterruption() {
-            DobbyLog.v("onInterruption id " + id);
-            if (cancelling.get()) {
-                markListenerAsCancelled();
-            }
-            //It is not really done here -- this is a temp fix.
-            //updateTestAsDone(id);
+            DobbyLog.v("onInterruption id " + id + " uuid: " + uuid);
         }
 
     }
+
+
 }

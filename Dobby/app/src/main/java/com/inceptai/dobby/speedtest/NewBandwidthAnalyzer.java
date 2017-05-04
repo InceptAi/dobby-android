@@ -152,12 +152,13 @@ public class NewBandwidthAnalyzer {
         markTestsAsCancelling();
         if (downloadAnalyzer != null) {
             DobbyLog.v("Cancelling downloadAnalyzer");
-            downloadAnalyzer.cancelAllTests();
+            downloadAnalyzer.cancelAllTests(dobbyThreadpool.getExecutorService());
         }
         if (uploadAnalyzer != null) {
             DobbyLog.v("Cancelling uploadAnalyzer");
-            uploadAnalyzer.cancelAllTests();
+            uploadAnalyzer.cancelAllTests(dobbyThreadpool.getExecutorService());
         }
+        unRegisterCallback();
         markTestsAsCancelled();
         DobbyLog.v("NBA done with bw cancellation");
     }

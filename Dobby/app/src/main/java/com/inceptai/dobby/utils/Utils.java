@@ -32,6 +32,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.UUID;
 
 /**
  * Utils class.
@@ -568,5 +569,10 @@ public class Utils {
     public static String convertHashMapToJson(Map<?, ?> hashMap) {
         Gson gson = new Gson();
         return gson.toJson(hashMap);
+    }
+
+    public static String generateUUID() {
+        UUID uuid = UUID.randomUUID();
+        return uuid.toString();
     }
 }
