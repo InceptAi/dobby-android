@@ -51,6 +51,10 @@
     <string name="congestion">Congestion</string>
     <string name="your_net">Your Network</string>
     <string name="running_tests">Running tests..</string>
+    <string name="dismiss_button">DISMISS</string>
+    <string name="cancel_button">CANCEL</string>
+    <string name="status_title">Status</string>
+    <string name="suggestions_title">Suggestions</string>
     <string-array name="rssi_level_array">
         <item>High</item>
         <item>Medium</item>
