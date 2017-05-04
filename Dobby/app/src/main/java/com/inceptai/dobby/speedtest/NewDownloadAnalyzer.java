@@ -4,6 +4,9 @@ import android.support.annotation.Nullable;
 
 import com.inceptai.dobby.model.BandwidthStats;
 import com.inceptai.dobby.speedtest.BandwithTestCodes.TestMode;
+import com.inceptai.dobby.utils.DobbyLog;
+
+import java.util.concurrent.ExecutorService;
 
 import fr.bmartel.speedtest.SpeedTestSocket;
 import fr.bmartel.speedtest.model.SpeedTestError;
@@ -24,7 +27,6 @@ public class NewDownloadAnalyzer {
 
     //Results callback
     private ResultsCallback resultsCallback;
-    private DownloadTestListener downloadTestListener;
 
     /**
      * Callback interface for results. More methods to follow.
@@ -42,8 +44,6 @@ public class NewDownloadAnalyzer {
         this.serverDetails = serverDetails;
         this.serverUrlPrefix = getServerUrlForSpeedTest(serverDetails.url);
         this.resultsCallback = resultsCallback;
-        this.downloadTestListener = new DownloadTestListener();
-        this.bandwidthAggregator = new BandwidthAggregator(this.downloadTestListener);
     }
 
     /**
@@ -82,19 +82,39 @@ public class NewDownloadAnalyzer {
     }
 
 
-    public void downloadTestWithMultipleThreads(int numThreads, int reportIntervalMs) {
+    void downloadTestWithMultipleThreads(int numThreads, int reportIntervalMs) {
+        if (downloadConfig == null) {
+            DobbyLog.e("Download config is null while trying to start download");
+            return;
+        }
+        if (bandwidthAggregator != null) {
+            DobbyLog.e("Download is already in progress. Cancel it first before running again");
+            return;
+        }
+        bandwidthAggregator = new BandwidthAggregator(new DownloadTestListener());
         int threadsToRun = Math.min(numThreads, downloadConfig.threadsPerUrl);
         for (int threadCountIndex = 0; threadCountIndex < threadsToRun; threadCountIndex++) {
-            SpeedTestSocket speedTestSocket = this.bandwidthAggregator.getSpeedTestSocket(threadCountIndex);
+            SpeedTestSocket speedTestSocket = bandwidthAggregator.getSpeedTestSocket(threadCountIndex);
             speedTestSocket.startDownloadRepeat(serverUrlPrefix, DOWNLOAD_FILE,
                     downloadConfig.testLength * 1000, //converting to ms,
                     reportIntervalMs,
-                    this.bandwidthAggregator.getListener(threadCountIndex));
+                    bandwidthAggregator.getListener(threadCountIndex));
+            DobbyLog.v("Started Download speedtest with socket: " + speedTestSocket.toString());
         }
     }
 
-    public boolean cancelAllTests() {
-        return this.bandwidthAggregator.cancelActiveSockets();
+    void cancelAllTests(ExecutorService executorService) {
+        if (bandwidthAggregator != null) {
+            bandwidthAggregator.cancelTestsAndCleanupAsync(executorService);
+        }
+        bandwidthAggregator = null;
+    }
+
+    private void cleanup() {
+        if (bandwidthAggregator != null) {
+            bandwidthAggregator.cleanUp();
+        }
+        bandwidthAggregator = null;
     }
 
     private class DownloadTestListener implements BandwidthAggregator.ResultsCallback {
@@ -103,6 +123,7 @@ public class NewDownloadAnalyzer {
             if (resultsCallback != null) {
                 resultsCallback.onFinish(BandwithTestCodes.TestMode.DOWNLOAD, stats);
             }
+            cleanup();
         }
 
         @Override
@@ -110,6 +131,7 @@ public class NewDownloadAnalyzer {
             if (resultsCallback != null) {
                 resultsCallback.onError(TestMode.DOWNLOAD, speedTestError, errorMessage);
             }
+            cleanup();
         }
 
         @Override

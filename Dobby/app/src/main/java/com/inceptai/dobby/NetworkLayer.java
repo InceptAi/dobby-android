@@ -172,11 +172,14 @@ public class NetworkLayer {
     }
 
     public synchronized void cancelBandwidthTests() {
-        getNewBandwidthAnalyzerInstance().cancelBandwidthTests();
+        DobbyLog.v("NL cancel bw test");
         if (bandwidthObserver != null) {
             bandwidthObserver.onCancelled();
         }
         bandwidthObserver = null;
+        DobbyLog.v("NL calling getNewBandwidthAnalyzer cancel");
+        getNewBandwidthAnalyzerInstance().cancelBandwidthTests();
+        DobbyLog.v("NL done with bw cancellation");
     }
 
     public HashMap<String, PingStats> getRecentIPLayerPingStats() {

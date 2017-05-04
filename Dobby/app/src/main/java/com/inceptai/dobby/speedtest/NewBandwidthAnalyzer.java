@@ -147,15 +147,20 @@ public class NewBandwidthAnalyzer {
         }
     }
 
-    public void cancelBandwidthTests() {
+    synchronized public void cancelBandwidthTests() {
+        DobbyLog.v("NBA start with bw cancellation");
         markTestsAsCancelling();
         if (downloadAnalyzer != null) {
-            downloadAnalyzer.cancelAllTests();
+            DobbyLog.v("Cancelling downloadAnalyzer");
+            downloadAnalyzer.cancelAllTests(dobbyThreadpool.getExecutorService());
         }
         if (uploadAnalyzer != null) {
-            uploadAnalyzer.cancelAllTests();
+            DobbyLog.v("Cancelling uploadAnalyzer");
+            uploadAnalyzer.cancelAllTests(dobbyThreadpool.getExecutorService());
         }
+        unRegisterCallback();
         markTestsAsCancelled();
+        DobbyLog.v("NBA done with bw cancellation");
     }
 
     public void processDobbyBusEvents(DobbyEvent event) {
@@ -338,7 +343,9 @@ public class NewBandwidthAnalyzer {
                 resultsCallback.onTestFinished(callbackTestMode, bandwidthStats);
             }
             //Do we need to do upload here ?
-            if (callbackTestMode == BandwithTestCodes.TestMode.DOWNLOAD && testMode == BandwithTestCodes.TestMode.DOWNLOAD_AND_UPLOAD) {
+            if (bandwidthAnalyzerState == BandwidthAnalyzerState.RUNNING &&
+                    callbackTestMode == BandwithTestCodes.TestMode.DOWNLOAD &&
+                    testMode == BandwithTestCodes.TestMode.DOWNLOAD_AND_UPLOAD) {
                 dobbyThreadpool.submit(new Runnable() {
                     @Override
                     public void run() {
@@ -398,17 +405,21 @@ public class NewBandwidthAnalyzer {
         markTestsAsStopped();
     }
 
+
+    //TODO write a checkAndSet function for bandwidthAnalyzerState
+
     //Helper functions for state
-    private boolean testsCurrentlyRunning() {
+    synchronized private boolean testsCurrentlyRunning() {
         return bandwidthAnalyzerState == BandwidthAnalyzerState.RUNNING;
     }
 
-    private boolean testsCurrentlyInactive() {
+    synchronized private boolean testsCurrentlyInactive() {
         return (bandwidthAnalyzerState == BandwidthAnalyzerState.STOPPED ||
-                bandwidthAnalyzerState == BandwidthAnalyzerState.CANCELLED);
+                bandwidthAnalyzerState == BandwidthAnalyzerState.CANCELLED ||
+                bandwidthAnalyzerState == BandwidthAnalyzerState.CANCELLING);
     }
 
-    private boolean checkTestStatusAndMarkRunningIfInactive() {
+    synchronized private boolean checkTestStatusAndMarkRunningIfInactive() {
         if (!testsCurrentlyInactive()) {
             if (resultsCallback != null) {
                 resultsCallback.onBandwidthTestError(TestMode.STARTING,
@@ -422,20 +433,24 @@ public class NewBandwidthAnalyzer {
         }
     }
 
-    private void markTestsAsStopped() {
+    synchronized private void markTestsAsStopped() {
         bandwidthAnalyzerState = BandwidthAnalyzerState.STOPPED;
     }
 
-    private void markTestsAsCancelled() {
-        bandwidthAnalyzerState = BandwidthAnalyzerState.CANCELLED;
+    synchronized private void markTestsAsCancelled() {
+        DobbyLog.v("Trying to mark test as cancelled, current state: " + bandwidthAnalyzerState);
+        if (bandwidthAnalyzerState == BandwidthAnalyzerState.CANCELLING) {
+            DobbyLog.v("Marking test as cancelled");
+            bandwidthAnalyzerState = BandwidthAnalyzerState.CANCELLED;
+        }
     }
 
-    private void markTestsAsCancelling() {
-        bandwidthAnalyzerState = BandwidthAnalyzerState.CANCELLING;
-    }
-
-    public ServerInformation.ServerDetails getLastBestServer() {
-        return bestServer;
+    synchronized private void markTestsAsCancelling() {
+        DobbyLog.v("Trying to mark test as cancelling, current state: " + bandwidthAnalyzerState);
+        if (bandwidthAnalyzerState == BandwidthAnalyzerState.RUNNING) {
+            DobbyLog.v("Marking test as cancelling");
+            bandwidthAnalyzerState = BandwidthAnalyzerState.CANCELLING;
+        }
     }
 
     /**

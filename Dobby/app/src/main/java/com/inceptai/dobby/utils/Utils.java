@@ -33,6 +33,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.UUID;
 
 /**
  * Utils class.
@@ -589,5 +590,9 @@ public class Utils {
     public static float pixelsToDpY(Context context, float px) {
         DisplayMetrics metrics = context.getResources().getDisplayMetrics();
         return Math.round(px / (metrics.ydpi / DisplayMetrics.DENSITY_DEFAULT));
+    }
+
+    public static String generateUUID() {
+        return UUID.randomUUID().toString();
     }
 }

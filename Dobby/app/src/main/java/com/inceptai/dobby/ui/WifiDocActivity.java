@@ -1,13 +1,11 @@
 package com.inceptai.dobby.ui;
 
-import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.DobbyThreadpool;
@@ -20,8 +18,6 @@ import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 
 import javax.inject.Inject;
-
-import uk.co.samuelwall.materialtaptargetprompt.MaterialTapTargetPrompt;
 
 import static com.inceptai.dobby.DobbyApplication.TAG;
 
@@ -89,6 +85,8 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
 
     @Override
     public void cancelTests() {
+        DobbyLog.v("WifiDocActivity start with bw cancellation");
         networkLayer.cancelBandwidthTests();
+        DobbyLog.v("WifiDocActivity end with bw cancellation");
     }
 }
