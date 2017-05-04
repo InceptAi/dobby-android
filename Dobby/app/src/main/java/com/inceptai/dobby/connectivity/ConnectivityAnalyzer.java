@@ -36,11 +36,9 @@ import static com.inceptai.dobby.connectivity.ConnectivityAnalyzer.WifiConnectiv
  */
 public class ConnectivityAnalyzer {
     public static int MAX_STRING_LENGTH_TO_FETCH = 1000; // 1Kbyte
-    public static String URL_FOR_CONNECTIVITY_TEST = "http://www.google.com";
     public static String URL_FOR_CONNECTIVITY_AND_PORTAL_TEST = "http://clients3.google.com/generate_204";
     protected static int MAX_SCHEDULING_TRIES_FOR_CHECKING_WIFI_CONNECTIVITY = 5;
     protected static int GAP_BETWEEN_CONNECTIIVITY_CHECKS_MS = 2000;
-    protected static int MAX_TRIES_AFTER_CONNECTIVITY_CHECK_RETURNS_FALSE = 1;
 
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({WifiConnectivityMode.CONNECTED_AND_ONLINE, WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL,
@@ -124,38 +122,19 @@ public class ConnectivityAnalyzer {
                 DobbyLog.v("Exception, wanted 200, Got return code " + e.httpReturnCode);
                 if (e.httpReturnCode == HttpURLConnection.HTTP_NO_CONTENT) {
                     //This is working, we can return as online
-                    mode = CONNECTED_AND_ONLINE;
+                    mode = WifiConnectivityMode.CONNECTED_AND_ONLINE;
                 } else if (e.httpReturnCode == HttpURLConnection.HTTP_MOVED_TEMP) {
                     //This is a captive portal
                     mode = WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL;
                 }
             } catch (IOException e) {
-                DobbyLog.v("Unable to fetch: " + URL_FOR_CONNECTIVITY_TEST + " Except: " + e);
+                DobbyLog.v("Unable to fetch: " + URL_FOR_CONNECTIVITY_AND_PORTAL_TEST + " Except: " + e);
                 mode = WifiConnectivityMode.CONNECTED_AND_OFFLINE;
             } catch (Exception e) {
                 DobbyLog.v("Exception : " + e);
             }
         }
         return mode;
-    }
-
-    public boolean performConnectivityTest(NetworkInfo activeNetwork) {
-        boolean connectedAndOnline = false;
-        if (activeNetwork != null && activeNetwork.getType() == ConnectivityManager.TYPE_WIFI && activeNetwork.isConnected()) {
-            //Fetch google.com to validate
-            String dataFetched = Utils.EMPTY_STRING;
-            try {
-                dataFetched = Utils.getDataFromUrl(URL_FOR_CONNECTIVITY_TEST, MAX_STRING_LENGTH_TO_FETCH);
-            } catch (IOException e) {
-                DobbyLog.v("Unable to fetch: " + URL_FOR_CONNECTIVITY_TEST + " Except: " + e);
-                return false;
-            } catch (Exception e) {
-                DobbyLog.v("Exception : " + e);
-            }
-            DobbyLog.v("Total bytes recv: " + dataFetched.length());
-            connectedAndOnline = (dataFetched.length() > 0);
-        }
-        return connectedAndOnline;
     }
 
     synchronized protected void updateWifiConnectivityMode(final int scheduleCount) {
@@ -187,6 +166,8 @@ public class ConnectivityAnalyzer {
         wifiConnectivityMode = currentWifiMode;
         if (wifiConnectivityMode == CONNECTED_AND_ONLINE) {
             eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.WIFI_INTERNET_CONNECTIVITY_ONLINE));
+        } else if (wifiConnectivityMode == CONNECTED_AND_CAPTIVE_PORTAL) {
+            eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.WIFI_INTERNET_CONNECTIVITY_CAPTIVE_PORTAL));
         } else {
             eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.WIFI_INTERNET_CONNECTIVITY_OFFLINE));
         }
