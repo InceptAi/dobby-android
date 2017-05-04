@@ -19,7 +19,8 @@ import java.util.List;
  */
 
 public class BestServerSelector {
-    public static final int MAX_LATENCY_TRY = 3;
+    private static final int MAX_LATENCY_TRY = 3;
+    private static final int MAX_CLOSEST_SERVERS = 3; //taken from speedtest-cli
     public static final int MAX_STRING_LENGTH = 100;
 
     private SpeedTestConfig config;
@@ -64,7 +65,6 @@ public class BestServerSelector {
      * @return
      */
     public List<ServerInformation.ServerDetails> getClosestServers(SpeedTestConfig config, ServerInformation info) {
-        final int MAX_CLOSEST_SERVERS = 10; //taken from speedtest-cli
         List<ServerInformation.ServerDetails> closeList = new ArrayList<ServerInformation.ServerDetails>();
         //Iterate over all servers and compute distance, ignore the ones in ignore ids
         for (ServerInformation.ServerDetails detailInfo : info.serverList) {
