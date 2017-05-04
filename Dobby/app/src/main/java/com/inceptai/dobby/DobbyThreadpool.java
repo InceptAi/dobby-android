@@ -46,6 +46,8 @@ public class DobbyThreadpool {
     private ListeningScheduledExecutorService networkLayerExecutorService;
     private ListeningScheduledExecutorService eventBusExecutorService;
 
+    private ListeningScheduledExecutorService scheduledExecutorServiceForPing;
+
     private UiThreadExecutor uiThreadExecutor;
 
     public DobbyThreadpool() {
@@ -70,6 +72,8 @@ public class DobbyThreadpool {
         uiThreadExecutor = new UiThreadExecutor();
         networkLayerExecutorService = MoreExecutors.listeningDecorator(Executors.newSingleThreadScheduledExecutor());
         eventBusExecutorService = MoreExecutors.listeningDecorator(Executors.newSingleThreadScheduledExecutor());
+
+        scheduledExecutorServiceForPing = MoreExecutors.listeningDecorator(Executors.newSingleThreadScheduledExecutor());
     }
 
     public void submit(Runnable runnable) {
@@ -87,6 +91,10 @@ public class DobbyThreadpool {
 
     public ScheduledExecutorService getScheduledExecutorService() {
         return scheduledExecutorService;
+    }
+
+    public ScheduledExecutorService getScheduledExecutorServiceForPing() {
+        return scheduledExecutorServiceForPing;
     }
 
     public ListeningScheduledExecutorService getListeningScheduledExecutorService() {
