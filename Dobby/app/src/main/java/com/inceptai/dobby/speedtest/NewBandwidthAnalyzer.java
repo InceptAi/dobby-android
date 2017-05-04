@@ -453,10 +453,6 @@ public class NewBandwidthAnalyzer {
         }
     }
 
-    public ServerInformation.ServerDetails getLastBestServer() {
-        return bestServer;
-    }
-
     /**
      * start the speed test
      */
