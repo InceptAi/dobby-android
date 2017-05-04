@@ -758,7 +758,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         private RelativeLayout bottomToolbar;
         private int mode = MODE_STATUS;
         private boolean isVisible = false;
-        private double finalTargetY = 0.0;
+        private double finalTargetY =-1.0;
 
         BottomDialog(final Context context, View parentView) {
             this.context = context;
@@ -784,10 +784,11 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             rootView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
                 @Override
                 public void onGlobalLayout() {
-                    float targetY = rootView.getY();
-                    finalTargetY = targetY;
+                    if (finalTargetY < 0.0) {
+                        finalTargetY = rootView.getY();
+                    }
                     float maxY = rootLayout.getHeight();
-                    ObjectAnimator.ofFloat(rootView, "y", maxY, targetY).setDuration(1000).start();
+                    ObjectAnimator.ofFloat(rootView, "y", maxY, (float) finalTargetY).setDuration(1000).start();
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                         rootView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
                     } else {
@@ -860,6 +861,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             float maxY = rootLayout.getHeight();
             ObjectAnimator animator = ObjectAnimator.ofFloat(rootView, "y", targetY, maxY).setDuration(1000);
             isVisible = false;
+            vContent.setText("");
             animator.addListener(new Animator.AnimatorListener() {
                 @Override
                 public void onAnimationStart(Animator animation) {
