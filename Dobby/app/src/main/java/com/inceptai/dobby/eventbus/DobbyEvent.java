@@ -24,7 +24,7 @@ public class DobbyEvent {
             EventType.HANGING_ON_AUTHENTICATING, EventType.HANGING_ON_SCANNING, EventType.FREQUENT_DISCONNECTIONS,
             EventType.BANDWIDTH_TEST_STARTING, EventType.WIFI_SCAN_STARTING, EventType.PING_STARTING,
             EventType.PING_GRADE_AVAILABLE, EventType.GATEWAY_HTTP_GRADE_AVAILABLE, EventType.WIFI_GRADE_AVAILABLE,
-            EventType.SUGGESTIONS_AVAILABLE})
+            EventType.SUGGESTIONS_AVAILABLE, EventType.WIFI_INTERNET_CONNECTIVITY_CAPTIVE_PORTAL})
     public @interface EventType {
         //Unknown event type
         int NO_EVENT_RECEIVED = 0;
@@ -73,6 +73,7 @@ public class DobbyEvent {
         int GATEWAY_HTTP_GRADE_AVAILABLE = 28;
         int WIFI_GRADE_AVAILABLE = 29;
         int SUGGESTIONS_AVAILABLE = 30;
+        int WIFI_INTERNET_CONNECTIVITY_CAPTIVE_PORTAL = 31;
     }
 
     @DobbyEvent.EventType
@@ -144,6 +145,8 @@ public class DobbyEvent {
                 return "WIFI_INTERNET_CONNECTIVITY_ONLINE";
             case EventType.WIFI_INTERNET_CONNECTIVITY_OFFLINE:
                 return "WIFI_INTERNET_CONNECTIVITY_OFFLINE";
+            case EventType.WIFI_INTERNET_CONNECTIVITY_CAPTIVE_PORTAL:
+                return "WIFI_INTERNET_CONNECTIVITY_CAPTIVE_PORTAL";
             case EventType.WIFI_NOT_CONNECTED:
                 return "WIFI_NOT_CONNECTED";
             case EventType.WIFI_CONNECTED:
