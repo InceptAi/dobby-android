@@ -17,9 +17,9 @@ import java.util.Map;
 @IgnoreExtraProperties
 public class FeedbackRecord {
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({AppGrade.HELPFUL, AppGrade.MAYBE,
-            AppGrade.NOT_HELPFUL, AppGrade.UNKNOWN})
-    @interface AppGrade {
+    @IntDef({HelpfulScore.HELPFUL, HelpfulScore.MAYBE,
+            HelpfulScore.NOT_HELPFUL, HelpfulScore.UNKNOWN})
+    public @interface HelpfulScore {
         int HELPFUL = 0;
         int MAYBE = 1;
         int NOT_HELPFUL = 2;
@@ -29,7 +29,7 @@ public class FeedbackRecord {
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({PromotionScore.YES, PromotionScore.MAYBE,
             PromotionScore.NO, PromotionScore.UNKNOWN})
-    @interface PromotionScore {
+    public @interface PromotionScore {
         int YES = 10;
         int MAYBE = 4;
         int NO = 0;
@@ -39,18 +39,19 @@ public class FeedbackRecord {
 
     public String uid;
     public long timestamp;
-    @AppGrade
-    public int appGrade;
+    @HelpfulScore
+    public int helpfulScore;
     @PromotionScore
     public int promotionScore;
     public String userFeedback;
+    public String emailAddress;
 
     public FeedbackRecord() {}
 
     public FeedbackRecord(String uid) {
         this.uid = uid;
         timestamp = System.currentTimeMillis();
-        appGrade = AppGrade.UNKNOWN;
+        helpfulScore = HelpfulScore.UNKNOWN;
         promotionScore = PromotionScore.UNKNOWN;
         userFeedback = "DUMMY FEEDBACK";
     }
@@ -60,9 +61,10 @@ public class FeedbackRecord {
         HashMap<String, Object> result = new HashMap<>();
         result.put("uid", uid);
         result.put("timestamp", timestamp);
-        result.put("appGrade", appGrade);
+        result.put("helpfulScore", helpfulScore);
         result.put("promotionScore", promotionScore);
         result.put("userFeedback", userFeedback);
+        result.put("emailAddress", emailAddress);
         return result;
     }
 
@@ -82,12 +84,12 @@ public class FeedbackRecord {
         this.timestamp = timestamp;
     }
 
-    public int getAppGrade() {
-        return appGrade;
+    public int getHelpfulScore() {
+        return helpfulScore;
     }
 
-    public void setAppGrade(int appGrade) {
-        this.appGrade = appGrade;
+    public void setHelpfulScore(int helpfulScore) {
+        this.helpfulScore = helpfulScore;
     }
 
     public int getPromotionScore() {
@@ -106,4 +108,11 @@ public class FeedbackRecord {
         this.userFeedback = userFeedback;
     }
 
+    public String getEmailAddress() {
+        return emailAddress;
+    }
+
+    public void setEmailAddress(String emailAddress) {
+        this.emailAddress = emailAddress;
+    }
 }

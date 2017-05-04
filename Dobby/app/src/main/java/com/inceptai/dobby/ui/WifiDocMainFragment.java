@@ -890,6 +890,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             if (TAG_POSITIVE_BUTTON.equals(v.getTag())) {
                 showMoreSuggestions();
             } else if (TAG_CANCEL_BUTTON.equals(v.getTag())) {
+                if (mode == MODE_STATUS) {
+                    cancelTests();
+                }
                 dismiss();
             } else if (TAG_DISMISS_BUTTON.equals(v.getTag())) {
                 dismiss();

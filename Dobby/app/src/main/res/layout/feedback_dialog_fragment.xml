@@ -88,7 +88,7 @@
         android:id="@+id/recommend_rg"
         android:orientation="horizontal">
 
-        <RadioButton android:id="@+id/recommend_yes"
+        <RadioButton android:id="@+id/radio_recommend_yes"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:scaleX="0.8"
@@ -96,7 +96,7 @@
             android:textSize="12sp"
             android:textColor="@color/lessDarkGray2"
             android:text="Yes" />
-        <RadioButton android:id="@+id/recommend_maybe"
+        <RadioButton android:id="@+id/radio_recommend_maybe"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:scaleX="0.8"
@@ -104,7 +104,7 @@
             android:textSize="12sp"
             android:textColor="@color/lessDarkGray2"
             android:text="Maybe" />
-        <RadioButton android:id="@+id/recommend_no"
+        <RadioButton android:id="@+id/radio_recommend_no"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/lessDarkGray2"

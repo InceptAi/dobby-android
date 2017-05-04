@@ -12,8 +12,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ListView;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import com.inceptai.dobby.DobbyApplication;
@@ -52,7 +54,7 @@ public class WifiDocDialogFragment extends DialogFragment {
                     "the United States your information will be transferred, processed and stored there under United States privacy standards. "
     };
 
-    private static final String PRIVACY_POLICY = "Privacy Policy: Please click <a href=\"http://inceptai.com/privacy.html\"> here </a> to read about our privacy policy.";
+    private static final String PRIVACY_POLICY = "Please click <a href=\"http://inceptai.com/privacy.html\"> here </a> to read about our privacy policy.";
     private View rootView;
     private String suggestionTitle;
     private ArrayList<String> suggestionList;
@@ -178,12 +180,10 @@ public class WifiDocDialogFragment extends DialogFragment {
             @Override
             public void onClick(View v) {
                 FrameLayout fl = (FrameLayout) getActivity().findViewById(R.id.wifi_doc_placeholder_fl);
-                Snackbar.make(fl, "Feedback submitted. Thanks for your comments !", Snackbar.LENGTH_SHORT).show();
-
                 //Write the feedback to database
-                FeedbackRecord feedbackRecord = new FeedbackRecord(((DobbyApplication) getActivity().getApplication()).getUserUuid());
+                FeedbackRecord feedbackRecord = createFeedbackRecord(rootView);
                 feedbackDatabaseWriter.writeFeedbackToDatabase(feedbackRecord);
-
+                Snackbar.make(fl, "Feedback submitted. Thanks for your comments !", Snackbar.LENGTH_SHORT).show();
                 dismiss();
             }
         });
@@ -198,5 +198,50 @@ public class WifiDocDialogFragment extends DialogFragment {
         });
         builder.setView(rootView);
         return builder.create();
+    }
+
+    private FeedbackRecord createFeedbackRecord(View rootView) {
+        FeedbackRecord feedbackRecord = new FeedbackRecord(((DobbyApplication) getActivity().getApplication()).getUserUuid());
+        RadioGroup helpfulRg = (RadioGroup) rootView.findViewById(R.id.helpful_rb);
+        int id = helpfulRg.getCheckedRadioButtonId();
+        switch (id) {
+            case R.id.radio_helpful_yes:
+                feedbackRecord.setHelpfulScore(FeedbackRecord.HelpfulScore.HELPFUL);
+                break;
+            case R.id.radio_helpful_maybe:
+                feedbackRecord.setHelpfulScore(FeedbackRecord.HelpfulScore.MAYBE);
+                break;
+            case R.id.radio_helpful_no:
+                feedbackRecord.setHelpfulScore(FeedbackRecord.HelpfulScore.NOT_HELPFUL);
+                break;
+            default:
+                feedbackRecord.setHelpfulScore(FeedbackRecord.HelpfulScore.UNKNOWN);
+        }
+        RadioGroup recommendRg = (RadioGroup) rootView.findViewById(R.id.recommend_rg);
+        id = recommendRg.getCheckedRadioButtonId();
+        switch (id) {
+            case R.id.radio_recommend_yes:
+                feedbackRecord.setPromotionScore(FeedbackRecord.PromotionScore.YES);
+                break;
+            case R.id.radio_recommend_maybe:
+                feedbackRecord.setPromotionScore(FeedbackRecord.PromotionScore.MAYBE);
+                break;
+            case R.id.radio_recommend_no:
+                feedbackRecord.setPromotionScore(FeedbackRecord.PromotionScore.NO);
+                break;
+            default:
+                feedbackRecord.setPromotionScore(FeedbackRecord.PromotionScore.UNKNOWN);
+        }
+        EditText commentsEt = (EditText) rootView.findViewById(R.id.detailed_comment_edittext);
+        String comments = commentsEt.getText().toString();
+        if (comments != null && !comments.isEmpty()) {
+            feedbackRecord.setUserFeedback(comments);
+        }
+        EditText userEmail = (EditText) rootView.findViewById(R.id.email_et);
+        String emailAddress = userEmail.getText().toString();
+        if (!emailAddress.isEmpty()) {
+            feedbackRecord.setEmailAddress(emailAddress);
+        }
+        return feedbackRecord;
     }
 }
