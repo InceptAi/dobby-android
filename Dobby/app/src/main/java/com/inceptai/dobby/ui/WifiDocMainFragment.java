@@ -54,7 +54,6 @@ import java.util.List;
 
 import uk.co.samuelwall.materialtaptargetprompt.MaterialTapTargetPrompt;
 
-import static android.view.View.GONE;
 import static com.inceptai.dobby.ai.DataInterpreter.MetricType.ABYSMAL;
 import static com.inceptai.dobby.ai.DataInterpreter.MetricType.AVERAGE;
 import static com.inceptai.dobby.ai.DataInterpreter.MetricType.EXCELLENT;
@@ -924,6 +923,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     }
 
     private void cancelTests() {
+        showStatusMessage("Cancelling tests ...");
         if (mListener != null) {
             mListener.cancelTests();
         }
