@@ -149,8 +149,12 @@ public class NewBandwidthAnalyzer {
 
     public void cancelBandwidthTests() {
         markTestsAsCancelling();
-        downloadAnalyzer.cancelAllTests();
-        uploadAnalyzer.cancelAllTests();
+        if (downloadAnalyzer != null) {
+            downloadAnalyzer.cancelAllTests();
+        }
+        if (uploadAnalyzer != null) {
+            uploadAnalyzer.cancelAllTests();
+        }
         markTestsAsCancelled();
     }
 

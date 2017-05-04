@@ -702,9 +702,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             if (bottomDialog == null) {
                 bottomDialog = createBottomDialog();
                 bottomDialog.show();
-            } else if (!bottomDialog.isVisible()) {
-                bottomDialog.show();
             }
+            bottomDialog.show();
             bottomDialog.setModeStatus();
         }
 
@@ -756,6 +755,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         private RelativeLayout bottomToolbar;
         private int mode = MODE_STATUS;
         private boolean isVisible = false;
+        private double finalTargetY = 0.0;
 
         BottomDialog(final Context context, View parentView) {
             this.context = context;
@@ -770,10 +770,19 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             vNegative.setTag(TAG_CANCEL_BUTTON);
             vPositive = (Button) rootView.findViewById(R.id.bottomDialog_ok);
             vPositive.setTag(TAG_POSITIVE_BUTTON);
+            vNegative.setOnClickListener(this);
+            vPositive.setOnClickListener(this);
+        }
+
+        void show() {
+            if (isVisible) {
+                return;
+            }
             rootView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
                 @Override
                 public void onGlobalLayout() {
                     float targetY = rootView.getY();
+                    finalTargetY = targetY;
                     float maxY = rootLayout.getHeight();
                     ObjectAnimator.ofFloat(rootView, "y", maxY, targetY).setDuration(1000).start();
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
@@ -783,14 +792,6 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                     }
                 }
             });
-            vNegative.setOnClickListener(this);
-            vPositive.setOnClickListener(this);
-        }
-
-        void show() {
-            if (isVisible) {
-                return;
-            }
             LayoutTransition transition = rootLayout.getLayoutTransition();
             transition.setDuration(1000);
             transition.setInterpolator(LayoutTransition.APPEARING, new AccelerateDecelerateInterpolator());
@@ -855,6 +856,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             float targetY = rootView.getY();
             float maxY = rootLayout.getHeight();
             ObjectAnimator animator = ObjectAnimator.ofFloat(rootView, "y", targetY, maxY).setDuration(1000);
+            isVisible = false;
             animator.addListener(new Animator.AnimatorListener() {
                 @Override
                 public void onAnimationStart(Animator animation) {
@@ -863,6 +865,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                 @Override
                 public void onAnimationEnd(Animator animation) {
                     dismissAndShowCanonicalViews();
+                    rootView.setY((float) finalTargetY);
                     isVisible = false;
                     setModeStatus();
                 }
@@ -880,9 +883,10 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         }
 
         void dismissAndShowCanonicalViews() {
-            rootView.setVisibility(GONE);
+            rootView.setVisibility(View.INVISIBLE);
             fab.setVisibility(View.VISIBLE);
             bottomToolbar.setVisibility(View.VISIBLE);
+            isVisible = false;
         }
 
         @Override
@@ -925,5 +929,6 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         }
         showStatusMessage("Tests Cancelled !");
         sendSwitchStateMessage(UI_STATE_INIT_AND_READY);
+        resetData();
     }
  }

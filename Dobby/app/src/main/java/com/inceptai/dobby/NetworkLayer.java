@@ -173,7 +173,9 @@ public class NetworkLayer {
 
     public synchronized void cancelBandwidthTests() {
         getNewBandwidthAnalyzerInstance().cancelBandwidthTests();
-        bandwidthObserver.onCancelled();
+        if (bandwidthObserver != null) {
+            bandwidthObserver.onCancelled();
+        }
         bandwidthObserver = null;
     }
 
