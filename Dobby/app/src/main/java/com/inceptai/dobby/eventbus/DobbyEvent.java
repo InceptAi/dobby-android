@@ -22,7 +22,7 @@ public class DobbyEvent {
             EventType.PING_STARTED, EventType.PING_INFO_AVAILABLE, EventType.PING_FAILED,
             EventType.BWTEST_INFO_AVAILABLE, EventType.BWTEST_FAILED, EventType.HANGING_ON_DHCP,
             EventType.HANGING_ON_AUTHENTICATING, EventType.HANGING_ON_SCANNING, EventType.FREQUENT_DISCONNECTIONS,
-            EventType.BANDWIDTH_TEST_STARTING, EventType.WIFI_SCAN_STARTING, EventType.PING_STARTING,
+            EventType.BANDWIDTH_TEST_STARTING, EventType.WIFI_SCAN_STARTING,
             EventType.PING_GRADE_AVAILABLE, EventType.GATEWAY_HTTP_GRADE_AVAILABLE, EventType.WIFI_GRADE_AVAILABLE,
             EventType.SUGGESTIONS_AVAILABLE})
     public @interface EventType {
@@ -68,7 +68,6 @@ public class DobbyEvent {
         // Payload type: BandwidthObserver.
         int BANDWIDTH_TEST_STARTING = 24;
         int WIFI_SCAN_STARTING = 25;
-        int PING_STARTING = 26;
         int PING_GRADE_AVAILABLE = 27;
         int GATEWAY_HTTP_GRADE_AVAILABLE = 28;
         int WIFI_GRADE_AVAILABLE = 29;

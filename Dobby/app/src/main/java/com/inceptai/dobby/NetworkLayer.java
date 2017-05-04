@@ -119,6 +119,10 @@ public class NetworkLayer {
 
     @Nullable
     public ListenableFuture<HashMap<String, PingStats>> startPing() {
+        if (getConnectivityAnalyzerInstance().isWifiInCaptivePortal()) {
+            DobbyLog.e("Ignoring ping due to Captive Portal mode.");
+            return null;
+        }
         try {
             return getPingAnalyzerInstance().scheduleEssentialPingTestsAsyncSafely(MAX_AGE_GAP_TO_RETRIGGER_PING_MS);
         } catch (IllegalStateException e) {

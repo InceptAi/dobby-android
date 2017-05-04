@@ -328,13 +328,20 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         if (event.getEventType() == DobbyEvent.EventType.BANDWIDTH_TEST_STARTING) {
             bandwidthObserver = (BandwidthObserver) event.getPayload();
             bandwidthObserver.registerCallback(this);
-            // Toast.makeText(getContext(), "Bandwidth test starting.", Toast.LENGTH_SHORT).show();
         } else if (event.getEventType() == DobbyEvent.EventType.WIFI_GRADE_AVAILABLE) {
             Message.obtain(handler, MSG_WIFI_GRADE_AVAILABLE, event.getPayload()).sendToTarget();
         } else if (event.getEventType() == DobbyEvent.EventType.PING_GRADE_AVAILABLE) {
             Message.obtain(handler, MSG_PING_GRADE_AVAILABLE, event.getPayload()).sendToTarget();
         } else if (event.getEventType() == DobbyEvent.EventType.SUGGESTIONS_AVAILABLE) {
             Message.obtain(handler, MSG_SUGGESTION_AVAILABLE, event.getPayload()).sendToTarget();
+        }
+
+        if (uiState == UI_STATE_RUNNING_TESTS) {
+            if (event.getEventType() == DobbyEvent.EventType.PING_STARTED) {
+                showStatusMessageAsync("Running ping tests ..");
+            } else if (event.getEventType() == DobbyEvent.EventType.WIFI_SCAN_STARTING) {
+                showStatusMessageAsync("Running wifi network analysis  ..");
+            }
         }
     }
 
@@ -396,7 +403,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
     @Override
     public void onBandwidthTestError(@BandwithTestCodes.TestMode int testMode, @BandwithTestCodes.ErrorCodes int errorCode, @Nullable String errorMessage) {
-
+        showStatusMessageAsync("Error running bandwidth tests. Please cancel and try again.");
     }
 
     @Override
@@ -478,7 +485,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(suggestion.getTitle() + "\n");
         for(String line : suggestion.getShortSuggestionList()) {
-            stringBuilder.append(line + "\n");
+            stringBuilder.append(line).append("\n");
         }
         // suggestionsValueTv.setText(stringBuilder.toString());
         showSuggestionsUi();
@@ -885,6 +892,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                     rootView.setY((float) finalTargetY);
                     isVisible = false;
                     setModeStatus();
+                    clearStatusMessages();
                 }
 
                 @Override
@@ -904,6 +912,10 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             fab.setVisibility(View.VISIBLE);
             bottomToolbar.setVisibility(View.VISIBLE);
             isVisible = false;
+        }
+
+        void clearStatusMessages() {
+            statusMessage = "";
         }
 
         @Override

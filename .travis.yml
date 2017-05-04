@@ -9,4 +9,4 @@ android:
     - extra-android-m2repository
 
 script:
-   - ./Dobby/gradlew build connectedCheck
+   - ./Dobby/gradlew build
