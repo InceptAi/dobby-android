@@ -118,11 +118,6 @@ public class PingAnalyzer {
         return ipLayerPingStats;
     }
 
-    public PingStats getRecentGatewayDownloadTestStats() {
-        return gatewayDownloadLatencyTestStats;
-    }
-
-
     public boolean checkIfShouldRedoPingStats(int minGapToRetriggerPing, int lossRateToTriggerPing) {
         boolean redoPing = false;
         long maxTimeUpdatedAt = 0;
@@ -211,6 +206,7 @@ public class PingAnalyzer {
     }
 
     protected ListenableFuture<HashMap<String, PingStats>> scheduleEssentialPingTestsAsync(int maxAgeToReTriggerPingMs) throws IllegalStateException {
+        DobbyLog.v("PA: In scheduleEssentialPingTestsAsync");
         if (ipLayerInfo == null) {
             // Try to get new iplayerInfo
             eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.PING_FAILED));
@@ -220,6 +216,7 @@ public class PingAnalyzer {
         String[] addressList = selectPingAddressesBasedOnFreshnessOfCachedResults(maxAgeToReTriggerPingMs);
         pingResultsFuture = SettableFuture.create();
         if (addressList.length > 0) {
+            DobbyLog.v("PA: Starting ping for count: " + addressList.length);
             eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.PING_STARTED));
             pingInProgress.set(true);
             pingsInFlight.clear();
@@ -229,6 +226,7 @@ public class PingAnalyzer {
             scheduleMultipleAsyncPingAndReturn(addressList);
         } else {
             //No need to ping, just set the future and return
+            DobbyLog.v("PA: Returning cached results");
             pingResultsFuture.set(ipLayerPingStats);
         }
         return pingResultsFuture;
