@@ -94,6 +94,7 @@ public class BandwidthAggregator {
         for (BandwidthInfo bandwidthInfo: aggregateBandwidthInfo.values()) {
             bandwidthInfo.disableCallbackForListener();
         }
+        resultsCallback = null;
     }
 
     //Get socket
