@@ -332,6 +332,32 @@ public class Utils {
     }
 
     /**
+     * Run linux system command with timeout
+     * @param command
+     */
+    public static String runSystemCommand(String command, int timeoutSeconds) throws Exception {
+        StringBuilder outputStringBuilder = new StringBuilder();
+        try {
+            Process p = Runtime.getRuntime().exec(command);
+            BufferedReader inputStream = new BufferedReader(
+                    new InputStreamReader(p.getInputStream()));
+
+            String s;
+            // reading output stream of the command
+            while ((s = inputStream.readLine()) != null) {
+                outputStringBuilder.append(s);
+                //DobbyLog.v("ping response: " + s);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        } finally {
+            return outputStringBuilder.toString();
+        }
+    }
+
+    /**
      * Run linux system command
      * @param command
      */
