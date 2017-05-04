@@ -50,6 +50,7 @@ import com.inceptai.dobby.speedtest.SpeedTestConfig;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import uk.co.samuelwall.materialtaptargetprompt.MaterialTapTargetPrompt;
@@ -72,7 +73,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private static final int MSG_SUGGESTION_AVAILABLE = 1004;
     private static final int MSG_SHOW_STATUS = 1005;
     private static final int MSG_SWITCH_STATE = 1006;
+    private static final int MSG_RESUME_HANDLER = 1007;
     private static final long SUGGESTION_FRESHNESS_TS_MS = 30000; // 30 seconds
+    private static final int MAX_HANDLER_PAUSE_MS = 2000;
 
     private static final int UI_STATE_INIT_AND_READY = 101; // Ready to run tests. Initial state.
     private static final int UI_STATE_RUNNING_TESTS = 102; // Running tests.
@@ -140,6 +143,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private DobbyEventBus eventBus;
     private BandwidthObserver bandwidthObserver;
     private Handler handler;
+    private List<Message> handlerBacklog;
+    private boolean pauseHandler;
 
     private SuggestionCreator.Suggestion currentSuggestion;
     MaterialTapTargetPrompt fabPrompt;
@@ -172,6 +177,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             mParam1 = getArguments().getString(ARG_PARAM1);
         }
         statusMessage = Utils.EMPTY_STRING;
+        handlerBacklog = new LinkedList<>();
+        pauseHandler = false;
     }
 
     @Override
@@ -408,6 +415,15 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
     @Override
     public boolean handleMessage(Message msg) {
+        if (pauseHandler) {
+            if (msg.what == MSG_RESUME_HANDLER) {
+                resumeHandler();
+            } else {
+                handlerBacklog.add(Message.obtain(msg));
+                DobbyLog.e("Adding message to backlog." + msg.what);
+            }
+            return true;
+        }
         switch(msg.what) {
             case MSG_UPDATED_CIRCULAR_GAUGE:
                 updateBandwidthGauge(msg);
@@ -676,6 +692,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         wifiSignalValueTv.setText(String.valueOf(0));
         uploadGaugeTv.setText(ZERO_POINT_ZERO);
         downloadGaugeTv.setText(ZERO_POINT_ZERO);
+        // Clear suggestions
+        currentSuggestion = null;
         //ispNameTv.setText("");
     }
 
@@ -747,6 +765,22 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         return dialog;
     }
 
+    private synchronized void pauseHandler() {
+        pauseHandler = true;
+        Message msg = Message.obtain(handler, MSG_RESUME_HANDLER);
+        handler.sendMessageDelayed(msg, MAX_HANDLER_PAUSE_MS);
+    }
+
+    private synchronized void resumeHandler() {
+        if (!pauseHandler) return;
+        pauseHandler = false;
+        for (Message msg : handlerBacklog) {
+            DobbyLog.e("Sending backlog message BACK." + msg.what);
+            handler.sendMessageDelayed(msg, 50);
+        }
+        handlerBacklog.clear();
+    }
+
     final class BottomDialog implements Button.OnClickListener{
         private static final String TAG_CANCEL_BUTTON = "neg";
         private static final String TAG_DISMISS_BUTTON = "dismiss";
@@ -802,7 +836,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                         finalTargetY = finalTargetY + Utils.dpToPixelsY(getContext(), Y_GUTTER_DP);
                     }
                     float maxY = rootLayout.getHeight();
-                    ObjectAnimator.ofFloat(rootView, "y", maxY, (float) finalTargetY).setDuration(1000).start();
+                    getSlideInAnimator(maxY).start();
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                         rootView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
                     } else {
@@ -825,6 +859,32 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             bottomToolbar.setVisibility(View.INVISIBLE);
             rootLayout.requestLayout();
             isVisible = true;
+        }
+
+        private Animator getSlideInAnimator(float maxY) {
+            Animator animator = ObjectAnimator.ofFloat(rootView, "y", maxY, (float) finalTargetY).setDuration(1000);
+            animator.addListener(new Animator.AnimatorListener() {
+                @Override
+                public void onAnimationStart(Animator animation) {
+                    pauseHandler();
+                }
+
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    resumeHandler();
+                }
+
+                @Override
+                public void onAnimationCancel(Animator animation) {
+                    resumeHandler();
+                }
+
+                @Override
+                public void onAnimationRepeat(Animator animation) {
+
+                }
+            });
+            return animator;
         }
 
         void setContent(String content) {
@@ -884,6 +944,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             animator.addListener(new Animator.AnimatorListener() {
                 @Override
                 public void onAnimationStart(Animator animation) {
+                    pauseHandler();
                 }
 
                 @Override
@@ -898,10 +959,12 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                 @Override
                 public void onAnimationCancel(Animator animation) {
                     dismissAndShowCanonicalViews();
+                    resumeHandler();
                 }
 
                 @Override
                 public void onAnimationRepeat(Animator animation) {
+                    resumeHandler();
                 }
             });
             animator.start();
