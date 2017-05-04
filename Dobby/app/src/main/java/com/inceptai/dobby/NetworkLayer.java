@@ -69,6 +69,9 @@ public class NetworkLayer {
     }
 
     public ListenableFuture<List<ScanResult>> wifiScan() {
+        if (getConnectivityAnalyzerInstance().isWifiInCaptivePortal()) {
+            return null;
+        }
         return getWifiAnalyzerInstance().startWifiScan(MAX_AGE_GAP_TO_RETRIGGER_WIFI_SCAN_MS);
     }
 
@@ -154,7 +157,6 @@ public class NetworkLayer {
         }
 
         if (!getConnectivityAnalyzerInstance().isWifiOnline()) {
-            // TODO: Always check if bandwidth analyzer is null
             DobbyLog.w("Abandoning bandwidth test since wifi is offline.");
             return null;
         }
@@ -231,6 +233,18 @@ public class NetworkLayer {
             case DobbyEvent.EventType.WIFI_CONNECTED:
             case DobbyEvent.EventType.WIFI_STATE_ENABLED:
                 wifiScan();
+                break;
+            case DobbyEvent.EventType.WIFI_INTERNET_CONNECTIVITY_CAPTIVE_PORTAL:
+            case DobbyEvent.EventType.WIFI_INTERNET_CONNECTIVITY_OFFLINE:
+                if (getNewBandwidthAnalyzerInstance().testsCurrentlyRunning()) {
+                    threadpool.getExecutorService().submit(new Runnable() {
+                        @Override
+                        public void run() {
+                            DobbyLog.i("NL Cancelling bandwidth tests since we are no longer online");
+                            getNewBandwidthAnalyzerInstance().cancelBandwidthTests();
+                        }
+                    });
+                }
                 break;
         }
         //Passing this info to ConnectivityAnalyzer

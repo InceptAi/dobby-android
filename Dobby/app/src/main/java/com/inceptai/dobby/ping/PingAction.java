@@ -10,6 +10,7 @@ import com.inceptai.dobby.utils.Utils;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.HashMap;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -17,6 +18,7 @@ import static com.inceptai.dobby.ping.PingAction.PingErrorCode.PING_EXCEPTION_CO
 import static com.inceptai.dobby.ping.PingAction.PingErrorCode.PING_EXCEPTION_INVALID_HOST;
 import static com.inceptai.dobby.ping.PingAction.PingErrorCode.PING_EXCEPTION_PARSING_OUTPUT;
 import static com.inceptai.dobby.utils.Utils.EMPTY_STRING;
+import static com.inceptai.dobby.utils.Utils.runSystemCommand;
 
 /**
  * Created by vivek on 4/2/17.
@@ -24,6 +26,7 @@ import static com.inceptai.dobby.utils.Utils.EMPTY_STRING;
 
 public class PingAction {
     private static int DEFAULT_TIME_OUT_SEC = 3;
+    private static int DEFAULT_KILL_TIMEOUT_MS = 5000;
     private static int DEFAULT_NUMBER_OF_PINGS = 6;
     private static int DEFAULT_PACKET_SIZE_BYTES = 1200;
     private ResultsCallback resultsCallback;
@@ -94,8 +97,21 @@ public class PingAction {
         DobbyLog.v("Starting ping for IP: " + ipAddress);
         String output = EMPTY_STRING;
         try {
-            //output = Utils.runSystemCommand("ping -w 0.2 -c " + numberOfPings + " " + ipAddress);
-            output = Utils.runSystemCommand("ping -s 1200 -w 0.2 -c " + numberOfPings + " " + ipAddress);
+            output = runSystemCommand("ping -s 1200 -w 5 -c " + numberOfPings + " " + ipAddress);
+        } catch (Exception e) {
+            throw new PingActionException(PING_EXCEPTION_COMMAND_NOT_FOUND, ipAddress);
+        }
+        DobbyLog.v("Ending ping for IP: " + ipAddress);
+        return output;
+    }
+
+    public static String pingIP(String ipAddress, int timeOut, int numberOfPings, int timeoutMs,
+                                ScheduledExecutorService scheduledExecutorService) throws PingActionException {
+        DobbyLog.v("Starting ping for IP: " + ipAddress);
+        String output = EMPTY_STRING;
+        String command = "ping -s 1200 -w  " + timeOut + " -c " + numberOfPings + " " + ipAddress;
+        try {
+            output = Utils.runSystemCommand(command, scheduledExecutorService, timeoutMs);
         } catch (Exception e) {
             throw new PingActionException(PING_EXCEPTION_COMMAND_NOT_FOUND, ipAddress);
         }
@@ -104,16 +120,20 @@ public class PingAction {
     }
 
 
-    public HashMap<String, PingStats> pingAndReturnStatsList(String[] pingAddressList, int timeOut, int numberOfPings) {
+    public HashMap<String, PingStats> pingAndReturnStatsList(String[] pingAddressList, int systemTimeOut,
+                                                             int numberOfPings, int killTimeOutMs,
+                                                             ScheduledExecutorService scheduledExecutorService) {
         if (pingAddressList == null) {
             return null;
         }
 
         HashMap<String, PingStats> pingStatsMap = new HashMap<>();
+
         try {
             for (int addressIndex = 0; addressIndex < pingAddressList.length; addressIndex++) {
                 pingStatsMap.put(pingAddressList[addressIndex],
-                        pingAndReturnStats(pingAddressList[addressIndex], timeOut, numberOfPings));
+                        pingAndReturnStats(pingAddressList[addressIndex], systemTimeOut,
+                                numberOfPings, killTimeOutMs, scheduledExecutorService));
             }
             if (resultsCallback != null) {
                 resultsCallback.onFinish(pingStatsMap);
@@ -135,11 +155,19 @@ public class PingAction {
         return pingStatsMap;
     }
 
-    public HashMap<String, PingStats> pingAndReturnStatsList(String[] pingAddressList) {
-        return pingAndReturnStatsList(pingAddressList, DEFAULT_TIME_OUT_SEC, DEFAULT_NUMBER_OF_PINGS);
+    HashMap<String, PingStats> pingAndReturnStatsList(String[] pingAddressList,
+                                                      ScheduledExecutorService scheduledExecutorService) {
+        return pingAndReturnStatsList(pingAddressList,
+                DEFAULT_TIME_OUT_SEC, DEFAULT_NUMBER_OF_PINGS,
+                DEFAULT_KILL_TIMEOUT_MS, scheduledExecutorService);
     }
 
-    public PingStats pingAndReturnStats(String ipAddress, int timeOut, int numberOfPings) throws PingActionException, IndexOutOfBoundsException {
+    private PingStats pingAndReturnStats(String ipAddress,
+                                         int pingSystemTimeOut,
+                                         int numberOfPings,
+                                         int killTimeOutMs,
+                                         ScheduledExecutorService scheduledExecutorService)
+            throws PingActionException, IndexOutOfBoundsException {
         /*
             PING 192.168.1.1 (192.168.1.1): 56 data bytes
             64 bytes from 192.168.1.1: icmp_seq=0 ttl=64 time=2.191 ms
@@ -155,7 +183,8 @@ public class PingAction {
         String patternForPktLoss = "\\d+(\\.\\d+)?% packet loss";
 
         //Get pkts stats
-        String pingOutput = pingIP(ipAddress, timeOut, numberOfPings);
+        String pingOutput = pingIP(ipAddress,
+                pingSystemTimeOut, numberOfPings, killTimeOutMs, scheduledExecutorService);
         Pattern pktsPattern = Pattern.compile(patternForPktLoss);
         Matcher pktsMatcher = pktsPattern.matcher(pingOutput);
         if (pktsMatcher.find()) {

@@ -147,7 +147,7 @@ public class NewBandwidthAnalyzer {
         }
     }
 
-    synchronized public void cancelBandwidthTests() {
+    public synchronized void cancelBandwidthTests() {
         DobbyLog.v("NBA start with bw cancellation");
         markTestsAsCancelling();
         if (downloadAnalyzer != null) {
@@ -405,22 +405,15 @@ public class NewBandwidthAnalyzer {
         markTestsAsStopped();
     }
 
-
     //TODO write a checkAndSet function for bandwidthAnalyzerState
 
     //Helper functions for state
-    synchronized private boolean testsCurrentlyRunning() {
+    synchronized public boolean testsCurrentlyRunning() {
         return bandwidthAnalyzerState == BandwidthAnalyzerState.RUNNING;
     }
 
-    synchronized private boolean testsCurrentlyInactive() {
-        return (bandwidthAnalyzerState == BandwidthAnalyzerState.STOPPED ||
-                bandwidthAnalyzerState == BandwidthAnalyzerState.CANCELLED ||
-                bandwidthAnalyzerState == BandwidthAnalyzerState.CANCELLING);
-    }
-
     synchronized private boolean checkTestStatusAndMarkRunningIfInactive() {
-        if (!testsCurrentlyInactive()) {
+        if (testsCurrentlyRunning()) {
             if (resultsCallback != null) {
                 resultsCallback.onBandwidthTestError(TestMode.STARTING,
                         ErrorCodes.ERROR_TEST_ALREADY_RUNNING,

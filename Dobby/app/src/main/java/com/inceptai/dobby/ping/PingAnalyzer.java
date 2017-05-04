@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.inceptai.dobby.speedtest.BestServerSelector.MAX_STRING_LENGTH;
@@ -118,11 +119,6 @@ public class PingAnalyzer {
         return ipLayerPingStats;
     }
 
-    public PingStats getRecentGatewayDownloadTestStats() {
-        return gatewayDownloadLatencyTestStats;
-    }
-
-
     public boolean checkIfShouldRedoPingStats(int minGapToRetriggerPing, int lossRateToTriggerPing) {
         boolean redoPing = false;
         long maxTimeUpdatedAt = 0;
@@ -150,20 +146,22 @@ public class PingAnalyzer {
         initializePingStats(ipLayerInfo);
     }
 
-    private void schedulePingAndReturn(String[] pingAddressList) {
+    private void schedulePingAndReturn(String[] pingAddressList,
+                                       final ScheduledExecutorService scheduledExecutorService) {
         final String[] pingAddressListFinal = pingAddressList;
         dobbyThreadpool.submit(new Runnable() {
             @Override
             public void run() {
-                pingAction.pingAndReturnStatsList(pingAddressListFinal);
+                pingAction.pingAndReturnStatsList(pingAddressListFinal, scheduledExecutorService);
             }
         });
     }
 
-    private void scheduleMultipleAsyncPingAndReturn(String[] pingAddressList) {
+    private void scheduleMultipleAsyncPingAndReturn(String[] pingAddressList,
+                                                    ScheduledExecutorService scheduledExecutorService) {
         for (String address: pingAddressList) {
             String[] list = {address};
-            schedulePingAndReturn(list);
+            schedulePingAndReturn(list, scheduledExecutorService);
         }
     }
 
@@ -207,10 +205,12 @@ public class PingAnalyzer {
                 addressListToPing.add(entry.getKey());
             }
         }
+        DobbyLog.v("PA: List of IP addresses to ping " + addressListToPing);
         return addressListToPing.toArray(new String[addressListToPing.size()]);
     }
 
     protected ListenableFuture<HashMap<String, PingStats>> scheduleEssentialPingTestsAsync(int maxAgeToReTriggerPingMs) throws IllegalStateException {
+        DobbyLog.v("PA: In scheduleEssentialPingTestsAsync");
         if (ipLayerInfo == null) {
             // Try to get new iplayerInfo
             eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.PING_FAILED));
@@ -220,15 +220,17 @@ public class PingAnalyzer {
         String[] addressList = selectPingAddressesBasedOnFreshnessOfCachedResults(maxAgeToReTriggerPingMs);
         pingResultsFuture = SettableFuture.create();
         if (addressList.length > 0) {
+            DobbyLog.v("PA: Starting ping for count: " + addressList.length);
             eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.PING_STARTED));
             pingInProgress.set(true);
             pingsInFlight.clear();
             for (String address: addressList) {
                 pingsInFlight.put(address, true);
             }
-            scheduleMultipleAsyncPingAndReturn(addressList);
+            scheduleMultipleAsyncPingAndReturn(addressList, dobbyThreadpool.getScheduledExecutorServiceForPing());
         } else {
             //No need to ping, just set the future and return
+            DobbyLog.v("PA: Returning cached results");
             pingResultsFuture.set(ipLayerPingStats);
         }
         return pingResultsFuture;
@@ -242,6 +244,8 @@ public class PingAnalyzer {
             if (pingStatsHashMap == null) {
                 return;
             }
+            DobbyLog.v("PA: onFinish " + pingStatsHashMap.toString());
+
             for (String key : ipLayerPingStats.keySet()) {
                 PingStats returnedValue = pingStatsHashMap.get(key);
                 if (returnedValue != null) {

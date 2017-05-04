@@ -2,10 +2,9 @@ package com.inceptai.dobby.ai;
 
 import com.inceptai.dobby.ai.InferenceMap.Condition;
 import com.inceptai.dobby.connectivity.ConnectivityAnalyzer;
+import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 import com.inceptai.dobby.wifi.WifiState;
-
-import org.parceler.Parcel;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -95,9 +94,17 @@ public class SuggestionCreator {
             sb.append("TITLE: ");
             sb.append(getTitle());
             sb.append("\n");
-            sb.append("DETAILS: ");
+            sb.append("DETAIL LIST: ");
             //Use long suggestion by default.
             sb.append(convertListToStringMessage(true));
+            sb.append("\n");
+            sb.append("SHORT LIST: ");
+            //Use long suggestion by default.
+            sb.append(convertListToStringMessage(false));
+            sb.append("\n");
+            sb.append("CONDITIONS: ");
+            sb.append(conditionsMap.toString());
+            sb.append("\n");
             return sb.toString();
         }
     }
@@ -143,6 +150,7 @@ public class SuggestionCreator {
             suggestionToReturn.longSuggestionList = getNoConditionMessageList(params);
             suggestionToReturn.shortSuggestionList = getNoConditionMessageList(params);
         }
+        DobbyLog.v("Returing suggestion " + suggestionToReturn.toString());
         return suggestionToReturn;
     }
 
@@ -695,11 +703,11 @@ public class SuggestionCreator {
                 break;
             case Condition.DNS_UNREACHABLE:
                 if (!baseMessage.equals(Utils.EMPTY_STRING)) {
-                    baseMessage += " However, your ";
+                    baseMessage += " However, we ";
                 } else {
-                    baseMessage = "Your ";
+                    baseMessage = "We ";
                 }
-                baseMessage += "We are unable to reach your DNS server, which means you can't access " +
+                baseMessage += "are unable to reach your DNS server, which means you can't access " +
                         "the Internet on your phone and other devices.";
                 conditionalMessage = getAlternateDNSMessage(params);
                 break;
@@ -713,7 +721,7 @@ public class SuggestionCreator {
                 } else {
                     baseMessage = "You ";
                 }
-                baseMessage = "are behind a captive portal -- " +
+                baseMessage += "are behind a captive portal -- " +
                         "basically the wifi you are connected to " + params.wifiGrade.getPrimaryApSsid() + " is managed " +
                         "by someone who restricts access unless you sign in.";
                 break;
