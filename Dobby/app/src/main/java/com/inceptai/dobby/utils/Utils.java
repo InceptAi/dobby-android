@@ -9,6 +9,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.util.DisplayMetrics;
 import android.widget.ImageView;
 
 import com.google.common.net.InetAddresses;
@@ -568,5 +569,25 @@ public class Utils {
     public static String convertHashMapToJson(Map<?, ?> hashMap) {
         Gson gson = new Gson();
         return gson.toJson(hashMap);
+    }
+
+    public static float dpToPixelsX(Context context, float dp) {
+        DisplayMetrics metrics = context.getResources().getDisplayMetrics();
+        return Math.round(dp * (metrics.xdpi / DisplayMetrics.DENSITY_DEFAULT));
+    }
+
+    public static float dpToPixelsY(Context context, float dp) {
+        DisplayMetrics metrics = context.getResources().getDisplayMetrics();
+        return Math.round(dp * (metrics.ydpi / DisplayMetrics.DENSITY_DEFAULT));
+    }
+
+    public static float pixelsToDpX(Context context, float px) {
+        DisplayMetrics metrics = context.getResources().getDisplayMetrics();
+        return Math.round(px / (metrics.xdpi / DisplayMetrics.DENSITY_DEFAULT));
+    }
+
+    public static float pixelsToDpY(Context context, float px) {
+        DisplayMetrics metrics = context.getResources().getDisplayMetrics();
+        return Math.round(px / (metrics.ydpi / DisplayMetrics.DENSITY_DEFAULT));
     }
 }

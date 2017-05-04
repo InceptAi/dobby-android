@@ -709,7 +709,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
         if (uiState == UI_STATE_RUNNING_TESTS && newState == UI_STATE_READY_WITH_RESULTS) {
             if (bottomDialog != null) {
-                bottomDialog.showOnlyDismissButton();
+                bottomDialog.setModeStatusWithDismiss();
             }
         }
 
@@ -727,7 +727,6 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             Toast.makeText(getContext(), "Unable to show suggestions.", Toast.LENGTH_SHORT).show();
             return;
         }
-        bottomDialog.setTitle("Suggestions");
         String suggestions = currentSuggestion.getTitle();
         bottomDialog.setModeSuggestion();
         bottomDialog.setSuggestion(suggestions);
@@ -744,8 +743,14 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         private static final String TAG_CANCEL_BUTTON = "neg";
         private static final String TAG_DISMISS_BUTTON = "dismiss";
         private static final String TAG_POSITIVE_BUTTON = "pos";
+        private static final float Y_GUTTER_DP = 10;
+
         private static final int MODE_STATUS = 1001;
         private static final int MODE_SUGGESTION = 1002;
+
+        // Cancel functionality not available in this mode.
+        private static final int MODE_STATUS_DISMISS = 1003;
+
         private ImageView vIcon;
         private TextView vTitle;
         private TextView vContent;
@@ -786,6 +791,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                 public void onGlobalLayout() {
                     if (finalTargetY < 0.0) {
                         finalTargetY = rootView.getY();
+                        finalTargetY = finalTargetY + Utils.dpToPixelsY(getContext(), Y_GUTTER_DP);
                     }
                     float maxY = rootLayout.getHeight();
                     ObjectAnimator.ofFloat(rootView, "y", maxY, (float) finalTargetY).setDuration(1000).start();
@@ -811,9 +817,6 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             isVisible = true;
         }
 
-        void setTitle(String title) {
-            vTitle.setText(title);
-        }
 
         void setContent(String content) {
             if (mode != MODE_STATUS) {
@@ -837,10 +840,17 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
         void setModeSuggestion() {
             mode = MODE_SUGGESTION;
+            setTitle("Suggestions");
         }
 
         void setModeStatus() {
             mode = MODE_STATUS;
+            setTitle("Status");
+        }
+
+        void setModeStatusWithDismiss() {
+            mode = MODE_STATUS_DISMISS;
+            showOnlyDismissButton();
         }
 
         void showMoreDismissButtons() {
@@ -851,6 +861,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         }
 
         void showOnlyDismissButton() {
+            mode = MODE_STATUS_DISMISS;
             vNegative.setText("DISMISS");
             vNegative.setVisibility(View.VISIBLE);
             vPositive.setVisibility(View.INVISIBLE);
@@ -906,6 +917,10 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             } else if (TAG_DISMISS_BUTTON.equals(v.getTag())) {
                 dismiss();
             }
+        }
+
+        private void setTitle(String title) {
+            vTitle.setText(title);
         }
     }
 
