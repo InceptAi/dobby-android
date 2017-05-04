@@ -94,8 +94,7 @@ public class PingAction {
         DobbyLog.v("Starting ping for IP: " + ipAddress);
         String output = EMPTY_STRING;
         try {
-            //output = Utils.runSystemCommand("ping -w 0.2 -c " + numberOfPings + " " + ipAddress);
-            output = Utils.runSystemCommand("ping -s 1200 -w 0.2 -c " + numberOfPings + " " + ipAddress);
+            output = Utils.runSystemCommand("ping -s 1200 -w 5 -c " + numberOfPings + " " + ipAddress);
         } catch (Exception e) {
             throw new PingActionException(PING_EXCEPTION_COMMAND_NOT_FOUND, ipAddress);
         }
