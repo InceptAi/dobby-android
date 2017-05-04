@@ -270,7 +270,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             return;
         }
         if (mListener != null) {
-            if (uiState == UI_STATE_INIT_AND_READY) {
+            if (uiState == UI_STATE_INIT_AND_READY || uiState == UI_STATE_READY_WITH_RESULTS) {
                 setBwTestState(BW_TEST_INITIATED);
                 showStatusMessageAsync("Fetching server configuration ...");
                 DobbyLog.v("WifiDoc: Issued command for starting bw tests");
@@ -329,6 +329,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         if (event.getEventType() == DobbyEvent.EventType.BANDWIDTH_TEST_STARTING) {
             bandwidthObserver = (BandwidthObserver) event.getPayload();
             bandwidthObserver.registerCallback(this);
+            // Toast.makeText(getContext(), "Bandwidth test starting.", Toast.LENGTH_SHORT).show();
         } else if (event.getEventType() == DobbyEvent.EventType.WIFI_GRADE_AVAILABLE) {
             Message.obtain(handler, MSG_WIFI_GRADE_AVAILABLE, event.getPayload()).sendToTarget();
         } else if (event.getEventType() == DobbyEvent.EventType.PING_GRADE_AVAILABLE) {
@@ -346,7 +347,6 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         setBwTestState(BW_CONFIG_FETCHED);
         DobbyLog.v("WifiDoc: Fetched config");
     }
-
 
     @Override
     public void onServerInformationFetch(ServerInformation serverInformation) {
@@ -708,6 +708,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         }
 
         if (uiState == UI_STATE_RUNNING_TESTS && newState == UI_STATE_READY_WITH_RESULTS) {
+            if (bottomDialog != null) {
+                bottomDialog.showOnlyDismissButton();
+            }
         }
 
         uiState = newState;
@@ -927,7 +930,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         if (mListener != null) {
             mListener.cancelTests();
         }
-        showStatusMessage("Tests Cancelled !");
+        showStatusMessage("Tests cancelled !");
         sendSwitchStateMessage(UI_STATE_INIT_AND_READY);
         resetData();
     }
