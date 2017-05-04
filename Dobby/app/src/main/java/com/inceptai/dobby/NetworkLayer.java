@@ -69,9 +69,11 @@ public class NetworkLayer {
     }
 
     public ListenableFuture<List<ScanResult>> wifiScan() {
+        /*
         if (getConnectivityAnalyzerInstance().isWifiInCaptivePortal()) {
             return null;
         }
+        */
         return getWifiAnalyzerInstance().startWifiScan(MAX_AGE_GAP_TO_RETRIGGER_WIFI_SCAN_MS);
     }
 
@@ -123,7 +125,7 @@ public class NetworkLayer {
     @Nullable
     public ListenableFuture<HashMap<String, PingStats>> startPing() {
         try {
-            return getPingAnalyzerInstance().scheduleEssentialPingTestsAsyncSafely(MAX_AGE_GAP_TO_RETRIGGER_PING_MS);
+            return getPingAnalyzerInstance().schedulePingsIfNeeded(MAX_AGE_GAP_TO_RETRIGGER_PING_MS);
         } catch (IllegalStateException e) {
             DobbyLog.v("Exception while scheduling ping tests: " + e);
         }
@@ -133,7 +135,7 @@ public class NetworkLayer {
     @Nullable
     public ListenableFuture<PingStats> startGatewayDownloadLatencyTest() {
         try {
-            return getPingAnalyzerInstance().scheduleRouterDownloadLatencyTestSafely(MAX_AGE_GAP_TO_RETRIGGER_PING_MS);
+            return getPingAnalyzerInstance().scheduleRouterDownloadLatencyIfNeeded(MAX_AGE_GAP_TO_RETRIGGER_PING_MS);
         } catch (IllegalStateException e) {
             DobbyLog.v("Exception while scheduling ping tests: " + e);
         }
