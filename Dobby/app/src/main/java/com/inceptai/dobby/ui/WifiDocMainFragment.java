@@ -686,7 +686,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     @UiThread
     private void showStatusMessage(String message) {
         // TODO Animate this if needed.
-        statusMessage = statusMessage + "\n" + message;
+        statusMessage = message + "\n" + statusMessage;
         // statusTv.setText(statusMessage);
         if (bottomDialog != null) {
             bottomDialog.setContent(statusMessage);
