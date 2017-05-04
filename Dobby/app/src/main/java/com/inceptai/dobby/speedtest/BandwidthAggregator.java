@@ -328,7 +328,8 @@ public class BandwidthAggregator {
             if (cancelling.get()) {
                 markListenerAsCancelled();
             }
-            updateTestAsDone(id);
+            //It is not really done here -- this is a temp fix.
+            //updateTestAsDone(id);
         }
 
     }
