@@ -467,7 +467,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             DobbyLog.w("Null suggestion received from eventbus.");
             return;
         }
-
+        if (uiState != UI_STATE_READY_WITH_RESULTS) {
+            switchState(UI_STATE_READY_WITH_RESULTS);
+        }
         if (currentSuggestion != null && isSuggestionFresh(currentSuggestion)) {
             DobbyLog.i("Already have a fresh enough suggestion, ignoring new suggestion");
             return;
