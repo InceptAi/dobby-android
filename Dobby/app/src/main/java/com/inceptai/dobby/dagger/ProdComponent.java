@@ -7,6 +7,7 @@ import com.inceptai.dobby.ui.DebugFragment;
 import com.inceptai.dobby.ui.FakeDataFragment;
 import com.inceptai.dobby.ui.WifiDocActivity;
 import com.inceptai.dobby.ui.WifiDocDialogFragment;
+import com.inceptai.dobby.ui.WifiDocMainFragment;
 
 import javax.inject.Singleton;
 
@@ -33,4 +34,5 @@ public interface ProdComponent {
 
     void inject(WifiDocActivity wifiDocActivity);
 
+    void inject(WifiDocMainFragment wifiDocMainFragment);
 }

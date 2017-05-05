@@ -36,6 +36,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.common.eventbus.Subscribe;
+import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.ai.DataInterpreter;
 import com.inceptai.dobby.ai.SuggestionCreator;
@@ -49,9 +50,12 @@ import com.inceptai.dobby.speedtest.ServerInformation;
 import com.inceptai.dobby.speedtest.SpeedTestConfig;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
+import com.inceptai.dobby.wifi.DobbyAnalytics;
 
 import java.util.LinkedList;
 import java.util.List;
+
+import javax.inject.Inject;
 
 import uk.co.samuelwall.materialtaptargetprompt.MaterialTapTargetPrompt;
 
@@ -149,6 +153,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private SuggestionCreator.Suggestion currentSuggestion;
     MaterialTapTargetPrompt fabPrompt;
 
+    @Inject
+    DobbyAnalytics dobbyAnalytics;
+
     public WifiDocMainFragment() {
         // Required empty public constructor
     }
@@ -172,6 +179,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        ((DobbyApplication) getActivity().getApplication()).getProdComponent().inject(this);
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             mParam1 = getArguments().getString(ARG_PARAM1);
