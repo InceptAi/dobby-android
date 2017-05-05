@@ -54,7 +54,7 @@ public class WifiDocDialogFragment extends DialogFragment {
                     "the United States your information will be transferred, processed and stored there under United States privacy standards. "
     };
 
-    private static final String PRIVACY_POLICY = "Please click <a href=\"http://inceptai.com/privacy.html\"> here </a> to read about our privacy policy.";
+    private static final String PRIVACY_POLICY = "Please click <a href=\"http://inceptai.com/privacy/\"> here </a> to read about our privacy policy.";
     private View rootView;
     private String suggestionTitle;
     private ArrayList<String> suggestionList;

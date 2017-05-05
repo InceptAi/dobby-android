@@ -74,5 +74,5 @@
     <string name="wifi_quality">Wifi Link</string>
     <string name="suggestions">Suggestions</string>
     <string name="ready_status_message">Ready to run tests.</string>
-    <string name="about_string">This app is offered by InceptAI. Copyright &#169; 2017.</string>
+    <string name="about_string">This app is offered by InceptAI. Copyright &#169; 2017. For detailed feedback or questions, email us at hello@obiai.tech.</string>
 </resources>
