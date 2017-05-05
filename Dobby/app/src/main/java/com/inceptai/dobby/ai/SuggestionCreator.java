@@ -426,18 +426,29 @@ public class SuggestionCreator {
     }
 
     private static String convertWifiLinkModeToIssueString(@WifiState.WifiLinkMode int linkMode) {
-        String issuesString = "Your phone can't connect to your wifi router. ";
+        String issuesString = "Your phone is not currently connected to any Wifi network. ";
         switch (linkMode) {
             case WifiState.WifiLinkMode.HANGING_ON_DHCP:
-                issuesString += "Specifically, your phone is unable to get an IP address from your wifi router. ";
+                issuesString += "Specifically, it is unable to get an IP address from your wifi router. ";
+                break;
             case WifiState.WifiLinkMode.HANGING_ON_SCANNING:
-                issuesString += "Specifically, your phone is unable to find your wireless router to connect. " +
+                issuesString += "Specifically, it is unable to find your wireless router to connect. " +
                         "Make sure the router is plugged in. ";
+                break;
             case WifiState.WifiLinkMode.HANGING_ON_AUTHENTICATING:
-                issuesString +=  "Your phone is unable to get on your wifi network due to some authentication " +
+                issuesString +=  "It is unable to get on your wifi network due to some authentication " +
                         "issue. Make sure you have the right password. ";
+                break;
+            case WifiState.WifiLinkMode.CONNECTING:
+                issuesString += "It is trying to connect to your wifi network but is not yet successful. ";
+                break;
+            case WifiState.WifiLinkMode.FREQUENT_DISCONNECTIONS:
+                issuesString += "It seems like it connects for short periods of time and then disconnects quickly. ";
+                break;
+            case WifiState.WifiLinkMode.DISCONNECTED:
+                break;
         }
-        issuesString += " Try rebooting the router and hopefully it will get rid of some weird " +
+        issuesString += " If you think you should be connected, try rebooting the router (if possible) and hopefully it will get rid of some weird " +
                 "state that the router might be in. ";
         return issuesString;
     }
