@@ -52,6 +52,7 @@ import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 import com.inceptai.dobby.wifi.DobbyAnalytics;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -201,6 +202,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         showTapOnboarding(view);
         // requestPermissions();
         uiStateVisibilityChanges(view);
+        dobbyAnalytics.wifiDocFragmentEntered();
         return view;
     }
 
@@ -291,6 +293,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                 sendSwitchStateMessage(UI_STATE_RUNNING_TESTS);
             }
             mListener.onMainButtonClick();
+            dobbyAnalytics.runTestsClicked();
         }
         resetData();
     }
@@ -462,6 +465,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     }
 
     private void showWifiResults(DataInterpreter.WifiGrade wifiGrade) {
+        if (wifiGrade != null) {
+            dobbyAnalytics.wifiGrade(wifiGrade);
+        }
         String ssid = wifiGrade.getPrimaryApSsid();
         if (ssid != null && !ssid.isEmpty()) {
             if (ssid.length() > 10) {
@@ -482,6 +488,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             return;
         }
 
+        dobbyAnalytics.pingGrade(pingGrade);
         setPingResult(pingRouterValueTv, String.format("%02.1f", pingGrade.getRouterLatencyMs()),
                 pingRouterGradeIv, pingGrade.getRouterLatencyMetric());
 
@@ -525,10 +532,11 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         }
         currentSuggestion = suggestion;
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(suggestion.getTitle() + "\n");
+        stringBuilder.append("Title:").append(suggestion.getTitle()).append("\n").append("Text:");
         for(String line : suggestion.getShortSuggestionList()) {
             stringBuilder.append(line).append("\n");
         }
+        dobbyAnalytics.briefSuggestionsShown(stringBuilder.toString());
         // suggestionsValueTv.setText(stringBuilder.toString());
         showSuggestionsUi();
         DobbyLog.i("Received suggestions:" + stringBuilder.toString());
@@ -1032,19 +1040,24 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         WifiDocDialogFragment fragment = WifiDocDialogFragment.forSuggestion(currentSuggestion.getTitle(),
                 currentSuggestion.getLongSuggestionList());
         fragment.show(getActivity().getSupportFragmentManager(), "Suggestions");
+        dobbyAnalytics.moreSuggestionsShown(currentSuggestion.getTitle(),
+                new ArrayList<String>(currentSuggestion.getShortSuggestionList()));
     }
 
     private void showAboutAndPrivacyPolicy() {
         WifiDocDialogFragment fragment = WifiDocDialogFragment.forAboutAndPrivacyPolicy();
         fragment.show(getActivity().getSupportFragmentManager(), "About");
+        dobbyAnalytics.aboutShown();
     }
 
     private void showFeedbackForm() {
         WifiDocDialogFragment fragment = WifiDocDialogFragment.forFeedback();
         fragment.show(getActivity().getSupportFragmentManager(), "Feedback");
+        dobbyAnalytics.feedbackFormShown();
     }
 
     private void cancelTests() {
+        dobbyAnalytics.testsCancelled();
         showStatusMessage("Cancelling tests ...");
         if (mListener != null) {
             mListener.cancelTests();
