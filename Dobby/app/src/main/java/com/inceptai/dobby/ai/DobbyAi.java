@@ -210,10 +210,11 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                     if (payload == null) {
                         //Error.
                         DobbyLog.i("Error starting ping.");
+                    } else {
+                        DobbyLog.v("DobbyAI: Notifying ping stats with payload " + payload.toString());
                     }
                     //We notify inferencing engine in any case so it knows that ping
                     // failed and can make the inferencing based on other measurements.
-                    DobbyLog.v("DobbyAI: Notifying ping stats with payload " + payload.toString());
                     DataInterpreter.PingGrade pingGrade = inferenceEngine.notifyPingStats(payload, networkLayer.getIpLayerInfo());
                     if (pingGrade != null) {
                         eventBus.postEvent(DobbyEvent.EventType.PING_GRADE_AVAILABLE, pingGrade);
