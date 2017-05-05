@@ -216,15 +216,23 @@ public class InferenceMap {
             }
         } else if (DataInterpreter.isGoodOrExcellentOrAverage(wifiGrade.primaryApSignalMetric)){
             conditions.exclude(Condition.WIFI_CHANNEL_BAD_SIGNAL);
-            if (DataInterpreter.isAverageOrPoorOrNonFunctional(wifiGrade.primaryApLinkSpeedMetric)) {
+            if (DataInterpreter.isPoorOrAbysmalOrNonFunctional(wifiGrade.primaryApLinkSpeedMetric)) {
                 conditions.include(Condition.ROUTER_GOOD_SIGNAL_USING_SLOW_DATA_RATE, 0.2);
             }
-            if (DataInterpreter.isAverageOrPoorOrNonFunctional(wifiGrade.primaryLinkChannelOccupancyMetric)) {
+            if (DataInterpreter.isPoorOrAbysmalOrNonFunctional(wifiGrade.primaryLinkChannelOccupancyMetric)) {
                 conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.2);
             }
             if (wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.FREQUENT_DISCONNECTIONS) {
                 conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.7);
             }
+        }
+
+        if (DataInterpreter.isUnknown(wifiGrade.primaryLinkChannelOccupancyMetric)) {
+            conditions.exclude(Condition.WIFI_CHANNEL_CONGESTION);
+        }
+
+        if (DataInterpreter.isUnknown(wifiGrade.primaryApSignalMetric)) {
+            conditions.exclude(Condition.WIFI_CHANNEL_BAD_SIGNAL);
         }
 
         /*
