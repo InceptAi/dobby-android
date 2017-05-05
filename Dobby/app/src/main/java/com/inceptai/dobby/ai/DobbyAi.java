@@ -177,28 +177,19 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         ping.uponCompletion(gatewayLatencyTest);
         bwTest.post();
 
-        /*
-        final ComposableOperation wifiScan = wifiScanOperation();
-        wifiScan.post();
-        final ComposableOperation ping = pingOperation();
-        wifiScan.uponCompletion(ping);
-        final ComposableOperation gatewayLatencyTest = gatewayLatencyTestOperation();
-        ping.uponCompletion(gatewayLatencyTest);
-        final ComposableOperation bwTest = bandwidthOperation();
-        gatewayLatencyTest.uponCompletion(bwTest);
-        */
-
         // Wire up with IE.
         wifiScan.getFuture().addListener(new Runnable() {
             @Override
             public void run() {
                 try {
                     OperationResult result = wifiScan.getFuture().get();
+                    DobbyLog.v("DobbyAI: Setting the result for wifiscan");
                 }catch (Exception e) {
                     e.printStackTrace(System.out);
                     DobbyLog.w("Exception getting wifi results: " + e.getStackTrace().toString());
                     //Informing inference engine of the error.
                 } finally {
+                    DobbyLog.v("DobbyAI: Notifying wifi state ");
                     DataInterpreter.WifiGrade wifiGrade = inferenceEngine.notifyWifiState(networkLayer.getWifiState(),
                             networkLayer.getWifiLinkMode(),
                             networkLayer.getCurrentConnectivityMode());
@@ -214,6 +205,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             public void run() {
                 try {
                     OperationResult result = ping.getFuture().get();
+                    DobbyLog.v("DobbyAI: Getting result for pingFuture");
                     HashMap<String, PingStats> payload = (HashMap<String, PingStats>) result.getPayload();
                     if (payload == null) {
                         //Error.
@@ -221,6 +213,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                     }
                     //We notify inferencing engine in any case so it knows that ping
                     // failed and can make the inferencing based on other measurements.
+                    DobbyLog.v("DobbyAI: Notifying ping stats with payload " + payload.toString());
                     DataInterpreter.PingGrade pingGrade = inferenceEngine.notifyPingStats(payload, networkLayer.getIpLayerInfo());
                     if (pingGrade != null) {
                         eventBus.postEvent(DobbyEvent.EventType.PING_GRADE_AVAILABLE, pingGrade);
@@ -230,6 +223,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                     e.printStackTrace(System.out);
                     DobbyLog.w("Exception getting ping results: " + e.getStackTrace().toString());
                     //Informing inference engine of the error.
+                    DobbyLog.v("DobbyAI: Notifying ping stats with null payload ");
                     inferenceEngine.notifyPingStats(null, networkLayer.getIpLayerInfo());
                 }
             }
@@ -240,7 +234,9 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             public void run() {
                 try {
                     OperationResult result = gatewayLatencyTest.getFuture().get();
+                    DobbyLog.v("DobbyAI: Getting result for download latency future");
                     PingStats payload = (PingStats) result.getPayload();
+                    DobbyLog.v("DobbyAI: Notifying download latency stats with payload " + payload);
                     DataInterpreter.HttpGrade httpGrade = inferenceEngine.notifyGatewayHttpStats(payload);
                     if (httpGrade != null) {
                         eventBus.postEvent(DobbyEvent.EventType.GATEWAY_HTTP_GRADE_AVAILABLE, httpGrade);
@@ -262,6 +258,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         return new ComposableOperation(threadpool) {
             @Override
             public void post() {
+                DobbyLog.v("DobbyAI: Starting wifi operation");
                 setFuture(networkLayer.wifiScan());
             }
 
@@ -276,6 +273,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         return new ComposableOperation(threadpool) {
             @Override
             public void post() {
+                DobbyLog.v("DobbyAI: Starting ping operation");
                 setFuture(networkLayer.startPing());
             }
 
@@ -290,6 +288,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         return new ComposableOperation(threadpool) {
             @Override
             public void post() {
+                DobbyLog.v("DobbyAI: Starting bw operation");
                 setFuture(startBandwidthTest());
             }
 
@@ -304,6 +303,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         return new ComposableOperation(threadpool) {
             @Override
             public void post() {
+                DobbyLog.v("DobbyAI: Starting latency operation");
                 setFuture(networkLayer.startGatewayDownloadLatencyTest());
             }
 
