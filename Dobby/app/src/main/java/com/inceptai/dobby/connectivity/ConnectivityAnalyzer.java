@@ -202,6 +202,11 @@ public class ConnectivityAnalyzer {
         return (wifiConnectivityMode == WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL);
     }
 
+    synchronized public boolean isWifiDisconnected() {
+        return (wifiConnectivityMode == WifiConnectivityMode.OFF ||
+                wifiConnectivityMode == WifiConnectivityMode.ON_AND_DISCONNECTED) ;
+    }
+
 
     public void processDobbyBusEvents(DobbyEvent event) {
         int eventType = event.getEventType();
