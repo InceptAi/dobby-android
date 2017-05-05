@@ -162,6 +162,7 @@ public class NetworkLayer {
 
         if (!getConnectivityAnalyzerInstance().isWifiOnline()) {
             DobbyLog.w("Abandoning bandwidth test since wifi is offline.");
+            eventBus.postEvent(DobbyEvent.EventType.BANDWIDTH_TEST_FAILED_WIFI_OFFLINE);
             return null;
         }
 

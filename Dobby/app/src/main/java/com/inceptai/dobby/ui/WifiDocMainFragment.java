@@ -79,6 +79,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private static final int MSG_SHOW_STATUS = 1005;
     private static final int MSG_SWITCH_STATE = 1006;
     private static final int MSG_RESUME_HANDLER = 1007;
+    private static final int MSG_WIFI_OFFLINE = 1008;
     private static final long SUGGESTION_FRESHNESS_TS_MS = 30000; // 30 seconds
     private static final int MAX_HANDLER_PAUSE_MS = 2000;
 
@@ -364,6 +365,11 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                     event.getEventType() == DobbyEvent.EventType.WIFI_GRADE_AVAILABLE) {
                 showStatusMessageAsync("Running wifi network analysis  ..");
             }
+            if (event.getEventType() == DobbyEvent.EventType.BANDWIDTH_TEST_FAILED_WIFI_OFFLINE) {
+                showStatusMessageAsync("Unable to run Bandwidth tests since the Wifi network is OFFLINE.");
+                showStatusMessageAsync("We are continuing to run Ping and Wifi analysis tests.");
+                Message.obtain(handler, MSG_WIFI_OFFLINE).sendToTarget();
+            }
         }
     }
 
@@ -457,6 +463,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                 break;
             case MSG_SWITCH_STATE:
                 switchState(msg.arg1);
+                break;
+            case MSG_WIFI_OFFLINE:
+                // Should we do anything here ?
                 break;
             default:
                 return false;
