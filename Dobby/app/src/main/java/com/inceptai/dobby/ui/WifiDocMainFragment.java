@@ -61,7 +61,7 @@ import static com.inceptai.dobby.ai.DataInterpreter.MetricType.EXCELLENT;
 import static com.inceptai.dobby.ai.DataInterpreter.MetricType.GOOD;
 import static com.inceptai.dobby.ai.DataInterpreter.MetricType.POOR;
 
-public class WifiDocMainFragment extends Fragment implements View.OnClickListener, NewBandwidthAnalyzer.ResultsCallback, Handler.Callback{
+public class WifiDocMainFragment extends Fragment implements View.OnClickListener, NewBandwidthAnalyzer.ResultsCallback, Handler.Callback {
     public static final String TAG = "WifiDocMainFragment";
     private static final String UNKNOWN_LATENCY_STRING = "--";
     private static final String ZERO_POINT_ZERO = "0.0";
