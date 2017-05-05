@@ -55,6 +55,7 @@ public class WifiDocDialogFragment extends DialogFragment {
     };
 
     private static final String PRIVACY_POLICY = "Please click <a href=\"http://inceptai.com/privacy/\"> here </a> to read about our privacy policy.";
+    private static final String ABOUT_STRING = "This app is offered by InceptAI. Copyright &#169; 2017. For detailed feedback or questions, email us at <a href=\"mailto:hello@obiai.tech\">hello@obiai.tech</a>.";
     private View rootView;
     private String suggestionTitle;
     private ArrayList<String> suggestionList;
@@ -155,6 +156,7 @@ public class WifiDocDialogFragment extends DialogFragment {
         TextView aboutTv = (TextView) rootView.findViewById(R.id.about_tv);
         TextView privacyTv = (TextView) rootView. findViewById(R.id.privacy_tv);
         makeHtmlFriendly(privacyTv, PRIVACY_POLICY);
+        makeHtmlFriendly(aboutTv, ABOUT_STRING);
         Button dismissButton = (Button) rootView.findViewById(R.id.privacy_policy_dismiss_button);
         dismissButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -183,7 +185,7 @@ public class WifiDocDialogFragment extends DialogFragment {
                 //Write the feedback to database
                 FeedbackRecord feedbackRecord = createFeedbackRecord(rootView);
                 feedbackDatabaseWriter.writeFeedbackToDatabase(feedbackRecord);
-                Snackbar.make(fl, "Feedback submitted. Thanks for your comments !", Snackbar.LENGTH_SHORT).show();
+                Snackbar.make(fl, "Thanks for your feedback !", Snackbar.LENGTH_SHORT).show();
                 dismiss();
             }
         });
