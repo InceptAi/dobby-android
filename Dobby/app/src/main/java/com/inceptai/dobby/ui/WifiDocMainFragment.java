@@ -344,9 +344,13 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         }
 
         if (uiState == UI_STATE_RUNNING_TESTS) {
-            if (event.getEventType() == DobbyEvent.EventType.PING_STARTED) {
+            if (event.getEventType() == DobbyEvent.EventType.PING_STARTED ||
+                    event.getEventType() == DobbyEvent.EventType.PING_INFO_AVAILABLE ||
+                    event.getEventType() == DobbyEvent.EventType.PING_GRADE_AVAILABLE) {
                 showStatusMessageAsync("Running ping tests ..");
-            } else if (event.getEventType() == DobbyEvent.EventType.WIFI_SCAN_STARTING) {
+            } else if (event.getEventType() == DobbyEvent.EventType.WIFI_SCAN_STARTING ||
+                    event.getEventType() == DobbyEvent.EventType.WIFI_SCAN_AVAILABLE ||
+                    event.getEventType() == DobbyEvent.EventType.WIFI_GRADE_AVAILABLE) {
                 showStatusMessageAsync("Running wifi network analysis  ..");
             }
         }
@@ -954,12 +958,14 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                     isVisible = false;
                     setModeStatus();
                     clearStatusMessages();
+                    vContent.setText("");
                 }
 
                 @Override
                 public void onAnimationCancel(Animator animation) {
                     dismissAndShowCanonicalViews();
                     resumeHandler();
+                    vContent.setText("");
                 }
 
                 @Override
