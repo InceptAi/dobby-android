@@ -75,9 +75,6 @@ public class InferenceMap {
         Condition.WIFI_LINK_DHCP_ISSUE,
         Condition.WIFI_LINK_ASSOCIATION_ISSUE,
         Condition.WIFI_LINK_AUTH_ISSUE,
-        Condition.ROUTER_FAULT_WIFI_OK,
-        Condition.ROUTER_WIFI_INTERFACE_FAULT,
-        Condition.ROUTER_SOFTWARE_FAULT,
         Condition.ROUTER_GOOD_SIGNAL_USING_SLOW_DATA_RATE
     };
 
@@ -117,6 +114,7 @@ public class InferenceMap {
             conditions.exclude(ISP_CONDITIONS);
             //We can exclude WIFI CONDITIONS here but what about FREQUENCT DISCONNECTIONS etc.
             //TODO: Decide whether to exclude wifi conditions here
+            conditions.exclude(ROUTER_CONDITIONS);
             conditions.exclude(WIFI_CONDITIONS);
             return conditions;
         }
@@ -157,6 +155,7 @@ public class InferenceMap {
                 wifiGrade.wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_ONLINE &&
                 wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.NO_PROBLEM_DEFAULT_STATE) {
             conditions.exclude(WIFI_CONDITIONS);
+            conditions.exclude(ROUTER_CONDITIONS);
             return conditions;
         }
 
@@ -176,21 +175,12 @@ public class InferenceMap {
         } else if (wifiGrade.wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.OFF) {
             //Wifi is off. Need to turn it on.
             conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_TURNED_OFF, 1.0);
-        }
-
-        //Wifi link mode
-        if (wifiGrade.wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.ON_AND_DISCONNECTED  &&
-                (wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.HANGING_ON_SCANNING ||
-                wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.FREQUENT_DISCONNECTIONS ||
-                wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.HANGING_ON_AUTHENTICATING ||
-                wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.HANGING_ON_DHCP)) {
-            // Wifi is on but not connected to the router
-            //It could be that client Wifi interface is not connecting or user needs to issue explicit command to connect
-            conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE, 0.3);
-            //It could be that the right network is not showing up in the scans.
-            conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.7);
+        } else if (wifiGrade.wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.ON_AND_DISCONNECTED) {
             conditions.exclude(ISP_CONDITIONS);
             conditions.exclude(DNS_CONDITIONS);
+            conditions.exclude(WIFI_CONDITIONS);
+            conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.8);
+            conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE, 0.2);
             return conditions;
         }
 
