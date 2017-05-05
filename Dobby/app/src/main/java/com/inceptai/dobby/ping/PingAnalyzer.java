@@ -120,13 +120,12 @@ public class PingAnalyzer {
 
     public ListenableFuture<HashMap<String, PingStats>> schedulePingsIfNeeded(int maxAgeToReTriggerPingMs) throws IllegalStateException {
         DobbyLog.v("In real ping Analyzer");
-        final int maxAge = maxAgeToReTriggerPingMs;
         if (pingResultsFuture != null && !pingResultsFuture.isDone()) {
             DobbyLog.v("PA: Returning ping future as ping is running");
             return pingResultsFuture;
         } else {
             DobbyLog.v("PA: Scheduling ping");
-            return scheduleEssentialPingTestsAsync(maxAge);
+            return scheduleEssentialPingTestsAsync(maxAgeToReTriggerPingMs);
         }
     }
 
@@ -166,12 +165,11 @@ public class PingAnalyzer {
 
     private void schedulePingAndReturn(final String[] pingAddressList,
                                        final ScheduledExecutorService scheduledExecutorService) {
-        final String[] pingAddressListFinal = pingAddressList;
         dobbyThreadpool.submit(new Runnable() {
             @Override
             public void run() {
                 DobbyLog.v("PA: Putting ping on thread " + pingAddressList.toString());
-                pingAction.pingAndReturnStatsList(pingAddressListFinal, scheduledExecutorService);
+                pingAction.pingAndReturnStatsList(pingAddressList, scheduledExecutorService);
                 DobbyLog.v("PA: Done with pinging " + pingAddressList.toString());
             }
         });
@@ -231,7 +229,7 @@ public class PingAnalyzer {
 
     protected ListenableFuture<HashMap<String, PingStats>> scheduleEssentialPingTestsAsync(int maxAgeToReTriggerPingMs) throws IllegalStateException {
         DobbyLog.v("PA: In scheduleEssentialPingTestsAsync");
-        if (ipLayerInfo == null) {
+        if (ipLayerInfo == null || ipLayerInfo.gateway == null || ipLayerInfo.gateway.equals("0.0.0.0")) {
             // Try to get new iplayerInfo
             eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.PING_FAILED));
             throw new IllegalStateException("Cannot schedule pings when iplayerInfo is null or own IP is 0.0.0.0");
@@ -252,6 +250,7 @@ public class PingAnalyzer {
         } else {
             //No need to ping, just set the future and return
             DobbyLog.v("PA: Returning cached results");
+            DobbyLog.v("PA: Setting PING future");
             pingResultsFuture.set(ipLayerPingStats);
         }
         return pingResultsFuture;
@@ -278,6 +277,7 @@ public class PingAnalyzer {
                 //Return the results here
                 pingInProgress.set(false);
                 if (pingResultsFuture != null) {
+                    DobbyLog.v("PA: Setting PING future");
                     pingResultsFuture.set(ipLayerPingStats);
                     DobbyLog.v("PA: IP Layer Ping Stats " + ipLayerPingStats.toString());
                     eventBus.postEvent(DobbyEvent.EventType.PING_INFO_AVAILABLE);
@@ -299,13 +299,12 @@ public class PingAnalyzer {
 
 
     //Perform download tests with router
-    private void performGatewayDownloadTest() {
+    private PingStats performGatewayDownloadTest() {
         DobbyLog.v("PA: Starting download latency tests");
-        PingStats downloadLatencyStats = new PingStats(ipLayerInfo.gateway);
-        if (ipLayerInfo.gateway == null || ipLayerInfo.gateway.equals("0.0.0.0")) {
-            return;
+        if (ipLayerInfo == null || ipLayerInfo.gateway == null || ipLayerInfo.gateway.equals("0.0.0.0")) {
+            return null;
         }
-
+        PingStats downloadLatencyStats = new PingStats(ipLayerInfo.gateway);
         String gatewayURLToDownload = "http://" + ipLayerInfo.gateway;
         List<Double> latencyMeasurementsMs = new ArrayList<>();
         for (int i = 0; i < MAX_GATEWAY_DOWNLOAD_TRIES; i++) {
@@ -339,9 +338,8 @@ public class PingAnalyzer {
                 DobbyLog.v(errorString);
             }
         }
-        gatewayDownloadLatencyTestStats = downloadLatencyStats;
-        gatewayDownloadTestFuture.set(gatewayDownloadLatencyTestStats);
-        DobbyLog.v("GW server latency is : " + gatewayDownloadLatencyTestStats.toString());
+        DobbyLog.v("GW server latency is : " + downloadLatencyStats.toString());
+        return downloadLatencyStats;
     }
 
     public ListenableFuture<PingStats> scheduleRouterDownloadLatencyTestSafely(int maxAgeToRetriggerTest) throws IllegalStateException {
@@ -361,13 +359,12 @@ public class PingAnalyzer {
     }
 
     public ListenableFuture<PingStats> scheduleRouterDownloadLatencyIfNeeded(int maxAgeToRetriggerTest) throws IllegalStateException {
-        final int maxAge = maxAgeToRetriggerTest;
         if (gatewayDownloadTestFuture != null && !gatewayDownloadTestFuture.isDone()) {
             DobbyLog.v("PA: Returing existing future for gw latency");
             return gatewayDownloadTestFuture;
         } else {
             DobbyLog.v("PA: Calling new gateway latency to get new future");
-            return scheduleGatewayDownloadLatencyTest(maxAge);
+            return scheduleGatewayDownloadLatencyTest(maxAgeToRetriggerTest);
         }
     }
 
@@ -381,7 +378,8 @@ public class PingAnalyzer {
                 @Override
                 public void run() {
                     DobbyLog.v("PA: Putting gw latency on thread");
-                    performGatewayDownloadTest();
+                    gatewayDownloadLatencyTestStats = performGatewayDownloadTest();
+                    gatewayDownloadTestFuture.set(gatewayDownloadLatencyTestStats);
                     DobbyLog.v("PA: GW latency done");
                 }
             });
