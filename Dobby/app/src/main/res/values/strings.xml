@@ -67,8 +67,8 @@
     <string name="onboarding_one_desc2">This app can run some tests on your phone to find out. It can also suggest remedies for issues found.</string>
     <string name="onboarding_two_desc1">Wifi Tester can run a speed test to show your upload and download speeds.</string>
     <string name="onboarding_two_desc2">It can also see if your DNS servers or your routers are slow.</string>
-    <string name="onboarding_three_desc1">Wifi Tester can perform Wifi scans to see if your wifi environment is congested or if your signal is poor.</string>
-    <string name="onboarding_three_desc2">This optional test requires you to grant the Location permission.</string>
+    <string name="onboarding_three_desc1">Wifi Tester can perform Wifi scans to see if your wifi environment is congested.</string>
+    <string name="onboarding_three_desc2">It will also figure out if there is a problem with your Wifi router signal.</string>
     <string name="slow_internet_q">Slow Internet ?</string>
     <string name="bad_wifi_signal">Bad Wifi signal ?</string>
     <string name="wifi_quality">Wifi Link</string>
