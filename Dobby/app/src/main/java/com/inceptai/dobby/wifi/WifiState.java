@@ -27,7 +27,7 @@ public class WifiState {
     private static final int SNR_MAX_POSITIVE_GAP = 10;
     private static final int SNR_MAX_POSITIVE_GAP_SQ = SNR_MAX_POSITIVE_GAP * SNR_MAX_POSITIVE_GAP;
     private static final int MOVING_AVERAGE_DECAY_FACTOR = 20;
-    private static final int THRESHOLD_FOR_DECLARING_CONNECTION_SETUP_STATE_AS_HANGING_MS = 10000;
+    private static final int THRESHOLD_FOR_DECLARING_CONNECTION_SETUP_STATE_AS_HANGING_MS = 5000;
     private static final int THRESHOLD_FOR_DECLARING_CONNECTION_SETUP_AS_DONE_IF_CONNECTED_FOR_MS = 10000;
     private static final int THRESHOLD_FOR_FLAGGING_FREQUENT_STATE_CHANGES = 5;
     private static final int THRESHOLD_FOR_COUNTING_FREQUENT_STATE_CHANGES_MS = 10000;
@@ -49,15 +49,17 @@ public class WifiState {
     @IntDef({WifiLinkMode.NO_PROBLEM_DEFAULT_STATE, WifiLinkMode.HANGING_ON_DHCP,
             WifiLinkMode.HANGING_ON_AUTHENTICATING, WifiLinkMode.HANGING_ON_SCANNING,
             WifiLinkMode.FREQUENT_DISCONNECTIONS, WifiLinkMode.UNKNOWN,
-            WifiLinkMode.MAX_MODES})
+            WifiLinkMode.DISCONNECTED, WifiLinkMode.CONNECTING, WifiLinkMode.MAX_MODES})
     public @interface WifiLinkMode {
         int NO_PROBLEM_DEFAULT_STATE = 0;  // Connected and working normally.
         int HANGING_ON_DHCP = 1;
         int HANGING_ON_AUTHENTICATING = 2;
         int HANGING_ON_SCANNING = 3;
         int FREQUENT_DISCONNECTIONS = 4;
-        int UNKNOWN = 5;
-        int MAX_MODES = 6;
+        int CONNECTING = 5;
+        int DISCONNECTED = 6;
+        int UNKNOWN = 7;
+        int MAX_MODES = 8;
     }
 
     public static String wifiLinkModeToString(@WifiLinkMode int mode) {
@@ -72,11 +74,15 @@ public class WifiState {
                 return "HANGING_ON_SCANNING";
             case WifiLinkMode.FREQUENT_DISCONNECTIONS:
                 return "FREQUENT_DISCONNECTIONS";
+            case WifiLinkMode.DISCONNECTED:
+                return "DISCONNECTED";
+            case WifiLinkMode.CONNECTING:
+                return "CONNECTING";
             case WifiLinkMode.MAX_MODES:
                 return "MAX_MODES";
             case WifiLinkMode.UNKNOWN:
             default:
-                return "Unknown";
+                return "UNKNOWN";
         }
     }
 
@@ -500,8 +506,8 @@ public class WifiState {
     private int updateWifiProblemMode() {
         long startTimeMs = getCurrentStateStartTimeMs();
         long currentTimeMs = System.currentTimeMillis();
+        NetworkInfo.DetailedState currentState = getCurrentState();
         if (currentTimeMs - startTimeMs >= THRESHOLD_FOR_DECLARING_CONNECTION_SETUP_STATE_AS_HANGING_MS) {
-            NetworkInfo.DetailedState currentState = getCurrentState();
             currentState.name();
             switch(currentState) {
                 case SCANNING:
@@ -516,11 +522,31 @@ public class WifiState {
             }
         } else if (getNumberOfTimesWifiInState(NetworkInfo.DetailedState.DISCONNECTED,
                 THRESHOLD_FOR_COUNTING_FREQUENT_STATE_CHANGES_MS) > THRESHOLD_FOR_FLAGGING_FREQUENT_STATE_CHANGES){
-            //Check for frequenct disconnections
+            //Check for frequent disconnections
             wifiProblemMode = WifiLinkMode.FREQUENT_DISCONNECTIONS;
-        } else if(getCurrentState() == NetworkInfo.DetailedState.CONNECTED) {
-                // && (currentTimeMs - getCurrentStateStartTimeMs() >= THRESHOLD_FOR_DECLARING_CONNECTION_SETUP_AS_DONE_IF_CONNECTED_FOR_MS)) {
-            wifiProblemMode = WifiLinkMode.NO_PROBLEM_DEFAULT_STATE;
+        } else {
+            switch (currentState) {
+                case CONNECTED:
+                    wifiProblemMode = WifiLinkMode.NO_PROBLEM_DEFAULT_STATE;
+                    break;
+                case IDLE:
+                case SCANNING:
+                case DISCONNECTED:
+                case DISCONNECTING:
+                case FAILED:
+                case BLOCKED:
+                case SUSPENDED:
+                    wifiProblemMode = WifiLinkMode.DISCONNECTED;
+                    break;
+                case CONNECTING:
+                case AUTHENTICATING:
+                case OBTAINING_IPADDR:
+                case VERIFYING_POOR_LINK:
+                case CAPTIVE_PORTAL_CHECK:
+                    wifiProblemMode = WifiLinkMode.CONNECTING;
+                    break;
+            }
+
         }
         return wifiProblemMode;
     }
