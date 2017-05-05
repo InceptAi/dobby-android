@@ -487,6 +487,20 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                 pingWebGradeIv, pingGrade.getExternalServerLatencyMetric());
     }
 
+    private void resetPingData() {
+        setPingResult(pingRouterValueTv, ZERO_POINT_ZERO,
+                pingRouterGradeIv, DataInterpreter.MetricType.UNKNOWN);
+
+        setPingResult(pingDnsPrimaryValueTv, ZERO_POINT_ZERO,
+                pingDnsPrimaryGradeIv, DataInterpreter.MetricType.UNKNOWN);
+
+        setPingResult(pingDnsSecondValueTv,  ZERO_POINT_ZERO,
+                pingDnsSecondGradeIv, DataInterpreter.MetricType.UNKNOWN);
+
+        setPingResult(pingWebValueTv, ZERO_POINT_ZERO,
+                pingWebGradeIv, DataInterpreter.MetricType.UNKNOWN);
+    }
+
     private void showSuggestion(SuggestionCreator.Suggestion suggestion) {
         ispNameTv.setText(suggestion.getIsp());
         routerIpTv.setText(suggestion.getExternalIp());
@@ -698,6 +712,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         downloadGaugeTv.setText(ZERO_POINT_ZERO);
         // Clear suggestions
         currentSuggestion = null;
+        resetPingData();
         //ispNameTv.setText("");
     }
 
