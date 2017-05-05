@@ -4,6 +4,7 @@ import android.support.annotation.Nullable;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
+import com.inceptai.dobby.ai.DataInterpreter;
 import com.inceptai.dobby.ai.InferenceEngine;
 import com.inceptai.dobby.ai.RtDataSource;
 import com.inceptai.dobby.model.BandwidthStats;
@@ -114,7 +115,11 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
     public synchronized void onTestFinished(@BandwithTestCodes.TestMode int testMode, BandwidthStats stats) {
         DobbyLog.v("BandwidthObserver onTestFinished");
         if (inferenceEngine != null) {
-            inferenceEngine.notifyBandwidthTestResult(testMode, stats.getOverallBandwidth(), clientIsp, clientExternalIp);
+            DobbyLog.v("BandwidthObserver: Notifying bw stats with testmode " + testMode + " stats: " + stats.toString());
+            DataInterpreter.BandwidthGrade bandwidthGrade = inferenceEngine.notifyBandwidthTestResult(testMode, stats.getOverallBandwidth(), clientIsp, clientExternalIp);
+            if (bandwidthGrade != null) {
+                DobbyLog.v("BandwidthObserver BANDWIDTH_GRADE_AVAILABLE " + bandwidthGrade.toString());
+            }
         }
 
         HashSet<RtDataListener<Float>> listenerSet = testMode == BandwithTestCodes.TestMode.UPLOAD ? listenersUpload : listenersDownload;
@@ -132,7 +137,7 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
         }
 
         if (areTestsDone(testMode)) {
-            DobbyLog.v("Calling tests Done with tesmode: " + testMode);
+            DobbyLog.v("Calling tests Done with testmode: " + testMode);
             testsDone();
         } else {
             DobbyLog.v("Tests not done.");
