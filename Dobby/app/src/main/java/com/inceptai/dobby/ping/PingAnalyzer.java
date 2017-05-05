@@ -97,6 +97,8 @@ public class PingAnalyzer {
     public void cleanup() {
     }
 
+    //Example of Futures.transform
+
     public ListenableFuture<HashMap<String, PingStats>> scheduleEssentialPingTestsAsyncSafely(int maxAgeToReTriggerPingMs) throws IllegalStateException {
         DobbyLog.v("In real ping Analyzer");
         final int maxAge = maxAgeToReTriggerPingMs;
@@ -111,6 +113,19 @@ public class PingAnalyzer {
             ListenableFuture<HashMap<String, PingStats>> newPingResultsFuture = Futures.transformAsync(pingResultsFuture, redoPing);
             return newPingResultsFuture;
         } else {
+            return scheduleEssentialPingTestsAsync(maxAge);
+        }
+    }
+
+
+    public ListenableFuture<HashMap<String, PingStats>> schedulePingsIfNeeded(int maxAgeToReTriggerPingMs) throws IllegalStateException {
+        DobbyLog.v("In real ping Analyzer");
+        final int maxAge = maxAgeToReTriggerPingMs;
+        if (pingResultsFuture != null && !pingResultsFuture.isDone()) {
+            DobbyLog.v("PA: Returning ping future as ping is running");
+            return pingResultsFuture;
+        } else {
+            DobbyLog.v("PA: Scheduling ping");
             return scheduleEssentialPingTestsAsync(maxAge);
         }
     }
@@ -138,6 +153,7 @@ public class PingAnalyzer {
 
     public void updateIPLayerInfo(IPLayerInfo updatedInfo) {
         this.ipLayerInfo = updatedInfo;
+        clearPingStatsCache();
     }
 
     public void clearPingStatsCache() {
@@ -146,13 +162,17 @@ public class PingAnalyzer {
         initializePingStats(ipLayerInfo);
     }
 
-    private void schedulePingAndReturn(String[] pingAddressList,
+
+
+    private void schedulePingAndReturn(final String[] pingAddressList,
                                        final ScheduledExecutorService scheduledExecutorService) {
         final String[] pingAddressListFinal = pingAddressList;
         dobbyThreadpool.submit(new Runnable() {
             @Override
             public void run() {
+                DobbyLog.v("PA: Putting ping on thread " + pingAddressList.toString());
                 pingAction.pingAndReturnStatsList(pingAddressListFinal, scheduledExecutorService);
+                DobbyLog.v("PA: Done with pinging " + pingAddressList.toString());
             }
         });
     }
@@ -218,6 +238,7 @@ public class PingAnalyzer {
         }
         //Get list of addresses to ping
         String[] addressList = selectPingAddressesBasedOnFreshnessOfCachedResults(maxAgeToReTriggerPingMs);
+        DobbyLog.v("PA: Ping address list " + addressList.toString());
         pingResultsFuture = SettableFuture.create();
         if (addressList.length > 0) {
             DobbyLog.v("PA: Starting ping for count: " + addressList.length);
@@ -258,7 +279,7 @@ public class PingAnalyzer {
                 pingInProgress.set(false);
                 if (pingResultsFuture != null) {
                     pingResultsFuture.set(ipLayerPingStats);
-                    DobbyLog.v("IP Layer Ping Stats " + ipLayerPingStats.toString());
+                    DobbyLog.v("PA: IP Layer Ping Stats " + ipLayerPingStats.toString());
                     eventBus.postEvent(DobbyEvent.EventType.PING_INFO_AVAILABLE);
                 }
             }
@@ -266,6 +287,7 @@ public class PingAnalyzer {
 
         @Override
         public void onError(@PingAction.PingErrorCode int errorType, String[] addressList, String errorMessage) {
+            DobbyLog.v("PA: On Error " + errorMessage + " address " + addressList.toString());
             eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.PING_FAILED));
             for (String address: addressList) {
                 pingsInFlight.put(address, false);
@@ -278,6 +300,7 @@ public class PingAnalyzer {
 
     //Perform download tests with router
     private void performGatewayDownloadTest() {
+        DobbyLog.v("PA: Starting download latency tests");
         PingStats downloadLatencyStats = new PingStats(ipLayerInfo.gateway);
         if (ipLayerInfo.gateway == null || ipLayerInfo.gateway.equals("0.0.0.0")) {
             return;
@@ -294,10 +317,10 @@ public class PingAnalyzer {
                     latencyMeasurementsMs.add(Double.valueOf(System.currentTimeMillis() - startTime));
                 }
             } catch (Utils.HTTPReturnCodeException e) {
-                DobbyLog.v("HTTP Return code: " + e.httpReturnCode);
+                DobbyLog.v("PA HTTP Return code: " + e.httpReturnCode);
                 latencyMeasurementsMs.add(Double.valueOf(System.currentTimeMillis() - startTime));
             } catch (IOException e) {
-                String errorString = "Exception while performing latencyMs test: " + e;
+                String errorString = "PA Exception while performing latencyMs test: " + e;
                 DobbyLog.v(errorString);
                 //latencyMeasurementsMs.add(MAX_LATENCY_GATEWAY_MS);
             }
@@ -312,7 +335,7 @@ public class PingAnalyzer {
                 downloadLatencyStats.minLatencyMs = Utils.computePercentileFromSortedList(latencyMeasurementsMs, 0);
                 downloadLatencyStats.updatedAt = System.currentTimeMillis();
             } catch (IllegalArgumentException e) {
-                String errorString = "Got exception while computing average: " + e;
+                String errorString = "PA Got exception while computing average: " + e;
                 DobbyLog.v(errorString);
             }
         }
@@ -337,6 +360,17 @@ public class PingAnalyzer {
         }
     }
 
+    public ListenableFuture<PingStats> scheduleRouterDownloadLatencyIfNeeded(int maxAgeToRetriggerTest) throws IllegalStateException {
+        final int maxAge = maxAgeToRetriggerTest;
+        if (gatewayDownloadTestFuture != null && !gatewayDownloadTestFuture.isDone()) {
+            DobbyLog.v("PA: Returing existing future for gw latency");
+            return gatewayDownloadTestFuture;
+        } else {
+            DobbyLog.v("PA: Calling new gateway latency to get new future");
+            return scheduleGatewayDownloadLatencyTest(maxAge);
+        }
+    }
+
     protected ListenableFuture<PingStats> scheduleGatewayDownloadLatencyTest(int maxAgeToRetriggerTest) throws IllegalStateException {
         gatewayDownloadTestFuture = SettableFuture.create();
         if (checkIfPingStatsIsFresh(gatewayDownloadLatencyTestStats, maxAgeToRetriggerTest)) {
@@ -346,7 +380,9 @@ public class PingAnalyzer {
             dobbyThreadpool.submit(new Runnable() {
                 @Override
                 public void run() {
+                    DobbyLog.v("PA: Putting gw latency on thread");
                     performGatewayDownloadTest();
+                    DobbyLog.v("PA: GW latency done");
                 }
             });
         }

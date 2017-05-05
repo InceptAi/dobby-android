@@ -24,7 +24,7 @@ public class DobbyEvent {
             EventType.HANGING_ON_AUTHENTICATING, EventType.HANGING_ON_SCANNING, EventType.FREQUENT_DISCONNECTIONS,
             EventType.BANDWIDTH_TEST_STARTING, EventType.WIFI_SCAN_STARTING,
             EventType.PING_GRADE_AVAILABLE, EventType.GATEWAY_HTTP_GRADE_AVAILABLE, EventType.WIFI_GRADE_AVAILABLE,
-            EventType.SUGGESTIONS_AVAILABLE, EventType.WIFI_INTERNET_CONNECTIVITY_CAPTIVE_PORTAL})
+            EventType.SUGGESTIONS_AVAILABLE, EventType.WIFI_INTERNET_CONNECTIVITY_CAPTIVE_PORTAL, EventType.BANDWIDTH_GRADE_AVAILABLE})
     public @interface EventType {
         //Unknown event type
         int NO_EVENT_RECEIVED = 0;
@@ -73,6 +73,7 @@ public class DobbyEvent {
         int WIFI_GRADE_AVAILABLE = 29;
         int SUGGESTIONS_AVAILABLE = 30;
         int WIFI_INTERNET_CONNECTIVITY_CAPTIVE_PORTAL = 31;
+        int BANDWIDTH_GRADE_AVAILABLE = 32;
     }
 
     @DobbyEvent.EventType
@@ -162,6 +163,8 @@ public class DobbyEvent {
                 return "PING_GRADE_AVAILABLE";
             case EventType.GATEWAY_HTTP_GRADE_AVAILABLE:
                 return "GATEWAY_HTTP_GRADE_AVAILABLE";
+            case EventType.BANDWIDTH_GRADE_AVAILABLE:
+                return "BANDWIDTH_GRADE_AVAILABLE";
 
             //BWTest notifications
             case EventType.BANDWIDTH_TEST_STARTING:

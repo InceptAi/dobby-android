@@ -36,6 +36,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.common.eventbus.Subscribe;
+import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.ai.DataInterpreter;
 import com.inceptai.dobby.ai.SuggestionCreator;
@@ -49,9 +50,13 @@ import com.inceptai.dobby.speedtest.ServerInformation;
 import com.inceptai.dobby.speedtest.SpeedTestConfig;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
+import com.inceptai.dobby.wifi.DobbyAnalytics;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+
+import javax.inject.Inject;
 
 import uk.co.samuelwall.materialtaptargetprompt.MaterialTapTargetPrompt;
 
@@ -61,7 +66,7 @@ import static com.inceptai.dobby.ai.DataInterpreter.MetricType.EXCELLENT;
 import static com.inceptai.dobby.ai.DataInterpreter.MetricType.GOOD;
 import static com.inceptai.dobby.ai.DataInterpreter.MetricType.POOR;
 
-public class WifiDocMainFragment extends Fragment implements View.OnClickListener, NewBandwidthAnalyzer.ResultsCallback, Handler.Callback{
+public class WifiDocMainFragment extends Fragment implements View.OnClickListener, NewBandwidthAnalyzer.ResultsCallback, Handler.Callback {
     public static final String TAG = "WifiDocMainFragment";
     private static final String UNKNOWN_LATENCY_STRING = "--";
     private static final String ZERO_POINT_ZERO = "0.0";
@@ -149,6 +154,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private SuggestionCreator.Suggestion currentSuggestion;
     MaterialTapTargetPrompt fabPrompt;
 
+    @Inject
+    DobbyAnalytics dobbyAnalytics;
+
     public WifiDocMainFragment() {
         // Required empty public constructor
     }
@@ -172,6 +180,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        ((DobbyApplication) getActivity().getApplication()).getProdComponent().inject(this);
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             mParam1 = getArguments().getString(ARG_PARAM1);
@@ -193,6 +202,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         showTapOnboarding(view);
         // requestPermissions();
         uiStateVisibilityChanges(view);
+        dobbyAnalytics.wifiDocFragmentEntered();
         return view;
     }
 
@@ -283,6 +293,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                 sendSwitchStateMessage(UI_STATE_RUNNING_TESTS);
             }
             mListener.onMainButtonClick();
+            dobbyAnalytics.runTestsClicked();
         }
         resetData();
     }
@@ -344,9 +355,13 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         }
 
         if (uiState == UI_STATE_RUNNING_TESTS) {
-            if (event.getEventType() == DobbyEvent.EventType.PING_STARTED) {
+            if (event.getEventType() == DobbyEvent.EventType.PING_STARTED ||
+                    event.getEventType() == DobbyEvent.EventType.PING_INFO_AVAILABLE ||
+                    event.getEventType() == DobbyEvent.EventType.PING_GRADE_AVAILABLE) {
                 showStatusMessageAsync("Running ping tests ..");
-            } else if (event.getEventType() == DobbyEvent.EventType.WIFI_SCAN_STARTING) {
+            } else if (event.getEventType() == DobbyEvent.EventType.WIFI_SCAN_STARTING ||
+                    event.getEventType() == DobbyEvent.EventType.WIFI_SCAN_AVAILABLE ||
+                    event.getEventType() == DobbyEvent.EventType.WIFI_GRADE_AVAILABLE) {
                 showStatusMessageAsync("Running wifi network analysis  ..");
             }
         }
@@ -450,6 +465,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     }
 
     private void showWifiResults(DataInterpreter.WifiGrade wifiGrade) {
+        if (wifiGrade != null) {
+            dobbyAnalytics.wifiGrade(wifiGrade);
+        }
         String ssid = wifiGrade.getPrimaryApSsid();
         if (ssid != null && !ssid.isEmpty()) {
             if (ssid.length() > 10) {
@@ -470,6 +488,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             return;
         }
 
+        dobbyAnalytics.pingGrade(pingGrade);
         setPingResult(pingRouterValueTv, String.format("%02.1f", pingGrade.getRouterLatencyMs()),
                 pingRouterGradeIv, pingGrade.getRouterLatencyMetric());
 
@@ -481,6 +500,20 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
         setPingResult(pingWebValueTv, String.format("%02.1f", pingGrade.getExternalServerLatencyMs()),
                 pingWebGradeIv, pingGrade.getExternalServerLatencyMetric());
+    }
+
+    private void resetPingData() {
+        setPingResult(pingRouterValueTv, ZERO_POINT_ZERO,
+                pingRouterGradeIv, DataInterpreter.MetricType.UNKNOWN);
+
+        setPingResult(pingDnsPrimaryValueTv, ZERO_POINT_ZERO,
+                pingDnsPrimaryGradeIv, DataInterpreter.MetricType.UNKNOWN);
+
+        setPingResult(pingDnsSecondValueTv,  ZERO_POINT_ZERO,
+                pingDnsSecondGradeIv, DataInterpreter.MetricType.UNKNOWN);
+
+        setPingResult(pingWebValueTv, ZERO_POINT_ZERO,
+                pingWebGradeIv, DataInterpreter.MetricType.UNKNOWN);
     }
 
     private void showSuggestion(SuggestionCreator.Suggestion suggestion) {
@@ -499,10 +532,11 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         }
         currentSuggestion = suggestion;
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(suggestion.getTitle() + "\n");
+        stringBuilder.append("Title:").append(suggestion.getTitle()).append("\n").append("Text:");
         for(String line : suggestion.getShortSuggestionList()) {
             stringBuilder.append(line).append("\n");
         }
+        dobbyAnalytics.briefSuggestionsShown(stringBuilder.toString());
         // suggestionsValueTv.setText(stringBuilder.toString());
         showSuggestionsUi();
         DobbyLog.i("Received suggestions:" + stringBuilder.toString());
@@ -694,6 +728,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         downloadGaugeTv.setText(ZERO_POINT_ZERO);
         // Clear suggestions
         currentSuggestion = null;
+        resetPingData();
         //ispNameTv.setText("");
     }
 
@@ -954,12 +989,14 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                     isVisible = false;
                     setModeStatus();
                     clearStatusMessages();
+                    vContent.setText("");
                 }
 
                 @Override
                 public void onAnimationCancel(Animator animation) {
                     dismissAndShowCanonicalViews();
                     resumeHandler();
+                    vContent.setText("");
                 }
 
                 @Override
@@ -1003,19 +1040,24 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         WifiDocDialogFragment fragment = WifiDocDialogFragment.forSuggestion(currentSuggestion.getTitle(),
                 currentSuggestion.getLongSuggestionList());
         fragment.show(getActivity().getSupportFragmentManager(), "Suggestions");
+        dobbyAnalytics.moreSuggestionsShown(currentSuggestion.getTitle(),
+                new ArrayList<String>(currentSuggestion.getShortSuggestionList()));
     }
 
     private void showAboutAndPrivacyPolicy() {
         WifiDocDialogFragment fragment = WifiDocDialogFragment.forAboutAndPrivacyPolicy();
         fragment.show(getActivity().getSupportFragmentManager(), "About");
+        dobbyAnalytics.aboutShown();
     }
 
     private void showFeedbackForm() {
         WifiDocDialogFragment fragment = WifiDocDialogFragment.forFeedback();
         fragment.show(getActivity().getSupportFragmentManager(), "Feedback");
+        dobbyAnalytics.feedbackFormShown();
     }
 
     private void cancelTests() {
+        dobbyAnalytics.testsCancelled();
         showStatusMessage("Cancelling tests ...");
         if (mListener != null) {
             mListener.cancelTests();

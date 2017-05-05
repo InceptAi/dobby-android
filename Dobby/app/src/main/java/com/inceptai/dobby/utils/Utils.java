@@ -46,8 +46,8 @@ public class Utils {
     public static final String EMPTY_STRING = "";
     public static final String TRUE_STRING = "true";
     public static final String FALSE_STRING = "false";
-    private static final int READ_TIMEOUT_MS = 10000;
-    private static final int CONNECTION_TIMEOUT_MS = 15000;
+    private static final int READ_TIMEOUT_MS = 5000;
+    private static final int CONNECTION_TIMEOUT_MS = 5000;
     private static Random random = new Random();
 
     public static final String PREFERENCES_FILE = "wifi_tester_settings";
@@ -372,6 +372,7 @@ public class Utils {
             // reading output stream of the command
             while ((s = inputStream.readLine()) != null) {
                 outputStringBuilder.append(s);
+                DobbyLog.v("Ping RunSystemCommand: " + s);
             }
         } finally {
             DobbyLog.v("Utils: Cancelling pingCommandFuture");

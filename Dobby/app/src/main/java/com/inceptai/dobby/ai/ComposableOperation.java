@@ -65,6 +65,7 @@ public abstract class ComposableOperation {
             @Override
             public void run() {
                 if (uponCompletion != null) {
+                    DobbyLog.v("CO: Running upon completion for " + getName());
                     uponCompletion.post();
                 }
             }

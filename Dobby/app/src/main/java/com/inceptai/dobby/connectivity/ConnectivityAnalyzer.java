@@ -217,9 +217,9 @@ public class ConnectivityAnalyzer {
             case DobbyEvent.EventType.WIFI_STATE_UNKNOWN:
                 wifiConnectivityMode = WifiConnectivityMode.UNKNOWN;
                 break;
+            case DobbyEvent.EventType.WIFI_CONNECTED:
             case DobbyEvent.EventType.WIFI_STATE_ENABLING:
             case DobbyEvent.EventType.WIFI_STATE_ENABLED:
-            case DobbyEvent.EventType.WIFI_CONNECTED:
             case DobbyEvent.EventType.WIFI_RSSI_CHANGED:
             case DobbyEvent.EventType.DHCP_INFO_AVAILABLE:
             case DobbyEvent.EventType.PING_INFO_AVAILABLE:

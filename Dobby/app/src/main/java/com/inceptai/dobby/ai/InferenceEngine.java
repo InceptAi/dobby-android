@@ -218,8 +218,9 @@ public class InferenceEngine {
         }
     }
 
-    public void notifyBandwidthTestResult(@BandwithTestCodes.TestMode int testMode,
-                                          double bandwidth, String clientIsp, String clientExternalIp) {
+    public DataInterpreter.BandwidthGrade notifyBandwidthTestResult(@BandwithTestCodes.TestMode int testMode,
+                                                                    double bandwidth, String clientIsp, String clientExternalIp) {
+        DataInterpreter.BandwidthGrade bandwidthGrade = new DataInterpreter.BandwidthGrade();
         if (bandwidth >= 0) {
             sendResponseOnlyAction(testModeToString(testMode) + " Overall Bandwidth = " + String.format("%.2f", bandwidth / 1000000) + " Mbps");
         } else {
@@ -232,8 +233,8 @@ public class InferenceEngine {
             metricsDb.updateDownloadBandwidthGrade(bandwidth * 1.0e-6, DataInterpreter.MetricType.UNKNOWN);
         }
         if (metricsDb.hasValidDownload() && metricsDb.hasValidUpload()) {
-            DataInterpreter.BandwidthGrade bandwidthGrade = DataInterpreter.interpret(
-                    metricsDb.getDownloadMbps(), metricsDb.getUploadMbps(), clientIsp, clientExternalIp);
+            bandwidthGrade = DataInterpreter.interpret(metricsDb.getDownloadMbps(),
+                    metricsDb.getUploadMbps(), clientIsp, clientExternalIp);
             //Update the bandwidth grade, overwriting earlier info.
             metricsDb.updateBandwidthGrade(bandwidthGrade);
             PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(bandwidthGrade);
@@ -243,6 +244,7 @@ public class InferenceEngine {
             DobbyLog.i("InferenceEngine After merging: " + currentConditions.toString());
             checkAndSendSuggestions();
         }
+        return bandwidthGrade;
     }
 
     public void cleanup() {

@@ -462,7 +462,16 @@ public class SuggestionCreator {
                         (params.httpGrade.hasValidData() && DataInterpreter.isGoodOrExcellentOrAverage(params.httpGrade.httpDownloadLatencyMetric))) {
                     return Utils.EMPTY_STRING;
                 } else {
-                    return "You are connected to the router, but your link is very poor (" +
+                    return "You are connected to the router, but your link to the router is very poor (" +
+                            params.pingGrade.routerLatencyMs + " ms), which could result in poor speeds. " +
+                            "This could be because of an issue with the router, try rebooting it and it might make the connection better. ";
+                }
+            case ConnectivityAnalyzer.WifiConnectivityMode.UNKNOWN:
+                if ((params.pingGrade.hasValidData() && DataInterpreter.isGoodOrExcellentOrAverage(params.pingGrade.routerLatencyMetric)) ||
+                        (params.httpGrade.hasValidData() && DataInterpreter.isGoodOrExcellentOrAverage(params.httpGrade.httpDownloadLatencyMetric))) {
+                    return Utils.EMPTY_STRING;
+                } else {
+                    return "You are connected to the router, but your link to the router is very poor (" +
                             params.pingGrade.routerLatencyMs + " ms), which could result in poor speeds. " +
                             "This could be because of an issue with the router, try rebooting it and it might make the connection better. ";
                 }

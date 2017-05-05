@@ -36,7 +36,7 @@ import static com.inceptai.dobby.wifi.WifiAnalyzerFactory.getWifiAnalyzer;
 
 public class NetworkLayer {
     private static final int MIN_PKT_LOSS_RATE_TO_RETRIGGER_PING_PERCENT = 50;
-    private static final int MIN_CHECKS_CONNECTIIVITY = 3;
+    private static final int MIN_CHECKS_CONNECTIIVITY = 5;
     private static final int MAX_AGE_GAP_TO_RETRIGGER_PING_MS = 120000; // 2 mins
     private static final int MAX_AGE_GAP_TO_RETRIGGER_WIFI_SCAN_MS = 120000; // 2 mins
     private static final boolean RETRIGGER_PING_AUTOMATICALLY = false;
@@ -122,12 +122,8 @@ public class NetworkLayer {
 
     @Nullable
     public ListenableFuture<HashMap<String, PingStats>> startPing() {
-        if (getConnectivityAnalyzerInstance().isWifiInCaptivePortal()) {
-            DobbyLog.e("Ignoring ping due to Captive Portal mode.");
-            return null;
-        }
         try {
-            return getPingAnalyzerInstance().scheduleEssentialPingTestsAsyncSafely(MAX_AGE_GAP_TO_RETRIGGER_PING_MS);
+            return getPingAnalyzerInstance().schedulePingsIfNeeded(MAX_AGE_GAP_TO_RETRIGGER_PING_MS);
         } catch (IllegalStateException e) {
             DobbyLog.v("Exception while scheduling ping tests: " + e);
         }
@@ -137,7 +133,7 @@ public class NetworkLayer {
     @Nullable
     public ListenableFuture<PingStats> startGatewayDownloadLatencyTest() {
         try {
-            return getPingAnalyzerInstance().scheduleRouterDownloadLatencyTestSafely(MAX_AGE_GAP_TO_RETRIGGER_PING_MS);
+            return getPingAnalyzerInstance().scheduleRouterDownloadLatencyIfNeeded(MAX_AGE_GAP_TO_RETRIGGER_PING_MS);
         } catch (IllegalStateException e) {
             DobbyLog.v("Exception while scheduling ping tests: " + e);
         }
@@ -216,7 +212,9 @@ public class NetworkLayer {
             case DobbyEvent.EventType.DHCP_INFO_AVAILABLE:
                 ipLayerInfo = new IPLayerInfo(getWifiAnalyzerInstance().getDhcpInfo());
                 getPingAnalyzerInstance().updateIPLayerInfo(ipLayerInfo);
-                startPing();
+                if (RETRIGGER_PING_AUTOMATICALLY) {
+                    startPing();
+                }
                 break;
             case DobbyEvent.EventType.WIFI_INTERNET_CONNECTIVITY_ONLINE:
                 if (RETRIGGER_PING_AUTOMATICALLY &&
