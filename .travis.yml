@@ -7,6 +7,8 @@ android:
     - build-tools-25.0.2
     - android-25
     - extra-android-m2repository
+jdk:
+    - oraclejdk8
 
 script:
    - cd Dobby; ./gradlew build assemble assembleDebug assembleRelease
