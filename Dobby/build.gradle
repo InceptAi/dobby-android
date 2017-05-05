@@ -1,5 +1,5 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
-apply plugin: 'checkstyle'
+// apply plugin: 'checkstyle'
 buildscript {
     repositories {
         jcenter()
@@ -24,11 +24,11 @@ task clean(type: Delete) {
     delete rootProject.buildDir
 }
 
-task checkstyle(type: Checkstyle) {
-    configFile file("${project.rootDir}/config/quality/google-checks.xml") // Where my checkstyle config is...
-    // configProperties.checkstyleSuppressionsPath = file("${project.rootDir}/config/quality/checkstyle/suppressions.xml").absolutePath // Where is my suppressions file for checkstyle is...
-    source 'src'
-    include '**/*.java'
-    exclude '**/gen/**'
-    classpath = files()
-}
+//task checkstyle(type: Checkstyle) {
+//    configFile file("${project.rootDir}/config/quality/google-checks.xml") // Where my checkstyle config is...
+//    // configProperties.checkstyleSuppressionsPath = file("${project.rootDir}/config/quality/checkstyle/suppressions.xml").absolutePath // Where is my suppressions file for checkstyle is...
+//    source 'src'
+//    include '**/*.java'
+//    exclude '**/gen/**'
+//    classpath = files()
+//}
