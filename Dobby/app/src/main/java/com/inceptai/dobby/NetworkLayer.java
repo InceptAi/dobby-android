@@ -122,6 +122,10 @@ public class NetworkLayer {
 
     @Nullable
     public ListenableFuture<HashMap<String, PingStats>> startPing() {
+        if (getConnectivityAnalyzerInstance().isWifiDisconnected()) {
+            DobbyLog.v("NL: In start ping, bailing because wifi is not even connected (off/disconnected)");
+            return null;
+        }
         try {
             return getPingAnalyzerInstance().schedulePingsIfNeeded(MAX_AGE_GAP_TO_RETRIGGER_PING_MS);
         } catch (IllegalStateException e) {
@@ -132,6 +136,10 @@ public class NetworkLayer {
 
     @Nullable
     public ListenableFuture<PingStats> startGatewayDownloadLatencyTest() {
+        if (getConnectivityAnalyzerInstance().isWifiDisconnected()) {
+            DobbyLog.v("NL: In start ping, bailing because wifi is not even connected (off/disconnected)");
+            return null;
+        }
         try {
             return getPingAnalyzerInstance().scheduleRouterDownloadLatencyIfNeeded(MAX_AGE_GAP_TO_RETRIGGER_PING_MS);
         } catch (IllegalStateException e) {
