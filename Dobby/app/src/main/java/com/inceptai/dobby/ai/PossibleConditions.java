@@ -31,8 +31,16 @@ public class PossibleConditions {
         exclusionSet.clear();
     }
 
+    void excludeEverythingElse() {
+        exclusionSet.addAll(InferenceMap.getAllConditions());
+        for (int condition : inclusionMap.keySet()) {
+            exclusionSet.remove(condition);
+        }
+    }
+
     void include(@InferenceMap.Condition int condition, double weight) {
         inclusionMap.put(condition, weight);
+        exclusionSet.remove(condition);
     }
 
     void exclude(@InferenceMap.Condition int condition) {

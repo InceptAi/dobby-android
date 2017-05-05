@@ -3,10 +3,13 @@ package com.inceptai.dobby.ai;
 import android.support.annotation.IntDef;
 
 import com.inceptai.dobby.connectivity.ConnectivityAnalyzer;
+import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.wifi.WifiState;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.lang.reflect.Field;
+import java.util.HashSet;
 import java.util.Set;
 
 import static com.inceptai.dobby.ai.InferenceMap.Condition.ISP_INTERNET_DOWN;
@@ -39,7 +42,7 @@ public class InferenceMap {
             Condition.CABLE_MODEM_FAULT,
             Condition.CAPTIVE_PORTAL_NO_INTERNET,
             Condition.REMOTE_SERVER_IS_SLOW_TO_RESPOND})
-    @Retention(RetentionPolicy.SOURCE)
+    @Retention(RetentionPolicy.RUNTIME)
     public @interface Condition {
         int WIFI_CHANNEL_CONGESTION = 10;
         int WIFI_CHANNEL_BAD_SIGNAL = 11;
@@ -63,7 +66,6 @@ public class InferenceMap {
         int CABLE_MODEM_FAULT = 41;
         int CAPTIVE_PORTAL_NO_INTERNET = 50;
         int REMOTE_SERVER_IS_SLOW_TO_RESPOND = 51;
-        int CONDITION_NONE_MAX = 64;  // For bitset size purposes only.
     }
 
     private static int[] WIFI_CONDITIONS = {
@@ -100,6 +102,18 @@ public class InferenceMap {
         Condition.CABLE_MODEM_FAULT
     };
 
+
+    public static Set<Integer> getAllConditions() {
+        Set<Integer> allConditions = new HashSet<>();
+        for (Field field : Condition.class.getFields()) {
+            try {
+                allConditions.add((Integer) field.get(Condition.class));
+            } catch (IllegalAccessException e) {
+                DobbyLog.e("Exception: " + e);
+            }
+        }
+        return allConditions;
+    }
 
     /**
      * Exhaustive list of problems:
