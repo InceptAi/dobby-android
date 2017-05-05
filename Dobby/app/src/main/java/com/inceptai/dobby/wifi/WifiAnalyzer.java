@@ -44,6 +44,7 @@ public class WifiAnalyzer {
     protected DobbyThreadpool threadpool;
     protected WifiState wifiState;
     protected boolean wifiConnected;
+    private boolean publishedWifiState;
     protected boolean wifiEnabled;
     protected SettableFuture<List<ScanResult>> wifiScanFuture;
     protected DobbyEventBus eventBus;
@@ -59,6 +60,7 @@ public class WifiAnalyzer {
         this.threadpool = threadpool;
         this.eventBus = eventBus;
         wifiConnected = false;
+        publishedWifiState = false;
         wifiEnabled = false;
         wifiState = new WifiState();
         wifiState.updateWifiStats(new DobbyWifiInfo(wifiManager.getConnectionInfo()), null);
@@ -313,12 +315,11 @@ public class WifiAnalyzer {
             NetworkInfo.DetailedState detailedWifiState = networkInfo.getDetailedState();
             updateWifiStatsDetailedState(detailedWifiState);
         }
-
         boolean wasConnected = wifiConnected;
         wifiConnected = networkInfo != null && networkInfo.isConnected();
         // If we just connected, grab the initial signal strength and SSID
         if (wifiConnected && !wasConnected) {
-            eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.WIFI_CONNECTED));
+            postToEventBus(DobbyEvent.EventType.WIFI_CONNECTED);
             // try getting it out of the intent first
             WifiInfo info = (WifiInfo) intent.getParcelableExtra(WifiManager.EXTRA_WIFI_INFO);
             updateWifiStatsWithWifiInfo(info);
@@ -329,14 +330,26 @@ public class WifiAnalyzer {
             }
         } else if (!wifiConnected && wasConnected) {
             wifiState.clearWifiConnectionInfo();
-            eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.WIFI_NOT_CONNECTED));
+            postToEventBus(DobbyEvent.EventType.WIFI_NOT_CONNECTED);
         } else {
             if (wifiConnected) {
+                if (!publishedWifiState) {
+                    postToEventBus(DobbyEvent.EventType.WIFI_CONNECTED);
+                }
                 DobbyLog.v("No change in wifi state -- we were connected and are connected");
             } else {
+                //So that we publish this event at least once
+                if (!publishedWifiState) {
+                    postToEventBus(DobbyEvent.EventType.WIFI_NOT_CONNECTED);
+                }
                 DobbyLog.v("No change in wifi state -- we were NOT connected and are still NOT connected");
             }
         }
+    }
+
+    private void postToEventBus(@DobbyEvent.EventType int eventType) {
+        eventBus.postEvent(new DobbyEvent(eventType));
+        publishedWifiState = true;
     }
 
     private void processWifiStateChangedIntent(Intent intent) {
