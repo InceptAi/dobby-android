@@ -32,8 +32,10 @@ import static com.inceptai.dobby.speedtest.BestServerSelector.MAX_STRING_LENGTH;
 
 public class PingAnalyzer {
     public static final int MAX_ASYNC_PING = 10;
-    public static final int MAX_GATEWAY_DOWNLOAD_TRIES = 5;
+    private static final int MAX_GATEWAY_DOWNLOAD_TRIES = 5;
     public static final double MAX_LATENCY_GATEWAY_MS = 60000;
+    private static final int READ_TIMEOUT_LATENCY_TEST_MS = 200;
+    private static final int CONNECTION_TIMEOUT_LATENCY_TEST_MS = 200;
 
     protected IPLayerInfo ipLayerInfo;
     protected HashMap<String, PingStats> ipLayerPingStats;
@@ -192,7 +194,7 @@ public class PingAnalyzer {
     }
 
     private boolean checkIfPingStatsIsFresh(PingStats pingStats, int maxAgeForFreshness) {
-        if (pingStats.getUpdatedAt() > 0 &&
+        if (pingStats != null && pingStats.getUpdatedAt() > 0 &&
                 (System.currentTimeMillis() - pingStats.getUpdatedAt() < maxAgeForFreshness)) {
             return true;
         }
@@ -311,7 +313,8 @@ public class PingAnalyzer {
             String dataFromUrl = Utils.EMPTY_STRING;
             long startTime = System.currentTimeMillis();
             try {
-                dataFromUrl = Utils.getDataFromUrl(gatewayURLToDownload, MAX_STRING_LENGTH);
+                dataFromUrl = Utils.getDataFromUrlWithTimeouts(gatewayURLToDownload,
+                        MAX_STRING_LENGTH, READ_TIMEOUT_LATENCY_TEST_MS, CONNECTION_TIMEOUT_LATENCY_TEST_MS);
                 if (dataFromUrl.length() > 0) {
                     latencyMeasurementsMs.add(Double.valueOf(System.currentTimeMillis() - startTime));
                 }

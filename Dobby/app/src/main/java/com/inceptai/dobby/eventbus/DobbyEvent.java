@@ -187,6 +187,8 @@ public class DobbyEvent {
                 return "FREQUENT_DISCONNECTIONS";
             case EventType.SUGGESTIONS_AVAILABLE:
                 return "SUGGESTIONS_AVAILABLE";
+            case EventType.BANDWIDTH_TEST_FAILED_WIFI_OFFLINE:
+                return "BANDWIDTH_TEST_FAILED_WIFI_OFFLINE";
             default:
                 return "UNKNOWN EVENT TYPE:" + eventType;
         }

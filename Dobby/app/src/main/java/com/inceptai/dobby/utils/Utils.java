@@ -130,12 +130,26 @@ public class Utils {
      * @throws IOException
      */
     public static String getDataFromUrl(String urlString, int maxStringLength) throws IOException {
+        return getDataFromUrlWithTimeouts(urlString, maxStringLength,
+                READ_TIMEOUT_MS, CONNECTION_TIMEOUT_MS);
+    }
+
+    /**
+     * Given a string url, connects and returns an input stream
+     * @param urlString string to fetch
+     * @param maxStringLength maximum length of the string in bytes
+     * @return
+     * @throws IOException
+     */
+    public static String getDataFromUrlWithTimeouts(String urlString, int maxStringLength,
+                                                    int readTimeOutMs, int connectionTimeOutMs)
+            throws IOException {
         String outputString = null;
         InputStream stream = null;
         URL url = new URL(urlString);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        connection.setReadTimeout(READ_TIMEOUT_MS /* milliseconds */);
-        connection.setConnectTimeout(CONNECTION_TIMEOUT_MS /* milliseconds */);
+        connection.setReadTimeout(readTimeOutMs /* milliseconds */);
+        connection.setConnectTimeout(connectionTimeOutMs /* milliseconds */);
         connection.setRequestMethod("GET");
         connection.setDoInput(true);
         // Starts the query
@@ -157,6 +171,7 @@ public class Utils {
         }
         return outputString;
     }
+
 
     /**
      * Given a string url, connects and returns an input stream

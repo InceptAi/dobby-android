@@ -35,10 +35,12 @@ import static com.inceptai.dobby.connectivity.ConnectivityAnalyzer.WifiConnectiv
  * Created by vivek on 4/12/17.
  */
 public class ConnectivityAnalyzer {
-    public static int MAX_STRING_LENGTH_TO_FETCH = 1000; // 1Kbyte
-    public static String URL_FOR_CONNECTIVITY_AND_PORTAL_TEST = "http://clients3.google.com/generate_204";
-    protected static int MAX_SCHEDULING_TRIES_FOR_CHECKING_WIFI_CONNECTIVITY = 5;
-    protected static int GAP_BETWEEN_CONNECTIIVITY_CHECKS_MS = 2000;
+    private static int MAX_STRING_LENGTH_TO_FETCH = 1000; // 1Kbyte
+    private static String URL_FOR_CONNECTIVITY_AND_PORTAL_TEST = "http://clients3.google.com/generate_204";
+    protected static int MAX_SCHEDULING_TRIES_FOR_CHECKING_WIFI_CONNECTIVITY = 0; // Only once
+    private static int GAP_BETWEEN_CONNECTIIVITY_CHECKS_MS = 2000;
+    private static final int PORTAL_TEST_READ_TIMEOUT_MS = 1000;
+    private static final int PORTAL_TEST_CONNECTION_TIMEOUT_MS = 1000;
 
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({WifiConnectivityMode.CONNECTED_AND_ONLINE, WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL,
@@ -113,38 +115,55 @@ public class ConnectivityAnalyzer {
     @WifiConnectivityMode
     public int performConnectivityAndPortalTest(NetworkInfo activeNetwork) {
         @WifiConnectivityMode int mode = WifiConnectivityMode.UNKNOWN;
+        DobbyLog.v("CA: In performConnectivityAndPortalTest");
         if (activeNetwork != null && activeNetwork.getType() == ConnectivityManager.TYPE_WIFI && activeNetwork.isConnected()) {
             //Fetch google.com to validate
             String dataFetched = Utils.EMPTY_STRING;
             try {
-                dataFetched = Utils.getDataFromUrl(URL_FOR_CONNECTIVITY_AND_PORTAL_TEST, MAX_STRING_LENGTH_TO_FETCH);
+                DobbyLog.v("CA: Starting portal test");
+                dataFetched = Utils.getDataFromUrlWithTimeouts(URL_FOR_CONNECTIVITY_AND_PORTAL_TEST,
+                        MAX_STRING_LENGTH_TO_FETCH,
+                        PORTAL_TEST_READ_TIMEOUT_MS,
+                        PORTAL_TEST_CONNECTION_TIMEOUT_MS);
+                DobbyLog.v("CA: Finishing portal test");
             } catch (Utils.HTTPReturnCodeException e) {
-                DobbyLog.v("Exception, wanted 200, Got return code " + e.httpReturnCode);
+                DobbyLog.v("CA: In perform portal test. Wanted 200, Got return code " + e.httpReturnCode);
                 if (e.httpReturnCode == HttpURLConnection.HTTP_NO_CONTENT) {
                     //This is working, we can return as online
+                    DobbyLog.v("CA: Setting wifi connectivity mode to CONNECTED_AND_ONLINE from wifiConnectivityMode: " + connecitivyModeToString(getWifiConnectivityMode()));
                     mode = WifiConnectivityMode.CONNECTED_AND_ONLINE;
                 } else if (e.httpReturnCode == HttpURLConnection.HTTP_MOVED_TEMP) {
                     //This is a captive portal
+                    DobbyLog.v("CA: Setting wifi connectivity mode to CONNECTED_AND_CAPTIVE_PORTAL from wifiConnectivityMode: " + connecitivyModeToString(getWifiConnectivityMode()));
                     mode = WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL;
+                } else {
+                    DobbyLog.v("CA: Got Third return code " + e.httpReturnCode);
                 }
             } catch (IOException e) {
                 DobbyLog.v("Unable to fetch: " + URL_FOR_CONNECTIVITY_AND_PORTAL_TEST + " Except: " + e);
                 if (!isWifiInCaptivePortal()) {
+                    DobbyLog.v("CA: Setting wifi connectivity mode to CONNECTED_AND_OFFLINE from wifiConnectivityMode: " + connecitivyModeToString(getWifiConnectivityMode()));
                     mode = WifiConnectivityMode.CONNECTED_AND_OFFLINE;
                 }
             } catch (Exception e) {
                 DobbyLog.v("Exception : " + e);
             }
         }
+        DobbyLog.v("CA: Returning mode " + connecitivyModeToString(mode));
         return mode;
     }
 
-    synchronized protected void updateWifiConnectivityMode(final int scheduleCount) {
+    synchronized private void updateWifiConnectivityMode(final int scheduleCount) {
         @WifiConnectivityMode int currentWifiMode = WifiConnectivityMode.UNKNOWN;
+
         if (isWifiOnline()) {
+            DobbyLog.v("CA In updateWifiConnectivityMode with scheduleCount " +
+                    scheduleCount + " but returning since already Online");
             return;
         }
+
         DobbyLog.v("Update wifi connectivity mode, scheduleCount =" + scheduleCount);
+
         final NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
 
         // Reschedule network check if requested to do so and we have a null NetworkInfo.
@@ -152,26 +171,31 @@ public class ConnectivityAnalyzer {
             rescheduleConnectivityTest(scheduleCount - 1);
             return;
         }
+
         DobbyLog.v("active network is not null, activeNetwork:" + activeNetwork.toString());
-        boolean isWifiConnectionOnline = false;
         try {
             currentWifiMode = performConnectivityAndPortalTest(activeNetwork);
-            isWifiConnectionOnline = currentWifiMode == CONNECTED_AND_ONLINE;
         } catch (IllegalStateException e) {
             DobbyLog.v("Exception while checking connectivity: " + e);
         }
-        if (scheduleCount > 0 && !isWifiConnectionOnline) {
-            rescheduleConnectivityTest(0);  // Try once more before quitting.
-            return;
-        }
+
         //Set the wifiConnectivityMode
-        wifiConnectivityMode = currentWifiMode;
-        if (wifiConnectivityMode == CONNECTED_AND_ONLINE) {
+        if (currentWifiMode != WifiConnectivityMode.UNKNOWN) {
+            wifiConnectivityMode = currentWifiMode;
+        }
+        if (isWifiOnline()) {
             eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.WIFI_INTERNET_CONNECTIVITY_ONLINE));
-        } else if (wifiConnectivityMode == CONNECTED_AND_CAPTIVE_PORTAL) {
+        } else if (isWifiInCaptivePortal()) {
             eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.WIFI_INTERNET_CONNECTIVITY_CAPTIVE_PORTAL));
+        } else if (isWifiDisconnected()){
+
         } else {
             eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.WIFI_INTERNET_CONNECTIVITY_OFFLINE));
+        }
+
+        //TODO: Move this to the end.
+        if (scheduleCount > 0 && !isWifiOnline()) {
+            rescheduleConnectivityTest(0);  // Try once more before quitting.
         }
     }
 
@@ -213,28 +237,34 @@ public class ConnectivityAnalyzer {
         DobbyLog.v("ConnectivityAnalyzer Got event: " + event);
         switch(eventType) {
             case DobbyEvent.EventType.WIFI_NOT_CONNECTED:
+                DobbyLog.v("CA: Setting wifi connectivity mode to ON_AND_DISCONNECTED from wifiConnectivityMode: " + connecitivyModeToString(getWifiConnectivityMode()));
                 wifiConnectivityMode = WifiConnectivityMode.ON_AND_DISCONNECTED;
                 break;
             case DobbyEvent.EventType.WIFI_STATE_DISABLED:
             case DobbyEvent.EventType.WIFI_STATE_DISABLING:
+                DobbyLog.v("CA: Setting wifi connectivity mode to OFF from wifiConnectivityMode: " + connecitivyModeToString(getWifiConnectivityMode()));
                 wifiConnectivityMode = WifiConnectivityMode.OFF;
                 break;
             case DobbyEvent.EventType.WIFI_STATE_UNKNOWN:
-                wifiConnectivityMode = WifiConnectivityMode.UNKNOWN;
+                DobbyLog.v("CA: Got event WIFI_STATE_UNKNOWN, ignoring");
+                //wifiConnectivityMode = WifiConnectivityMode.UNKNOWN;
                 break;
             case DobbyEvent.EventType.WIFI_CONNECTED:
+            //Should change mode to CONNECTED AND OFFLINE -- will transition to CONNECTED AND ONLINE OR CAPTIVE AFTER TEST
             case DobbyEvent.EventType.WIFI_STATE_ENABLING:
             case DobbyEvent.EventType.WIFI_STATE_ENABLED:
             case DobbyEvent.EventType.WIFI_RSSI_CHANGED:
             case DobbyEvent.EventType.DHCP_INFO_AVAILABLE:
             case DobbyEvent.EventType.PING_INFO_AVAILABLE:
                 //Safe to call since it doesn't do anyting if we are already online
-                threadpool.getExecutorServiceForNetworkLayer().submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        updateWifiConnectivityMode(MAX_SCHEDULING_TRIES_FOR_CHECKING_WIFI_CONNECTIVITY /* Do not schedule again*/);
-                    }
-                });
+                if (!isWifiOnline()) {
+                    threadpool.getExecutorServiceForNetworkLayer().submit(new Runnable() {
+                        @Override
+                        public void run() {
+                            updateWifiConnectivityMode(0 /* Do not schedule again*/);
+                        }
+                    });
+                }
                 break;
         }
         DobbyLog.v("WifiConnectivity Mode is " + wifiConnectivityMode);

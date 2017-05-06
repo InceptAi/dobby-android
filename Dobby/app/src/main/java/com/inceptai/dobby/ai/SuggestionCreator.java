@@ -150,13 +150,22 @@ public class SuggestionCreator {
             suggestionToReturn.longSuggestionList = getNoConditionMessageList(params);
             suggestionToReturn.shortSuggestionList = getNoConditionMessageList(params);
         }
-        DobbyLog.v("Returing suggestion " + suggestionToReturn.toString());
+        DobbyLog.v("Returning suggestion " + suggestionToReturn.toString());
         return suggestionToReturn;
     }
 
     private static List<String> getNoConditionMessageList(SuggestionCreatorParams params) {
         List<String> noConditionMessageList = new ArrayList<>();
         noConditionMessageList.add("We performed speed tests, pings and wifi scans on your network. ");
+
+        if (DataInterpreter.isNonFunctionalOrUnknown(params.bandwidthGrade.getDownloadBandwidthMetric()) ||
+                DataInterpreter.isNonFunctionalOrUnknown(params.bandwidthGrade.getUploadBandwidthMetric()) ||
+                DataInterpreter.isUnknown(params.wifiGrade.primaryApSignalMetric)) {
+            //Shouldn't have happened, but we are here.
+            noConditionMessageList.add(getShortNoConditionMessage(params));
+            return noConditionMessageList;
+        }
+
         noConditionMessageList.add("You are getting " + String.format("%.2f", params.bandwidthGrade.getDownloadBandwidth()) +
                 " Mbps download and " + String.format("%.2f", params.bandwidthGrade.getUploadBandwidth()) +
                 " Mbps upload speed on your phone, which is pretty good. ");
@@ -168,9 +177,21 @@ public class SuggestionCreator {
                 "it might be good if you run this test a few times so we can catch an issue " +
                 "if it shows up. Hope this helps :)");
         return noConditionMessageList;
+
     }
 
     private static String getShortNoConditionMessage(SuggestionCreatorParams params) {
+        String output = Utils.EMPTY_STRING;
+        if (DataInterpreter.isUnknown(params.bandwidthGrade.getDownloadBandwidthMetric()) ||
+                DataInterpreter.isUnknown(params.bandwidthGrade.getUploadBandwidthMetric()) || DataInterpreter.isUnknown(params.wifiGrade.primaryApSignalMetric)) {
+            output += "We were unable to run bandwidth tests as your phone is unable to reach the Internet right now. ";
+            if (!(params.wifiGrade.primaryApSsid == null || params.wifiGrade.primaryApSsid.equals(""))) {
+                output += "Make sure " + params.wifiGrade.getPrimaryApSsid() + " is the right wifi network you want to use. ";
+            }
+           output += "Your wifi doesn't seem to be connected properly for us to estimate the bandwidth. " +
+                        "Try rebooting the router if possible or contact your administrator if this is a managed wifi network. ";
+            return output;
+        }
         return "We don't see any key issues with your wifi network at the moment. " +
                 "Your Internet speeds are good and your wifi network is working " +
                 "well as per our tests.";
@@ -426,6 +447,14 @@ public class SuggestionCreator {
     }
 
     private static String convertWifiLinkModeToIssueString(@WifiState.WifiLinkMode int linkMode) {
+
+        if (linkMode == WifiState.WifiLinkMode.FREQUENT_DISCONNECTIONS) {
+            return "It seems like your phone is having trouble staying connected to the wifi network. " +
+                    "It connects for short periods of time and then disconnects quickly." +
+                    " If you think you should be connected, try rebooting the router (if possible) " +
+                    "and hopefully it will get rid of some weird state that the router might be in. ";
+        }
+
         String issuesString = "Your phone is not currently connected to any Wifi network. ";
         switch (linkMode) {
             case WifiState.WifiLinkMode.HANGING_ON_DHCP:
@@ -441,9 +470,6 @@ public class SuggestionCreator {
                 break;
             case WifiState.WifiLinkMode.CONNECTING:
                 issuesString += "It is trying to connect to your wifi network but is not yet successful. ";
-                break;
-            case WifiState.WifiLinkMode.FREQUENT_DISCONNECTIONS:
-                issuesString += "It seems like it connects for short periods of time and then disconnects quickly. ";
                 break;
             case WifiState.WifiLinkMode.DISCONNECTED:
                 break;
@@ -462,29 +488,44 @@ public class SuggestionCreator {
                         (params.httpGrade.hasValidData() && DataInterpreter.isGoodOrExcellentOrAverage(params.httpGrade.httpDownloadLatencyMetric))) {
                     return "Your wifi network is fine, but for some reason, connectivity to the Internet is down. " +
                             "It could be an issue with the router software being in a weird state, try rebooting it to see if it works";
-                } else {
-                    return "You are connected to the router, but your link is very poor (" +
-                            params.pingGrade.routerLatencyMs + " ms), " +
-                            "and you can't connect to Internet. This could be because of an issue with the router. " +
-                            "Try rebooting it to see if it works";
+                } else  if ((params.pingGrade.hasValidData() && DataInterpreter.isPoorOrAbysmal(params.pingGrade.routerLatencyMetric)) ||
+                    (params.httpGrade.hasValidData() && DataInterpreter.isPoorOrAbysmal(params.httpGrade.httpDownloadLatencyMetric))) {
+                return "You are connected to the router, but your link is very poor (" +
+                        String.format("%.2f", params.pingGrade.routerLatencyMs) + " ms), " +
+                        "and you can't connect to Internet. This could be because of an issue with the router. " +
+                        "Try rebooting it to see if it works";
+                } else if ((params.pingGrade.hasValidData() && DataInterpreter.isNonFunctional(params.pingGrade.routerLatencyMetric)) ||
+                        (params.httpGrade.hasValidData() && DataInterpreter.isNonFunctional(params.httpGrade.httpDownloadLatencyMetric))) {
+                    return "We can't reach your wifi router and hence you can't connect to Internet. This could be because of an issue with the router. " +
+                            "If possible, try rebooting it and it may bring it back from a weird state. ";
                 }
             case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_ONLINE:
                 if ((params.pingGrade.hasValidData() && DataInterpreter.isGoodOrExcellentOrAverage(params.pingGrade.routerLatencyMetric)) ||
                         (params.httpGrade.hasValidData() && DataInterpreter.isGoodOrExcellentOrAverage(params.httpGrade.httpDownloadLatencyMetric))) {
                     return Utils.EMPTY_STRING;
-                } else {
-                    return "You are connected to the router, but your link to the router is very poor (" +
-                            params.pingGrade.routerLatencyMs + " ms), which could result in poor speeds. " +
-                            "This could be because of an issue with the router, try rebooting it and it might make the connection better. ";
+                } else  if ((params.pingGrade.hasValidData() && DataInterpreter.isPoorOrAbysmal(params.pingGrade.routerLatencyMetric)) ||
+                        (params.httpGrade.hasValidData() && DataInterpreter.isPoorOrAbysmal(params.httpGrade.httpDownloadLatencyMetric))) {
+                    return "You are connected to the router, but your link is very poor (" +
+                            String.format("%.2f", params.pingGrade.routerLatencyMs) + " ms), which could result in poor speeds. This could be because of an issue with the router. " +
+                            "Try rebooting it to see if it works";
+                } else if ((params.pingGrade.hasValidData() && DataInterpreter.isNonFunctional(params.pingGrade.routerLatencyMetric)) ||
+                        (params.httpGrade.hasValidData() && DataInterpreter.isNonFunctional(params.httpGrade.httpDownloadLatencyMetric))) {
+                    return "We can't reach your wifi router, maybe it is intermittently available. This could be because of an issue with the router. " +
+                            "If possible, try rebooting it and it may bring it back from a weird state. ";
                 }
             case ConnectivityAnalyzer.WifiConnectivityMode.UNKNOWN:
                 if ((params.pingGrade.hasValidData() && DataInterpreter.isGoodOrExcellentOrAverage(params.pingGrade.routerLatencyMetric)) ||
                         (params.httpGrade.hasValidData() && DataInterpreter.isGoodOrExcellentOrAverage(params.httpGrade.httpDownloadLatencyMetric))) {
                     return Utils.EMPTY_STRING;
-                } else {
-                    return "You are connected to the router, but your link to the router is very poor (" +
-                            params.pingGrade.routerLatencyMs + " ms), which could result in poor speeds. " +
-                            "This could be because of an issue with the router, try rebooting it and it might make the connection better. ";
+                } else  if ((params.pingGrade.hasValidData() && DataInterpreter.isPoorOrAbysmal(params.pingGrade.routerLatencyMetric)) ||
+                        (params.httpGrade.hasValidData() && DataInterpreter.isPoorOrAbysmal(params.httpGrade.httpDownloadLatencyMetric))) {
+                    return "You are connected to the router, but your link is very poor (" +
+                            String.format("%.2f", params.pingGrade.routerLatencyMs) + " ms), which could result in poor speeds. This could be because of an issue with the router. " +
+                            "Try rebooting it to see if it works";
+                } else if ((params.pingGrade.hasValidData() && DataInterpreter.isNonFunctional(params.pingGrade.routerLatencyMetric)) ||
+                        (params.httpGrade.hasValidData() && DataInterpreter.isNonFunctional(params.httpGrade.httpDownloadLatencyMetric))) {
+                    return "We can't reach your wifi router, maybe it is intermittently available. This could be because of an issue with the router. " +
+                            "If possible, try rebooting it and it may bring it back from a weird state. ";
                 }
         }
         return Utils.EMPTY_STRING;
@@ -690,7 +731,7 @@ public class SuggestionCreator {
                         String.format("%.2f", params.bandwidthGrade.getDownloadMbps()) +
                         " Mbps), especially given you are getting a good " +
                         "upload speed ( " +
-                        String.format("%.2f", params.bandwidthGrade.getUploadMbps()) + " Mbps";
+                        String.format("%.2f", params.bandwidthGrade.getUploadMbps()) + " Mbps).";
                 break;
             case Condition.ISP_INTERNET_SLOW_UPLOAD:
                 baseMessage = "Looks like your Internet upload speed is slow " +

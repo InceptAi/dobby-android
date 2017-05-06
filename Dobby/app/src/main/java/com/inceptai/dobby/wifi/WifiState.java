@@ -245,6 +245,7 @@ public class WifiState {
 
     private void setLinkSignal(int linkSignal) {
         if (linkSignal != ANDROID_INVALID_RSSI) {
+            DobbyLog.v("WS: Setting link signal from  " + this.linkSignal + " to " + linkSignal);
             this.linkSignal = linkSignal;
         }
     }
@@ -334,6 +335,7 @@ public class WifiState {
         }
         if (Math.abs(updatedSignal - linkSignal) >= MIN_SIGNAL_CHANGE_FOR_CLEARING_CHANNEL_STATS) {
             channelInfoMap.clear();
+            DobbyLog.v("WS: In updateSignal, new signal " + updatedSignal);
             setLinkSignal(updatedSignal);
             //TODO -- reissue a scan request.
             //Recompute the contention metric here
@@ -369,14 +371,14 @@ public class WifiState {
         // printHashMap();
     }
 
-    private int getNumberOfTimesWifiInState(NetworkInfo.DetailedState detailedState, long timeIntervalMs) {
+    private int getNumberOfTimesWifiInState(NetworkInfo.DetailedState detailedState) {
         int count = 0;
         List<WifiStateInfo> list = detailedWifiStateStats.get(detailedState);
         if (list == null) {
             return 0;
         }
         for (WifiStateInfo wifiStateInfo: list) {
-            if (wifiStateInfo.endTimestampMs >= (System.currentTimeMillis() - timeIntervalMs)) {
+            if (wifiStateInfo.endTimestampMs >= (System.currentTimeMillis() - THRESHOLD_FOR_COUNTING_FREQUENT_STATE_CHANGES_MS)) {
                 count++;
             }
         }
@@ -507,8 +509,14 @@ public class WifiState {
         long startTimeMs = getCurrentStateStartTimeMs();
         long currentTimeMs = System.currentTimeMillis();
         NetworkInfo.DetailedState currentState = getCurrentState();
+        int numDisconnections = getNumberOfTimesWifiInState(NetworkInfo.DetailedState.DISCONNECTED);
+        int numConnections = getNumberOfTimesWifiInState(NetworkInfo.DetailedState.CONNECTING);
+        //If we are in CONNECTED mode now, then mark this as no issue and return
+        if (getCurrentState() == NetworkInfo.DetailedState.CONNECTED) {
+            wifiProblemMode = WifiLinkMode.NO_PROBLEM_DEFAULT_STATE;
+            return wifiProblemMode;
+        }
         if (currentTimeMs - startTimeMs >= THRESHOLD_FOR_DECLARING_CONNECTION_SETUP_STATE_AS_HANGING_MS) {
-            currentState.name();
             switch(currentState) {
                 case SCANNING:
                     wifiProblemMode = WifiLinkMode.HANGING_ON_SCANNING;
@@ -520,15 +528,11 @@ public class WifiState {
                     wifiProblemMode = WifiLinkMode.HANGING_ON_DHCP;
                     break;
             }
-        } else if (getNumberOfTimesWifiInState(NetworkInfo.DetailedState.DISCONNECTED,
-                THRESHOLD_FOR_COUNTING_FREQUENT_STATE_CHANGES_MS) > THRESHOLD_FOR_FLAGGING_FREQUENT_STATE_CHANGES){
+        } else if (Math.max(numDisconnections, numConnections) > THRESHOLD_FOR_FLAGGING_FREQUENT_STATE_CHANGES){
             //Check for frequent disconnections
             wifiProblemMode = WifiLinkMode.FREQUENT_DISCONNECTIONS;
         } else {
             switch (currentState) {
-                case CONNECTED:
-                    wifiProblemMode = WifiLinkMode.NO_PROBLEM_DEFAULT_STATE;
-                    break;
                 case IDLE:
                 case SCANNING:
                 case DISCONNECTED:
@@ -546,7 +550,6 @@ public class WifiState {
                     wifiProblemMode = WifiLinkMode.CONNECTING;
                     break;
             }
-
         }
         return wifiProblemMode;
     }

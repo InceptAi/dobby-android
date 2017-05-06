@@ -63,10 +63,9 @@ public class WifiAnalyzer {
         publishedWifiState = false;
         wifiEnabled = false;
         wifiState = new WifiState();
-        wifiState.updateWifiStats(new DobbyWifiInfo(wifiManager.getConnectionInfo()), null);
-        registerWifiStateReceiver();
         combinedScanResult = new ArrayList<>();
         lastScanCompletionTimestampMs = 0;
+        initializeWifiState();
     }
 
     /**
@@ -82,6 +81,19 @@ public class WifiAnalyzer {
             return new WifiAnalyzer(context.getApplicationContext(), wifiManager, threadpool, eventBus);
         }
         return null;
+    }
+
+    private void initializeWifiState() {
+        Preconditions.checkNotNull(wifiManager);
+        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+
+        //Switch thread and do this.
+        wifiState.updateWifiStats(new DobbyWifiInfo(wifiInfo), null);
+        registerWifiStateReceiver();
+
+        //Publish detailed connection state and wifi state on the bus
+        updateWifiStatsDetailedState(WifiInfo.getDetailedStateOf(wifiInfo.getSupplicantState()));
+        processWifiStateChanged(wifiManager.getWifiState());
     }
 
     public void clearWifiScanCache() {
@@ -317,6 +329,10 @@ public class WifiAnalyzer {
         }
         boolean wasConnected = wifiConnected;
         wifiConnected = networkInfo != null && networkInfo.isConnected();
+        //If no longer connected, clear the connection info
+        if (!wifiConnected) {
+            wifiState.clearWifiConnectionInfo();
+        }
         // If we just connected, grab the initial signal strength and SSID
         if (wifiConnected && !wasConnected) {
             postToEventBus(DobbyEvent.EventType.WIFI_CONNECTED);
@@ -329,7 +345,6 @@ public class WifiAnalyzer {
                 eventBus.postEvent(new DobbyEvent(DobbyEvent.EventType.DHCP_INFO_AVAILABLE));
             }
         } else if (!wifiConnected && wasConnected) {
-            wifiState.clearWifiConnectionInfo();
             postToEventBus(DobbyEvent.EventType.WIFI_NOT_CONNECTED);
         } else {
             if (wifiConnected) {
@@ -354,6 +369,10 @@ public class WifiAnalyzer {
 
     private void processWifiStateChangedIntent(Intent intent) {
         int wifiState = intent.getIntExtra(WifiManager.EXTRA_WIFI_STATE, WifiManager.WIFI_STATE_UNKNOWN);
+        processWifiStateChanged(wifiState);
+    }
+
+    private void processWifiStateChanged(int wifiState) {
         @DobbyEvent.EventType int eventToBroadcast = DobbyEvent.EventType.NO_EVENT_RECEIVED;
         switch (wifiState) {
             case WifiManager.WIFI_STATE_ENABLED:
@@ -381,6 +400,7 @@ public class WifiAnalyzer {
             eventBus.postEvent(new DobbyEvent(eventToBroadcast));
         }
     }
+
 
     //Listening for WiFi intents
     synchronized private void processWifiStateRelatedIntents(Intent intent) {
