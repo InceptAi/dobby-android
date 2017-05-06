@@ -82,6 +82,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private static final int MSG_WIFI_OFFLINE = 1008;
     private static final long SUGGESTION_FRESHNESS_TS_MS = 30000; // 30 seconds
     private static final int MAX_HANDLER_PAUSE_MS = 2000;
+    private static final int MAX_SSID_LENGTH = 30;
 
     private static final int UI_STATE_INIT_AND_READY = 101; // Ready to run tests. Initial state.
     private static final int UI_STATE_RUNNING_TESTS = 102; // Running tests.
@@ -479,8 +480,11 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         }
         String ssid = wifiGrade.getPrimaryApSsid();
         if (ssid != null && !ssid.isEmpty()) {
-            if (ssid.length() > 10) {
-                ssid = ssid.substring(0, 10);
+            if (ssid.length() > MAX_SSID_LENGTH) {
+                ssid = ssid.substring(0, MAX_SSID_LENGTH);
+                if (ssid.startsWith("\"") || ssid.startsWith("'")) {
+                    ssid = ssid + ssid.substring(0, 1);
+                }
             }
             wifiSsidTv.setText(ssid);
         }
