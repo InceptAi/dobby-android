@@ -40,6 +40,7 @@ public class NetworkLayer {
     private static final int MAX_AGE_GAP_TO_RETRIGGER_PING_MS = 120000; // 2 mins
     private static final int MAX_AGE_GAP_TO_RETRIGGER_WIFI_SCAN_MS = 120000; // 2 mins
     private static final boolean RETRIGGER_PING_AUTOMATICALLY = false;
+    private static final boolean DISABLE_WIFI_SCAN = true; //We will disable wifi scan for this release
 
     private Context context;
     private DobbyThreadpool threadpool;
@@ -69,6 +70,10 @@ public class NetworkLayer {
     }
 
     public ListenableFuture<List<ScanResult>> wifiScan() {
+        if (DISABLE_WIFI_SCAN) {
+            return null;
+        }
+        //If scanning not disabled, continue
         if (getConnectivityAnalyzerInstance().isWifiInCaptivePortal()) {
             return null;
         }
@@ -127,6 +132,7 @@ public class NetworkLayer {
             return null;
         }
         try {
+            DobbyLog.v("NL Calling pingAnalyzer.schedulePingsIfNeeded");
             return getPingAnalyzerInstance().schedulePingsIfNeeded(MAX_AGE_GAP_TO_RETRIGGER_PING_MS);
         } catch (IllegalStateException e) {
             DobbyLog.v("Exception while scheduling ping tests: " + e);
@@ -141,6 +147,7 @@ public class NetworkLayer {
             return null;
         }
         try {
+            DobbyLog.v("NL Calling pingAnalyzer.scheduleRouterDownloadLatencyIfNeeded");
             return getPingAnalyzerInstance().scheduleRouterDownloadLatencyIfNeeded(MAX_AGE_GAP_TO_RETRIGGER_PING_MS);
         } catch (IllegalStateException e) {
             DobbyLog.v("Exception while scheduling ping tests: " + e);
