@@ -159,22 +159,22 @@ public class InferenceMap {
             return conditions;
         }
 
-        //wifi Connectivity mode
+        //wifi Connectivity mode -- strong indicators return from these.
         if (wifiGrade.wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL) {
             //Connected but offline -- we are getting 302 download google.com
             conditions.include(Condition.CAPTIVE_PORTAL_NO_INTERNET, 2.0);
             conditions.exclude(ISP_CONDITIONS);
             conditions.exclude(DNS_CONDITIONS);
             conditions.exclude(ROUTER_CONDITIONS);
-        } else if (wifiGrade.wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_OFFLINE) {
-            //Connected but offline -- we can't download http://client3.google.com/204
-            conditions.include(Condition.ISP_INTERNET_DOWN, 0.3);
-            conditions.include(Condition.CABLE_MODEM_FAULT, 0.3);
-            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
-            conditions.include(Condition.DNS_UNREACHABLE, 0.3);
+            conditions.exclude(WIFI_CONDITIONS);
+            return conditions;
         } else if (wifiGrade.wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.OFF) {
             //Wifi is off. Need to turn it on.
-            conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_TURNED_OFF, 1.0);
+            conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_TURNED_OFF, 2.0);
+            conditions.exclude(ISP_CONDITIONS);
+            conditions.exclude(DNS_CONDITIONS);
+            conditions.exclude(ROUTER_CONDITIONS);
+            return conditions;
         } else if (wifiGrade.wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.ON_AND_DISCONNECTED) {
             conditions.exclude(ISP_CONDITIONS);
             conditions.exclude(DNS_CONDITIONS);
@@ -182,6 +182,16 @@ public class InferenceMap {
             conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.8);
             conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE, 0.2);
             return conditions;
+        }
+
+        //Continue if this is the case. See why we are offline
+        if (wifiGrade.wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_OFFLINE) {
+            //Connected but offline -- we can't download http://client3.google.com/204
+            conditions.include(Condition.ISP_INTERNET_DOWN, 0.3);
+            conditions.include(Condition.CABLE_MODEM_FAULT, 0.3);
+            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
+            conditions.include(Condition.DNS_UNREACHABLE, 0.3);
+            conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.3);
         }
 
         //Wifi signal
