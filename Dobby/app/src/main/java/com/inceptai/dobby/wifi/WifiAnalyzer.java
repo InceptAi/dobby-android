@@ -309,7 +309,7 @@ public class WifiAnalyzer {
     }
 
     protected void updateWifiStatsDetailedState(NetworkInfo.DetailedState detailedState) {
-        @WifiState.WifiLinkMode int oldProblemMode = wifiState.getCurrentWifiProblemMode();
+        @WifiState.WifiLinkMode int oldProblemMode = wifiState.getWifiProblemMode();
         @WifiState.WifiLinkMode int newProblemMode = wifiState.updateDetailedWifiStateInfo(detailedState, System.currentTimeMillis());
         if (oldProblemMode != newProblemMode) {
             @DobbyEvent.EventType int eventTypeToBroadcast = convertWifiStateProblemToDobbyEventType(newProblemMode);
