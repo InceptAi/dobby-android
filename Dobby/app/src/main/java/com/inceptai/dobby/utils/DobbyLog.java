@@ -18,16 +18,14 @@ public class DobbyLog {
 
     public static void checkCrashHandler() {
         Thread.UncaughtExceptionHandler handler = Thread.getDefaultUncaughtExceptionHandler();
-        //Log.i(TAG, "DobbyLog: Current handler:" + handler.getClass().getCanonicalName());
         handler = Thread.currentThread().getUncaughtExceptionHandler();
-        //Log.i(TAG, "DobbyLog: Current Thread's handler:" + handler.getClass().getCanonicalName());
     }
 
     public static void i(String message) {
-        checkCrashHandler();
         if (BuildConfig.DEBUG) {
             Log.i(TAG, message);
         } else {
+            Log.i(TAG, message);
             FirebaseCrash.logcat(Log.INFO, TAG, message);
         }
     }
@@ -36,6 +34,7 @@ public class DobbyLog {
         if (BuildConfig.DEBUG) {
             Log.e(TAG, message);
         } else {
+            Log.e(TAG, message);
             FirebaseCrash.logcat(Log.ERROR, TAG, message);
         }
     }
@@ -44,6 +43,7 @@ public class DobbyLog {
         if (BuildConfig.DEBUG) {
             Log.v(TAG, message);
         } else {
+            Log.v(TAG, message);
             FirebaseCrash.logcat(Log.VERBOSE, TAG, message);
         }
     }
@@ -52,6 +52,7 @@ public class DobbyLog {
         if (BuildConfig.DEBUG) {
             Log.w(TAG, message);
         } else {
+            Log.w(TAG, message);
             FirebaseCrash.logcat(Log.WARN, TAG, message);
         }
     }
