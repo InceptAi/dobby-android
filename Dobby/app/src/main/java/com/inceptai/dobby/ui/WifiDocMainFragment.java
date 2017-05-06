@@ -356,19 +356,36 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         }
 
         if (uiState == UI_STATE_RUNNING_TESTS) {
-            if (event.getEventType() == DobbyEvent.EventType.PING_STARTED ||
-                    event.getEventType() == DobbyEvent.EventType.PING_INFO_AVAILABLE ||
-                    event.getEventType() == DobbyEvent.EventType.PING_GRADE_AVAILABLE) {
-                showStatusMessageAsync("Running ping tests ..");
-            } else if (event.getEventType() == DobbyEvent.EventType.WIFI_SCAN_STARTING ||
-                    event.getEventType() == DobbyEvent.EventType.WIFI_SCAN_AVAILABLE ||
-                    event.getEventType() == DobbyEvent.EventType.WIFI_GRADE_AVAILABLE) {
-                showStatusMessageAsync("Running wifi network analysis  ..");
-            }
-            if (event.getEventType() == DobbyEvent.EventType.BANDWIDTH_TEST_FAILED_WIFI_OFFLINE) {
-                showStatusMessageAsync("Unable to run Bandwidth tests since the Wifi network is OFFLINE.");
-                showStatusMessageAsync("We are continuing to run Ping and Wifi analysis tests.");
-                Message.obtain(handler, MSG_WIFI_OFFLINE).sendToTarget();
+            switch(event.getEventType()) {
+                case DobbyEvent.EventType.BWTEST_INFO_AVAILABLE:
+                    showStatusMessageAsync("Analyzing speed test data ..");
+                    break;
+                case DobbyEvent.EventType.BANDWIDTH_GRADE_AVAILABLE:
+                    showStatusMessageAsync("Speed test analysis ready ..");
+                    break;
+                case DobbyEvent.EventType.PING_STARTED:
+                    showStatusMessageAsync("Running Ping tests ..");
+                    break;
+                case DobbyEvent.EventType.PING_INFO_AVAILABLE:
+                    showStatusMessageAsync("Analyzing Ping results ..");
+                    break;
+                case DobbyEvent.EventType.PING_GRADE_AVAILABLE:
+                    showStatusMessageAsync("Ping analysis ready ..");
+                    break;
+                case DobbyEvent.EventType.WIFI_SCAN_STARTING:
+                    showStatusMessageAsync("Running Wifi tests ..");
+                    break;
+                case DobbyEvent.EventType.WIFI_SCAN_AVAILABLE:
+                    showStatusMessageAsync("Analyzing Wifi data ..");
+                    break;
+                case DobbyEvent.EventType.WIFI_GRADE_AVAILABLE:
+                    showStatusMessageAsync("Wifi analysis ready ..");
+                    break;
+                case DobbyEvent.EventType.BANDWIDTH_TEST_FAILED_WIFI_OFFLINE:
+                    showStatusMessageAsync("Unable to run Bandwidth tests since the Wifi network is OFFLINE.");
+                    showStatusMessageAsync("We are continuing to run Ping and Wifi analysis tests.");
+                    Message.obtain(handler, MSG_WIFI_OFFLINE).sendToTarget();
+                    break;
             }
         }
     }
