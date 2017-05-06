@@ -144,6 +144,27 @@ public class Utils {
     public static String getDataFromUrlWithTimeouts(String urlString, int maxStringLength,
                                                     int readTimeOutMs, int connectionTimeOutMs)
             throws IOException {
+        final boolean DEFAULT_URL_REDIRECT = true;
+        final boolean DEFAULT_USE_CACHES = true;
+        return getDataFromUrlWithOptions(urlString, maxStringLength,
+                readTimeOutMs, connectionTimeOutMs,
+                DEFAULT_URL_REDIRECT, DEFAULT_USE_CACHES);
+    }
+
+
+    /**
+     * Given a string url, connects and returns an input stream
+     * @param urlString string to fetch
+     * @param maxStringLength maximum length of the string in bytes
+     * @return
+     * @throws IOException
+     */
+    public static String getDataFromUrlWithOptions(String urlString,
+                                        int maxStringLength,
+                                        int readTimeOutMs,
+                                        int connectionTimeOutMs,
+                                        boolean urlRedirect,
+                                        boolean useCaches) throws IOException {
         String outputString = null;
         InputStream stream = null;
         URL url = new URL(urlString);
@@ -151,7 +172,8 @@ public class Utils {
         connection.setReadTimeout(readTimeOutMs /* milliseconds */);
         connection.setConnectTimeout(connectionTimeOutMs /* milliseconds */);
         connection.setRequestMethod("GET");
-        connection.setDoInput(true);
+        connection.setInstanceFollowRedirects(urlRedirect);
+        connection.setUseCaches(useCaches);
         // Starts the query
         connection.connect();
         int responseCode = connection.getResponseCode();

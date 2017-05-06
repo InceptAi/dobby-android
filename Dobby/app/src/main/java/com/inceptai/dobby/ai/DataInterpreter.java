@@ -492,7 +492,7 @@ public class DataInterpreter {
                     ", SpeedMetric: " + metricTypeToString(primaryApLinkSpeedMetric) +
                     ", channelOccupancy: " +
                     metricTypeToString(primaryLinkChannelOccupancyMetric));
-            builder.append("\nWifi connectivity mode: " + ConnectivityAnalyzer.connecitivyModeToString(wifiConnectivityMode));
+            builder.append("\nWifi connectivity mode: " + ConnectivityAnalyzer.connectivityModeToString(wifiConnectivityMode));
             builder.append("\nWifi link mode: " + WifiState.wifiLinkModeToString(wifiLinkMode));
             builder.append("\nChannel map:" + wifiChannelOccupancyMetric.toString());
             builder.append("\n primaryApChannel:" + primaryApChannel);

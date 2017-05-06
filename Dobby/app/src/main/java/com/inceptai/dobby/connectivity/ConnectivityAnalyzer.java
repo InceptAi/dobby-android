@@ -22,11 +22,13 @@ import java.io.IOException;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.concurrent.TimeUnit;
 
 import static com.inceptai.dobby.connectivity.ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL;
 import static com.inceptai.dobby.connectivity.ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_OFFLINE;
 import static com.inceptai.dobby.connectivity.ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_ONLINE;
+import static com.inceptai.dobby.connectivity.ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_UNKNOWN;
 import static com.inceptai.dobby.connectivity.ConnectivityAnalyzer.WifiConnectivityMode.OFF;
 import static com.inceptai.dobby.connectivity.ConnectivityAnalyzer.WifiConnectivityMode.ON_AND_DISCONNECTED;
 
@@ -39,21 +41,23 @@ public class ConnectivityAnalyzer {
     private static String URL_FOR_CONNECTIVITY_AND_PORTAL_TEST = "http://clients3.google.com/generate_204";
     protected static int MAX_SCHEDULING_TRIES_FOR_CHECKING_WIFI_CONNECTIVITY = 0; // Only once
     private static int GAP_BETWEEN_CONNECTIIVITY_CHECKS_MS = 2000;
-    private static final int PORTAL_TEST_READ_TIMEOUT_MS = 1000;
-    private static final int PORTAL_TEST_CONNECTION_TIMEOUT_MS = 1000;
+    private static final int PORTAL_TEST_READ_TIMEOUT_MS = 3000;
+    private static final int PORTAL_TEST_CONNECTION_TIMEOUT_MS = 3000;
 
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({WifiConnectivityMode.CONNECTED_AND_ONLINE, WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL,
             WifiConnectivityMode.CONNECTED_AND_OFFLINE, WifiConnectivityMode.ON_AND_DISCONNECTED,
-            WifiConnectivityMode.OFF, WifiConnectivityMode.UNKNOWN, WifiConnectivityMode.MAX_MODES})
+            WifiConnectivityMode.OFF, WifiConnectivityMode.UNKNOWN, WifiConnectivityMode.CONNECTED_AND_UNKNOWN,
+            WifiConnectivityMode.MAX_MODES})
     public @interface WifiConnectivityMode {
         int CONNECTED_AND_ONLINE = 0;
         int CONNECTED_AND_CAPTIVE_PORTAL = 1;
         int CONNECTED_AND_OFFLINE = 2;
-        int ON_AND_DISCONNECTED = 3;
-        int OFF = 4;
-        int UNKNOWN = 5;
-        int MAX_MODES = 6;
+        int CONNECTED_AND_UNKNOWN = 3;
+        int ON_AND_DISCONNECTED = 4;
+        int OFF = 5;
+        int UNKNOWN = 6;
+        int MAX_MODES = 7;
     }
 
     @WifiConnectivityMode
@@ -95,7 +99,7 @@ public class ConnectivityAnalyzer {
         return null;
     }
 
-    public static String connecitivyModeToString(@WifiConnectivityMode int mode) {
+    public static String connectivityModeToString(@WifiConnectivityMode int mode) {
         switch (mode) {
             case CONNECTED_AND_ONLINE:
                 return "CONNECTED_AND_ONLINE";
@@ -103,6 +107,8 @@ public class ConnectivityAnalyzer {
                 return "CONNECTED_AND_CAPTIVE_PORTAL";
             case CONNECTED_AND_OFFLINE:
                 return "CONNECTED_AND_OFFLINE";
+            case CONNECTED_AND_UNKNOWN:
+                return "CONNECTED_AND_UNKNOWN";
             case ON_AND_DISCONNECTED:
                 return "ON_AND_DISCONNECTED";
             case OFF:
@@ -112,29 +118,69 @@ public class ConnectivityAnalyzer {
         }
     }
 
+    private boolean testUrlForCaptivePortal(String urlString) throws IOException {
+        HttpURLConnection urlConnection = null;
+        URL url = new URL(URL_FOR_CONNECTIVITY_AND_PORTAL_TEST);
+        urlConnection = (HttpURLConnection) url.openConnection();
+        urlConnection.setInstanceFollowRedirects(false);
+        urlConnection.setConnectTimeout(PORTAL_TEST_CONNECTION_TIMEOUT_MS);
+        urlConnection.setReadTimeout(PORTAL_TEST_READ_TIMEOUT_MS);
+        urlConnection.setUseCaches(false);
+        urlConnection.getInputStream();
+        // We got a valid response, but not from the real google
+        return urlConnection.getResponseCode() != 204;
+    }
+
+    private boolean isWalledGardenConnection() {
+        HttpURLConnection urlConnection = null;
+        try {
+            URL url = new URL(URL_FOR_CONNECTIVITY_AND_PORTAL_TEST);
+            urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setInstanceFollowRedirects(false);
+            urlConnection.setConnectTimeout(PORTAL_TEST_CONNECTION_TIMEOUT_MS);
+            urlConnection.setReadTimeout(PORTAL_TEST_READ_TIMEOUT_MS);
+            urlConnection.setUseCaches(false);
+            urlConnection.getInputStream();
+            // We got a valid response, but not from the real google
+            return urlConnection.getResponseCode() != 204;
+        } catch (IOException e) {
+            DobbyLog.v("Walled garden check - probably not a portal: exception " + e);
+            return false;
+        } finally {
+            if (urlConnection != null) {
+                urlConnection.disconnect();
+            }
+        }
+    }
+
+
     @WifiConnectivityMode
     public int performConnectivityAndPortalTest(NetworkInfo activeNetwork) {
         @WifiConnectivityMode int mode = WifiConnectivityMode.UNKNOWN;
         DobbyLog.v("CA: In performConnectivityAndPortalTest");
         if (activeNetwork != null && activeNetwork.getType() == ConnectivityManager.TYPE_WIFI && activeNetwork.isConnected()) {
-            //Fetch google.com to validate
-            String dataFetched = Utils.EMPTY_STRING;
             try {
                 DobbyLog.v("CA: Starting portal test");
-                dataFetched = Utils.getDataFromUrlWithTimeouts(URL_FOR_CONNECTIVITY_AND_PORTAL_TEST,
+                Utils.getDataFromUrlWithOptions(
+                        URL_FOR_CONNECTIVITY_AND_PORTAL_TEST,
                         MAX_STRING_LENGTH_TO_FETCH,
                         PORTAL_TEST_READ_TIMEOUT_MS,
-                        PORTAL_TEST_CONNECTION_TIMEOUT_MS);
+                        PORTAL_TEST_CONNECTION_TIMEOUT_MS,
+                        false, //No redirects
+                        false); //No cache
+                //This returned 200 which means we are in captive portal
+                DobbyLog.v("CA: Setting wifi connectivity mode to CONNECTED_AND_CAPTIVE_PORTAL from wifiConnectivityMode: " + connectivityModeToString(getWifiConnectivityMode()));
+                mode = WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL;
                 DobbyLog.v("CA: Finishing portal test");
             } catch (Utils.HTTPReturnCodeException e) {
                 DobbyLog.v("CA: In perform portal test. Wanted 200, Got return code " + e.httpReturnCode);
                 if (e.httpReturnCode == HttpURLConnection.HTTP_NO_CONTENT) {
                     //This is working, we can return as online
-                    DobbyLog.v("CA: Setting wifi connectivity mode to CONNECTED_AND_ONLINE from wifiConnectivityMode: " + connecitivyModeToString(getWifiConnectivityMode()));
+                    DobbyLog.v("CA: Setting wifi connectivity mode to CONNECTED_AND_ONLINE from wifiConnectivityMode: " + connectivityModeToString(getWifiConnectivityMode()));
                     mode = WifiConnectivityMode.CONNECTED_AND_ONLINE;
                 } else if (e.httpReturnCode == HttpURLConnection.HTTP_MOVED_TEMP) {
                     //This is a captive portal
-                    DobbyLog.v("CA: Setting wifi connectivity mode to CONNECTED_AND_CAPTIVE_PORTAL from wifiConnectivityMode: " + connecitivyModeToString(getWifiConnectivityMode()));
+                    DobbyLog.v("CA: Setting wifi connectivity mode to CONNECTED_AND_CAPTIVE_PORTAL from wifiConnectivityMode: " + connectivityModeToString(getWifiConnectivityMode()));
                     mode = WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL;
                 } else {
                     DobbyLog.v("CA: Got Third return code " + e.httpReturnCode);
@@ -142,14 +188,14 @@ public class ConnectivityAnalyzer {
             } catch (IOException e) {
                 DobbyLog.v("Unable to fetch: " + URL_FOR_CONNECTIVITY_AND_PORTAL_TEST + " Except: " + e);
                 if (!isWifiInCaptivePortal()) {
-                    DobbyLog.v("CA: Setting wifi connectivity mode to CONNECTED_AND_OFFLINE from wifiConnectivityMode: " + connecitivyModeToString(getWifiConnectivityMode()));
+                    DobbyLog.v("CA: Setting wifi connectivity mode to CONNECTED_AND_OFFLINE from wifiConnectivityMode: " + connectivityModeToString(getWifiConnectivityMode()));
                     mode = WifiConnectivityMode.CONNECTED_AND_OFFLINE;
                 }
             } catch (Exception e) {
                 DobbyLog.v("Exception : " + e);
             }
         }
-        DobbyLog.v("CA: Returning mode " + connecitivyModeToString(mode));
+        DobbyLog.v("CA: Returning mode " + connectivityModeToString(mode));
         return mode;
     }
 
@@ -237,12 +283,12 @@ public class ConnectivityAnalyzer {
         DobbyLog.v("ConnectivityAnalyzer Got event: " + event);
         switch(eventType) {
             case DobbyEvent.EventType.WIFI_NOT_CONNECTED:
-                DobbyLog.v("CA: Setting wifi connectivity mode to ON_AND_DISCONNECTED from wifiConnectivityMode: " + connecitivyModeToString(getWifiConnectivityMode()));
+                DobbyLog.v("CA: Setting wifi connectivity mode to ON_AND_DISCONNECTED from wifiConnectivityMode: " + connectivityModeToString(getWifiConnectivityMode()));
                 wifiConnectivityMode = WifiConnectivityMode.ON_AND_DISCONNECTED;
                 break;
             case DobbyEvent.EventType.WIFI_STATE_DISABLED:
             case DobbyEvent.EventType.WIFI_STATE_DISABLING:
-                DobbyLog.v("CA: Setting wifi connectivity mode to OFF from wifiConnectivityMode: " + connecitivyModeToString(getWifiConnectivityMode()));
+                DobbyLog.v("CA: Setting wifi connectivity mode to OFF from wifiConnectivityMode: " + connectivityModeToString(getWifiConnectivityMode()));
                 wifiConnectivityMode = WifiConnectivityMode.OFF;
                 break;
             case DobbyEvent.EventType.WIFI_STATE_UNKNOWN:
@@ -250,7 +296,8 @@ public class ConnectivityAnalyzer {
                 //wifiConnectivityMode = WifiConnectivityMode.UNKNOWN;
                 break;
             case DobbyEvent.EventType.WIFI_CONNECTED:
-            //Should change mode to CONNECTED AND OFFLINE -- will transition to CONNECTED AND ONLINE OR CAPTIVE AFTER TEST
+                //Should change mode to CONNECTED AND OFFLINE -- will transition to CONNECTED AND ONLINE OR CAPTIVE AFTER TEST
+                wifiConnectivityMode = CONNECTED_AND_UNKNOWN;
             case DobbyEvent.EventType.WIFI_STATE_ENABLING:
             case DobbyEvent.EventType.WIFI_STATE_ENABLED:
             case DobbyEvent.EventType.WIFI_RSSI_CHANGED:

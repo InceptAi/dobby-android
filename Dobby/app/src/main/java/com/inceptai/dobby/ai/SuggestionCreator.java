@@ -487,17 +487,18 @@ public class SuggestionCreator {
                 if ((params.pingGrade.hasValidData() && DataInterpreter.isGoodOrExcellentOrAverage(params.pingGrade.routerLatencyMetric)) ||
                         (params.httpGrade.hasValidData() && DataInterpreter.isGoodOrExcellentOrAverage(params.httpGrade.httpDownloadLatencyMetric))) {
                     return "Your wifi network is fine, but for some reason, connectivity to the Internet is down. " +
-                            "It could be an issue with the router software being in a weird state, try rebooting it to see if it works";
+                            "It could be an issue with the router software being in a weird state or you are behind a captive portal which requires sign-in (mostly public hotspots). " +
+                            "If this issue is at home, try rebooting the router to see if it works. ";
                 } else  if ((params.pingGrade.hasValidData() && DataInterpreter.isPoorOrAbysmal(params.pingGrade.routerLatencyMetric)) ||
                     (params.httpGrade.hasValidData() && DataInterpreter.isPoorOrAbysmal(params.httpGrade.httpDownloadLatencyMetric))) {
                 return "You are connected to the router, but your link is very poor (" +
                         String.format("%.2f", params.pingGrade.routerLatencyMs) + " ms), " +
-                        "and you can't connect to Internet. This could be because of an issue with the router. " +
-                        "Try rebooting it to see if it works";
+                        "and you can't connect to Internet. This could be because of an issue with the router or you are behind a captive portal which requires sign-in (mostly public hotspots). " +
+                        "If this issue is at home, Try rebooting the wifi router. ";
                 } else if ((params.pingGrade.hasValidData() && DataInterpreter.isNonFunctional(params.pingGrade.routerLatencyMetric)) ||
                         (params.httpGrade.hasValidData() && DataInterpreter.isNonFunctional(params.httpGrade.httpDownloadLatencyMetric))) {
-                    return "We can't reach your wifi router and hence you can't connect to Internet. This could be because of an issue with the router. " +
-                            "If possible, try rebooting it and it may bring it back from a weird state. ";
+                    return "We can't connect to Internet. This could be because of an issue with the router or you are behind a captive portal which requires sign-in (mostly public hotspots). " +
+                            "If this issue is at home, try rebooting the wifi router and it may bring it back from a weird state. ";
                 }
             case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_ONLINE:
                 if ((params.pingGrade.hasValidData() && DataInterpreter.isGoodOrExcellentOrAverage(params.pingGrade.routerLatencyMetric)) ||

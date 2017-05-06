@@ -170,7 +170,7 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
         ArrayList<String> modeList = new ArrayList<>();
         for (@ConnectivityAnalyzer.WifiConnectivityMode int modeIndex = 0;
              modeIndex < ConnectivityAnalyzer.WifiConnectivityMode.MAX_MODES; modeIndex++) {
-            modeList.add(ConnectivityAnalyzer.connecitivyModeToString(modeIndex));
+            modeList.add(ConnectivityAnalyzer.connectivityModeToString(modeIndex));
         }
         ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_dropdown_item, modeList);
         arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -370,7 +370,7 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
             //noinspection ResourceType
             setFakeWifiConnectivityMode(selectedMode);
             DobbyLog.i("FAKE Setting Connectivity mode to : " +
-                    ConnectivityAnalyzer.connecitivyModeToString(fakeWifiConnectivityMode));
+                    ConnectivityAnalyzer.connectivityModeToString(fakeWifiConnectivityMode));
             if (networkLayer != null) {
                 networkLayer.getConnectivityAnalyzerInstance().setWifiConnectivityMode(fakeWifiConnectivityMode);
             }
