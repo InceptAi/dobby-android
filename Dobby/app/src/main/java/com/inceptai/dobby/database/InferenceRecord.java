@@ -15,6 +15,7 @@ import java.util.Map;
 public class InferenceRecord {
     public String uid;
     public String phoneInfo;
+    public String appVersion;
     public String titleMessage;
     public long timestamp;
     public String bandwidthGradeJson;
@@ -32,6 +33,7 @@ public class InferenceRecord {
         result.put("uid", uid);
         result.put("phoneInfo", phoneInfo);
         result.put("titleMessage", titleMessage);
+        result.put("appVersion", appVersion);
         result.put("detailedMessageList", detailedMessageList);
         result.put("timestamp", timestamp);
         result.put("bandwidthGradeJson", bandwidthGradeJson);
@@ -83,4 +85,7 @@ public class InferenceRecord {
         return conditionsUsedForInference;
     }
 
+    public String getAppVersion() {
+        return appVersion;
+    }
 }

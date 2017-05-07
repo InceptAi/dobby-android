@@ -66,6 +66,10 @@ public class DobbyApplication extends Application {
         return userUuid.get();
     }
 
+    public static String getAppVersion() {
+        return BuildConfig.VERSION_NAME;
+    }
+
     public String getPhoneInfo() {
         HashMap<String, String> phoneInfo = new HashMap<>();
         phoneInfo.put("manufacturer", Build.MANUFACTURER);
