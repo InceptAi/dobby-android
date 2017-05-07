@@ -260,19 +260,19 @@ public class DataInterpreter {
             clearDownload();
         }
 
-        public boolean hasValidUpload() {
-            return isFresh(uploadUpdatedAtMs);
+        boolean hasValidUpload() {
+            return uploadUpdatedAtMs > 0 && isFresh(uploadUpdatedAtMs);
         }
 
-        public boolean hasValidDownload() {
-            return isFresh(downloadUpdatedAtMs);
+        boolean hasValidDownload() {
+            return downloadUpdatedAtMs > 0 && isFresh(downloadUpdatedAtMs);
         }
 
-        public double getUploadMbps() {
+        double getUploadMbps() {
             return uploadMbps;
         }
 
-        public double getDownloadMbps() {
+        double getDownloadMbps() {
             return downloadMbps;
         }
 
