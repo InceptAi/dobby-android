@@ -127,8 +127,7 @@ public class WifiState {
         }
     }
 
-    @WifiLinkMode
-    public int getCurrentWifiProblemMode() {
+    public int getWifiProblemMode() {
         return wifiProblemMode;
     }
 
@@ -346,7 +345,57 @@ public class WifiState {
     }
 
     @WifiLinkMode
-    synchronized protected int updateDetailedWifiStateInfo(NetworkInfo.DetailedState detailedWifiState, long timestampMs) {
+    public int getCurrentWifiProblemMode() {
+        long startTimeMs = getCurrentStateStartTimeMs();
+        long currentTimeMs = System.currentTimeMillis();
+        NetworkInfo.DetailedState currentState = getCurrentState();
+        int numDisconnections = getNumberOfTimesWifiInState(NetworkInfo.DetailedState.DISCONNECTED);
+        int numConnections = getNumberOfTimesWifiInState(NetworkInfo.DetailedState.CONNECTING);
+        //If we are in CONNECTED mode now, then mark this as no issue and return
+        if (getCurrentState() == NetworkInfo.DetailedState.CONNECTED) {
+            wifiProblemMode = WifiLinkMode.NO_PROBLEM_DEFAULT_STATE;
+            return wifiProblemMode;
+        }
+        if (currentTimeMs - startTimeMs >= THRESHOLD_FOR_DECLARING_CONNECTION_SETUP_STATE_AS_HANGING_MS) {
+            switch(currentState) {
+                case SCANNING:
+                    wifiProblemMode = WifiLinkMode.HANGING_ON_SCANNING;
+                    break;
+                case AUTHENTICATING:
+                    wifiProblemMode = WifiLinkMode.HANGING_ON_AUTHENTICATING;
+                    break;
+                case OBTAINING_IPADDR:
+                    wifiProblemMode = WifiLinkMode.HANGING_ON_DHCP;
+                    break;
+            }
+        } else if (Math.max(numDisconnections, numConnections) > THRESHOLD_FOR_FLAGGING_FREQUENT_STATE_CHANGES){
+            //Check for frequent disconnections
+            wifiProblemMode = WifiLinkMode.FREQUENT_DISCONNECTIONS;
+        } else {
+            switch (currentState) {
+                case IDLE:
+                case SCANNING:
+                case DISCONNECTED:
+                case DISCONNECTING:
+                case FAILED:
+                case BLOCKED:
+                case SUSPENDED:
+                    wifiProblemMode = WifiLinkMode.DISCONNECTED;
+                    break;
+                case CONNECTING:
+                case AUTHENTICATING:
+                case OBTAINING_IPADDR:
+                case VERIFYING_POOR_LINK:
+                case CAPTIVE_PORTAL_CHECK:
+                    wifiProblemMode = WifiLinkMode.CONNECTING;
+                    break;
+            }
+        }
+        return wifiProblemMode;
+    }
+
+    @WifiLinkMode
+    synchronized int updateDetailedWifiStateInfo(NetworkInfo.DetailedState detailedWifiState, long timestampMs) {
         if (lastWifiState != detailedWifiState) {
             if (lastWifiStateTimestampMs != 0) {
                 WifiStateInfo lastWifiStateInfo = new WifiStateInfo(lastWifiState,
@@ -367,7 +416,7 @@ public class WifiState {
                 lastWifiStateTimestampMs = timestampMs;
         }
         // Update the wifi problem mode if any
-        return updateWifiProblemMode();
+        return getCurrentWifiProblemMode();
         // printHashMap();
     }
 
@@ -502,55 +551,5 @@ public class WifiState {
             }
             DobbyLog.v("updateDetailedWifiStateInfo4 Key: " + key.name() + " value: " + sb.toString());
         }
-    }
-
-    @WifiLinkMode
-    private int updateWifiProblemMode() {
-        long startTimeMs = getCurrentStateStartTimeMs();
-        long currentTimeMs = System.currentTimeMillis();
-        NetworkInfo.DetailedState currentState = getCurrentState();
-        int numDisconnections = getNumberOfTimesWifiInState(NetworkInfo.DetailedState.DISCONNECTED);
-        int numConnections = getNumberOfTimesWifiInState(NetworkInfo.DetailedState.CONNECTING);
-        //If we are in CONNECTED mode now, then mark this as no issue and return
-        if (getCurrentState() == NetworkInfo.DetailedState.CONNECTED) {
-            wifiProblemMode = WifiLinkMode.NO_PROBLEM_DEFAULT_STATE;
-            return wifiProblemMode;
-        }
-        if (currentTimeMs - startTimeMs >= THRESHOLD_FOR_DECLARING_CONNECTION_SETUP_STATE_AS_HANGING_MS) {
-            switch(currentState) {
-                case SCANNING:
-                    wifiProblemMode = WifiLinkMode.HANGING_ON_SCANNING;
-                    break;
-                case AUTHENTICATING:
-                    wifiProblemMode = WifiLinkMode.HANGING_ON_AUTHENTICATING;
-                    break;
-                case OBTAINING_IPADDR:
-                    wifiProblemMode = WifiLinkMode.HANGING_ON_DHCP;
-                    break;
-            }
-        } else if (Math.max(numDisconnections, numConnections) > THRESHOLD_FOR_FLAGGING_FREQUENT_STATE_CHANGES){
-            //Check for frequent disconnections
-            wifiProblemMode = WifiLinkMode.FREQUENT_DISCONNECTIONS;
-        } else {
-            switch (currentState) {
-                case IDLE:
-                case SCANNING:
-                case DISCONNECTED:
-                case DISCONNECTING:
-                case FAILED:
-                case BLOCKED:
-                case SUSPENDED:
-                    wifiProblemMode = WifiLinkMode.DISCONNECTED;
-                    break;
-                case CONNECTING:
-                case AUTHENTICATING:
-                case OBTAINING_IPADDR:
-                case VERIFYING_POOR_LINK:
-                case CAPTIVE_PORTAL_CHECK:
-                    wifiProblemMode = WifiLinkMode.CONNECTING;
-                    break;
-            }
-        }
-        return wifiProblemMode;
     }
 }
