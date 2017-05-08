@@ -34,8 +34,8 @@ android {
     productFlavors {
         wifidoc {
             applicationIdSuffix ".wifidoc"
-            versionCode 11
-            versionName "1.1-wifitester-beta11"
+            versionCode 12
+            versionName "1.1-wifitester-beta12"
         }
         dobby {
             applicationIdSuffix ".ai"
