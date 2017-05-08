@@ -80,6 +80,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private static final int MSG_SWITCH_STATE = 1006;
     private static final int MSG_RESUME_HANDLER = 1007;
     private static final int MSG_WIFI_OFFLINE = 1008;
+    private static final int MSG_REQUEST_LAYOUT = 1009;
     private static final long SUGGESTION_FRESHNESS_TS_MS = 30000; // 30 seconds
     private static final int MAX_HANDLER_PAUSE_MS = 2000;
     private static final int MAX_SSID_LENGTH = 30;
@@ -485,6 +486,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             case MSG_WIFI_OFFLINE:
                 // Should we do anything here ?
                 break;
+            case MSG_REQUEST_LAYOUT:
+                uiStateVisibilityChanges(getView());
+                break;
             default:
                 return false;
         }
@@ -759,6 +763,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         // Clear suggestions
         currentSuggestion = null;
         resetPingData();
+        ispNameTv.setText(Utils.EMPTY_STRING);
+        wifiSsidTv.setText(Utils.EMPTY_STRING);
         //ispNameTv.setText("");
     }
 
@@ -936,6 +942,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
                 @Override
                 public void onAnimationEnd(Animator animation) {
+                    handler.sendEmptyMessageDelayed(MSG_REQUEST_LAYOUT, 500);
                     resumeHandler();
                 }
 
