@@ -43,5 +43,5 @@ before_install:
     - cd Dobby; ./gradlew dependencies || true
 
 script:
-   - cd Dobby; ./gradlew clean build assembleDebug assembleRelease
+   - ./gradlew clean build assembleDebug assembleRelease
 
