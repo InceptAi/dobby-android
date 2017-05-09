@@ -41,7 +41,7 @@ before_install:
     - echo -e "\n84831b9409646a918e30573bab4c9c91346d8abd" > "$ANDROID_HOME/licenses/android-sdk-preview-license"
     - chmod +x Dobby/gradlew
     - mkdir ../Keystore
-    - cp dummy-keystore.properties ../Keystore
+    - cp dummy-keystore.properties ../Keystore/wifidoc-keystore.properties
     - cd Dobby; ./gradlew dependencies || true
 
 script:
