@@ -42,6 +42,7 @@ before_install:
     - chmod +x Dobby/gradlew
     - mkdir ../Keystore
     - cp dummy-keystore.properties ../Keystore/wifidoc-keystore.properties
+    - cp dummy-keystore.jks ../Keystore/wifidoc-key.jks
     - cd Dobby; ./gradlew dependencies || true
 
 script:
