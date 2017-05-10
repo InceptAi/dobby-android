@@ -1036,7 +1036,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                     isVisible = false;
                     setModeStatus();
                     clearStatusMessages();
-                    vContent.setText("");
+                    vContent.setText(Utils.EMPTY_STRING);
                     resumeHandler();
                 }
 
@@ -1044,7 +1044,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                 public void onAnimationCancel(Animator animation) {
                     dismissAndShowCanonicalViews();
                     resumeHandler();
-                    vContent.setText("");
+                    vContent.setText(Utils.EMPTY_STRING);
                 }
 
                 @Override
@@ -1062,7 +1062,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         }
 
         void clearStatusMessages() {
-            statusMessage = "";
+            statusMessage = Utils.EMPTY_STRING;
         }
 
         @Override
