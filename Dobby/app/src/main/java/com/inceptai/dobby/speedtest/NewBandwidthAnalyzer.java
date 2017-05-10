@@ -281,7 +281,6 @@ public class NewBandwidthAnalyzer {
         @Override
         public void onConfigFetchError(String error) {
             DobbyLog.v("NBA Speed test config fetched error: " + error);
-            cancelBandwidthTests();
             if (resultsCallback != null) {
                 resultsCallback.onBandwidthTestError(BandwithTestCodes.TestMode.CONFIG_FETCH,
                         ErrorCodes.ERROR_FETCHING_CONFIG,
@@ -306,7 +305,6 @@ public class NewBandwidthAnalyzer {
 
         @Override
         public void onServerInformationFetchError(String error) {
-            cancelBandwidthTests();
             if (resultsCallback != null) {
                 resultsCallback.onBandwidthTestError(BandwithTestCodes.TestMode.SERVER_FETCH,
                         ErrorCodes.ERROR_FETCHING_SERVER_INFO,
@@ -324,10 +322,10 @@ public class NewBandwidthAnalyzer {
 
         @Override
         public void onBestServerSelectionError(String error) {
-            cancelBandwidthTests();
-            if (resultsCallback != null)
+            if (resultsCallback != null) {
                 resultsCallback.onBandwidthTestError(BandwithTestCodes.TestMode.SERVER_FETCH,
                         ErrorCodes.ERROR_SELECTING_BEST_SERVER, error);
+            }
         }
 
         @Override
@@ -369,11 +367,11 @@ public class NewBandwidthAnalyzer {
         @Override
         public void onError(@BandwithTestCodes.TestMode int callbackTestMode, SpeedTestError speedTestError, String errorMessage) {
             //Cancel bandwidth tests.
-            cancelBandwidthTests();
             if (resultsCallback != null) {
                 resultsCallback.onBandwidthTestError(callbackTestMode,
                         convertToBandwidthTestCodes(speedTestError), errorMessage);
             }
+            cancelBandwidthTests();
         }
     }
 

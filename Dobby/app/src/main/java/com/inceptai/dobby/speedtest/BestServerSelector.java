@@ -108,9 +108,9 @@ public class BestServerSelector {
                     }
                 } catch (IOException e) {
                     String errorString = "Exception while performing latencyMs test: " + e;
-                    if (this.resultsCallback != null) {
-                        this.resultsCallback.onBestServerSelectionError(errorString);
-                    }
+                    //if (this.resultsCallback != null) {
+                    //    this.resultsCallback.onBestServerSelectionError(errorString);
+                    //}
                     DobbyLog.v(errorString);
                 }
             }

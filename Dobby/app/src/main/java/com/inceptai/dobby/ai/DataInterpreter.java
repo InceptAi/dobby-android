@@ -7,6 +7,7 @@ import com.inceptai.dobby.connectivity.ConnectivityAnalyzer;
 import com.inceptai.dobby.model.DobbyWifiInfo;
 import com.inceptai.dobby.model.IPLayerInfo;
 import com.inceptai.dobby.model.PingStats;
+import com.inceptai.dobby.speedtest.BandwithTestCodes;
 import com.inceptai.dobby.wifi.WifiState;
 
 import java.lang.annotation.Retention;
@@ -210,8 +211,10 @@ public class DataInterpreter {
         private long uploadUpdatedAtMs;
         private double uploadMbps;
         private double downloadMbps;
-        public String isp;
-        public String externalIP;
+        String isp;
+        String externalIP;
+        @BandwithTestCodes.ErrorCodes
+        int errorCode = BandwithTestCodes.ErrorCodes.ERROR_UNKNOWN;
 
         public BandwidthGrade() {
             //Set timestamp here
@@ -242,6 +245,7 @@ public class DataInterpreter {
             builder.append("\n Upload Updated: " + downloadUpdatedAtMs);
             builder.append("\n isp : " + isp);
             builder.append("\n external IP: " + externalIP);
+            builder.append("\n error code: " + errorCode);
             return builder.toString();
         }
 
@@ -600,7 +604,9 @@ public class DataInterpreter {
      * @param downloadMbps Bandwidth in Mbps or -1 if failed.
      * @return
      */
-    public static BandwidthGrade interpret(double downloadMbps, double uploadMbps, String isp, String externalClientIp) {
+    public static BandwidthGrade interpret(double downloadMbps, double uploadMbps,
+                                           String isp, String externalClientIp,
+                                           int errorCode) {
         BandwidthGrade grade = new BandwidthGrade();
         @MetricType int downloadMetric = getGradeHigherIsBetter(downloadMbps, BW_DOWNLOAD_STEPS_MBPS, downloadMbps >= 0.0, downloadMbps == 0.0);
         @MetricType int uploadMetric = getGradeHigherIsBetter(uploadMbps, BW_UPLOAD_STEPS_MBPS, uploadMbps >= 0.0, uploadMbps == 0.0);
@@ -608,6 +614,7 @@ public class DataInterpreter {
         grade.updateDownloadInfo(downloadMbps, downloadMetric);
         grade.isp = isp;
         grade.externalIP = externalClientIp;
+        grade.errorCode = errorCode;
         return grade;
     }
 

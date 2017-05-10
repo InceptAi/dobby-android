@@ -220,7 +220,9 @@ public class InferenceEngine {
     }
 
     public DataInterpreter.BandwidthGrade notifyBandwidthTestResult(@BandwithTestCodes.TestMode int testMode,
-                                                                    double bandwidth, String clientIsp, String clientExternalIp) {
+                                                                    double bandwidth,
+                                                                    String clientIsp,
+                                                                    String clientExternalIp) {
         DataInterpreter.BandwidthGrade bandwidthGrade = new DataInterpreter.BandwidthGrade();
         if (bandwidth >= 0) {
             sendResponseOnlyAction(testModeToString(testMode) + " Overall Bandwidth = " + String.format("%.2f", bandwidth / 1000000) + " Mbps");
@@ -228,14 +230,16 @@ public class InferenceEngine {
             sendResponseOnlyAction(testModeToString(testMode) + " Bandwidth error -- can't do bandwidth test.");
         }
         lastBandwidthUpdateTimestampMs = 0;
+
         if (testMode == BandwithTestCodes.TestMode.UPLOAD) {
             metricsDb.updateUploadBandwidthGrade(bandwidth * 1.0e-6, DataInterpreter.MetricType.UNKNOWN);
         } else if (testMode == BandwithTestCodes.TestMode.DOWNLOAD) {
             metricsDb.updateDownloadBandwidthGrade(bandwidth * 1.0e-6, DataInterpreter.MetricType.UNKNOWN);
         }
+
         if (metricsDb.hasValidDownload() && metricsDb.hasValidUpload()) {
             bandwidthGrade = DataInterpreter.interpret(metricsDb.getDownloadMbps(),
-                    metricsDb.getUploadMbps(), clientIsp, clientExternalIp);
+                    metricsDb.getUploadMbps(), clientIsp, clientExternalIp, BandwithTestCodes.ErrorCodes.NO_ERROR);
             //Update the bandwidth grade, overwriting earlier info.
             metricsDb.updateBandwidthGrade(bandwidthGrade);
             PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(bandwidthGrade);
@@ -247,6 +251,23 @@ public class InferenceEngine {
         }
         return bandwidthGrade;
     }
+
+
+    public DataInterpreter.BandwidthGrade notifyBandwidthTestError(@BandwithTestCodes.ErrorCodes int errorCode,
+                                                                   double bandwidth) {
+        lastBandwidthUpdateTimestampMs = 0;
+        DataInterpreter.BandwidthGrade bandwidthGrade = DataInterpreter.interpret(0.0, 0.0,
+                Utils.EMPTY_STRING, Utils.EMPTY_STRING, errorCode);
+        metricsDb.updateBandwidthGrade(bandwidthGrade);
+        PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(bandwidthGrade);
+        currentConditions.mergeIn(conditions);
+        DobbyLog.i("InferenceEngine bandwidthGradeJson: " + bandwidthGrade.toString());
+        DobbyLog.i("InferenceEngine which gives conditions: " + conditions.toString());
+        DobbyLog.i("InferenceEngine After merging: " + currentConditions.toString());
+        checkAndSendSuggestions();
+        return bandwidthGrade;
+    }
+
 
     public void cleanup() {
         if (bandwidthCheckFuture!= null && !bandwidthCheckFuture.isDone()) {
