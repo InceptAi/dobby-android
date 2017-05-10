@@ -21,7 +21,8 @@ android {
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+       // testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "com.inceptai.dobby.MyAndroidJUnitRunner"
     }
     signingConfigs {
         wifidoc_config {
