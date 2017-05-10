@@ -189,7 +189,7 @@ public class InferenceMap {
             conditions.exclude(DNS_CONDITIONS);
             conditions.exclude(ROUTER_CONDITIONS);
             return conditions;
-        } else if (wifiGrade.wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.ON_AND_DISCONNECTED) {
+        } else if (wifiGrade.wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.ON_AND_DISCONNECTED || wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.CONNECTING) {
             conditions.exclude(ISP_CONDITIONS);
             conditions.exclude(DNS_CONDITIONS);
             conditions.exclude(WIFI_CONDITIONS);
