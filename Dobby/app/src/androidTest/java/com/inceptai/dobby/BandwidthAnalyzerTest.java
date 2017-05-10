@@ -18,9 +18,11 @@ import com.inceptai.dobby.utils.DobbyLog;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.internal.runners.statements.ExpectException;
 import org.junit.runner.RunWith;
 
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -36,11 +38,13 @@ public class BandwidthAnalyzerTest {
 
     NewBandwidthAnalyzer newBandwidthAnalyzer;
     ObjectRegistry objectRegistry;
+    Random random;
 
     @Before
     public void setupInstance() {
         objectRegistry = ObjectRegistry.get();
         newBandwidthAnalyzer = new NewBandwidthAnalyzer(objectRegistry.getThreadpool(), objectRegistry.getEventBus());
+        random = new Random();
     }
 
     @Test
@@ -78,6 +82,39 @@ public class BandwidthAnalyzerTest {
         assertNotNull(statsFuture.get());
     }
 
+    @Test
+    public void uploadWithCancelTest()  {
+        for (int i = 0; i < 10; i ++) {
+            int randomDelay = random.nextInt(5000);
+            DobbyLog.i("Starting tests with delay of " + randomDelay);
+            Future<BandwidthResult> statsFuture = startBandwidthTest(BandwithTestCodes.TestMode.UPLOAD);
+            try {
+                Thread.sleep(randomDelay);
+                newBandwidthAnalyzer.cancelBandwidthTests();
+                // assertNull(statsFuture.get());
+            } catch (Exception e) {
+                DobbyLog.e("Got exception " + e);
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    @Test
+    public void downloadWithCancelTest()  {
+        for (int i = 0; i < 10; i ++) {
+            int randomDelay = random.nextInt(5000);
+            DobbyLog.i("Starting tests with delay of " + randomDelay);
+            Future<BandwidthResult> statsFuture = startBandwidthTest(BandwithTestCodes.TestMode.DOWNLOAD);
+            try {
+                Thread.sleep(randomDelay);
+                newBandwidthAnalyzer.cancelBandwidthTests();
+                // assertNull(statsFuture.get());
+            } catch (Exception e) {
+                DobbyLog.e("Got exception " + e);
+                throw new RuntimeException(e);
+            }
+        }
+    }
 
     private ListenableFuture<BandwidthResult> startBandwidthTest(@BandwithTestCodes.TestMode int testMode) {
         BandwidthCallback callback = new BandwidthCallback(testMode);
