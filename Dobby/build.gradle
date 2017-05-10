@@ -24,6 +24,12 @@ task clean(type: Delete) {
     delete rootProject.buildDir
 }
 
+ext {
+    runnerVersion = "0.5"
+    rulesVersion = "0.5"
+    espressoVersion = "2.2.2"
+}
+
 //task checkstyle(type: Checkstyle) {
 //    configFile file("${project.rootDir}/config/quality/google-checks.xml") // Where my checkstyle config is...
 //    // configProperties.checkstyleSuppressionsPath = file("${project.rootDir}/config/quality/checkstyle/suppressions.xml").absolutePath // Where is my suppressions file for checkstyle is...
