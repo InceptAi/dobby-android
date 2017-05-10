@@ -297,15 +297,11 @@ public class ConnectivityAnalyzer {
                 break;
 
             case DobbyEvent.EventType.WIFI_STATE_UNKNOWN:
-                DobbyLog.v("CA: Got event WIFI_STATE_UNKNOWN, ignoring");
-                //wifiConnectivityMode = WifiConnectivityMode.UNKNOWN;
+                DobbyLog.v("CA: Got event WIFI_STATE_UNKNOWN, setting to UNKNOWN");
+                wifiConnectivityMode = WifiConnectivityMode.UNKNOWN;
                 break;
 
-            case DobbyEvent.EventType.WIFI_CONNECTED:
-                //Should change mode to CONNECTED AND OFFLINE -- will transition to CONNECTED AND ONLINE OR CAPTIVE AFTER TEST
-                wifiConnectivityMode = WifiConnectivityMode.CONNECTED_AND_UNKNOWN;
-                scheduleWifiOnlineTest=true;
-                break;
+
 
             case DobbyEvent.EventType.WIFI_STATE_ENABLING:
             case DobbyEvent.EventType.WIFI_STATE_ENABLED:
@@ -314,8 +310,17 @@ public class ConnectivityAnalyzer {
                 scheduleWifiOnlineTest=true;
                 break;
 
-            case DobbyEvent.EventType.WIFI_RSSI_CHANGED:
+            case DobbyEvent.EventType.WIFI_CONNECTED:
             case DobbyEvent.EventType.DHCP_INFO_AVAILABLE:
+                //Should change mode to CONNECTED AND OFFLINE -- will transition to CONNECTED AND ONLINE OR CAPTIVE AFTER TEST
+                //wifiConnectivityMode = WifiConnectivityMode.ON_AND_DISCONNECTED;
+                scheduleWifiOnlineTest=true;
+                break;
+
+            case DobbyEvent.EventType.WIFI_RSSI_CHANGED:
+                scheduleWifiOnlineTest=true;
+                break;
+
             case DobbyEvent.EventType.PING_INFO_AVAILABLE:
                 scheduleWifiOnlineTest = true;
                 break;
