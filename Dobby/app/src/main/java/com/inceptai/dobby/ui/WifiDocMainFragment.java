@@ -38,6 +38,7 @@ import android.widget.Toast;
 import com.google.common.eventbus.Subscribe;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.R;
+import com.inceptai.dobby.RemoteConfig;
 import com.inceptai.dobby.ai.DataInterpreter;
 import com.inceptai.dobby.ai.SuggestionCreator;
 import com.inceptai.dobby.eventbus.DobbyEvent;
@@ -160,6 +161,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     @Inject
     DobbyAnalytics dobbyAnalytics;
 
+    @Inject
+    RemoteConfig remoteConfig;
+
     public WifiDocMainFragment() {
         // Required empty public constructor
     }
@@ -191,6 +195,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         statusMessage = Utils.EMPTY_STRING;
         handlerBacklog = new LinkedList<>();
         pauseHandler = false;
+        remoteConfig.fetchAsync();
     }
 
     @Override

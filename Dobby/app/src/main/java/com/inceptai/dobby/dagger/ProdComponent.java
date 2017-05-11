@@ -35,4 +35,6 @@ public interface ProdComponent {
     void inject(WifiDocActivity wifiDocActivity);
 
     void inject(WifiDocMainFragment wifiDocMainFragment);
+
+    void inject(ObjectRegistry objectRegistry);
 }
