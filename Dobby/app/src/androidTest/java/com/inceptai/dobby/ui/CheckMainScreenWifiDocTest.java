@@ -53,6 +53,8 @@ public class CheckMainScreenWifiDocTest {
     private final String MORE_TITLE = "MORE";
     private final String STATUS_RUNNING_TESTS_MESSAGE = "Running tests..";
     private final String STATUS_IDLE_MESSAGE = "Ready to run tests.";
+    private final int CANCEL_WAIT_MS = 5000; // ~500 ms
+
 
 
 
@@ -91,8 +93,7 @@ public class CheckMainScreenWifiDocTest {
             WifiDocActivity.class);
 
 
-    @Test
-    public void bwTestDefaultTest() {
+    private void checkIdleUIState() {
         //Before the test, upload and download matches 0.0
         onView(allOf(withParent(withId(R.id.cg_download)), withId(R.id.gauge_tv))).check(matches(withText(WifiDocMainFragment.ZERO_POINT_ZERO)));
         onView(allOf(withParent(withId(R.id.cg_upload)), withId(R.id.gauge_tv))).check(matches(withText(WifiDocMainFragment.ZERO_POINT_ZERO)));
@@ -100,14 +101,12 @@ public class CheckMainScreenWifiDocTest {
         //Before the tests are run -- status card view is displayed with text "Ready to run tests."
         onView(withId(R.id.status_cardview)).check(matches(isDisplayed()));
         onView(withId(R.id.status_tv)).check(matches(withText(STATUS_IDLE_MESSAGE)));
+        onView(withId(R.id.bottom_dialog_inc)).check(matches(not(isDisplayed())));
+    }
 
-        //Click the run tests button
-        onView(withId(R.id.main_fab_button)).perform(click());
-
+    private void checkRunningUIState() {
         //Check that the status card view text changes
         onView(withId(R.id.status_tv)).check(matches(withText(STATUS_RUNNING_TESTS_MESSAGE)));
-
-        SystemClock.sleep(BOTTOM_DRAWER_WAITING_TIME_MS);
 
         //Check that the status dialog box comes up
         onView(withId(R.id.bottom_dialog_inc)).check(matches(isDisplayed()));
@@ -122,18 +121,17 @@ public class CheckMainScreenWifiDocTest {
         //onView(withId(R.id.bottomDialog_content)).check(matches(withText(anyOf(startsWith(FETCHING_CONFIG_MESSAGE), endsWith(FETCHING_CONFIG_MESSAGE)))));
         onView(withId(R.id.bottomDialog_content)).check(matches(withText(containsString(FETCHING_CONFIG_MESSAGE))));
         onView(withId(R.id.bottomDialog_title)).check(matches(withText(STATUS_TITLE)));
+    }
 
-        // Now we wait
-        SystemClock.sleep(BW_WAITING_TIME_MS);
-
+    private void checkBWTestFinishedState() {
         //Check that the status dialog box shows running download
         onView(allOf(withParent(withId(R.id.cg_download)), withId(R.id.gauge_tv))).check(matches(withText(not(containsString(WifiDocMainFragment.ZERO_POINT_ZERO)))));
 
         //Check that the status dialog box shows running upload
         onView(allOf(withParent(withId(R.id.cg_upload)), withId(R.id.gauge_tv))).check(matches(withText(not(containsString(WifiDocMainFragment.ZERO_POINT_ZERO)))));
+    }
 
-        SystemClock.sleep(SUGGESTION_WAITING_TIME_AFTER_BW_MS);
-
+    private void checkSuggestionsAvailableState() {
         //Finally when bw tests are done -- check that wifi card, ping card are visible
         onView(withId(R.id.ping_cardview)).check(matches(isDisplayed()));
         onView(withId(R.id.net_cardview)).check(matches(isDisplayed()));
@@ -145,4 +143,98 @@ public class CheckMainScreenWifiDocTest {
         onView(withId(R.id.bottomDialog_ok)).check(matches(withText(MORE_TITLE)));
         onView(withId(R.id.bottomDialog_ok)).check(matches(isDisplayed()));
     }
+
+    @Test
+    public void bwTestDefaultTest() {
+        checkIdleUIState();
+        //Click the run tests button
+        onView(withId(R.id.main_fab_button)).perform(click());
+        SystemClock.sleep(BOTTOM_DRAWER_WAITING_TIME_MS);
+        //Check that the status card view text changes
+        checkRunningUIState();
+        // Now we wait
+        SystemClock.sleep(BW_WAITING_TIME_MS);
+        checkBWTestFinishedState();
+        SystemClock.sleep(SUGGESTION_WAITING_TIME_AFTER_BW_MS);
+        checkSuggestionsAvailableState();
+    }
+
+    @Test
+    public void bwTestCancelTest() {
+        checkIdleUIState();
+        //Click the run tests button
+        onView(withId(R.id.main_fab_button)).perform(click());
+        SystemClock.sleep(BOTTOM_DRAWER_WAITING_TIME_MS);
+        checkRunningUIState();
+        //Cancel the tests
+        onView(withId(R.id.bottomDialog_cancel)).perform(click());
+        // Now we wait
+        SystemClock.sleep(CANCEL_WAIT_MS);
+        checkIdleUIState();
+    }
+
+    @Test
+    public void bwTestRerunAfterCancelTest() {
+        checkIdleUIState();
+
+        //Click the run tests button
+        onView(withId(R.id.main_fab_button)).perform(click());
+        SystemClock.sleep(BOTTOM_DRAWER_WAITING_TIME_MS);
+
+        checkRunningUIState();
+
+        //Cancel the tests
+        onView(withId(R.id.bottomDialog_cancel)).perform(click());
+        // Now we wait
+        SystemClock.sleep(CANCEL_WAIT_MS);
+
+        checkIdleUIState();
+
+        //Run tests again
+        onView(withId(R.id.main_fab_button)).perform(click());
+        SystemClock.sleep(BOTTOM_DRAWER_WAITING_TIME_MS);
+
+        //Check that the status card view text changes
+        checkRunningUIState();
+
+        // Now we wait
+        SystemClock.sleep(BW_WAITING_TIME_MS);
+
+        checkBWTestFinishedState();
+
+        SystemClock.sleep(SUGGESTION_WAITING_TIME_AFTER_BW_MS);
+
+        checkSuggestionsAvailableState();
+    }
+
+
+    @Test
+    public void bwTestRunBackToBackTest() {
+        checkIdleUIState();
+        //Click the run tests button
+        onView(withId(R.id.main_fab_button)).perform(click());
+        SystemClock.sleep(BOTTOM_DRAWER_WAITING_TIME_MS);
+        //Check that the status card view text changes
+        checkRunningUIState();
+        // Now we wait
+        SystemClock.sleep(BW_WAITING_TIME_MS);
+        checkBWTestFinishedState();
+        SystemClock.sleep(SUGGESTION_WAITING_TIME_AFTER_BW_MS);
+        checkSuggestionsAvailableState();
+
+        //Second run
+        onView(withId(R.id.bottomDialog_cancel)).perform(click());
+        onView(withId(R.id.main_fab_button)).perform(click());
+        SystemClock.sleep(BOTTOM_DRAWER_WAITING_TIME_MS);
+        //Check that the status card view text changes
+        checkRunningUIState();
+        // Now we wait
+        SystemClock.sleep(BW_WAITING_TIME_MS);
+        checkBWTestFinishedState();
+        SystemClock.sleep(SUGGESTION_WAITING_TIME_AFTER_BW_MS);
+        checkSuggestionsAvailableState();
+    }
+
+
+
 }
