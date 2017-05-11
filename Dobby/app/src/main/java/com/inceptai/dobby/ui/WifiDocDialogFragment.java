@@ -18,6 +18,7 @@ import android.widget.ListView;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 
+import com.inceptai.dobby.BuildConfig;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.database.FeedbackDatabaseWriter;
@@ -37,22 +38,7 @@ public class WifiDocDialogFragment extends DialogFragment {
     public static final String DIALOG_SUGGESTION_TILTE = "suggestionTitle";
     public static final String DIALOG_SUGGESTION_LIST = "suggestionList";
     public static final String DIALOG_TYPE = "type";
-
-    private static final String[] PRIVACY_POLICY_LIST = {
-            "In addition, the Application may collect certain information automatically, including," +
-                    "but not limited to, the type of mobile device you use, your mobile devices unique device ID," +
-                    "the IP address of your mobile device, your mobile operating system, the type of mobile Internet" +
-                    "browsers you use, and information about the way you use the Application.",
-            "This Application does not collect precise information about the location of your mobile device. ",
-            "If you have any questions regarding privacy while using the Application, or have questions about" +
-                    "our practices, please contact us via email at hello@obiai.tech.",
-            "By using the Application, you are consenting to our processing of your information as" +
-                    "set forth in this Privacy Policy now and as amended by us. \"Processing,” means" +
-                    "using cookies on a computer/hand held device or using or touching information in any way, " +
-                    " including, but not limited to, collecting, storing, deleting, using, combining and disclosing " +
-                    "information, all of which activities will take place in the United States. If you reside outside " +
-                    "the United States your information will be transferred, processed and stored there under United States privacy standards. "
-    };
+    public static final String VERSION_TEXT = "Wifi Tester App Version: ";
 
     private static final String PRIVACY_POLICY = "Please click <a href=\"http://inceptai.com/privacy/\"> here </a> to read about our privacy policy.";
     private static final String ABOUT_STRING = "This app is offered by InceptAI. Copyright &#169; 2017. For detailed feedback or questions, email us at <a href=\"mailto:hello@obiai.tech\">hello@obiai.tech</a>.";
@@ -155,6 +141,8 @@ public class WifiDocDialogFragment extends DialogFragment {
         rootView = inflater.inflate(R.layout.privacy_policy_dialog_fragment, null);
         TextView aboutTv = (TextView) rootView.findViewById(R.id.about_tv);
         TextView privacyTv = (TextView) rootView. findViewById(R.id.privacy_tv);
+        TextView versionTv = (TextView) rootView.findViewById(R.id.version_tv);
+        versionTv.setText(VERSION_TEXT + BuildConfig.VERSION_NAME);
         makeHtmlFriendly(privacyTv, PRIVACY_POLICY);
         makeHtmlFriendly(aboutTv, ABOUT_STRING);
         Button dismissButton = (Button) rootView.findViewById(R.id.privacy_policy_dismiss_button);
