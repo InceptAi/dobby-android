@@ -45,6 +45,7 @@ public class CheckMainScreenWifiDocTest {
     private final int BW_WAITING_TIME_MS = 21000; // ~21 secs
     private final int SUGGESTION_WAITING_TIME_AFTER_BW_MS = 7000; // ~6 secs
     private final int BOTTOM_DRAWER_WAITING_TIME_MS = 1000; // ~200 ms
+    private final int WAITING_BETWEEN_BW_TESTS_MS = 1000; // 200 ms
     private final String FETCHING_CONFIG_MESSAGE = "Fetching server configuration ...";
     private final String STATUS_TITLE = "Status";
     private final String SUGGESTIONS_TITLE = "Suggestions";
@@ -222,8 +223,11 @@ public class CheckMainScreenWifiDocTest {
         SystemClock.sleep(SUGGESTION_WAITING_TIME_AFTER_BW_MS);
         checkSuggestionsAvailableState();
 
-        //Second run
+        //Second run -- first dismiss the suggestion
         onView(withId(R.id.bottomDialog_cancel)).perform(click());
+        SystemClock.sleep(WAITING_BETWEEN_BW_TESTS_MS);
+
+        //Then start the test again
         onView(withId(R.id.main_fab_button)).perform(click());
         SystemClock.sleep(BOTTOM_DRAWER_WAITING_TIME_MS);
         //Check that the status card view text changes
