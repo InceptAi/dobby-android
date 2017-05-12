@@ -516,6 +516,7 @@ public class SuggestionCreator {
                             "If possible, try rebooting it and and it should put the router in a good state so you can connect to it.  ";
                 }
             case ConnectivityAnalyzer.WifiConnectivityMode.UNKNOWN:
+            case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_UNKNOWN:
                 if ((params.pingGrade.hasValidData() && DataInterpreter.isGoodOrExcellentOrAverage(params.pingGrade.routerLatencyMetric)) ||
                         (params.httpGrade.hasValidData() && DataInterpreter.isGoodOrExcellentOrAverage(params.httpGrade.httpDownloadLatencyMetric))) {
                     return Utils.EMPTY_STRING;

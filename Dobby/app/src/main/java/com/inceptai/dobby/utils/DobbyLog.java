@@ -25,7 +25,7 @@ public class DobbyLog {
         if (BuildConfig.DEBUG) {
             Log.i(TAG, message);
         } else {
-            Log.i(TAG, message);
+            // Log.i(TAG, message);
             FirebaseCrash.logcat(Log.INFO, TAG, message);
         }
     }
@@ -43,7 +43,6 @@ public class DobbyLog {
         if (BuildConfig.DEBUG) {
             Log.v(TAG, message);
         } else {
-            Log.v(TAG, message);
             FirebaseCrash.logcat(Log.VERBOSE, TAG, message);
         }
     }

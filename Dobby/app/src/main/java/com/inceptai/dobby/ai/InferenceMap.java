@@ -189,7 +189,7 @@ public class InferenceMap {
             conditions.exclude(DNS_CONDITIONS);
             conditions.exclude(ROUTER_CONDITIONS);
             return conditions;
-        } else if (wifiGrade.wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.ON_AND_DISCONNECTED) {
+        } else if (wifiGrade.wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.ON_AND_DISCONNECTED || wifiGrade.wifiLinkMode != WifiState.WifiLinkMode.NO_PROBLEM_DEFAULT_STATE) {
             conditions.exclude(ISP_CONDITIONS);
             conditions.exclude(DNS_CONDITIONS);
             conditions.exclude(WIFI_CONDITIONS);
@@ -246,7 +246,11 @@ public class InferenceMap {
         }
 
         if (DataInterpreter.isUnknown(wifiGrade.primaryApSignalMetric)) {
-            conditions.exclude(Condition.WIFI_CHANNEL_BAD_SIGNAL);
+            conditions.exclude(WIFI_CONDITIONS);
+            conditions.exclude(ISP_CONDITIONS);
+            conditions.exclude(DNS_CONDITIONS);
+            conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.8);
+            conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE, 0.2);
         }
 
         /*

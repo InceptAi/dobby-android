@@ -28,13 +28,13 @@ public class DobbyApplication extends Application {
     public static final AtomicBoolean USE_FAKES = new AtomicBoolean(false);
     private final AtomicReference<String> userUuid = new AtomicReference<>();
 
-    private ProdComponent prodComponent;
+    protected ProdComponent prodComponent;
 
     @Override
     public void onCreate() {
         super.onCreate();
 
-        prodComponent = DaggerProdComponent.builder().prodModule(new ProdModule(this)).build();
+        setupDagger();
         Thread.UncaughtExceptionHandler handler = Thread.getDefaultUncaughtExceptionHandler();
         Log.i("Dobby", "DobbyApplication: Old handler:" + handler.getClass().getCanonicalName());
         // Thread.setDefaultUncaughtExceptionHandler(new DobbyThreadpool.DobbyUncaughtExceptionHandler(handler));
@@ -48,6 +48,11 @@ public class DobbyApplication extends Application {
             Utils.saveSharedSetting(this, USER_UUID, uuid);
         }
         userUuid.set(uuid);
+    }
+
+    // Can be overridden by child classes, such as for testing.
+    protected void setupDagger() {
+        prodComponent = DaggerProdComponent.builder().prodModule(new ProdModule(this)).build();
     }
 
     public ProdComponent getProdComponent() {

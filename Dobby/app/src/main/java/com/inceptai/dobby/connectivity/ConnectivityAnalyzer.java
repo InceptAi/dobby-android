@@ -281,38 +281,59 @@ public class ConnectivityAnalyzer {
     public void processDobbyBusEvents(DobbyEvent event) {
         int eventType = event.getEventType();
         DobbyLog.v("ConnectivityAnalyzer Got event: " + event);
+        boolean scheduleWifiOnlineTest = false;
         switch(eventType) {
             case DobbyEvent.EventType.WIFI_NOT_CONNECTED:
-                DobbyLog.v("CA: Setting wifi connectivity mode to ON_AND_DISCONNECTED from wifiConnectivityMode: " + connectivityModeToString(getWifiConnectivityMode()));
-                wifiConnectivityMode = WifiConnectivityMode.ON_AND_DISCONNECTED;
+                if (wifiConnectivityMode != WifiConnectivityMode.OFF) {
+                    DobbyLog.v("CA: Setting wifi connectivity mode to ON_AND_DISCONNECTED from wifiConnectivityMode: " + connectivityModeToString(getWifiConnectivityMode()));
+                    wifiConnectivityMode = WifiConnectivityMode.ON_AND_DISCONNECTED;
+                }
                 break;
+
             case DobbyEvent.EventType.WIFI_STATE_DISABLED:
             case DobbyEvent.EventType.WIFI_STATE_DISABLING:
                 DobbyLog.v("CA: Setting wifi connectivity mode to OFF from wifiConnectivityMode: " + connectivityModeToString(getWifiConnectivityMode()));
                 wifiConnectivityMode = WifiConnectivityMode.OFF;
                 break;
+
             case DobbyEvent.EventType.WIFI_STATE_UNKNOWN:
-                DobbyLog.v("CA: Got event WIFI_STATE_UNKNOWN, ignoring");
-                //wifiConnectivityMode = WifiConnectivityMode.UNKNOWN;
+                DobbyLog.v("CA: Got event WIFI_STATE_UNKNOWN, setting to UNKNOWN");
+                wifiConnectivityMode = WifiConnectivityMode.UNKNOWN;
                 break;
-            case DobbyEvent.EventType.WIFI_CONNECTED:
-                //Should change mode to CONNECTED AND OFFLINE -- will transition to CONNECTED AND ONLINE OR CAPTIVE AFTER TEST
-                wifiConnectivityMode = CONNECTED_AND_UNKNOWN;
+
+
+
             case DobbyEvent.EventType.WIFI_STATE_ENABLING:
             case DobbyEvent.EventType.WIFI_STATE_ENABLED:
-            case DobbyEvent.EventType.WIFI_RSSI_CHANGED:
-            case DobbyEvent.EventType.DHCP_INFO_AVAILABLE:
-            case DobbyEvent.EventType.PING_INFO_AVAILABLE:
-                //Safe to call since it doesn't do anyting if we are already online
-                if (!isWifiOnline()) {
-                    threadpool.getExecutorServiceForNetworkLayer().submit(new Runnable() {
-                        @Override
-                        public void run() {
-                            updateWifiConnectivityMode(0 /* Do not schedule again*/);
-                        }
-                    });
-                }
+                DobbyLog.v("CA: Setting wifi connectivity mode to ON_AND_DISCONNECTED from wifiConnectivityMode: " + connectivityModeToString(getWifiConnectivityMode()));
+                wifiConnectivityMode = WifiConnectivityMode.ON_AND_DISCONNECTED;
+                scheduleWifiOnlineTest=true;
                 break;
+
+            case DobbyEvent.EventType.WIFI_CONNECTED:
+            case DobbyEvent.EventType.DHCP_INFO_AVAILABLE:
+                //Should change mode to CONNECTED AND OFFLINE -- will transition to CONNECTED AND ONLINE OR CAPTIVE AFTER TEST
+                //wifiConnectivityMode = WifiConnectivityMode.ON_AND_DISCONNECTED;
+                scheduleWifiOnlineTest=true;
+                break;
+
+            case DobbyEvent.EventType.WIFI_RSSI_CHANGED:
+                scheduleWifiOnlineTest=true;
+                break;
+
+            case DobbyEvent.EventType.PING_INFO_AVAILABLE:
+                scheduleWifiOnlineTest = true;
+                break;
+
+        }
+        //Safe to call since it doesn't do anyting if we are already online
+        if (scheduleWifiOnlineTest && !isWifiOnline()) {
+            threadpool.getExecutorServiceForNetworkLayer().submit(new Runnable() {
+                @Override
+                public void run() {
+                    updateWifiConnectivityMode(0 /* Do not schedule again*/);
+                }
+            });
         }
         DobbyLog.v("WifiConnectivity Mode is " + wifiConnectivityMode);
     }

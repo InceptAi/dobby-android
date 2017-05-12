@@ -166,6 +166,9 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
                                      @Nullable String errorMessage) {
         //TODO: Inform the inference engine that we encountered an error during bandwidth tests.
         DobbyLog.v("BandwidthObserver: onBandwidthTestError Got bw test error: " + errorCode + " testmode: " + testMode);
+        if (inferenceEngine != null) {
+            inferenceEngine.notifyBandwidthTestError(errorCode, 0.0);
+        }
         for (NewBandwidthAnalyzer.ResultsCallback callback : resultsCallbacks) {
             callback.onBandwidthTestError(testMode, errorCode, errorMessage);
         }

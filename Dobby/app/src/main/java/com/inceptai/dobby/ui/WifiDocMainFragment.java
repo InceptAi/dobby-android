@@ -38,6 +38,7 @@ import android.widget.Toast;
 import com.google.common.eventbus.Subscribe;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.R;
+import com.inceptai.dobby.RemoteConfig;
 import com.inceptai.dobby.ai.DataInterpreter;
 import com.inceptai.dobby.ai.SuggestionCreator;
 import com.inceptai.dobby.eventbus.DobbyEvent;
@@ -68,8 +69,8 @@ import static com.inceptai.dobby.ai.DataInterpreter.MetricType.POOR;
 
 public class WifiDocMainFragment extends Fragment implements View.OnClickListener, NewBandwidthAnalyzer.ResultsCallback, Handler.Callback {
     public static final String TAG = "WifiDocMainFragment";
+    public static final String ZERO_POINT_ZERO = "0.0";
     private static final String UNKNOWN_LATENCY_STRING = "--";
-    private static final String ZERO_POINT_ZERO = "0.0";
     private static final int PERMISSION_COARSE_LOCATION_REQUEST_CODE = 101;
     private static final String ARG_PARAM1 = "param1";
     private static final int MSG_UPDATED_CIRCULAR_GAUGE = 1001;
@@ -80,8 +81,10 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private static final int MSG_SWITCH_STATE = 1006;
     private static final int MSG_RESUME_HANDLER = 1007;
     private static final int MSG_WIFI_OFFLINE = 1008;
+    private static final int MSG_REQUEST_LAYOUT = 1009;
     private static final long SUGGESTION_FRESHNESS_TS_MS = 30000; // 30 seconds
-    private static final int MAX_HANDLER_PAUSE_MS = 2000;
+    private static final int MAX_HANDLER_PAUSE_MS = 5000;
+    private static final int MAX_SSID_LENGTH = 30;
 
     private static final int UI_STATE_INIT_AND_READY = 101; // Ready to run tests. Initial state.
     private static final int UI_STATE_RUNNING_TESTS = 102; // Running tests.
@@ -158,6 +161,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     @Inject
     DobbyAnalytics dobbyAnalytics;
 
+    @Inject
+    RemoteConfig remoteConfig;
+
     public WifiDocMainFragment() {
         // Required empty public constructor
     }
@@ -189,6 +195,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         statusMessage = Utils.EMPTY_STRING;
         handlerBacklog = new LinkedList<>();
         pauseHandler = false;
+        remoteConfig.fetchAsync();
     }
 
     @Override
@@ -208,6 +215,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     }
 
     private void uiStateVisibilityChanges(View rootView) {
+        DobbyLog.e("uiStateVisibilty called.");
         if (uiState == UI_STATE_INIT_AND_READY) {
             yourNetworkCv.setVisibility(View.INVISIBLE);
             pingCv.setVisibility(View.GONE);
@@ -484,6 +492,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             case MSG_WIFI_OFFLINE:
                 // Should we do anything here ?
                 break;
+            case MSG_REQUEST_LAYOUT:
+                uiStateVisibilityChanges(getView());
+                break;
             default:
                 return false;
         }
@@ -496,8 +507,11 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         }
         String ssid = wifiGrade.getPrimaryApSsid();
         if (ssid != null && !ssid.isEmpty()) {
-            if (ssid.length() > 10) {
-                ssid = ssid.substring(0, 10);
+            if (ssid.length() > MAX_SSID_LENGTH) {
+                ssid = ssid.substring(0, MAX_SSID_LENGTH);
+                if (ssid.startsWith("\"") || ssid.startsWith("'")) {
+                    ssid = ssid + ssid.substring(0, 1);
+                }
             }
             wifiSsidTv.setText(ssid);
         }
@@ -755,6 +769,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         // Clear suggestions
         currentSuggestion = null;
         resetPingData();
+        ispNameTv.setText(Utils.EMPTY_STRING);
+        wifiSsidTv.setText(Utils.EMPTY_STRING);
         //ispNameTv.setText("");
     }
 
@@ -782,8 +798,11 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     }
 
     private synchronized void switchState(int newState) {
-        if ((uiState == UI_STATE_INIT_AND_READY || uiState == UI_STATE_READY_WITH_RESULTS)
-                && newState == UI_STATE_RUNNING_TESTS) {
+        int oldState = uiState;
+        uiState = newState;
+        uiStateVisibilityChanges(getView());
+        if ((oldState == UI_STATE_INIT_AND_READY || oldState == UI_STATE_READY_WITH_RESULTS)
+                && uiState == UI_STATE_RUNNING_TESTS) {
             // Tests starting.
             // Disable fab.
             if (bottomDialog == null) {
@@ -794,19 +813,17 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             bottomDialog.setModeStatus();
         }
 
-        if (uiState == UI_STATE_RUNNING_TESTS && newState == UI_STATE_READY_WITH_RESULTS) {
+        if (oldState == UI_STATE_RUNNING_TESTS && uiState == UI_STATE_READY_WITH_RESULTS) {
             if (bottomDialog != null) {
                 bottomDialog.setModeStatusWithDismiss();
             }
         }
 
-        uiState = newState;
-        if (newState == UI_STATE_RUNNING_TESTS) {
+        if (uiState == UI_STATE_RUNNING_TESTS) {
             statusTv.setText(R.string.running_tests);
-        } else if (newState == UI_STATE_INIT_AND_READY) {
+        } else if (uiState == UI_STATE_INIT_AND_READY) {
             statusTv.setText(R.string.ready_status_message);
         }
-        uiStateVisibilityChanges(getView());
     }
 
     private void showSuggestionsUi() {
@@ -827,6 +844,11 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     }
 
     private synchronized void pauseHandler() {
+        if (pauseHandler) {
+            // Handler already paused do nothing.
+            return;
+        }
+        DobbyLog.e("Handler paused.");
         pauseHandler = true;
         Message msg = Message.obtain(handler, MSG_RESUME_HANDLER);
         handler.sendMessageDelayed(msg, MAX_HANDLER_PAUSE_MS);
@@ -835,6 +857,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private synchronized void resumeHandler() {
         if (!pauseHandler) return;
         pauseHandler = false;
+        handler.removeMessages(MSG_RESUME_HANDLER);
+        DobbyLog.e("Handler resumed.");
         for (Message msg : handlerBacklog) {
             DobbyLog.e("Sending backlog message BACK." + msg.what);
             handler.sendMessageDelayed(msg, 50);
@@ -919,6 +943,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             fab.setVisibility(View.INVISIBLE);
             bottomToolbar.setVisibility(View.INVISIBLE);
             rootLayout.requestLayout();
+            pauseHandler();
             isVisible = true;
         }
 
@@ -932,6 +957,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
                 @Override
                 public void onAnimationEnd(Animator animation) {
+                    handler.sendEmptyMessageDelayed(MSG_REQUEST_LAYOUT, 500);
                     resumeHandler();
                 }
 
@@ -1015,19 +1041,19 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                     isVisible = false;
                     setModeStatus();
                     clearStatusMessages();
-                    vContent.setText("");
+                    vContent.setText(Utils.EMPTY_STRING);
+                    resumeHandler();
                 }
 
                 @Override
                 public void onAnimationCancel(Animator animation) {
                     dismissAndShowCanonicalViews();
                     resumeHandler();
-                    vContent.setText("");
+                    vContent.setText(Utils.EMPTY_STRING);
                 }
 
                 @Override
                 public void onAnimationRepeat(Animator animation) {
-                    resumeHandler();
                 }
             });
             animator.start();
@@ -1041,7 +1067,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         }
 
         void clearStatusMessages() {
-            statusMessage = "";
+            statusMessage = Utils.EMPTY_STRING;
         }
 
         @Override

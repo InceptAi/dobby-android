@@ -16,7 +16,6 @@ import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.speedtest.BandwidthResult;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
 import com.inceptai.dobby.utils.DobbyLog;
-import com.inceptai.dobby.utils.Utils;
 
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -326,8 +325,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             threadpool.submit(new Runnable() {
                 @Override
                 public void run() {
-                    inferenceEngine.notifyBandwidthTestResult(BandwithTestCodes.TestMode.DOWNLOAD, -1.0, Utils.EMPTY_STRING, Utils.EMPTY_STRING);
-                    inferenceEngine.notifyBandwidthTestResult(BandwithTestCodes.TestMode.UPLOAD, -1.0, Utils.EMPTY_STRING, Utils.EMPTY_STRING);
+                    inferenceEngine.notifyBandwidthTestError(BandwithTestCodes.ErrorCodes.ERROR_WIFI_OFFLINE, -1.0);
                 }
             });
             return null;

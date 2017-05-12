@@ -31,8 +31,10 @@ public class BandwithTestCodes {
             ErrorCodes.ERROR_PARSING_SERVER_INFO, ErrorCodes.ERROR_SELECTING_BEST_SERVER,
             ErrorCodes.ERROR_INVALID_HTTP_RESPONSE, ErrorCodes.ERROR_SOCKET_ERROR,
             ErrorCodes.ERROR_SOCKET_TIMEOUT, ErrorCodes.ERROR_CONNECTION_ERROR,
-            ErrorCodes.ERROR_TEST_INTERRUPTED, ErrorCodes.ERROR_TEST_ALREADY_RUNNING})
+            ErrorCodes.ERROR_TEST_INTERRUPTED, ErrorCodes.ERROR_TEST_ALREADY_RUNNING,
+            ErrorCodes.ERROR_WIFI_OFFLINE, ErrorCodes.NO_ERROR})
     public @interface ErrorCodes {
+        int NO_ERROR = 0;
         int ERROR_UNKNOWN = 1;
         int ERROR_FETCHING_CONFIG = 2;
         int ERROR_PARSING_CONFIG = 3;
@@ -45,6 +47,7 @@ public class BandwithTestCodes {
         int ERROR_CONNECTION_ERROR = 10;
         int ERROR_TEST_INTERRUPTED = 11;
         int ERROR_TEST_ALREADY_RUNNING = 12;
+        int ERROR_WIFI_OFFLINE = 13;
     }
 
 }

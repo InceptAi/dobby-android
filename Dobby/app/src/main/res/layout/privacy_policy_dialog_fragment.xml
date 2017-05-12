@@ -34,6 +34,17 @@
         android:layout_height="wrap_content"
         android:textColor="@color/lessDarkGray2"
         android:textSize="12sp"
+        android:text=""
+        android:layout_marginLeft="15dp"
+        android:layout_marginStart="15dp"
+        android:id="@+id/version_tv"
+        />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/lessDarkGray2"
+        android:textSize="12sp"
         android:text="@string/about_string"
         android:padding="15dp"
         android:id="@+id/about_tv"
@@ -44,7 +55,8 @@
         android:layout_height="wrap_content"
         android:textSize="12sp"
         android:textColor="@color/lessDarkGray2"
-        android:padding="15dp"
+        android:layout_marginLeft="15dp"
+        android:layout_marginStart="15dp"
         android:id="@+id/privacy_tv"
         />
     <!--
