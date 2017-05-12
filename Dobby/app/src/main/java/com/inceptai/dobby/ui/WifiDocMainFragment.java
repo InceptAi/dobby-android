@@ -66,10 +66,11 @@ import static com.inceptai.dobby.ai.DataInterpreter.MetricType.AVERAGE;
 import static com.inceptai.dobby.ai.DataInterpreter.MetricType.EXCELLENT;
 import static com.inceptai.dobby.ai.DataInterpreter.MetricType.GOOD;
 import static com.inceptai.dobby.ai.DataInterpreter.MetricType.POOR;
+import static com.inceptai.dobby.utils.Utils.ZERO_POINT_ZERO;
+import static com.inceptai.dobby.utils.Utils.nonLinearBwScale;
 
 public class WifiDocMainFragment extends Fragment implements View.OnClickListener, NewBandwidthAnalyzer.ResultsCallback, Handler.Callback {
     public static final String TAG = "WifiDocMainFragment";
-    public static final String ZERO_POINT_ZERO = "0.0";
     private static final String UNKNOWN_LATENCY_STRING = "--";
     private static final int PERMISSION_COARSE_LOCATION_REQUEST_CODE = 101;
     private static final String ARG_PARAM1 = "param1";
@@ -435,7 +436,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
     @Override
     public void onTestFinished(@BandwithTestCodes.TestMode int testMode, BandwidthStats stats) {
-        Message.obtain(handler, MSG_UPDATED_CIRCULAR_GAUGE, BandwidthValue.from(testMode, (stats.getOverallBandwidth() / 1.0e6))).sendToTarget();
+        Message.obtain(handler, MSG_UPDATED_CIRCULAR_GAUGE, Utils.BandwidthValue.from(testMode, (stats.getOverallBandwidth() / 1.0e6))).sendToTarget();
         if (testMode == BandwithTestCodes.TestMode.UPLOAD) {
             showStatusMessageAsync("Finished bandwidth tests.");
             sendSwitchStateMessage(UI_STATE_READY_WITH_RESULTS);
@@ -451,7 +452,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             setBwTestState(BW_UPLOAD_RUNNING);
             showStatusMessageAsync("Running Upload test ...");
         }
-        Message.obtain(handler, MSG_UPDATED_CIRCULAR_GAUGE, BandwidthValue.from(testMode, (instantBandwidth / 1.0e6))).sendToTarget();
+        Message.obtain(handler, MSG_UPDATED_CIRCULAR_GAUGE, Utils.BandwidthValue.from(testMode, (instantBandwidth / 1.0e6))).sendToTarget();
     }
 
     @Override
@@ -660,7 +661,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     }
 
     private void updateBandwidthGauge(Message msg) {
-        BandwidthValue bandwidthValue = (BandwidthValue) msg.obj;
+        Utils.BandwidthValue bandwidthValue = (Utils.BandwidthValue) msg.obj;
         if (bandwidthValue.mode == BandwithTestCodes.TestMode.UPLOAD) {
             uploadCircularGauge.setValue((int) nonLinearBwScale(bandwidthValue.value));
             uploadGaugeTv.setText(String.format("%2.2f", bandwidthValue.value));
@@ -670,43 +671,6 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         }
     }
 
-    private static class BandwidthValue {
-        @BandwithTestCodes.TestMode
-        int mode;
-        double value;
-        static BandwidthValue from(int mode, double value) {
-            BandwidthValue bandwidthValue = new BandwidthValue();
-            bandwidthValue.mode = mode;
-            bandwidthValue.value = value;
-            return bandwidthValue;
-        }
-    }
-
-    private static double nonLinearBwScale(double input) {
-        // 0 .. 5 maps to 0 .. 50
-        if (input <= 5.0) {
-            return input * 10.;
-        }
-        // 5 to 10 maps to 50 .. 62.5
-        if (input <= 10.0) {
-            return  12.5 * (input - 5.0)  / 5.0 + 50.0;
-        }
-
-        // 10 to 20 maps to 62.5 .. 75.
-        if (input < 20.0) {
-            return 12.5 * (input - 10.0) / 10.0 + 62.5;
-        }
-
-        // 20 to 50 maps to 75 to 87.5
-        if (input < 50.0) {
-            return 12.5 * (input - 20.0) / 30.0 + 75;
-        }
-
-        // Upper bound by 100
-        input = Math.min(100.0, input);
-        // 50 to 100 maps to 87.5 to 100
-        return 12.5 * (input - 50.0) / 50.0 + 87.5;
-    }
 
     private void setPingResult(TextView valueTv, String value, ImageView gradeIv, @DataInterpreter.MetricType int grade) {
         valueTv.setText(value);

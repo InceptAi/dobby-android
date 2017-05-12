@@ -28,6 +28,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.dobby.ai.DobbyAi;
 import com.inceptai.dobby.ai.RtDataSource;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
+import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.ui.ChatFragment;
 import com.inceptai.dobby.ui.DebugFragment;
 import com.inceptai.dobby.ui.FakeDataFragment;
@@ -189,7 +190,7 @@ public class MainActivity extends AppCompatActivity
     // From DobbyAi.ResponseCallback interface.
     @Override
     public void showRtGraph(RtDataSource<Float, Integer> rtDataSource) {
-        chatFragment.showRtGraph(rtDataSource);
+        // chatFragment.showRtGraph(rtDataSource);
     }
 
     @Override
@@ -245,5 +246,10 @@ public class MainActivity extends AppCompatActivity
     protected void onDestroy() {
         super.onDestroy();
         dobbyAi.cleanup();
+    }
+
+    @Override
+    public void observeBandwidth(BandwidthObserver observer) {
+        chatFragment.observeBandwidthNonUi(observer);
     }
 }

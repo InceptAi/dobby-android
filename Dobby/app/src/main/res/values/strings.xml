@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Dobby</string>
+    <string name="wifiexpert_app_name">Wifi Expert</string>
     <string name="wifidoc_app_name">Wifi Tester</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>

@@ -52,6 +52,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     public interface ResponseCallback {
         void showResponse(String text);
         void showRtGraph(RtDataSource<Float, Integer> rtDataSource);
+        void observeBandwidth(BandwidthObserver observer);
     }
 
     public DobbyAi(DobbyThreadpool threadpool,
@@ -331,9 +332,9 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             return null;
         }
         observer.setInferenceEngine(inferenceEngine);
-        //responseCallback.showRtGraph(observer);
         if (responseCallback != null) {
-            responseCallback.showRtGraph(observer);
+            // responseCallback.showRtGraph(observer);
+            responseCallback.observeBandwidth(observer);
         }
         return observer.asFuture();
     }

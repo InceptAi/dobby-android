@@ -14,6 +14,7 @@ import android.widget.ImageView;
 
 import com.google.common.net.InetAddresses;
 import com.google.gson.Gson;
+import com.inceptai.dobby.speedtest.BandwithTestCodes;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -48,11 +49,13 @@ public class Utils {
     public static final String FALSE_STRING = "false";
     private static final int READ_TIMEOUT_MS = 5000;
     private static final int CONNECTION_TIMEOUT_MS = 5000;
+    public static final String ZERO_POINT_ZERO = "0.0";
     private static Random random = new Random();
 
     public static final String PREFERENCES_FILE = "wifi_tester_settings";
 
-    private Utils() {}
+    private Utils() {
+    }
 
     public static Random getRandom() {
         return random;
@@ -60,6 +63,7 @@ public class Utils {
 
     public static class HTTPReturnCodeException extends IOException {
         public int httpReturnCode = 0;
+
         public HTTPReturnCodeException(int httpReturnCode) {
             this.httpReturnCode = httpReturnCode;
         }
@@ -92,6 +96,7 @@ public class Utils {
         public double percentile90;
         public double getPercentile10;
         public int samples;
+
         public PercentileStats() {
             median = 0;
             max = 0;
@@ -100,6 +105,7 @@ public class Utils {
             getPercentile10 = 0;
             samples = 0;
         }
+
         public PercentileStats(List<Double> list) {
             Collections.sort(list);
             median = computePercentileFromSortedList(list, 50);
@@ -124,7 +130,8 @@ public class Utils {
 
     /**
      * Given a string url, connects and returns an input stream
-     * @param urlString string to fetch
+     *
+     * @param urlString       string to fetch
      * @param maxStringLength maximum length of the string in bytes
      * @return
      * @throws IOException
@@ -136,7 +143,8 @@ public class Utils {
 
     /**
      * Given a string url, connects and returns an input stream
-     * @param urlString string to fetch
+     *
+     * @param urlString       string to fetch
      * @param maxStringLength maximum length of the string in bytes
      * @return
      * @throws IOException
@@ -154,17 +162,18 @@ public class Utils {
 
     /**
      * Given a string url, connects and returns an input stream
-     * @param urlString string to fetch
+     *
+     * @param urlString       string to fetch
      * @param maxStringLength maximum length of the string in bytes
      * @return
      * @throws IOException
      */
     public static String getDataFromUrlWithOptions(String urlString,
-                                        int maxStringLength,
-                                        int readTimeOutMs,
-                                        int connectionTimeOutMs,
-                                        boolean urlRedirect,
-                                        boolean useCaches) throws IOException {
+                                                   int maxStringLength,
+                                                   int readTimeOutMs,
+                                                   int connectionTimeOutMs,
+                                                   boolean urlRedirect,
+                                                   boolean useCaches) throws IOException {
         String outputString = null;
         InputStream stream = null;
         URL url = new URL(urlString);
@@ -197,6 +206,7 @@ public class Utils {
 
     /**
      * Given a string url, connects and returns an input stream
+     *
      * @param urlString string to fetch
      * @return
      * @throws IOException
@@ -222,7 +232,8 @@ public class Utils {
 
     /**
      * Closes the input stream and disconnects
-     * @param stream input stream to close
+     *
+     * @param stream     input stream to close
      * @param connection connection to close
      * @throws IOException
      */
@@ -241,6 +252,7 @@ public class Utils {
 
     /**
      * Converts the contents of an InputStream to a String.
+     *
      * @param stream
      * @param maxLength
      * @return
@@ -273,6 +285,7 @@ public class Utils {
 
     /**
      * converts string to int with default value if unsuccessful
+     *
      * @param defaultValue
      * @param inputString
      * @return
@@ -287,6 +300,7 @@ public class Utils {
 
     /**
      * converts string to double with default value if unsuccessful
+     *
      * @param defaultValue
      * @param inputString
      * @return
@@ -301,6 +315,7 @@ public class Utils {
 
     /**
      * Skips one xml tag -- handles tags with nested tags
+     *
      * @param parser
      * @throws XmlPullParserException
      * @throws IOException
@@ -325,6 +340,7 @@ public class Utils {
 
     /**
      * Computes distance
+     *
      * @param lat1
      * @param lon1
      * @param lat2
@@ -343,6 +359,7 @@ public class Utils {
 
     /**
      * This function converts decimal degrees to radians
+     *
      * @param deg
      * @return
      */
@@ -352,6 +369,7 @@ public class Utils {
 
     /**
      * This function converts radians to decimal degrees
+     *
      * @param rad
      * @return
      */
@@ -368,11 +386,12 @@ public class Utils {
         for (int i = 0; i < in.length; i++) {
             sum += in[i];
         }
-        return sum/(double)(in.length);
+        return sum / (double) (in.length);
     }
 
     /**
      * Run linux system command
+     *
      * @param command
      */
     public static Process getPingProcess(String command) throws Exception {
@@ -387,6 +406,7 @@ public class Utils {
 
     /**
      * Run linux system command with timeout
+     *
      * @param command
      */
     public static String runSystemCommand(final String command,
@@ -420,6 +440,7 @@ public class Utils {
 
     /**
      * Run linux system command
+     *
      * @param command
      */
     public static String runSystemCommand(String command) throws Exception {
@@ -446,13 +467,14 @@ public class Utils {
 
     /**
      * Run linux system command
+     *
      * @param command
      */
     public static Reader getReaderForSystemCommand(String command) throws Exception {
         StringBuilder outputStringBuilder = new StringBuilder();
         try {
             Process p = Runtime.getRuntime().exec(command);
-            BufferedReader bufferedReader= new BufferedReader(
+            BufferedReader bufferedReader = new BufferedReader(
                     new InputStreamReader(p.getInputStream()));
             return bufferedReader;
         } catch (IOException e) {
@@ -501,7 +523,7 @@ public class Utils {
                 return median;
             }
         } else if (percentile == 100) {
-            return sortedList.get(size -1);
+            return sortedList.get(size - 1);
         } else if (percentile == 0) {
             return sortedList.get(0);
         }
@@ -511,13 +533,13 @@ public class Utils {
     public static int convertSignalDbmToPercent(int signalDbm) {
         final double MAX_SIGNAL_DBM = -50.0;
         final double MIN_SIGNAL_DBM = -110.0;
-        double percent = (((double)signalDbm - MIN_SIGNAL_DBM) / (MAX_SIGNAL_DBM - MIN_SIGNAL_DBM)) * 100.0;
+        double percent = (((double) signalDbm - MIN_SIGNAL_DBM) / (MAX_SIGNAL_DBM - MIN_SIGNAL_DBM)) * 100.0;
         if (percent > 100) {
             percent = 100;
         } else if (percent < 0) {
             percent = 1;
         }
-        return (int)percent;
+        return (int) percent;
     }
 
     public static int computeMovingAverageSignal(int currentSignal, int previousSignal, long currentSeen, long previousSeen, int maxAge) {
@@ -525,7 +547,7 @@ public class Utils {
             currentSeen = System.currentTimeMillis();
         }
         long age = currentSeen - previousSeen;
-        if (previousSeen > 0 && age > 0 && age < maxAge/2) {
+        if (previousSeen > 0 && age > 0 && age < maxAge / 2) {
             // Average the RSSI with previously seen instances of this scan result
             double alpha = 0.5 - (double) age / (double) maxAge;
             currentSignal = (int) ((double) currentSignal * (1 - alpha) + (double) previousSignal * alpha);
@@ -534,65 +556,53 @@ public class Utils {
     }
 
     public static <K, V extends Comparable<? super V>> Map<K, V>
-    sortHashMapByValueDescending(Map<K, V> map )
-    {
+    sortHashMapByValueDescending(Map<K, V> map) {
         List<Map.Entry<K, V>> list =
-                new LinkedList<Map.Entry<K, V>>( map.entrySet() );
-        Collections.sort( list, new Comparator<Map.Entry<K, V>>()
-        {
-            public int compare( Map.Entry<K, V> o1, Map.Entry<K, V> o2 )
-            {
-                return (o2.getValue()).compareTo( o1.getValue() );
+                new LinkedList<Map.Entry<K, V>>(map.entrySet());
+        Collections.sort(list, new Comparator<Map.Entry<K, V>>() {
+            public int compare(Map.Entry<K, V> o1, Map.Entry<K, V> o2) {
+                return (o2.getValue()).compareTo(o1.getValue());
             }
-        } );
+        });
 
         Map<K, V> result = new LinkedHashMap<K, V>();
-        for (Map.Entry<K, V> entry : list)
-        {
-            result.put( entry.getKey(), entry.getValue() );
+        for (Map.Entry<K, V> entry : list) {
+            result.put(entry.getKey(), entry.getValue());
         }
         return result;
     }
 
     public static <K, V extends Comparable<? super V>> Map<K, V>
-    sortHashMapByValueAscending(Map<K, V> map )
-    {
+    sortHashMapByValueAscending(Map<K, V> map) {
         List<Map.Entry<K, V>> list =
-                new LinkedList<Map.Entry<K, V>>( map.entrySet() );
-        Collections.sort( list, new Comparator<Map.Entry<K, V>>()
-        {
-            public int compare( Map.Entry<K, V> o1, Map.Entry<K, V> o2 )
-            {
-                return (o1.getValue()).compareTo( o2.getValue() );
+                new LinkedList<Map.Entry<K, V>>(map.entrySet());
+        Collections.sort(list, new Comparator<Map.Entry<K, V>>() {
+            public int compare(Map.Entry<K, V> o1, Map.Entry<K, V> o2) {
+                return (o1.getValue()).compareTo(o2.getValue());
             }
-        } );
+        });
 
         Map<K, V> result = new LinkedHashMap<K, V>();
-        for (Map.Entry<K, V> entry : list)
-        {
-            result.put( entry.getKey(), entry.getValue() );
+        for (Map.Entry<K, V> entry : list) {
+            result.put(entry.getKey(), entry.getValue());
         }
         return result;
     }
 
     public static <K, V extends Comparable<? super V>> Map<K, V>
-    sortHashMapByValue1( Map<K, V> map )
-    {
+    sortHashMapByValue1(Map<K, V> map) {
         List<Map.Entry<K, V>> list =
-                new LinkedList<>( map.entrySet() );
-        Collections.sort( list, new Comparator<Map.Entry<K, V>>()
-        {
+                new LinkedList<>(map.entrySet());
+        Collections.sort(list, new Comparator<Map.Entry<K, V>>() {
             @Override
-            public int compare( Map.Entry<K, V> o1, Map.Entry<K, V> o2 )
-            {
-                return ( o1.getValue() ).compareTo( o2.getValue() );
+            public int compare(Map.Entry<K, V> o1, Map.Entry<K, V> o2) {
+                return (o1.getValue()).compareTo(o2.getValue());
             }
-        } );
+        });
 
         Map<K, V> result = new LinkedHashMap<>();
-        for (Map.Entry<K, V> entry : list)
-        {
-            result.put( entry.getKey(), entry.getValue() );
+        for (Map.Entry<K, V> entry : list) {
+            result.put(entry.getKey(), entry.getValue());
         }
         return result;
     }
@@ -604,14 +614,14 @@ public class Utils {
         final int CHANNEL_1_CENTER_FREQUENCY = 2412;
         final int GAP_BETWEEN_CHANNELS = 5;
         int[] channelList = new int[MAX_CHANNELS_2GHZ];
-        for (int channelIndex=0; channelIndex < MAX_CHANNELS_2GHZ; channelIndex++) {
+        for (int channelIndex = 0; channelIndex < MAX_CHANNELS_2GHZ; channelIndex++) {
             channelList[channelIndex] = CHANNEL_1_CENTER_FREQUENCY + (GAP_BETWEEN_CHANNELS * channelIndex);
         }
         return channelList;
     }
 
     public static int[] get2GHzNonOverlappingChannelList() {
-        return new int[] {2412, 2437, 2462};
+        return new int[]{2412, 2437, 2462};
     }
 
     public static int convertCenterFrequencyToChannelNumber(int centerFrequency) {
@@ -681,5 +691,43 @@ public class Utils {
 
     public static String generateUUID() {
         return UUID.randomUUID().toString();
+    }
+
+    public static double nonLinearBwScale(double input) {
+        // 0 .. 5 maps to 0 .. 50
+        if (input <= 5.0) {
+            return input * 10.;
+        }
+        // 5 to 10 maps to 50 .. 62.5
+        if (input <= 10.0) {
+            return 12.5 * (input - 5.0) / 5.0 + 50.0;
+        }
+
+        // 10 to 20 maps to 62.5 .. 75.
+        if (input < 20.0) {
+            return 12.5 * (input - 10.0) / 10.0 + 62.5;
+        }
+
+        // 20 to 50 maps to 75 to 87.5
+        if (input < 50.0) {
+            return 12.5 * (input - 20.0) / 30.0 + 75;
+        }
+
+        // Upper bound by 100
+        input = Math.min(100.0, input);
+        // 50 to 100 maps to 87.5 to 100
+        return 12.5 * (input - 50.0) / 50.0 + 87.5;
+    }
+
+    public static class BandwidthValue {
+        @BandwithTestCodes.TestMode
+        public int mode;
+        public double value;
+        public static BandwidthValue from(int mode, double value) {
+            BandwidthValue bandwidthValue = new BandwidthValue();
+            bandwidthValue.mode = mode;
+            bandwidthValue.value = value;
+            return bandwidthValue;
+        }
     }
 }
