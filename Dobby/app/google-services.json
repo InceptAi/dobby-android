@@ -8,108 +8,6 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1094026000636:android:a270b32cfed56b95",
-        "android_client_info": {
-          "package_name": "com.inceptai.dobby"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "1094026000636-3trd5tq8lb9efoh9ijboa3ik7bi33fc7.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.inceptai.dobby",
-            "certificate_hash": "94f6c260efb7835371cc1a61476405f92b71ce6f"
-          }
-        },
-        {
-          "client_id": "1094026000636-24j48ikt1egocntv96lt738q5knpj9nn.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyBVDYH0xGaIiiht8xriI8Yxdoo2PuSxR-Y"
-        },
-        {
-          "current_key": "AIzaSyCcJZZPd12F29WCG4OB4Z8x10RjHuiz71o"
-        }
-      ],
-      "services": {
-        "analytics_service": {
-          "status": 1
-        },
-        "appinvite_service": {
-          "status": 2,
-          "other_platform_oauth_client": [
-            {
-              "client_id": "1094026000636-24j48ikt1egocntv96lt738q5knpj9nn.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
-        },
-        "ads_service": {
-          "status": 2
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:1094026000636:android:952307c71a3ddc21",
-        "android_client_info": {
-          "package_name": "com.inceptai.dobby.ai"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "1094026000636-hddlmr7o0e12oqi4tnid1bertbu9rq9c.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.inceptai.dobby.ai",
-            "certificate_hash": "3065043c3402f3425d0cb227e8e3d0b35037e0ab"
-          }
-        },
-        {
-          "client_id": "1094026000636-o26gf8cfiib2vbiog15uub5psnfbe07f.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.inceptai.dobby.ai",
-            "certificate_hash": "94f6c260efb7835371cc1a61476405f92b71ce6f"
-          }
-        },
-        {
-          "client_id": "1094026000636-24j48ikt1egocntv96lt738q5knpj9nn.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyBVDYH0xGaIiiht8xriI8Yxdoo2PuSxR-Y"
-        },
-        {
-          "current_key": "AIzaSyCcJZZPd12F29WCG4OB4Z8x10RjHuiz71o"
-        }
-      ],
-      "services": {
-        "analytics_service": {
-          "status": 1
-        },
-        "appinvite_service": {
-          "status": 2,
-          "other_platform_oauth_client": [
-            {
-              "client_id": "1094026000636-24j48ikt1egocntv96lt738q5knpj9nn.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
-        },
-        "ads_service": {
-          "status": 2
-        }
-      }
-    },
-    {
-      "client_info": {
         "mobilesdk_app_id": "1:1094026000636:android:77baf63c4ce44d42",
         "android_client_info": {
           "package_name": "com.inceptai.dobby.wifidoc"
@@ -129,6 +27,53 @@
           "client_type": 1,
           "android_info": {
             "package_name": "com.inceptai.dobby.wifidoc",
+            "certificate_hash": "94f6c260efb7835371cc1a61476405f92b71ce6f"
+          }
+        },
+        {
+          "client_id": "1094026000636-24j48ikt1egocntv96lt738q5knpj9nn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBVDYH0xGaIiiht8xriI8Yxdoo2PuSxR-Y"
+        },
+        {
+          "current_key": "AIzaSyCcJZZPd12F29WCG4OB4Z8x10RjHuiz71o"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1094026000636-24j48ikt1egocntv96lt738q5knpj9nn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1094026000636:android:710eac759d301c13",
+        "android_client_info": {
+          "package_name": "com.inceptai.wifiexpert"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1094026000636-0k5tg5pdqgi78icqiumqsutf3o2mt5i6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.inceptai.wifiexpert",
             "certificate_hash": "94f6c260efb7835371cc1a61476405f92b71ce6f"
           }
         },
