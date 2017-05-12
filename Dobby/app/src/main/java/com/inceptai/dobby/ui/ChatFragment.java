@@ -2,9 +2,11 @@ package com.inceptai.dobby.ui;
 
 import android.content.Context;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.speech.tts.TextToSpeech;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
@@ -33,6 +35,7 @@ import com.inceptai.dobby.utils.Utils;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 
 import static com.inceptai.dobby.utils.Utils.ZERO_POINT_ZERO;
 import static com.inceptai.dobby.utils.Utils.nonLinearBwScale;
@@ -86,6 +89,9 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     private TextView uploadGaugeTv;
     private TextView uploadGaugeTitleTv;
 
+    private TextToSpeech textToSpeech;
+
+    private boolean useVoiceOutput = false;
 
     private int uiState = UI_STATE_FULL_CHAT;
 
@@ -101,6 +107,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
          * @param text
          */
         void onUserQuery(String text);
+        void onMicPressed();
     }
 
     public ChatFragment() {
@@ -139,6 +146,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View fragmentView = inflater.inflate(R.layout.fragment_chat, container, false);
+        setupTextToSpeech();
 
         chatRv = (RecyclerView) fragmentView.findViewById(R.id.chatRv);
         recyclerViewAdapter = new ChatRecyclerViewAdapter(this.getContext(), new LinkedList<ChatEntry>());
@@ -175,10 +183,13 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         micButtonIv.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getContext(), "Mic not supported yet !", Toast.LENGTH_LONG).show();
+                if (mListener != null) {
+                    mListener.onMicPressed();
+                } else {
+                    Toast.makeText(getContext(), "Mic not supported yet !", Toast.LENGTH_LONG).show();
+                }
             }
         });
-
 
         View downloadView = fragmentView.findViewById(R.id.cg_download);
         downloadCircularGauge = (CircularGauge) downloadView.findViewById(R.id.bw_gauge);
@@ -192,18 +203,6 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         uploadGaugeTitleTv = (TextView) uploadView.findViewById(R.id.title_tv);
         uploadGaugeTitleTv.setText(R.string.upload_bw);
         return fragmentView;
-    }
-
-    private void makeUiChanges(View rootView) {
-        if (uiState == UI_STATE_FULL_CHAT) {
-            // make guage gone.
-            bwGaugeLayout.setVisibility(View.GONE);
-        } else if (uiState == UI_STATE_SHOW_BW_GAUGE) {
-            bwGaugeLayout.setVisibility(View.VISIBLE);
-        }
-
-        rootView.requestLayout();
-        chatRv.requestLayout();
     }
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -278,11 +277,61 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         uiStateChangeNonUi(UI_STATE_FULL_CHAT);
     }
 
+    public void addSpokenText(String userText) {
+        addUserChat(userText);
+        if (textToSpeech != null) {
+            useVoiceOutput = true;
+        }
+    }
+
+    private void makeUiChanges(View rootView) {
+        if (uiState == UI_STATE_FULL_CHAT) {
+            // make guage gone.
+            bwGaugeLayout.setVisibility(View.GONE);
+        } else if (uiState == UI_STATE_SHOW_BW_GAUGE) {
+            bwGaugeLayout.setVisibility(View.VISIBLE);
+        }
+
+        rootView.requestLayout();
+        chatRv.requestLayout();
+    }
+
+    private void speak(String text) {
+        if (textToSpeech != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                textToSpeech.speak(text, TextToSpeech.QUEUE_FLUSH, null, null);
+            }else{
+                textToSpeech.speak(text, TextToSpeech.QUEUE_FLUSH, null);
+            }
+        }
+    }
+
+    private void setupTextToSpeech() {
+        textToSpeech = new TextToSpeech(getContext(), new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                if (status == TextToSpeech.SUCCESS) {
+                    int result = textToSpeech.setLanguage(Locale.US);
+                    if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                        DobbyLog.e("TTS: Locale language is not supported");
+                        textToSpeech = null;
+                    }
+                } else {
+                    DobbyLog.e("TTS Initilization Failed!");
+                    textToSpeech = null;
+                }
+            }
+        });
+    }
+
     private void addDobbyChat(String text) {
         DobbyLog.i("Adding dobby chat: " + text);
         ChatEntry chatEntry = new ChatEntry(text.trim(), ChatEntry.DOBBY_CHAT);
         recyclerViewAdapter.addEntryAtBottom(chatEntry);
         chatRv.scrollToPosition(recyclerViewAdapter.getItemCount() - 1);
+        if (useVoiceOutput) {
+            speak(text);
+        }
     }
 
     private void showBandwidthGauge(BandwidthObserver observer) {
@@ -295,6 +344,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
             return;
         }
         addUserChat(text);
+        useVoiceOutput = false;
         // Parent activity callback.
         mListener.onUserQuery(text);
     }
