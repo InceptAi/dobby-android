@@ -1,5 +1,6 @@
 apply plugin: 'com.android.application'
 apply plugin: 'com.google.firebase.firebase-crash'
+apply plugin: 'spoon'
 
 
 // Create a variable called keystorePropertiesFile, and initialize it to your
@@ -71,6 +72,25 @@ android {
     }
 }
 
+
+// This section is optional
+spoon {
+    // for debug output
+    debug = true
+
+    // To run a single test class
+    className = 'com.inceptai.dobby.ui.CheckMainScreenWifiDocTest'
+
+    // To run a single method in TestCase
+    methodName = 'bwTestDefaultTest'
+
+    // To execute the tests device by device */
+    sequential = true
+
+    // To grant permissions to Android M >= devices */
+    grantAllPermissions = true
+}
+
 dependencies {
     compile files('libs/jspeedtest-1.26.jar')
     compile fileTree(include: ['*.jar'], dir: 'libs')
@@ -117,6 +137,7 @@ dependencies {
     androidTestCompile 'com.android.support:support-annotations:25.3.1';
     androidTestCompile 'com.android.support.test:runner:' + rootProject.runnerVersion;
     androidTestCompile 'com.android.support.test:rules:' + rootProject.rulesVersion;
+    androidTestCompile 'com.squareup.spoon:spoon-client:1.6.4'
 }
 
 apply plugin: 'com.google.gms.google-services'

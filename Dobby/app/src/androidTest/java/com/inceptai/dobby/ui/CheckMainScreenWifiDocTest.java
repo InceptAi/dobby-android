@@ -1,6 +1,7 @@
 package com.inceptai.dobby.ui;
 
 import android.app.Activity;
+import android.os.Build;
 import android.os.SystemClock;
 import android.support.test.espresso.Espresso;
 import android.support.test.espresso.IdlingPolicies;
@@ -14,6 +15,7 @@ import android.test.ActivityInstrumentationTestCase2;
 
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.testutils.ElapsedTimeIdlingResource;
+import com.squareup.spoon.Spoon;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -22,6 +24,8 @@ import org.junit.runner.RunWith;
 
 import java.util.concurrent.TimeUnit;
 
+import static android.support.test.InstrumentationRegistry.getInstrumentation;
+import static android.support.test.InstrumentationRegistry.getTargetContext;
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
@@ -78,6 +82,15 @@ public class CheckMainScreenWifiDocTest {
         //IdlingPolicies.setIdlingResourceTimeout(60, TimeUnit.SECONDS);
     }
 
+    public void grantPhonePermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            getInstrumentation().getUiAutomation().executeShellCommand(
+                    "pm grant " + getTargetContext().getPackageName()
+                            + " android.permission.WRITE_EXTERNAL_STORAGE");
+        }
+    }
+
+
     /**
      * A JUnit {@link Rule @Rule} to launch your activity under test. This is a replacement
      * for {@link ActivityInstrumentationTestCase2}.
@@ -93,6 +106,9 @@ public class CheckMainScreenWifiDocTest {
     public ActivityTestRule<WifiDocActivity> mActivityRule = new ActivityTestRule<>(
             WifiDocActivity.class);
 
+    private Activity getActivity() {
+        return mActivityRule.getActivity();
+    }
 
     private void checkIdleUIState() {
         //Before the test, upload and download matches 0.0
@@ -148,16 +164,22 @@ public class CheckMainScreenWifiDocTest {
     @Test
     public void bwTestDefaultTest() {
         checkIdleUIState();
+        Spoon.screenshot(getActivity(), "initial_state");
         //Click the run tests button
         onView(withId(R.id.main_fab_button)).perform(click());
         SystemClock.sleep(BOTTOM_DRAWER_WAITING_TIME_MS);
         //Check that the status card view text changes
+        Spoon.screenshot(getActivity(), "bw_running_state");
         checkRunningUIState();
         // Now we wait
         SystemClock.sleep(BW_WAITING_TIME_MS);
+        Spoon.screenshot(getActivity(), "bw_finished_state");
         checkBWTestFinishedState();
         SystemClock.sleep(SUGGESTION_WAITING_TIME_AFTER_BW_MS);
+        Spoon.screenshot(getActivity(), "suggestion_state");
         checkSuggestionsAvailableState();
+        /* Normal test code... */
+
     }
 
     @Test
