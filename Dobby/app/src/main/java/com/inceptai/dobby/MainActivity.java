@@ -2,13 +2,16 @@ package com.inceptai.dobby;
 
 import android.Manifest;
 import android.annotation.TargetApi;
+import android.content.ActivityNotFoundException;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.wifi.ScanResult;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.speech.RecognizerIntent;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
@@ -28,6 +31,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.dobby.ai.DobbyAi;
 import com.inceptai.dobby.ai.RtDataSource;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
+import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.ui.ChatFragment;
 import com.inceptai.dobby.ui.DebugFragment;
 import com.inceptai.dobby.ui.FakeDataFragment;
@@ -35,7 +39,9 @@ import com.inceptai.dobby.ui.WifiFragment;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import javax.inject.Inject;
 
@@ -45,6 +51,7 @@ public class MainActivity extends AppCompatActivity
         Handler.Callback, ChatFragment.OnFragmentInteractionListener {
 
     private static final int PERMISSION_COARSE_LOCATION_REQUEST_CODE = 101;
+    private static final int SPEECH_RECOGNITION_REQUEST_CODE = 102;
 
     @Inject DobbyApplication dobbyApplication;
     @Inject DobbyThreadpool threadpool;
@@ -189,7 +196,7 @@ public class MainActivity extends AppCompatActivity
     // From DobbyAi.ResponseCallback interface.
     @Override
     public void showRtGraph(RtDataSource<Float, Integer> rtDataSource) {
-        chatFragment.showRtGraph(rtDataSource);
+        // chatFragment.showRtGraph(rtDataSource);
     }
 
     @Override
@@ -245,5 +252,42 @@ public class MainActivity extends AppCompatActivity
     protected void onDestroy() {
         super.onDestroy();
         dobbyAi.cleanup();
+    }
+
+    @Override
+    public void observeBandwidth(BandwidthObserver observer) {
+        chatFragment.observeBandwidthNonUi(observer);
+    }
+
+    @Override
+    public void onMicPressed() {
+        listen();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == SPEECH_RECOGNITION_REQUEST_CODE) {
+            if (resultCode == RESULT_OK && null != data) {
+                ArrayList<String> res = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                String inSpeech = res.get(0);
+                chatFragment.addSpokenText(inSpeech);
+                onUserQuery(inSpeech);
+            }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
+    }
+
+    private void listen() {
+            Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+            i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+            i.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
+            i.putExtra(RecognizerIntent.EXTRA_PROMPT, "Say something");
+
+            try {
+                startActivityForResult(i, SPEECH_RECOGNITION_REQUEST_CODE);
+            } catch (ActivityNotFoundException a) {
+                Toast.makeText(MainActivity.this, "Your device doesn't support Speech Recognition", Toast.LENGTH_SHORT).show();
+            }
     }
 }
