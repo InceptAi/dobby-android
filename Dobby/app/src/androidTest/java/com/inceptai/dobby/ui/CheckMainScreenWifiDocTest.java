@@ -15,6 +15,7 @@ import android.test.ActivityInstrumentationTestCase2;
 
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.testutils.ElapsedTimeIdlingResource;
+import com.inceptai.dobby.utils.Utils;
 import com.squareup.spoon.Spoon;
 
 import org.junit.Before;
@@ -112,8 +113,8 @@ public class CheckMainScreenWifiDocTest {
 
     private void checkIdleUIState() {
         //Before the test, upload and download matches 0.0
-        onView(allOf(withParent(withId(R.id.cg_download)), withId(R.id.gauge_tv))).check(matches(withText(WifiDocMainFragment.ZERO_POINT_ZERO)));
-        onView(allOf(withParent(withId(R.id.cg_upload)), withId(R.id.gauge_tv))).check(matches(withText(WifiDocMainFragment.ZERO_POINT_ZERO)));
+        onView(allOf(withParent(withId(R.id.cg_download)), withId(R.id.gauge_tv))).check(matches(withText(Utils.ZERO_POINT_ZERO)));
+        onView(allOf(withParent(withId(R.id.cg_upload)), withId(R.id.gauge_tv))).check(matches(withText(Utils.ZERO_POINT_ZERO)));
 
         //Before the tests are run -- status card view is displayed with text "Ready to run tests."
         onView(withId(R.id.status_cardview)).check(matches(isDisplayed()));
@@ -142,10 +143,10 @@ public class CheckMainScreenWifiDocTest {
 
     private void checkBWTestFinishedState() {
         //Check that the status dialog box shows running download
-        onView(allOf(withParent(withId(R.id.cg_download)), withId(R.id.gauge_tv))).check(matches(withText(not(containsString(WifiDocMainFragment.ZERO_POINT_ZERO)))));
+        onView(allOf(withParent(withId(R.id.cg_download)), withId(R.id.gauge_tv))).check(matches(withText(not(containsString(Utils.ZERO_POINT_ZERO)))));
 
         //Check that the status dialog box shows running upload
-        onView(allOf(withParent(withId(R.id.cg_upload)), withId(R.id.gauge_tv))).check(matches(withText(not(containsString(WifiDocMainFragment.ZERO_POINT_ZERO)))));
+        onView(allOf(withParent(withId(R.id.cg_upload)), withId(R.id.gauge_tv))).check(matches(withText(not(containsString(Utils.ZERO_POINT_ZERO)))));
     }
 
     private void checkSuggestionsAvailableState() {
