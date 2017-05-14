@@ -12,6 +12,7 @@ import android.support.test.filters.LargeTest;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.test.ActivityInstrumentationTestCase2;
+import android.view.WindowManager;
 
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.testutils.ElapsedTimeIdlingResource;
@@ -78,9 +79,16 @@ public class CheckMainScreenWifiDocTest {
     }
 
     @Before
-    public void resetTimeout() {
-        //IdlingPolicies.setMasterPolicyTimeout(60, TimeUnit.SECONDS);
-        //IdlingPolicies.setIdlingResourceTimeout(60, TimeUnit.SECONDS);
+    public void unlockScreen() {
+        final WifiDocActivity activity = mActivityRule.getActivity();
+        Runnable wakeUpDevice = new Runnable() {
+            public void run() {
+                activity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON |
+                        WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED |
+                        WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            }
+        };
+        activity.runOnUiThread(wakeUpDevice);
     }
 
     public void grantPhonePermission() {
