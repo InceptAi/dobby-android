@@ -11,7 +11,8 @@ def index_file():
 
 @app.route('/<path:filename>')
 def serve_static(filename):
-    return send_from_directory(PATH_PREFIX, filename)
+	print ("Returning {0} from {1}".format(filename, PATH_PREFIX + filename))
+	return send_from_directory(PATH_PREFIX, filename)
 
 
 if __name__ == '__main__':
