@@ -75,4 +75,27 @@
     <string name="suggestions">Suggestions</string>
     <string name="ready_status_message">Ready to run tests.</string>
     <string name="about_string">This app is offered by InceptAI. Copyright &#169; 2017. For detailed feedback or questions, email us at hello@obiai.tech.</string>
+    <string name="status_tests_cancelled">Tests cancelled !</string>
+    <string name="status_cancelling_tests">Cancelling tests ..</string>
+    <string name="status_error_bw_tests">Error running bandwidth tests. Please cancel and try again.</string>
+    <string name="status_running_upload_tests">Running Upload test &#8230; </string>
+    <string name="status_running_download_tests">Running Download test &#8230; </string>
+    <string name="status_finished_bw_tests">Finished bandwidth tests.</string>
+    <string name="status_fetching_server_list">Fetching list of servers &#8230; </string>
+    <string name="status_analyzing_speed_test_data">Analyzing speed test data ..</string>
+    <string name="status_speed_test_analysis_ready">Speed test analysis ready ..</string>
+    <string name="status_running_ping_tests">Running Ping tests ..</string>
+    <string name="status_analyzing_ping_results">Analyzing Ping results ..</string>
+    <string name="status_ping_analysis_ready">Ping analysis ready ..</string>
+    <string name="status_running_wifi_tests">Running Wifi tests ..</string>
+    <string name="status_analyzing_wifi_data">Analyzing Wifi data ..</string>
+    <string name="status_wifi_analysis_ready">Wifi analysis ready ..</string>
+    <string name="status_bw_test_error_wifi_offline">"Unable to run Bandwidth tests since the Wifi network is OFFLINE."</string>
+    <string name="status_wifi_ping_tests_continue">"We are continuing to run Ping and Wifi analysis tests."</string>
+    <string name="status_fetching_server_config">Fetching server configuration &#8230;</string>
+    <string name="toast_tests_already_running">Tests already running.</string>
+    <string name="tap_anim_run_tests">Run some tests</string>
+    <string name="tap_anim_run_tests_long_msg">Tap the button to let Wifi Tester run some tests.</string>
+    <string name="status_closest_servers" formatted="false">Computing closest out of %1$d servers &#8230;</string>
+    <string name="status_found_closest_server" formatted="false">Closest server in %1%s has a latency of %2$.2f ms.</string>
 </resources>

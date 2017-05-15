@@ -237,8 +237,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         fabPrompt = new MaterialTapTargetPrompt.Builder(getActivity())
                 .setTarget(rootView.findViewById(R.id.main_fab_button))
                 .setFocalToTextPadding(R.dimen.dp40)
-                .setPrimaryText("Run some tests")
-                .setSecondaryText("Tap the button to let Wifi Tester run some tests.")
+                .setPrimaryText(R.string.tap_anim_run_tests)
+                .setSecondaryText(R.string.tap_anim_run_tests_long_msg)
                 .setAnimationInterpolator(new FastOutSlowInInterpolator())
                 .setBackgroundColourFromRes(R.color.orangeMediumLight1)
                 .setOnHidePromptListener(new MaterialTapTargetPrompt.OnHidePromptListener()
@@ -292,13 +292,13 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     @Override
     public void onClick(View v) {
         if (uiState == UI_STATE_RUNNING_TESTS) {
-            Toast.makeText(getContext(), "Tests already running.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), R.string.toast_tests_already_running, Toast.LENGTH_SHORT).show();
             return;
         }
         if (mListener != null) {
             if (uiState == UI_STATE_INIT_AND_READY || uiState == UI_STATE_READY_WITH_RESULTS) {
                 setBwTestState(BW_TEST_INITIATED);
-                showStatusMessageAsync("Fetching server configuration ...");
+                showStatusMessageAsync(R.string.status_fetching_server_config);
                 DobbyLog.v("WifiDoc: Issued command for starting bw tests");
                 sendSwitchStateMessage(UI_STATE_RUNNING_TESTS);
             }
@@ -367,32 +367,32 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         if (uiState == UI_STATE_RUNNING_TESTS) {
             switch(event.getEventType()) {
                 case DobbyEvent.EventType.BWTEST_INFO_AVAILABLE:
-                    showStatusMessageAsync("Analyzing speed test data ..");
+                    showStatusMessageAsync(R.string.status_analyzing_speed_test_data);
                     break;
                 case DobbyEvent.EventType.BANDWIDTH_GRADE_AVAILABLE:
-                    showStatusMessageAsync("Speed test analysis ready ..");
+                    showStatusMessageAsync(R.string.status_speed_test_analysis_ready);
                     break;
                 case DobbyEvent.EventType.PING_STARTED:
-                    showStatusMessageAsync("Running Ping tests ..");
+                    showStatusMessageAsync(R.string.status_running_ping_tests);
                     break;
                 case DobbyEvent.EventType.PING_INFO_AVAILABLE:
-                    showStatusMessageAsync("Analyzing Ping results ..");
+                    showStatusMessageAsync(R.string.status_analyzing_ping_results);
                     break;
                 case DobbyEvent.EventType.PING_GRADE_AVAILABLE:
-                    showStatusMessageAsync("Ping analysis ready ..");
+                    showStatusMessageAsync(R.string.status_ping_analysis_ready);
                     break;
                 case DobbyEvent.EventType.WIFI_SCAN_STARTING:
-                    showStatusMessageAsync("Running Wifi tests ..");
+                    showStatusMessageAsync(R.string.status_running_wifi_tests);
                     break;
                 case DobbyEvent.EventType.WIFI_SCAN_AVAILABLE:
-                    showStatusMessageAsync("Analyzing Wifi data ..");
+                    showStatusMessageAsync(R.string.status_analyzing_wifi_data);
                     break;
                 case DobbyEvent.EventType.WIFI_GRADE_AVAILABLE:
-                    showStatusMessageAsync("Wifi analysis ready ..");
+                    showStatusMessageAsync(R.string.status_wifi_analysis_ready);
                     break;
                 case DobbyEvent.EventType.BANDWIDTH_TEST_FAILED_WIFI_OFFLINE:
-                    showStatusMessageAsync("Unable to run Bandwidth tests since the Wifi network is OFFLINE.");
-                    showStatusMessageAsync("We are continuing to run Ping and Wifi analysis tests.");
+                    showStatusMessageAsync(R.string.status_bw_test_error_wifi_offline);
+                    showStatusMessageAsync(R.string.status_wifi_ping_tests_continue);
                     Message.obtain(handler, MSG_WIFI_OFFLINE).sendToTarget();
                     break;
             }
@@ -402,7 +402,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     @Override
     public void onConfigFetch(SpeedTestConfig config) {
         if (getBwTestState() == BW_TEST_INITIATED) {
-            showStatusMessageAsync("Fetching list of servers ...");
+            showStatusMessageAsync(R.string.status_fetching_server_list);
         }
         setBwTestState(BW_CONFIG_FETCHED);
         DobbyLog.v("WifiDoc: Fetched config");
@@ -411,7 +411,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     @Override
     public void onServerInformationFetch(ServerInformation serverInformation) {
         if (getBwTestState() == BW_CONFIG_FETCHED) {
-            showStatusMessageAsync("Computing closest out of " + serverInformation.serverList.size() + " servers ...");
+            String constructedString = getResources().getString(R.string.status_closest_servers, serverInformation.serverList.size());
+            showStatusMessageAsync(constructedString);
         }
         setBwTestState(BW_SERVER_INFO_FETCHED);
         DobbyLog.v("WifiDoc: Fetched server info");
@@ -428,7 +429,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     @Override
     public void onBestServerSelected(ServerInformation.ServerDetails bestServer) {
         if (getBwTestState() == BW_SERVER_INFO_FETCHED) {
-            showStatusMessageAsync("Closest server in " + bestServer.name + " has a latency of " + String.format("%.2f", bestServer.latencyMs) + " ms.");
+            // showStatusMessageAsync("Closest server in " + bestServer.name + " has a latency of " + String.format("%.2f", bestServer.latencyMs) + " ms.");
+            String constructedMessage = getResources().getString(R.string.status_found_closest_server, bestServer.name, bestServer.latencyMs);
+            showStatusMessageAsync(constructedMessage);
         }
         setBwTestState(BW_BEST_SERVER_DETERMINED);
         DobbyLog.v("WifiDoc: Best server");
@@ -438,7 +441,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     public void onTestFinished(@BandwithTestCodes.TestMode int testMode, BandwidthStats stats) {
         Message.obtain(handler, MSG_UPDATED_CIRCULAR_GAUGE, Utils.BandwidthValue.from(testMode, (stats.getOverallBandwidth() / 1.0e6))).sendToTarget();
         if (testMode == BandwithTestCodes.TestMode.UPLOAD) {
-            showStatusMessageAsync("Finished bandwidth tests.");
+            showStatusMessageAsync(R.string.status_finished_bw_tests);
             sendSwitchStateMessage(UI_STATE_READY_WITH_RESULTS);
         }
     }
@@ -447,17 +450,17 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     public void onTestProgress(@BandwithTestCodes.TestMode int testMode, double instantBandwidth) {
         if (testMode == BandwithTestCodes.TestMode.DOWNLOAD && getBwTestState() != BW_DOWNLOAD_RUNNING) {
             setBwTestState(BW_DOWNLOAD_RUNNING);
-            showStatusMessageAsync("Running Download test ...");
+            showStatusMessageAsync(R.string.status_running_download_tests);
         } else if (testMode == BandwithTestCodes.TestMode.UPLOAD && getBwTestState() != BW_UPLOAD_RUNNING) {
             setBwTestState(BW_UPLOAD_RUNNING);
-            showStatusMessageAsync("Running Upload test ...");
+            showStatusMessageAsync(R.string.status_running_upload_tests);
         }
         Message.obtain(handler, MSG_UPDATED_CIRCULAR_GAUGE, Utils.BandwidthValue.from(testMode, (instantBandwidth / 1.0e6))).sendToTarget();
     }
 
     @Override
     public void onBandwidthTestError(@BandwithTestCodes.TestMode int testMode, @BandwithTestCodes.ErrorCodes int errorCode, @Nullable String errorMessage) {
-        showStatusMessageAsync("Error running bandwidth tests. Please cancel and try again.");
+        showStatusMessageAsync(R.string.status_error_bw_tests);
     }
 
     @Override
@@ -747,6 +750,12 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         handler.sendMessageDelayed(msg, 100);
     }
 
+    private void showStatusMessageAsync(int resourceId) {
+        String message = getResources().getString(resourceId);
+        Message msg = Message.obtain(handler, MSG_SHOW_STATUS, message);
+        handler.sendMessageDelayed(msg, 100);
+    }
+
     private void sendSwitchStateMessage(int newState) {
         Message.obtain(handler, MSG_SWITCH_STATE, newState, 0).sendToTarget();
     }
@@ -759,6 +768,12 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         if (bottomDialog != null) {
             bottomDialog.setContent(statusMessage);
         }
+    }
+
+    @UiThread
+    private void showStatusMessage(int resourceId) {
+        String message = getResources().getString(resourceId);
+        showStatusMessage(message);
     }
 
     private synchronized void switchState(int newState) {
@@ -1074,11 +1089,11 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
     private void cancelTests() {
         dobbyAnalytics.testsCancelled();
-        showStatusMessage("Cancelling tests ...");
+        showStatusMessage(R.string.status_cancelling_tests);
         if (mListener != null) {
             mListener.cancelTests();
         }
-        showStatusMessage("Tests cancelled !");
+        showStatusMessage(R.string.status_tests_cancelled);
         sendSwitchStateMessage(UI_STATE_INIT_AND_READY);
         resetData();
     }

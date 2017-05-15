@@ -12,7 +12,7 @@ if [ $? -gt 0 ]; then
 	echo "BUILD FAILED"
 	BODY="Gradle build failed: See http://dobby1743.duckdns.org:5187/ for UI test results"
 	ATTACHMENT="/tmp/gradle.log"
-	echo ${BODY}| mail -s "Gradle Build Failed for WifiDoc" -a ${ATTACHMENT} $VIVEK_EMAIL $ARUNESH_EMAIL
+	echo ${BODY}| mail -s "Gradle Build Failed for WifiDoc" -A ${ATTACHMENT} $VIVEK_EMAIL $ARUNESH_EMAIL
 else
 	echo "BUILD SUCCEEDED"
 	BODY="Gradle build succeeded: See http://dobby1743.duckdns.org:5187/ for UI screenshots"
