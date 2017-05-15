@@ -216,7 +216,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     }
 
     private void uiStateVisibilityChanges(View rootView) {
-        DobbyLog.e("uiStateVisibilty called.");
+        DobbyLog.v("uiStateVisibilty called.");
         if (uiState == UI_STATE_INIT_AND_READY) {
             yourNetworkCv.setVisibility(View.INVISIBLE);
             pingCv.setVisibility(View.GONE);
@@ -467,7 +467,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                 resumeHandler();
             } else {
                 handlerBacklog.add(Message.obtain(msg));
-                DobbyLog.e("Adding message to backlog." + msg.what);
+                DobbyLog.v("Adding message to backlog." + msg.what);
             }
             return true;
         }
@@ -523,7 +523,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     }
 
     private void showPingResults(DataInterpreter.PingGrade pingGrade) {
-        DobbyLog.i("Ping grade available.");
+        DobbyLog.v("Ping grade available.");
         if (pingGrade == null) {
             DobbyLog.w("Null ping grade.");
             return;
@@ -580,7 +580,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         dobbyAnalytics.briefSuggestionsShown(stringBuilder.toString());
         // suggestionsValueTv.setText(stringBuilder.toString());
         showSuggestionsUi();
-        DobbyLog.i("Received suggestions:" + stringBuilder.toString());
+        DobbyLog.v("Received suggestions:" + stringBuilder.toString());
     }
 
 
@@ -812,7 +812,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             // Handler already paused do nothing.
             return;
         }
-        DobbyLog.e("Handler paused.");
+        DobbyLog.v("Handler paused.");
         pauseHandler = true;
         Message msg = Message.obtain(handler, MSG_RESUME_HANDLER);
         handler.sendMessageDelayed(msg, MAX_HANDLER_PAUSE_MS);
@@ -822,9 +822,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         if (!pauseHandler) return;
         pauseHandler = false;
         handler.removeMessages(MSG_RESUME_HANDLER);
-        DobbyLog.e("Handler resumed.");
+        DobbyLog.v("Handler resumed.");
         for (Message msg : handlerBacklog) {
-            DobbyLog.e("Sending backlog message BACK." + msg.what);
+            DobbyLog.v("Sending backlog message BACK." + msg.what);
             handler.sendMessageDelayed(msg, 50);
         }
         handlerBacklog.clear();
@@ -1051,7 +1051,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
     private void showMoreSuggestions() {
         if (currentSuggestion == null) {
-            DobbyLog.e("Attempting to show more suggestions when currentSuggestions are null.");
+            DobbyLog.v("Attempting to show more suggestions when currentSuggestions are null.");
         }
         WifiDocDialogFragment fragment = WifiDocDialogFragment.forSuggestion(currentSuggestion.getTitle(),
                 currentSuggestion.getLongSuggestionList());
