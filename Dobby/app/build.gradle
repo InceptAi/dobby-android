@@ -84,7 +84,7 @@ spoon {
     className = 'com.inceptai.dobby.ui.CheckMainScreenWifiDocTest'
 
     // To run a single method in TestCase
-    methodName = 'bwTestDefaultTest'
+    //methodName = 'bwTestDefaultTest'
 
     // To execute the tests device by device */
     sequential = true
