@@ -411,7 +411,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     @Override
     public void onServerInformationFetch(ServerInformation serverInformation) {
         if (getBwTestState() == BW_CONFIG_FETCHED) {
-            showStatusMessageAsync("Computing closest out of " + serverInformation.serverList.size() + " servers ...");
+            String constructedString = getResources().getString(R.string.status_closest_servers, serverInformation.serverList.size());
+            showStatusMessageAsync(constructedString);
         }
         setBwTestState(BW_SERVER_INFO_FETCHED);
         DobbyLog.v("WifiDoc: Fetched server info");
@@ -428,7 +429,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     @Override
     public void onBestServerSelected(ServerInformation.ServerDetails bestServer) {
         if (getBwTestState() == BW_SERVER_INFO_FETCHED) {
-            showStatusMessageAsync("Closest server in " + bestServer.name + " has a latency of " + String.format("%.2f", bestServer.latencyMs) + " ms.");
+            // showStatusMessageAsync("Closest server in " + bestServer.name + " has a latency of " + String.format("%.2f", bestServer.latencyMs) + " ms.");
+            String constructedMessage = getResources().getString(R.string.status_found_closest_server, bestServer.name, bestServer.latencyMs);
+            showStatusMessageAsync(constructedMessage);
         }
         setBwTestState(BW_BEST_SERVER_DETERMINED);
         DobbyLog.v("WifiDoc: Best server");
