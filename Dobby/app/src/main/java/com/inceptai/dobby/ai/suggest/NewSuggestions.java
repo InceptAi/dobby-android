@@ -2,6 +2,7 @@ package com.inceptai.dobby.ai.suggest;
 
 import android.support.annotation.Nullable;
 
+import com.google.common.primitives.UnsignedInteger;
 import com.inceptai.dobby.ai.DataInterpreter;
 
 /**
@@ -32,7 +33,8 @@ public class NewSuggestions {
     // SnippetType class that
     String getSummary(DataInterpreter.BandwidthGrade grade) {
 
-        if (grade.getUploadBandwidthMetric() == DataInterpreter.MetricType.UNKNOWN) {
+        if (grade.getUploadBandwidthMetric() == DataInterpreter.MetricType.UNKNOWN &&
+                grade.getDownloadBandwidthMetric() == DataInterpreter.MetricType.UNKNOWN) {
 
         }
         return null;
