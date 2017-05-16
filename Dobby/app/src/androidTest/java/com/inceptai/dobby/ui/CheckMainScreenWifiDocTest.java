@@ -52,7 +52,7 @@ public class CheckMainScreenWifiDocTest {
     private final int SUGGESTION_WAITING_TIME_AFTER_BW_MS = 7000; // ~6 secs
     private final int BOTTOM_DRAWER_WAITING_TIME_MS = 1000; // ~200 ms
     private final int WAITING_BETWEEN_BW_TESTS_MS = 1000; // 200 ms
-    private final String FETCHING_CONFIG_MESSAGE = "Fetching server configuration ...";
+    private final String FETCHING_CONFIG_MESSAGE = "Fetching server configuration";
     private final String STATUS_TITLE = "Status";
     private final String SUGGESTIONS_TITLE = "Suggestions";
     private final String DISMISS_TITLE = "DISMISS";
