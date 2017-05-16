@@ -396,7 +396,6 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         downloadGaugeTv.setText(ZERO_POINT_ZERO);
     }
 
-
     //  NewBandwidthAnalyzer.ResultCallback methods -------
     @Override
     public void onConfigFetch(SpeedTestConfig config) {

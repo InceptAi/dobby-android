@@ -122,7 +122,6 @@ public class SuggestionCreator {
         }
     }
 
-
     private static String convertChannelFrequencyToString(int channelFrequency) {
         int channelNumber = Utils.convertCenterFrequencyToChannelNumber(channelFrequency);
         String channelString = Utils.EMPTY_STRING;

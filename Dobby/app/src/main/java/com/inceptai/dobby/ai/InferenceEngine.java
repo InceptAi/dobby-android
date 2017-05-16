@@ -42,6 +42,15 @@ public class InferenceEngine {
     private static final int STATE_BANDWIDTH_TEST_FAILED = 4;
     private static final int STATE_BANDWIDTH_TEST_CANCELLED = 4;
 
+    @IntDef({Mode.INFERENCE_MODE_HOME_WIFI, Mode.INFERENCE_MODE_PUBLIC_WIFI, Mode.INFERENCE_MODE_TV, Mode.INFERENCE_MODE_UNKNOWN})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface Mode {
+        int INFERENCE_MODE_TV = 1001;
+        int INFERENCE_MODE_HOME_WIFI = 1002;
+        int INFERENCE_MODE_PUBLIC_WIFI = 1003;
+        int INFERENCE_MODE_UNKNOWN = 1004;
+    }
+
     private Action previousAction = Action.ACTION_NONE;
     private int bandwidthTestState; /* state of the bandwidth test */
     private ScheduledExecutorService scheduledExecutorService;
@@ -52,6 +61,9 @@ public class InferenceEngine {
     private PossibleConditions currentConditions = PossibleConditions.NOOP_CONDITION;
     private InferenceDatabaseWriter inferenceDatabaseWriter;
     private DobbyApplication dobbyApplication;
+
+    @Mode
+    private int currentMode = Mode.INFERENCE_MODE_UNKNOWN;
 
     public interface ActionListener {
         void takeAction(Action action);
@@ -79,6 +91,10 @@ public class InferenceEngine {
         metricsDb = new MetricsDb();
         this.inferenceDatabaseWriter = inferenceDatabaseWriter;
         this.dobbyApplication = dobbyApplication;
+    }
+
+    public void setCurrentMode(@Mode int mode) {
+        currentMode = mode;
     }
 
     public Action addGoal(@Goal int goal) {
