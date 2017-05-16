@@ -5,10 +5,6 @@ import android.support.annotation.Nullable;
 import com.google.common.primitives.UnsignedInteger;
 import com.inceptai.dobby.ai.DataInterpreter;
 
-/**
- * Created by arunesh on 5/15/17.
- */
-
 public class NewSuggestions {
 
 
