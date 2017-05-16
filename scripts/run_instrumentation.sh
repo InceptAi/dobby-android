@@ -42,7 +42,7 @@ notify_success () {
 }
 
 echo "Starting gradle build" > /tmp/gradle.log
-#./gradlew clean build assembleAndroidTest >> /tmp/gradle.log
+./gradlew clean build assembleAndroidTest >> /tmp/gradle.log
 
 
 if [ $? -gt 0 ]; then
