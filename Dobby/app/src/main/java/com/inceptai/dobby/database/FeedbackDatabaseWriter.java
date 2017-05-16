@@ -5,6 +5,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.inceptai.dobby.BuildConfig;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.utils.DobbyLog;
 
@@ -20,7 +21,7 @@ import javax.inject.Singleton;
  */
 @Singleton
 public class FeedbackDatabaseWriter {
-    private static final String FEEDBACK_DB_ROOT = "feedbacks";
+    private static final String FEEDBACK_DB_ROOT = BuildConfig.FLAVOR + "/" + BuildConfig.BUILD_TYPE  + "/" + "feedbacks";
     private DatabaseReference mDatabase;
     private ExecutorService executorService;
 
