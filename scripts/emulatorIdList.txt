@@ -1,0 +1,30 @@
+#"Samsung Galaxy Note 2 - 4.1.1 - API 16 - 720x1280" {48668502-cdfe-4304-9cde-ccabb789acd8}
+48668502-cdfe-4304-9cde-ccabb789acd8 16
+
+#"HTC Evo 4G LTE - 4.2.2 - API 17 - 720x1280" {094ebcd3-a416-45ea-98b7-9f83d7357845}
+094ebcd3-a416-45ea-98b7-9f83d7357845 17
+
+#"Motorola Moto X - 4.3 - API 18 - 720x1280" {0a60c14e-c32f-4dd8-9dee-2ae8d3903a2d}
+0a60c14e-c32f-4dd8-9dee-2ae8d3903a2d 18
+
+#"Samsung Galaxy S4 - 4.4.4 - API 19 - 1080x1920" {d609b283-b876-4600-a5fe-3f189a83b34a}
+d609b283-b876-4600-a5fe-3f189a83b34a 18
+
+#"Samsung Galaxy S6 - 5.0.0 - API 21 - 1440x2560" {bc57cd73-d576-4718-863e-3ae0d3abd61f}
+bc57cd73-d576-4718-863e-3ae0d3abd61f 21
+
+#"Google Nexus 4 - 5.1.0 - API 22 - 768x1280" {1ddd02e6-bf9d-4d3b-84dd-7f6c59c06a22}
+1ddd02e6-bf9d-4d3b-84dd-7f6c59c06a22 22
+
+#"Google Nexus 5 - 6.0.0 - API 23 - 1080x1920" {a0a956b6-edcc-4282-8595-8bab62f154d1}
+a0a956b6-edcc-4282-8595-8bab62f154d1 23
+
+#"Samsung Galaxy S6 - 6.0.0 - API 23 - 1440x2560" {a9c32523-b538-42a4-af84-50ff6e972daf}
+a9c32523-b538-42a4-af84-50ff6e972daf 23
+
+#"Google Nexus 5X - 7.0.0 - API 24 - 1080x1920" {eafc3648-6039-43cd-bf9c-4484ba3faefe}
+eafc3648-6039-43cd-bf9c-4484ba3faefe 24
+
+#"Google Nexus 6P - 7.1.0 - API 25 - 1440x2560" {a5d850d6-ffc3-41b4-a1b6-27cbacc9564d}
+a5d850d6-ffc3-41b4-a1b6-27cbacc9564d 25
+
