@@ -230,7 +230,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             pingCv.setVisibility(View.GONE);
             statusCv.setVisibility(View.VISIBLE);
         }
-        rootView.requestLayout();
+        if (rootView != null) {
+            rootView.requestLayout();
+        }
     }
 
     private void showTapOnboarding(View rootView) {
