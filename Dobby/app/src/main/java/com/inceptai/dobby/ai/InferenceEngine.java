@@ -183,8 +183,7 @@ public class InferenceEngine {
                 DobbyLog.i("Sending suggestions to DobbyAi");
                 actionListener.suggestionsAvailable(suggestion);
             }
-            sendResponseOnlyAction(suggestion.toString());
-
+            sendResponseOnlyAction(suggestion.getTitle());
             //Write the suggestion and inferencing parameters to DB
             InferenceRecord newInferenceRecord = createInferenceRecord(suggestion);
             inferenceDatabaseWriter.writeInferenceToDatabase(newInferenceRecord);
@@ -240,11 +239,13 @@ public class InferenceEngine {
                                                                     String clientIsp,
                                                                     String clientExternalIp) {
         DataInterpreter.BandwidthGrade bandwidthGrade = new DataInterpreter.BandwidthGrade();
+        /*
         if (bandwidth >= 0) {
-            sendResponseOnlyAction(testModeToString(testMode) + " Overall Bandwidth = " + String.format("%.2f", bandwidth / 1000000) + " Mbps");
+            //sendResponseOnlyAction(testModeToString(testMode) + " Overall Bandwidth = " + String.format("%.2f", bandwidth / 1000000) + " Mbps");
         } else {
-            sendResponseOnlyAction(testModeToString(testMode) + " Bandwidth error -- can't do bandwidth test.");
+            //sendResponseOnlyAction(testModeToString(testMode) + " Bandwidth error -- can't do bandwidth test.");
         }
+        */
         lastBandwidthUpdateTimestampMs = 0;
 
         if (testMode == BandwithTestCodes.TestMode.UPLOAD) {

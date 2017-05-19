@@ -28,6 +28,7 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import com.inceptai.dobby.ai.ApiAiClient;
 import com.inceptai.dobby.ai.DobbyAi;
 import com.inceptai.dobby.ai.RtDataSource;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
@@ -89,6 +90,8 @@ public class MainActivity extends AppCompatActivity
         handler = new Handler(this);
 
         setupChatFragment();
+        //Get the welcome message
+        dobbyAi.sendEvent(ApiAiClient.APIAI_WELCOME_EVENT);
         requestPermissions();
     }
 
@@ -207,6 +210,12 @@ public class MainActivity extends AppCompatActivity
     @Override
     public boolean handleMessage(Message msg) {
         return false;
+    }
+
+    public void sendEvent(String eventString) {
+        if (dobbyAi != null) {
+            dobbyAi.sendEvent(eventString);
+        }
     }
 
     private Fragment getFragmentByTag(String tag) {

@@ -149,6 +149,11 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         setupTextToSpeech();
 
         chatRv = (RecyclerView) fragmentView.findViewById(R.id.chatRv);
+        /*
+        LinearLayoutManager linearLayoutManager = (LinearLayoutManager)chatRv.getLayoutManager();
+        linearLayoutManager.setReverseLayout(true);
+        linearLayoutManager.setStackFromEnd(true);
+        */
         recyclerViewAdapter = new ChatRecyclerViewAdapter(this.getContext(), new LinkedList<ChatEntry>());
         chatRv.setAdapter(recyclerViewAdapter);
         chatRv.setLayoutManager(new LinearLayoutManager(this.getContext()));
@@ -177,6 +182,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
                 return false;
             }
         });
+
 
 
         micButtonIv = (ImageView) fragmentView.findViewById(R.id.micButtonIv);
@@ -324,7 +330,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         });
     }
 
-    private void addDobbyChat(String text) {
+    public void addDobbyChat(String text) {
         DobbyLog.i("Adding dobby chat: " + text);
         ChatEntry chatEntry = new ChatEntry(text.trim(), ChatEntry.DOBBY_CHAT);
         recyclerViewAdapter.addEntryAtBottom(chatEntry);
@@ -374,6 +380,11 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         bwTestState = state;
     }
 
+    private void showStatus(int resourceId) {
+        String message = getResources().getString(resourceId);
+        showResponse(message);
+    }
+
     private void showStatus(String message) {
         showResponse(message);
     }
@@ -400,7 +411,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     @Override
     public void onConfigFetch(SpeedTestConfig config) {
         if (getBwTestState() == BW_TEST_INITIATED) {
-            showStatus("Fetching list of servers ...");
+            showStatus(R.string.status_fetching_server_list);
         }
         setBwTestState(BW_CONFIG_FETCHED);
         DobbyLog.v("WifiDoc: Fetched config");
@@ -409,7 +420,8 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     @Override
     public void onServerInformationFetch(ServerInformation serverInformation) {
         if (getBwTestState() == BW_CONFIG_FETCHED) {
-            showStatus("Computing closest out of " + serverInformation.serverList.size() + " servers ...");
+            String constructedString = getResources().getString(R.string.status_closest_servers, serverInformation.serverList.size());
+            showStatus(constructedString);
         }
         setBwTestState(BW_SERVER_INFO_FETCHED);
         DobbyLog.v("WifiExpert: Fetched server info");
@@ -423,7 +435,8 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     @Override
     public void onBestServerSelected(ServerInformation.ServerDetails bestServer) {
         if (getBwTestState() == BW_SERVER_INFO_FETCHED) {
-            showStatus("Closest server in " + bestServer.name + " has a latency of " + String.format("%.2f", bestServer.latencyMs) + " ms.");
+            String constructedMessage = getResources().getString(R.string.status_found_closest_server, bestServer.name, bestServer.latencyMs);
+            showStatus(constructedMessage);
         }
         setBwTestState(BW_BEST_SERVER_DETERMINED);
         DobbyLog.v("WifiExpert: Best server");
@@ -433,7 +446,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     public void onTestFinished(@BandwithTestCodes.TestMode int testMode, BandwidthStats stats) {
         Message.obtain(handler, MSG_UPDATE_CIRCULAR_GAUGE, Utils.BandwidthValue.from(testMode, (stats.getOverallBandwidth() / 1.0e6))).sendToTarget();
         if (testMode == BandwithTestCodes.TestMode.UPLOAD) {
-            showStatus("Finished bandwidth tests.");
+            showStatus(R.string.status_finished_bw_tests);
         }
     }
 
@@ -441,16 +454,16 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     public void onTestProgress(@BandwithTestCodes.TestMode int testMode, double instantBandwidth) {
         if (testMode == BandwithTestCodes.TestMode.DOWNLOAD && getBwTestState() != BW_DOWNLOAD_RUNNING) {
             setBwTestState(BW_DOWNLOAD_RUNNING);
-            showStatus("Running Download test ...");
+            showStatus(R.string.status_running_download_tests);
         } else if (testMode == BandwithTestCodes.TestMode.UPLOAD && getBwTestState() != BW_UPLOAD_RUNNING) {
             setBwTestState(BW_UPLOAD_RUNNING);
-            showStatus("Running Upload test ...");
+            showStatus(R.string.status_running_upload_tests);
         }
         Message.obtain(handler, MSG_UPDATE_CIRCULAR_GAUGE, Utils.BandwidthValue.from(testMode, (instantBandwidth / 1.0e6))).sendToTarget();
     }
 
     @Override
     public void onBandwidthTestError(@BandwithTestCodes.TestMode int testMode, @BandwithTestCodes.ErrorCodes int errorCode, @Nullable String errorMessage) {
-        showStatus("Error running bandwidth tests. Please try again later.");
+        showStatus(R.string.status_error_bw_tests);
     }
 }

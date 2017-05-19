@@ -139,11 +139,20 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
 
     public void sendQuery(String text) {
         if (useApiAi) {
-            apiAiClient.sendTextQuery(text, this);
+            apiAiClient.sendTextQuery(text, null, this);
         } else {
             DobbyLog.w("Ignoring text query for Wifi doc version :" + text);
         }
     }
+
+    public void sendEvent(String text) {
+        if (useApiAi) {
+            apiAiClient.sendTextQuery(null, text, this);
+        } else {
+            DobbyLog.w("Ignoring events for Wifi doc version :" + text);
+        }
+    }
+
 
     public void cleanup() {
         networkLayer.cleanup();

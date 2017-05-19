@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="com.inceptai.dobby.MainActivity"
-    android:background="@drawable/blue_vertical_gradient"
+    android:background="@color/basicWhite"
     android:animateLayoutChanges="true"
     tools:showIn="@layout/app_bar_main">
 
@@ -30,12 +30,16 @@
             layout="@layout/circular_gauge_with_text"
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
+            android:layout_marginLeft="20dp"
+            android:layout_marginStart="20dp"
             android:id="@+id/cg_download"
             />
         <include
             layout="@layout/circular_gauge_with_text"
             android:layout_height="wrap_content"
             android:layout_marginLeft="10dp"
+            android:layout_marginRight="20dp"
+            android:layout_marginEnd="20dp"
             android:layout_marginStart="10dp"
             android:layout_width="wrap_content"
             android:id="@+id/cg_upload"
@@ -43,6 +47,9 @@
     </LinearLayout>
 
     <!-- DO NOT use animateLayoutChanges with RecyclerViews -->
+    <!--        app:layout_constraintVertical_bias="0.5" -->
+    <!-- app:layoutManager="LinearLayoutManager" -->
+
     <android.support.v7.widget.RecyclerView
         android:id="@+id/chatRv"
         android:layout_width="0dp"
@@ -52,55 +59,54 @@
         android:layout_marginLeft="8dp"
         app:layout_constraintLeft_toLeftOf="parent"
         android:layout_marginBottom="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/command_text_layout"
         android:layout_marginStart="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/command_text_layout"
         app:layout_constraintTop_toBottomOf="@id/bw_gauge_ll"
         android:layout_marginEnd="8dp">
-
     </android.support.v7.widget.RecyclerView>
 
-    <LinearLayout
-        android:id="@+id/command_text_layout"
+<LinearLayout
+    android:id="@+id/command_text_layout"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:layout_alignParentBottom="true"
+    android:layout_gravity="bottom"
+    android:background="@drawable/rounded_shape"
+    android:orientation="horizontal"
+    android:layout_margin="3dp"
+    android:padding="3dp"
+    app:layout_constraintBottom_toBottomOf="parent"
+    android:layout_marginBottom="8dp"
+    android:layout_marginRight="8dp"
+    app:layout_constraintRight_toRightOf="parent"
+    android:layout_marginLeft="8dp"
+    app:layout_constraintLeft_toLeftOf="parent"
+    android:layout_marginStart="8dp"
+    android:layout_marginEnd="8dp">
+
+    <EditText
+        android:id="@+id/queryEditText"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
+        android:layout_gravity="center_vertical"
+        android:layout_weight="1"
+        android:background="@null"
+        android:inputType="textAutoComplete"
+        android:hint="@string/chat_hint"
+        android:textSize="15sp"
+        android:imeOptions="actionGo"
+        android:maxLines="1"
+        android:paddingLeft="2dp"
+        android:paddingStart="2dp" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/micButtonIv"
         android:layout_gravity="bottom"
-        android:background="@drawable/rounded_shape"
-        android:orientation="horizontal"
-        android:layout_margin="3dp"
-        android:padding="3dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        android:layout_marginBottom="8dp"
-        android:layout_marginRight="8dp"
-        app:layout_constraintRight_toRightOf="parent"
-        android:layout_marginLeft="8dp"
-        app:layout_constraintLeft_toLeftOf="parent"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp">
+        android:paddingBottom="-5dp"
+        android:src="@drawable/ic_action_mic" />
 
-        <EditText
-            android:id="@+id/queryEditText"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_weight="1"
-            android:background="@null"
-            android:inputType="textAutoComplete"
-            android:hint="@string/chat_hint"
-            android:textSize="12sp"
-            android:imeOptions="actionGo"
-            android:maxLines="1"
-            android:paddingLeft="2dp"
-            android:paddingStart="2dp" />
-
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/micButtonIv"
-            android:layout_gravity="bottom"
-            android:paddingBottom="-5dp"
-            android:src="@drawable/ic_action_mic" />
-
-    </LinearLayout>
+</LinearLayout>
 
 </android.support.constraint.ConstraintLayout>
