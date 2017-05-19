@@ -14,11 +14,13 @@ import org.apache.logging.log4j.util.Strings;
  */
 
 public class FakeDataIntentReceiver extends BroadcastReceiver {
+    public static final String FAKE_DATA_INTENT = "com.inceptai.dobby.fake.FAKE_DATA";
     private static final String KEY_DOWNLOAD_BW = "download";
     private static final String KEY_UPLOAD_BW = "upload";
 
     @Override
     public void onReceive(Context context, Intent intent) {
+        Toast.makeText(context, "Received broadcast intent", Toast.LENGTH_SHORT).show();
         // Extract parameters from intent and set them !.
         Bundle extras = intent.getExtras();
         if (extras != null) {
@@ -37,4 +39,5 @@ public class FakeDataIntentReceiver extends BroadcastReceiver {
             Toast.makeText(context, "Upload Bandwidth = " + uploadBw, Toast.LENGTH_SHORT).show();
         }
     }
+
 }

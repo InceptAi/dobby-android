@@ -7,6 +7,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.wifi.ScanResult;
 import android.os.Build;
@@ -257,12 +258,15 @@ public class MainActivity extends AppCompatActivity
         super.onResume();
         if (fakeDataIntentReceiver == null) {
             fakeDataIntentReceiver = new FakeDataIntentReceiver();
-            // registerReceiver(fakeDataIntentReceiver, null);
+            registerReceiver(fakeDataIntentReceiver, new IntentFilter(FakeDataIntentReceiver.FAKE_DATA_INTENT));
         }
     }
 
     @Override
     protected void onStop() {
+        if (fakeDataIntentReceiver != null) {
+            unregisterReceiver(fakeDataIntentReceiver);
+        }
         super.onStop();
     }
 

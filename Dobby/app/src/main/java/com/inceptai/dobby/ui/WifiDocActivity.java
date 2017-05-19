@@ -1,5 +1,7 @@
 package com.inceptai.dobby.ui;
 
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -14,6 +16,7 @@ import com.inceptai.dobby.R;
 import com.inceptai.dobby.ai.Action;
 import com.inceptai.dobby.ai.DobbyAi;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
+import com.inceptai.dobby.fake.FakeDataIntentReceiver;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 
@@ -35,6 +38,8 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
     NetworkLayer networkLayer;
     @Inject
     DobbyEventBus eventBus;
+
+    private FakeDataIntentReceiver fakeDataIntentReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +70,27 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
     @Override
     public void onFragmentInteraction(Uri uri) {
 
+    }
+
+    @Override
+    protected void onResume() {
+        DobbyLog.i("onResume()");
+        super.onResume();
+        if (fakeDataIntentReceiver == null) {
+            fakeDataIntentReceiver = new FakeDataIntentReceiver();
+        }
+        Intent intent = registerReceiver(fakeDataIntentReceiver, new IntentFilter(FakeDataIntentReceiver.FAKE_DATA_INTENT));
+        if (intent != null) {
+            DobbyLog.e("intent: " + intent.getComponent());
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        if (fakeDataIntentReceiver != null) {
+            unregisterReceiver(fakeDataIntentReceiver);
+        }
+        super.onPause();
     }
 
     @Override
