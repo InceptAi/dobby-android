@@ -3,6 +3,8 @@ package com.inceptai.dobby;
 import android.Manifest;
 import android.annotation.TargetApi;
 import android.content.ActivityNotFoundException;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -31,6 +33,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.dobby.ai.DobbyAi;
 import com.inceptai.dobby.ai.RtDataSource;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
+import com.inceptai.dobby.fake.FakeDataIntentReceiver;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.ui.ChatFragment;
 import com.inceptai.dobby.ui.DebugFragment;
@@ -61,6 +64,7 @@ public class MainActivity extends AppCompatActivity
 
     private Handler handler;
     private ChatFragment chatFragment;
+    private FakeDataIntentReceiver fakeDataIntentReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -246,6 +250,20 @@ public class MainActivity extends AppCompatActivity
                 return;
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (fakeDataIntentReceiver == null) {
+            fakeDataIntentReceiver = new FakeDataIntentReceiver();
+            // registerReceiver(fakeDataIntentReceiver, null);
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
     }
 
     @Override
