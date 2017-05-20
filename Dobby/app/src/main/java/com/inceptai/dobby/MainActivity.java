@@ -90,8 +90,6 @@ public class MainActivity extends AppCompatActivity
         handler = new Handler(this);
 
         setupChatFragment();
-        //Get the welcome message
-        dobbyAi.sendEvent(ApiAiClient.APIAI_WELCOME_EVENT);
         requestPermissions();
     }
 
@@ -193,6 +191,7 @@ public class MainActivity extends AppCompatActivity
     // From DobbyAi.ResponseCallback interface.
     @Override
     public void showResponse(String text) {
+        DobbyLog.v("In showResponse of MainActivity: text: " + text);
         chatFragment.showResponse(text);
     }
 
@@ -278,6 +277,14 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onMicPressed() {
         listen();
+    }
+
+    @Override
+    public void onRecyclerViewReady() {
+        //Get the welcome message
+        if (dobbyAi != null) {
+            dobbyAi.sendEvent(ApiAiClient.APIAI_WELCOME_EVENT);
+        }
     }
 
     @Override

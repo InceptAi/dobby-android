@@ -210,6 +210,10 @@ public class NetworkLayer {
 
     public DobbyWifiInfo getLinkInfo() { return getWifiAnalyzerInstance().getLinkInfo(); }
 
+    public boolean isWifiOnline() {
+        return getConnectivityAnalyzerInstance().isWifiOnline();
+    }
+
     // Process events from eventbus. Do a thread switch to prevent deadlocks.
     @Subscribe
     public void listen(final DobbyEvent event) {

@@ -45,6 +45,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     private boolean useApiAi = false; // We do not use ApiAi for the WifiDoc app.
     private AtomicBoolean repeatBwWifiPingAction;
     private SuggestionCreator.Suggestion lastSuggestion;
+    private @Action.ActionType int lastAction;
 
     @Inject
     NetworkLayer networkLayer;
@@ -70,6 +71,16 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             initApiAiClient();
         }
         repeatBwWifiPingAction = new AtomicBoolean(false);
+        lastAction = Action.ActionType.ACTION_TYPE_UNKNOWN;
+    }
+
+    @Action.ActionType
+    public int getLastAction() {
+        return lastAction;
+    }
+
+    public void setLastAction(int lastAction) {
+        this.lastAction = lastAction;
     }
 
     public void setResponseCallback(ResponseCallback responseCallback) {
@@ -77,7 +88,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     }
 
     @Override
-    public void onResult(final Action action, final Result result) {
+    public void onResult(final Action action, @Nullable final Result result) {
         // Thread switch (to release any Api.Ai threads).
         threadpool.submit(new Runnable() {
             @Override
@@ -85,10 +96,8 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 takeAction(action);
             }
         });
-
-
-        DobbyLog.i("Got response Action: " + result.toString());
-        if (result.toString().contains("test")) {
+        if (result != null) {
+            DobbyLog.i("Got response Action: " + result.toString());
         }
     }
 
@@ -103,12 +112,21 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
      */
     @Override
     public void takeAction(Action action) {
+        DobbyLog.v("In takeAction with action: " + action.getAction() + " and user resp: " + action.getUserResponse());
+        setLastAction(action.getAction());
         showMessageToUser(action.getUserResponse());
         switch (action.getAction()) {
             case Action.ActionType.ACTION_TYPE_BANDWIDTH_TEST:
                 DobbyLog.i("Starting ACTION BANDWIDTH TEST.");
-                postBandwidthTestOperation();
-                break;
+                //postBandwidthTestOperation();
+                postAllOperations();
+                if (CLEAR_STATS_EVERY_TIME_USER_ASKS_TO_RUN_TESTS && repeatBwWifiPingAction.getAndSet(true)) {
+                    //Clear the ping/wifi cache to get fresh results.
+                    clearCache();
+                }
+                //Action diagnoseAction = inferenceEngine.addGoal(InferenceEngine.Goal.GOAL_DIAGNOSE_SLOW_INTERNET);
+                //takeAction(diagnoseAction);
+                return;
             case Action.ActionType.ACTION_TYPE_CANCEL_BANDWIDTH_TEST:
                 DobbyLog.i("Starting ACTION CANCEL BANDWIDTH TEST.");
                 try {
@@ -147,6 +165,8 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             case Action.ActionType.ACTION_TYPE_NONE:
                 //showMessageToUser(action.getUserResponse());
                 break;
+            case Action.ActionType.ACTION_TYPE_ASK_FOR_LONG_SUGGESTION:
+                break;
             default:
                 DobbyLog.i("Unknown Action");
                 break;
@@ -166,7 +186,11 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
 
     public void sendQuery(String text) {
         if (useApiAi) {
-            apiAiClient.sendTextQuery(text, null, this);
+            if (networkLayer.isWifiOnline()) {
+                apiAiClient.sendTextQuery(text, null, this);
+            } else {
+                apiAiClient.processTextQueryOffline(text, null, getLastAction(), this);
+            }
         } else {
             DobbyLog.w("Ignoring text query for Wifi doc version :" + text);
         }
@@ -174,7 +198,11 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
 
     public void sendEvent(String text) {
         if (useApiAi) {
-            apiAiClient.sendTextQuery(null, text, this);
+            if (networkLayer.isWifiOnline()) {
+                apiAiClient.sendTextQuery(null, text, this);
+            } else {
+                apiAiClient.processTextQueryOffline(null, text, getLastAction(), this);
+            }
         } else {
             DobbyLog.w("Ignoring events for Wifi doc version :" + text);
         }
@@ -191,6 +219,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
 
     private void showMessageToUser(String messageToShow) {
         if (responseCallback != null && messageToShow != null && ! messageToShow.equals(Utils.EMPTY_STRING)) {
+            DobbyLog.v("Showing to user message: " + messageToShow);
             responseCallback.showResponse(messageToShow);
         }
     }

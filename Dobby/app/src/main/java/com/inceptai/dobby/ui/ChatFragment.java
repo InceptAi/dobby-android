@@ -22,6 +22,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.common.base.Preconditions;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.ai.RtDataSource;
 import com.inceptai.dobby.model.BandwidthStats;
@@ -108,6 +109,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
          */
         void onUserQuery(String text);
         void onMicPressed();
+        void onRecyclerViewReady();
     }
 
     public ChatFragment() {
@@ -144,19 +146,21 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        DobbyLog.v("CF: onCreateView started");
         // Inflate the layout for this fragment
         View fragmentView = inflater.inflate(R.layout.fragment_chat, container, false);
         setupTextToSpeech();
 
         chatRv = (RecyclerView) fragmentView.findViewById(R.id.chatRv);
+        recyclerViewAdapter = new ChatRecyclerViewAdapter(this.getContext(), new LinkedList<ChatEntry>());
+        chatRv.setAdapter(recyclerViewAdapter);
+        chatRv.setLayoutManager(new LinearLayoutManager(this.getContext()));
         /*
         LinearLayoutManager linearLayoutManager = (LinearLayoutManager)chatRv.getLayoutManager();
         linearLayoutManager.setReverseLayout(true);
         linearLayoutManager.setStackFromEnd(true);
         */
-        recyclerViewAdapter = new ChatRecyclerViewAdapter(this.getContext(), new LinkedList<ChatEntry>());
-        chatRv.setAdapter(recyclerViewAdapter);
-        chatRv.setLayoutManager(new LinearLayoutManager(this.getContext()));
+
         handler = new Handler(this);
         bwGaugeLayout = (LinearLayout) fragmentView.findViewById(R.id.bw_gauge_ll);
 
@@ -208,6 +212,12 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         uploadGaugeTv = (TextView) uploadView.findViewById(R.id.gauge_tv);
         uploadGaugeTitleTv = (TextView) uploadView.findViewById(R.id.title_tv);
         uploadGaugeTitleTv.setText(R.string.upload_bw);
+
+        if (mListener != null) {
+            mListener.onRecyclerViewReady();
+        }
+
+        DobbyLog.v("CF: Finished with onCreateView");
         return fragmentView;
     }
 
@@ -246,6 +256,8 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     }
 
     public void showResponse(String text) {
+        Preconditions.checkNotNull(handler);
+        DobbyLog.v("ChatF: showResponse text " + text);
         Message.obtain(handler, MSG_SHOW_DOBBY_CHAT, text).sendToTarget();
     }
 
@@ -264,6 +276,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         switch (msg.what) {
             case MSG_SHOW_DOBBY_CHAT:
                 // Add to the recycler view.
+                DobbyLog.v("In handleMessage for DobbyChat");
                 String text = (String) msg.obj;
                 addDobbyChat(text);
                 break;

@@ -8,6 +8,8 @@ import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 
+import java.util.Arrays;
+
 import ai.api.AIListener;
 import ai.api.AIServiceException;
 import ai.api.android.AIConfiguration;
@@ -37,6 +39,8 @@ public class ApiAiClient implements AIListener {
     public static final String APIAI_PERFORM_BW_TEST_RETURN_RESULT = "perform-bw-test-return-result";
     public static final String APIAI_ACTION_CANCEL = "cancel-slow-internet-diagnosis";
     public static final String APIAI_ACTION_SHOW_LONG_SUGGESTION = "show-long-suggestion";
+    public static final String APIAI_ACTION_ASK_FOR_LONG_SUGGESTION = "ask-for-long-suggestion";
+
 
     private static final String CLIENT_ACCESS_TOKEN = "81dbd5289ee74637bf582fc3112b7dcb";
     private AIConfiguration aiConfiguration;
@@ -94,15 +98,81 @@ public class ApiAiClient implements AIListener {
         });
     }
 
-    public void processResult(Result result, ResultListener listener) {
+    void processTextQueryOffline(@Nullable final String query,
+                                 @Nullable final String event,
+                                 @Action.ActionType final int lastAction,
+                                 final ResultListener listener) {
+        DobbyLog.v("Submitting offline query");
+        Preconditions.checkState(query != null || event != null);
+        Action actionToReturn = new Action(Utils.EMPTY_STRING, Action.ActionType.ACTION_TYPE_NONE);
+        if (query != null && ! query.equals(Utils.EMPTY_STRING)) {
+            DobbyLog.v("Submitting offline query with text " + query);
+            if (Utils.grepForString(query, Arrays.asList("run", "test", "bandwidth", "check", "find"))) {
+                //Run bw test
+                actionToReturn = new Action("Sure I can run some tests for you. " +
+                        "I will test your download and upload speeds to SpeedTest.org servers. ",
+                        Action.ActionType.ACTION_TYPE_BANDWIDTH_TEST);
+
+            } else if (Utils.grepForString(query, Arrays.asList("slow", "sucks", "bad", "faults",
+                    "doesn't", "laggy", "buffering", "disconnected", "problem", "shit"))) {
+                //Slow internet diagnosis
+                actionToReturn = new Action("Ah that's not good. Let me see whats going on. " +
+                        "Hang on for a sec..I will run some diagnostics for you ! ",
+                        Action.ActionType.ACTION_TYPE_DIAGNOSE_SLOW_INTERNET);
+
+            } else if (Utils.grepForString(query, Arrays.asList("cancel", "stop", "later", "skip",
+                    "never mind", "dismiss", "forget", "no", "nm"))) {
+                if (lastAction == Action.ActionType.ACTION_TYPE_ASK_FOR_LONG_SUGGESTION) {
+                    actionToReturn = new Action("Ok sure. Hope I was of some help ! " +
+                            "Let me know if I can answer any other questions.",
+                            Action.ActionType.ACTION_TYPE_NONE);
+                } else {
+                    //Cancel intent
+                    actionToReturn = new Action("No worries, I am cancelling the tests. " +
+                            "Let me know if I can be of any other help ",
+                            Action.ActionType.ACTION_TYPE_CANCEL_BANDWIDTH_TEST);
+                }
+
+            } else if (Utils.grepForString(query, Arrays.asList("show", "yes", "sure", "of course", "sounds good", "ok", "kk", "k"))) {
+                //Show long suggestion
+                //Check if your last action was shown short suggestion
+                if (lastAction == Action.ActionType.ACTION_TYPE_ASK_FOR_LONG_SUGGESTION) {
+                    actionToReturn = new Action(Utils.EMPTY_STRING,
+                            Action.ActionType.ACTION_TYPE_SHOW_LONG_SUGGESTION);
+                } else if (lastAction == Action.ActionType.ACTION_TYPE_SHOW_LONG_SUGGESTION) {
+                    actionToReturn = new Action("Hope I was of some help. " +
+                            "Let me know if I can answer other questions.",
+                            Action.ActionType.ACTION_TYPE_NONE);
+                }
+            } else {
+                //Default fallback
+                actionToReturn = new Action("I'm sorry, I don't support that yet. " +
+                        "You can say things like \"Run speed test\", \"why is my internet slow\" " +
+                        "or \"why is my wireless slow\"",
+                        Action.ActionType.ACTION_TYPE_DEFAULT_FALLBACK);
+            }
+        } else if (event != null && ! event.equals(Utils.EMPTY_STRING)) {
+            DobbyLog.v("Submitting offline event with text " + event);
+            //Process the events
+            if (event.equals(APIAI_WELCOME_EVENT)) {
+                actionToReturn = new Action("Hi there,  I can help you if you have questions about " +
+                        "your network. You can say things like \"run tests\" or \"Is my wifi bad\" " +
+                        "or \"why is my internet slow\" etc.",
+                        Action.ActionType.ACTION_TYPE_WELCOME);
+            } else if (event.equals(APIAI_SHORT_SUGGESTION_SHOWN_EVENT)) {
+                actionToReturn = new Action("Do you want more details on my analysis ?",
+                        Action.ActionType.ACTION_TYPE_ASK_FOR_LONG_SUGGESTION);
+            } else if (event.equals(APIAI_LONG_SUGGESTION_SHOWN_EVENT)) {
+
+            }
+        }
+        DobbyLog.v("Sending action to listeners" + actionToReturn.getAction() + " with user response: " + actionToReturn.getUserResponse());
+        listener.onResult(actionToReturn, null);
+    }
+
+    private void processResult(Result result, ResultListener listener) {
         String action = result.getAction();
         String response = result.getFulfillment().getSpeech();
-
-        /*
-        if (response == null || response.isEmpty()) {
-            response = CANNED_RESPONSE;
-        }
-        */
         if (response == null) {
             response = Utils.EMPTY_STRING;
         }
@@ -120,6 +190,9 @@ public class ApiAiClient implements AIListener {
                 break;
             case APIAI_ACTION_SHOW_LONG_SUGGESTION:
                 actionInt = Action.ActionType.ACTION_TYPE_SHOW_LONG_SUGGESTION;
+                break;
+            case APIAI_ACTION_ASK_FOR_LONG_SUGGESTION:
+                actionInt = Action.ActionType.ACTION_TYPE_ASK_FOR_LONG_SUGGESTION;
                 break;
         }
         listener.onResult(new Action(response, actionInt), result);

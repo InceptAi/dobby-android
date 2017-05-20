@@ -21,7 +21,11 @@ public class Action {
             ActionType.ACTION_TYPE_DIAGNOSE_SLOW_INTERNET,
             ActionType.ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS,
             ActionType.ACTION_TYPE_SHOW_SHORT_SUGGESTION,
-            ActionType.ACTION_TYPE_SHOW_LONG_SUGGESTION
+            ActionType.ACTION_TYPE_SHOW_LONG_SUGGESTION,
+            ActionType.ACTION_TYPE_UNKNOWN,
+            ActionType.ACTION_TYPE_WELCOME,
+            ActionType.ACTION_TYPE_DEFAULT_FALLBACK,
+            ActionType.ACTION_TYPE_ASK_FOR_LONG_SUGGESTION
     })
     @Retention(RetentionPolicy.SOURCE)
     public @interface ActionType {
@@ -33,6 +37,10 @@ public class Action {
         int ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS = 5;
         int ACTION_TYPE_SHOW_SHORT_SUGGESTION = 6;
         int ACTION_TYPE_SHOW_LONG_SUGGESTION = 7;
+        int ACTION_TYPE_UNKNOWN = 8;
+        int ACTION_TYPE_WELCOME = 9;
+        int ACTION_TYPE_DEFAULT_FALLBACK = 10;
+        int ACTION_TYPE_ASK_FOR_LONG_SUGGESTION = 11;
     }
 
     /* User response to be shown, null for no response. */

@@ -693,6 +693,15 @@ public class Utils {
         return UUID.randomUUID().toString();
     }
 
+    public static boolean grepForString(String stringToGrep, List<String> stringList) {
+        for (String stringToCheck: stringList) {
+            if (stringToCheck.contains(stringToGrep) || stringToGrep.contains(stringToCheck)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static double nonLinearBwScale(double input) {
         // 0 .. 5 maps to 0 .. 50
         if (input <= 5.0) {
