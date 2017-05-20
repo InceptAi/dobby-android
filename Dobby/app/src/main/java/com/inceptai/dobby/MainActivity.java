@@ -203,6 +203,11 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    public void cancelTests() {
+        chatFragment.cancelTests();
+    }
+
+    @Override
     public void onUserQuery(String text) {
         dobbyAi.sendQuery(text);
     }
@@ -211,6 +216,8 @@ public class MainActivity extends AppCompatActivity
     public boolean handleMessage(Message msg) {
         return false;
     }
+
+
 
     public void sendEvent(String eventString) {
         if (dobbyAi != null) {

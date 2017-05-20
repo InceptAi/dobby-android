@@ -19,7 +19,9 @@ public class Action {
             ActionType.ACTION_TYPE_WIFI_SCAN,
             ActionType.ACTION_TYPE_CANCEL_BANDWIDTH_TEST,
             ActionType.ACTION_TYPE_DIAGNOSE_SLOW_INTERNET,
-            ActionType.ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS
+            ActionType.ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS,
+            ActionType.ACTION_TYPE_SHOW_SHORT_SUGGESTION,
+            ActionType.ACTION_TYPE_SHOW_LONG_SUGGESTION
     })
     @Retention(RetentionPolicy.SOURCE)
     public @interface ActionType {
@@ -29,6 +31,8 @@ public class Action {
         int ACTION_TYPE_CANCEL_BANDWIDTH_TEST = 3;
         int ACTION_TYPE_DIAGNOSE_SLOW_INTERNET = 4;
         int ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS = 5;
+        int ACTION_TYPE_SHOW_SHORT_SUGGESTION = 6;
+        int ACTION_TYPE_SHOW_LONG_SUGGESTION = 7;
     }
 
     /* User response to be shown, null for no response. */

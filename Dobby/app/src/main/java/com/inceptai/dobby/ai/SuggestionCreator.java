@@ -52,8 +52,17 @@ public class SuggestionCreator {
             return shortSuggestionList;
         }
 
+        public String getLongSuggestionListString() {
+            return convertListToStringMessage(true);
+        }
+
+        public String getShortSuggestionListString() {
+            return convertListToStringMessage(false);
+        }
+
         private String convertListToStringMessage(boolean useLongSuggestions) {
             //Use short suggestion by default.
+            final String CONDITIONS_PREFIX = "Here are the details";
             List<String> suggestionList;
             StringBuilder sb = new StringBuilder();
             if (useLongSuggestions) {
@@ -67,7 +76,7 @@ public class SuggestionCreator {
                 sb.append(suggestionList.get(0));
             } else {
                 //Multiple conditions
-                sb.append(MULTIPLE_CONDITIONS_PREFIX);
+                sb.append(CONDITIONS_PREFIX);
                 int index = 1;
                 for(String suggestion: suggestionList) {
                     sb.append("\n");

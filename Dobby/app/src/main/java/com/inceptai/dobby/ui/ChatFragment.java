@@ -253,6 +253,12 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         Message.obtain(handler, MSG_SHOW_RT_GRAPH, rtDataSource).sendToTarget();
     }
 
+    public void cancelTests() {
+        //resetData();
+        //uiStateChange(UI_STATE_FULL_CHAT);
+        dismissBandwidthGaugeNonUi();
+    }
+
     @Override
     public boolean handleMessage(Message msg) {
         switch (msg.what) {
@@ -272,7 +278,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
                 updateBandwidthGauge(msg);
                 break;
             case MSG_UI_STATE_CHANGE:
-                uiStateChange(msg.arg1);
+                uiStateChange((int)msg.obj);
                 break;
 
         }
@@ -293,6 +299,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     private void makeUiChanges(View rootView) {
         if (uiState == UI_STATE_FULL_CHAT) {
             // make guage gone.
+            resetData();
             bwGaugeLayout.setVisibility(View.GONE);
         } else if (uiState == UI_STATE_SHOW_BW_GAUGE) {
             bwGaugeLayout.setVisibility(View.VISIBLE);
