@@ -36,6 +36,7 @@ import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.ui.ChatFragment;
 import com.inceptai.dobby.ui.DebugFragment;
 import com.inceptai.dobby.ui.FakeDataFragment;
+import com.inceptai.dobby.ui.WifiDocDialogFragment;
 import com.inceptai.dobby.ui.WifiFragment;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
@@ -180,6 +181,10 @@ public class MainActivity extends AppCompatActivity
 
         } else if (id == R.id.nav_send) {
 
+        } else if (id == R.id.about_wifi_expert) {
+            showAboutAndPrivacyPolicy();
+        } else if (id == R.id.feedback_wifi_expert) {
+            showFeedbackForm();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -216,12 +221,22 @@ public class MainActivity extends AppCompatActivity
         return false;
     }
 
-
-
     public void sendEvent(String eventString) {
         if (dobbyAi != null) {
             dobbyAi.sendEvent(eventString);
         }
+    }
+
+    private void showAboutAndPrivacyPolicy() {
+        WifiDocDialogFragment fragment = WifiDocDialogFragment.forAboutAndPrivacyPolicy();
+        fragment.show(getSupportFragmentManager(), "About");
+        //dobbyAnalytics.aboutShown();
+    }
+
+    private void showFeedbackForm() {
+        WifiDocDialogFragment fragment = WifiDocDialogFragment.forFeedback(R.layout.activity_main);
+        fragment.show(getSupportFragmentManager(), "Feedback");
+        //dobbyAnalytics.feedbackFormShown();
     }
 
     private Fragment getFragmentByTag(String tag) {

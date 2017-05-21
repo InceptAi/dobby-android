@@ -1084,7 +1084,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     }
 
     private void showFeedbackForm() {
-        WifiDocDialogFragment fragment = WifiDocDialogFragment.forFeedback();
+        WifiDocDialogFragment fragment = WifiDocDialogFragment.forFeedback(R.id.wifi_doc_placeholder_fl);
         fragment.show(getActivity().getSupportFragmentManager(), "Feedback");
         dobbyAnalytics.feedbackFormShown();
     }
