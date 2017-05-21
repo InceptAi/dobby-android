@@ -60,10 +60,36 @@
         app:layout_constraintLeft_toLeftOf="parent"
         android:layout_marginBottom="8dp"
         android:layout_marginStart="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/command_text_layout"
+        app:layout_constraintBottom_toTopOf="@+id/action_menu"
         app:layout_constraintTop_toBottomOf="@id/bw_gauge_ll"
         android:layout_marginEnd="8dp">
     </android.support.v7.widget.RecyclerView>
+
+<LinearLayout
+    android:id="@+id/action_menu"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:layout_gravity="bottom"
+    app:layout_constraintBottom_toTopOf="@+id/command_text_layout"
+    app:layout_constraintRight_toRightOf="parent">
+
+    <Button
+        android:id="@+id/yes_action_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="YES"
+        android:src="@drawable/circle_shape"/>
+
+    <Button
+        android:id="@+id/no_action_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="NO"
+        android:src="@drawable/circle_shape"/>
+
+</LinearLayout>
+
 
 <LinearLayout
     android:id="@+id/command_text_layout"
