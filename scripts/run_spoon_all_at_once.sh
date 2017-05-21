@@ -11,9 +11,7 @@ BODY="Test Email"
 SUBJECT="Gradle Build"
 REL_PATH_DEBUG_APK="app/build/outputs/apk/app-wifidoc-debug.apk"
 REL_PATH_INSTRUMENTATION_APK="app/build/outputs/apk/app-wifidoc-debug-androidTest.apk"
-MIN_API_LEVEL_TO_USE_G_INSTALL_OPTION=23
-OUTPUT_PATH="/home/vivek/Work/dobby-android/Dobby/app/build/spoon/wifidoc"
-DOBBY_SERVER_HOME="/home/vivek/Work/dobby-android/server"
+
 
 uninstall_app () {
     #uninstall the apks from the device
@@ -22,18 +20,9 @@ uninstall_app () {
 }
 
 install_app () {
-    if [ $# -ne 1 ]; then
-		echo "Need API level for installation"
-		exit
-	fi
-	api_level=$1
     #install the apks on the target device
     adb push $REL_PATH_DEBUG_APK /data/local/tmp/com.inceptai.dobby.wifidoc.debug >> /tmp/gradle.log
-	if [ $api_level -lt 23 ]; then
-		adb shell pm install -r "/data/local/tmp/com.inceptai.dobby.wifidoc.debug" >> /tmp/gradle.log
-	else
-    	adb shell pm install -r -g "/data/local/tmp/com.inceptai.dobby.wifidoc.debug" >> /tmp/gradle.log
-	fi
+    adb shell pm install -r -g  "/data/local/tmp/com.inceptai.dobby.wifidoc.debug" >> /tmp/gradle.log
     adb push $REL_PATH_INSTRUMENTATION_APK /data/local/tmp/com.inceptai.dobby.wifidoc.debug.test >> /tmp/gradle.log
     adb shell pm install -r "/data/local/tmp/com.inceptai.dobby.wifidoc.debug.test" >> /tmp/gradle.log
 }
@@ -132,24 +121,100 @@ echo "List of emulators:"
 cat $EMULATOR_LIST_FILE
 should_report_failure=0
 
-rm -rf $DOBBY_SERVER_HOME/spoon/wifidoc
 clean_slate
 num_lines=`wc -l $EMULATOR_LIST_FILE | cut -d ' ' -f1`
 for i in $(seq 1 $num_lines); do
    	line=`sed -n ${i}p $EMULATOR_LIST_FILE`
-    emulator_info="$line"
-    if [ -z "$emulator_info" ]; then
+    emulator_id="$line"
+    if [ -z "$emulator_id" ]; then
         continue
     fi
-    is_commented=`echo $emulator_info | grep "#"`
+    is_commented=`echo $emulator_id | grep "#"`
     if [ ! -z "$is_commented" ]; then
-        echo "Emulator $emulator_info"
+        echo "Emulator $emulator_id"
         continue
     fi
-    echo "Running test for id $emulator_info"
-	emulator_id=`echo $emulator_info | cut -d " " -f 1`
-	api_level=`echo $emulator_info | cut -d " " -f 2`
-	echo "emulator id, api level" $emulator_id $api_level 
+    echo "Running test for id $emulator_id"
+
+	#Start the emulator
+	$GENYMOTION_HOME/player --vm-name $emulator_id &	
+	EMULATOR_PID=$!
+	echo "Started emulator with pid:" $EMULATOR_PID
+
+	#Slight delay before we check
+	sleep 5
+
+	#Wait for it to start
+	echo "Waiting for emulator:" $emulator_id
+	wait_for_emulator
+
+	#Sleep for a few secs	
+	sleep 15
+
+	#Uninstall the app
+	echo "Uninstalling app on emulator:" $emulator_id
+	uninstall_app
+
+	#Install the app
+	echo "Installing app on emulator:" $emulator_id
+	install_app
+
+	#Kill the emulator
+	echo "Killing emulator:" $emulator_id
+	kill $EMULATOR_PID
+	sleep 10
+	
+	clean_slate
+	echo "Done sleeping, onto the next one"
+done
+
+clean_slate
+num_lines=`wc -l $EMULATOR_LIST_FILE | cut -d ' ' -f1`
+for i in $(seq 1 $num_lines); do
+   	line=`sed -n ${i}p $EMULATOR_LIST_FILE`
+    emulator_id="$line"
+    if [ -z "$emulator_id" ]; then
+        continue
+    fi
+    is_commented=`echo $emulator_id | grep "#"`
+    if [ ! -z "$is_commented" ]; then
+        echo "Emulator $emulator_id"
+        continue
+    fi
+    echo "Running test for id $emulator_id"
+
+	#Start the emulator
+	$GENYMOTION_HOME/player --vm-name $emulator_id &	
+	EMULATOR_PID=$!
+	echo "Started emulator with pid:" $EMULATOR_PID
+
+	#Slight delay before we check
+	sleep 15
+	echo "Done sleeping, onto the next one"
+done
+
+
+#Run the test
+./gradlew spoonWifidocDebugAndroidTest --stacktrace >>  /tmp/gradle.log
+if [ $? -gt 0 ]; then
+	should_report_failure=1
+fi
+
+clean_slate
+num_lines=`wc -l $EMULATOR_LIST_FILE | cut -d ' ' -f1`
+for i in $(seq 1 $num_lines); do
+   	line=`sed -n ${i}p $EMULATOR_LIST_FILE`
+    emulator_id="$line"
+    if [ -z "$emulator_id" ]; then
+        continue
+    fi
+    is_commented=`echo $emulator_id | grep "#"`
+    if [ ! -z "$is_commented" ]; then
+        echo "Emulator $emulator_id"
+        continue
+    fi
+    echo "Running test for id $emulator_id"
+
 	#Start the emulator
 	$GENYMOTION_HOME/player --vm-name $emulator_id &	
 	EMULATOR_PID=$!
@@ -165,25 +230,9 @@ for i in $(seq 1 $num_lines); do
 	sleep 15
 
 	#Uninstall the app
+	echo "Uninstalling app on emulator:" $emulator_id
 	uninstall_app
 
-	#Install the app
-	install_app $api_level
-
-	#Run the test
-	./gradlew spoonWifidocDebugAndroidTest --stacktrace >>  /tmp/gradle.log
-	
-	#Store the output in a diff location
-	mkdir -p $DOBBY_SERVER_HOME/spoon/wifidoc/$api_level
-	cp -r $OUTPUT_PATH/debug/* $DOBBY_SERVER_HOME/spoon/wifidoc/$api_level/
-	
-	if [ $? -gt 0 ]; then
-		should_report_failure=1
-	fi
-
-	#Repeat for different emulators
-	uninstall_app
-	
 	#Kill the emulator
 	kill $EMULATOR_PID
 	sleep 10
