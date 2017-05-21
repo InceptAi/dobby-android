@@ -281,6 +281,14 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     }
 
     @Override
+    public void onPause() {
+        if (fabPrompt != null) {
+            fabPrompt.dismiss();
+        }
+        super.onPause();
+    }
+
+    @Override
     public void onDetach() {
         super.onDetach();
         eventBus.unregisterListener(this);

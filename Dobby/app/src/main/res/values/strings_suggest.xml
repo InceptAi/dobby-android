@@ -41,5 +41,7 @@
 
     <string name="suggest_upload_ratio_very_poor">The upload bandwidth is too low in comparison to the download bandwidth.</string>
     <string name="suggest_upload_ratio_very_poor_more">A very low upload bandwidth ratio when compared to the download bandwidth might indicate issues with the network or the internet provider. It could cause issues with using streaming apps, browsing or downloads.</string>
-    
+
+    <string name="suggest_bandwidth_overall_ok">Internet speeds are GOOD.</string>
+    <string name="suggest_bandwidth_overall_ok_more">Your overall download and upload bandwidth speeds look reasonably good. This usually means that should not be any unexpected issues with your Internet. If you are still seeing problems, it is possible that they are intermittent. Running this test a few times might help.</string>
 </resources>

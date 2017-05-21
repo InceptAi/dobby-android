@@ -17,22 +17,24 @@ class FakeConfig:
     def set_upload(self, bandwidth):
         self.keyDict['upload'] = bandwidth
 
-    def get_adb_string(self):
-        extras = ""
-        for key in self.keyDict.keys():
-            extras = extras + " --es " + key + " \"" + str(self.keyDict[key]) + "\""
-        command = "adb shell am broadcast -a com.inceptai.dobby.fake.FAKE_DATA " + extras
-        return command
+    def set_show_suggestions(self):
+        self.keyDict['show_suggestions'] = True
 
+    def get_adb_string(self):
+        bundle_string = ""
+        for (key, value) in self.keyDict.items():
+            bundle_string = bundle_string + " --es " + key + " \"" + str(value) + "\""
+        return "adb shell am broadcast -a com.inceptai.dobby.wifi.fake.FAKE_DATA " + bundle_string
 
 def main():
-    config = FakeConfig()
-    config.set_download(3.4)
-    config.set_upload(1.0)
-    command = FakeConfig.get_adb_string(config)
-    print("Running command:" + command)
-    print subprocess.Popen(command, stdout=subprocess.PIPE, shell=True, executable="/bin/bash").stdout.read()
+    fake_config = FakeConfig();
+    fake_config.set_download(2.5)
+    fake_config.set_upload(1.2)
+    fake_config.set_show_suggestions()
+    command = fake_config.get_adb_string()
+    print(command)
+    print subprocess.Popen(command, shell=True, stdout=subprocess.PIPE).stdout.read()
+    pass
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
-

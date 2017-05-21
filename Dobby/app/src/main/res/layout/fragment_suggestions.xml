@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    android:animateLayoutChanges="true"
+    android:id="@+id/suggestions_coordinator_layout"
+    tools:context="com.inceptai.dobby.ui.WifiDocActivity">
+
+    <android.support.design.widget.AppBarLayout
+        android:id="@+id/suggestions_app_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fitsSystemWindows="true">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/suggestions_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            app:layout_collapseMode="pin"
+            android:background="@drawable/vertical_orange_reverse_gradient"
+            android:alpha="0.7"
+            app:layout_scrollFlags="scroll|enterAlways">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:orientation="vertical"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:orientation="horizontal"
+                android:layout_gravity="top"
+                android:layout_height="wrap_content">
+                <ImageView
+                    android:id="@+id/wifi_doc_icon"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:src="@mipmap/wifi_doc_launcher" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:text="Diagnosis Report"
+                    android:textSize="16sp"
+                    android:gravity="center_vertical"
+                    android:layout_gravity="center_vertical"
+                    android:fontFamily="sans-serif-condensed-thin"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginLeft="5dp"
+                    android:textColor="@android:color/white"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+        </LinearLayout>
+        </android.support.v7.widget.Toolbar>
+    </android.support.design.widget.AppBarLayout>
+
+    <android.support.v4.widget.NestedScrollView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/suggestions_scroll_view"
+        android:animateLayoutChanges="true"
+        android:padding="5dp"
+        android:background="@drawable/circular_light_orange_gradient"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+    </android.support.v4.widget.NestedScrollView>
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/suggestions_human_fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/fab_margin"
+        android:clickable="true"
+        app:srcCompat="@android:drawable/ic_dialog_info"
+        android:visibility="visible"
+        app:layout_anchor="@id/suggestions_app_bar"
+        app:layout_anchorGravity="bottom|end" />
+
+</android.support.design.widget.CoordinatorLayout>

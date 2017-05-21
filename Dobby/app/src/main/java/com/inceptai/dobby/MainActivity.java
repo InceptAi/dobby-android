@@ -65,7 +65,6 @@ public class MainActivity extends AppCompatActivity
 
     private Handler handler;
     private ChatFragment chatFragment;
-    private FakeDataIntentReceiver fakeDataIntentReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -256,10 +255,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
-        if (fakeDataIntentReceiver == null) {
-            fakeDataIntentReceiver = new FakeDataIntentReceiver();
-            registerReceiver(fakeDataIntentReceiver, new IntentFilter(FakeDataIntentReceiver.FAKE_DATA_INTENT));
-        }
     }
 
     @Override

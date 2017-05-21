@@ -41,7 +41,7 @@ public class SnippetLocalizer {
 
     public LocalSnippet localize(Snippet snippet) {
         if (snippet.typeBandwidth()) {
-
+            return typeBandwidth(snippet, context.getResources());
         }
         return null;
     }
@@ -116,6 +116,7 @@ public class SnippetLocalizer {
             case TYPE_OVERALL_BANDWIDTH_GOOD:
                 break;
             case TYPE_OVERALL_BANDWIDTH_OK:
+                localSnippet.addString(resources.getString(R.string.suggest_bandwidth_overall_ok), resources.getString(R.string.suggest_bandwidth_overall_ok_more));
                 break;
             case TYPE_OVERALL_BANDWIDTH_POOR:
                 break;

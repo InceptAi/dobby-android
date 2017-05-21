@@ -30,4 +30,8 @@ public class LocalSnippet {
     public void addString(String mainString, String moreString) {
         stringList.add(new Pair<String, String>(mainString, moreString));
     }
+
+    public ArrayList<Pair<String, String>> getStrings() {
+        return stringList;
+    }
 }

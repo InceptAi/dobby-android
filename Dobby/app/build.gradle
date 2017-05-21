@@ -22,7 +22,7 @@ android {
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
-       // testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        // testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         testInstrumentationRunner "com.inceptai.dobby.MyAndroidJUnitRunner"
     }
     signingConfigs {
@@ -122,7 +122,7 @@ dependencies {
 
     annotationProcessor 'com.google.dagger:dagger-compiler:2.9'
     provided 'javax.annotation:jsr250-api:1.0'
-    //For jspeedtest
+    // For jspeedtest
     // compile 'fr.bmartel:jspeedtest:1.25'
     compile 'fr.bmartel:http-endec:1.04'
     compile 'commons-net:commons-net:3.6'

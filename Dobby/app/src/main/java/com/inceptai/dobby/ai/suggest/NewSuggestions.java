@@ -1,8 +1,12 @@
+
 package com.inceptai.dobby.ai.suggest;
 
+import android.content.Context;
+import android.provider.ContactsContract;
 import android.support.annotation.Nullable;
 
 import com.inceptai.dobby.ai.DataInterpreter;
+import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 
 public class NewSuggestions {
@@ -22,13 +26,29 @@ public class NewSuggestions {
         }
     }
 
+    private DataSummary dataSummary;
+    private Context context;
+
+    public NewSuggestions(DataSummary dataSummary, Context context) {
+        this.dataSummary = dataSummary;
+        this.context = context;
+    }
+
+    public LocalSnippet getSuggestions() {
+
+        Snippet bandwidthSnippet = bandwidth(dataSummary.bandwidthGrade);
+        return new SnippetLocalizer(context).localize(bandwidthSnippet);
+    }
+
     private static Snippet bandwidth(DataInterpreter.BandwidthGrade grade) {
         if (grade.getUploadBandwidthMetric() == DataInterpreter.MetricType.UNKNOWN &&
                 grade.getDownloadBandwidthMetric() == DataInterpreter.MetricType.UNKNOWN) {
+            DobbyLog.i("Returning snippet of UNKNOWN type.");
             return Snippet.ofType(Snippet.Type.TYPE_BW_UNKNOWN);
         }
         Snippet download = download(grade);
         Snippet upload = upload(grade);
+        DobbyLog.i("Returning snippet of type overall bandwidth OK.");
         return Snippet.ofType(Snippet.Type.TYPE_OVERALL_BANDWIDTH_OK, download, upload);
     }
 
