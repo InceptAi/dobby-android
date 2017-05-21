@@ -467,6 +467,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         Message.obtain(handler, MSG_UPDATE_CIRCULAR_GAUGE, Utils.BandwidthValue.from(testMode, (stats.getOverallBandwidth() / 1.0e6))).sendToTarget();
         if (testMode == BandwithTestCodes.TestMode.UPLOAD) {
             showStatus(R.string.status_finished_bw_tests);
+            dismissBandwidthGaugeNonUi();
         }
     }
 
@@ -485,5 +486,6 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     @Override
     public void onBandwidthTestError(@BandwithTestCodes.TestMode int testMode, @BandwithTestCodes.ErrorCodes int errorCode, @Nullable String errorMessage) {
         showStatus(R.string.status_error_bw_tests);
+        dismissBandwidthGaugeNonUi();
     }
 }
