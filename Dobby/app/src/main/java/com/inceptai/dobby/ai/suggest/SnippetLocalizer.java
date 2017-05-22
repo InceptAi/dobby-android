@@ -69,7 +69,6 @@ public class SnippetLocalizer {
                 localSnippet.addString(resources.getString(R.string.suggest_download_bw_2mbps, snippet.getBandwidth()),
                         resources.getString(R.string.suggest_download_bw_2mbps_more));
                 break;
-
             case TYPE_DOWNLOAD_BW_4MBPS:
                 localSnippet.addString(resources.getString(R.string.suggest_download_bw_4mbps, snippet.getBandwidth()),
                         resources.getString(R.string.suggest_download_bw_4mbps_more));
