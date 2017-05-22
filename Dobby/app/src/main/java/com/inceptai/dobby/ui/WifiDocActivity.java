@@ -105,7 +105,7 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
         DobbyLog.i("onResume()");
         super.onResume();
         if (fakeDataIntentReceiver == null) {
-            fakeDataIntentReceiver = new FakeDataIntentReceiver();
+            fakeDataIntentReceiver = new FakeDataIntentReceiver(this);
         }
         Intent intent = registerReceiver(fakeDataIntentReceiver, new IntentFilter(FakeDataIntentReceiver.FAKE_DATA_INTENT));
         if (intent != null) {
@@ -116,7 +116,11 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
     @Override
     protected void onPause() {
         if (fakeDataIntentReceiver != null) {
-            unregisterReceiver(fakeDataIntentReceiver);
+            try {
+                unregisterReceiver(fakeDataIntentReceiver);
+            } catch (IllegalArgumentException e) {
+                DobbyLog.i("Ignoring IllegalArgumentException for fake intent unregister.");
+            }
         }
         super.onPause();
     }
@@ -138,19 +142,7 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        if (fakeDataIntentReceiver == null) {
-            fakeDataIntentReceiver = new FakeDataIntentReceiver(this);
-        }
-        registerReceiver(fakeDataIntentReceiver, new IntentFilter(FakeDataIntentReceiver.FAKE_INTENT));
-    }
-
-    @Override
     protected void onStop() {
-        if (fakeDataIntentReceiver != null) {
-            unregisterReceiver(fakeDataIntentReceiver);
-        }
         super.onStop();
     }
 

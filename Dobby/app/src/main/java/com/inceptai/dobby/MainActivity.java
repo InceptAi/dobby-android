@@ -259,9 +259,6 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onStop() {
-        if (fakeDataIntentReceiver != null) {
-            unregisterReceiver(fakeDataIntentReceiver);
-        }
         super.onStop();
     }
 

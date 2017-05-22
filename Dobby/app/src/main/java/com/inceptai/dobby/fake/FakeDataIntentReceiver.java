@@ -18,7 +18,7 @@ import org.apache.logging.log4j.util.Strings;
  */
 
 public class FakeDataIntentReceiver extends BroadcastReceiver {
-    public static final String FAKE_DATA_INTENT = "com.inceptai.dobby.fake.FAKE_DATA";
+    public static final String FAKE_DATA_INTENT = "com.inceptai.dobby.wifi.fake.FAKE_DATA";
     private static final String KEY_DOWNLOAD_BW = "download";
     private static final String KEY_UPLOAD_BW = "upload";
     private static final String KEY_SHOW_SUGGESTIONS = "show_suggestions";
