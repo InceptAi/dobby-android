@@ -16,6 +16,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -25,6 +26,7 @@ import android.widget.Toast;
 import com.google.common.base.Preconditions;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.ai.RtDataSource;
+import com.inceptai.dobby.ai.UserResponse;
 import com.inceptai.dobby.model.BandwidthStats;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
@@ -61,6 +63,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     private static final int MSG_SHOW_BW_GAUGE = 3;
     private static final int MSG_UPDATE_CIRCULAR_GAUGE = 4;
     private static final int MSG_UI_STATE_CHANGE = 5;
+    private static final int MSG_SHOW_USER_ACTION_BUTTONS = 6;
 
     private static final int BW_TEST_INITIATED = 200;
     private static final int BW_CONFIG_FETCHED = 201;
@@ -81,6 +84,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     private OnFragmentInteractionListener mListener;
     private Handler handler;
     private LinearLayout bwGaugeLayout;
+    private LinearLayout actionMenu;
 
     private CircularGauge downloadCircularGauge;
     private TextView downloadGaugeTv;
@@ -163,6 +167,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
 
         handler = new Handler(this);
         bwGaugeLayout = (LinearLayout) fragmentView.findViewById(R.id.bw_gauge_ll);
+        actionMenu = (LinearLayout) fragmentView.findViewById(R.id.action_menu);
 
         queryEditText = (EditText) fragmentView.findViewById(R.id.queryEditText);
         queryEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -271,6 +276,12 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         dismissBandwidthGaugeNonUi();
     }
 
+    public void showUserActionOptions(List<Integer> userResponseTypes) {
+        DobbyLog.v("In showUserActionOptions of CF: responseTypes: " + userResponseTypes);
+        //Show all the buttons programatically and tie the response to send the user query
+        Message.obtain(handler, MSG_SHOW_USER_ACTION_BUTTONS, userResponseTypes).sendToTarget();
+    }
+
     @Override
     public boolean handleMessage(Message msg) {
         switch (msg.what) {
@@ -293,7 +304,9 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
             case MSG_UI_STATE_CHANGE:
                 uiStateChange((int)msg.obj);
                 break;
-
+            case MSG_SHOW_USER_ACTION_BUTTONS:
+                showUserActionButtons((List<Integer>) msg.obj);
+                break;
         }
         return false;
     }
@@ -363,6 +376,30 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     private void showBandwidthGauge(BandwidthObserver observer) {
         observer.registerCallback(this);
         uiStateChange(UI_STATE_SHOW_BW_GAUGE);
+    }
+
+    private void showUserActionButtons(List<Integer> userResponseTypes) {
+        actionMenu.removeAllViewsInLayout();
+        for (final int userResponseType: userResponseTypes) {
+            final String buttonText = UserResponse.getStringForResponseType(userResponseType);
+            if (buttonText == null || buttonText.equals(Utils.EMPTY_STRING)) {
+                continue;
+            }
+            Button button = new Button(this.getContext());
+            button.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT));
+            button.setText(UserResponse.getStringForResponseType(userResponseType));
+            button.setClickable(true);
+            button.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (mListener != null) {
+                        mListener.onUserQuery(buttonText);
+                    }
+                }
+            });
+            actionMenu.addView(button);
+        }
     }
 
     private void processTextQuery(String text) {

@@ -18,7 +18,9 @@ import com.inceptai.dobby.speedtest.BandwithTestCodes;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
@@ -26,6 +28,18 @@ import javax.inject.Inject;
 import ai.api.model.Result;
 
 import static com.inceptai.dobby.DobbyApplication.TAG;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_ASK_FOR_LONG_SUGGESTION;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_BANDWIDTH_TEST;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_CANCEL_BANDWIDTH_TEST;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_DEFAULT_FALLBACK;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_DIAGNOSE_SLOW_INTERNET;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_NONE;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_SHOW_LONG_SUGGESTION;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_SHOW_SHORT_SUGGESTION;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_UNKNOWN;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_WELCOME;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_WIFI_SCAN;
 
 /**
  * This class is responsible for managing the user queries and showing the responses by working
@@ -57,6 +71,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         void showRtGraph(RtDataSource<Float, Integer> rtDataSource);
         void observeBandwidth(BandwidthObserver observer);
         void cancelTests();
+        void showUserActionOptions(List<Integer> userResponseTypes);
     }
 
     public DobbyAi(DobbyThreadpool threadpool,
@@ -71,7 +86,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             initApiAiClient();
         }
         repeatBwWifiPingAction = new AtomicBoolean(false);
-        lastAction = Action.ActionType.ACTION_TYPE_UNKNOWN;
+        lastAction = ACTION_TYPE_UNKNOWN;
     }
 
     @Action.ActionType
@@ -116,7 +131,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         setLastAction(action.getAction());
         showMessageToUser(action.getUserResponse());
         switch (action.getAction()) {
-            case Action.ActionType.ACTION_TYPE_BANDWIDTH_TEST:
+            case ACTION_TYPE_BANDWIDTH_TEST:
                 DobbyLog.i("Starting ACTION BANDWIDTH TEST.");
                 //postBandwidthTestOperation();
                 postAllOperations();
@@ -127,7 +142,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 //Action diagnoseAction = inferenceEngine.addGoal(InferenceEngine.Goal.GOAL_DIAGNOSE_SLOW_INTERNET);
                 //takeAction(diagnoseAction);
                 return;
-            case Action.ActionType.ACTION_TYPE_CANCEL_BANDWIDTH_TEST:
+            case ACTION_TYPE_CANCEL_BANDWIDTH_TEST:
                 DobbyLog.i("Starting ACTION CANCEL BANDWIDTH TEST.");
                 try {
                     cancelBandwidthTest();
@@ -135,11 +150,11 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                     DobbyLog.i("Exception while cancelling:" + e);
                 }
                 break;
-            case Action.ActionType.ACTION_TYPE_DIAGNOSE_SLOW_INTERNET:
+            case ACTION_TYPE_DIAGNOSE_SLOW_INTERNET:
                 Action newAction = inferenceEngine.addGoal(InferenceEngine.Goal.GOAL_DIAGNOSE_SLOW_INTERNET);
                 takeAction(newAction);
                 return;
-            case Action.ActionType.ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS:
+            case ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS:
                 if (CLEAR_STATS_EVERY_TIME_USER_ASKS_TO_RUN_TESTS && repeatBwWifiPingAction.getAndSet(true)) {
                     //Clear the ping/wifi cache to get fresh results.
                     clearCache();
@@ -147,14 +162,14 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 DobbyLog.i("Going into postAllOperations()");
                 postAllOperations();
                 break;
-            case Action.ActionType.ACTION_TYPE_SHOW_SHORT_SUGGESTION:
+            case ACTION_TYPE_SHOW_SHORT_SUGGESTION:
                 //Send event for showing short suggestion
                 if (lastSuggestion != null) {
                     showMessageToUser(lastSuggestion.getTitle());
                 }
                 sendEvent(ApiAiClient.APIAI_SHORT_SUGGESTION_SHOWN_EVENT);
                 break;
-            case Action.ActionType.ACTION_TYPE_SHOW_LONG_SUGGESTION:
+            case ACTION_TYPE_SHOW_LONG_SUGGESTION:
                 //Show the long suggestion here and send the event
                 if (lastSuggestion != null) {
                     //TODO fix this to show list of suggestions nicely.
@@ -162,16 +177,18 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 }
                 sendEvent(ApiAiClient.APIAI_LONG_SUGGESTION_SHOWN_EVENT);
                 break;
-            case Action.ActionType.ACTION_TYPE_NONE:
+            case ACTION_TYPE_NONE:
                 //showMessageToUser(action.getUserResponse());
                 break;
-            case Action.ActionType.ACTION_TYPE_ASK_FOR_LONG_SUGGESTION:
+            case ACTION_TYPE_ASK_FOR_LONG_SUGGESTION:
                 break;
             default:
                 DobbyLog.i("Unknown Action");
                 break;
         }
-
+        if (responseCallback != null) {
+            responseCallback.showUserActionOptions(getPotentialUserResponses(lastAction));
+        }
     }
 
     @Override
@@ -179,7 +196,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         DobbyLog.v("Updating last suggestion to:" + suggestion.toString());
         lastSuggestion = suggestion;
         //Create a new action
-        Action shortSuggestionAction = new Action(Utils.EMPTY_STRING, Action.ActionType.ACTION_TYPE_SHOW_SHORT_SUGGESTION);
+        Action shortSuggestionAction = new Action(Utils.EMPTY_STRING, ACTION_TYPE_SHOW_SHORT_SUGGESTION);
         takeAction(shortSuggestionAction);
         eventBus.postEvent(DobbyEvent.EventType.SUGGESTIONS_AVAILABLE, suggestion);
     }
@@ -215,6 +232,64 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         if (useApiAi) {
             apiAiClient.cleanup();
         }
+    }
+
+
+    private List<Integer> getPotentialUserResponses(@Action.ActionType int lastActionShownToUser) {
+        ArrayList<Integer> responseList = new ArrayList<Integer>();
+        switch (lastActionShownToUser) {
+            case ACTION_TYPE_WELCOME:
+                //Followups -- RUN_BW_TESTS, RUN_WIFI_TESTS, RUN_DIAGNOSTICS
+                responseList.add(UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS);
+                responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
+                responseList.add(UserResponse.ResponseType.RUN_WIFI_TESTS);
+                responseList.add(UserResponse.ResponseType.LIST_ALL_FUNCTIONS);
+                break;
+            case ACTION_TYPE_NONE:
+                break;
+            case ACTION_TYPE_BANDWIDTH_TEST:
+                responseList.add(UserResponse.ResponseType.CANCEL);
+                break;
+            case ACTION_TYPE_WIFI_SCAN:
+                responseList.add(UserResponse.ResponseType.CANCEL);
+                break;
+            case ACTION_TYPE_CANCEL_BANDWIDTH_TEST:
+                responseList.add(UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS);
+                responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
+                responseList.add(UserResponse.ResponseType.RUN_WIFI_TESTS);
+                responseList.add(UserResponse.ResponseType.LIST_ALL_FUNCTIONS);
+                break;
+            case ACTION_TYPE_DIAGNOSE_SLOW_INTERNET:
+                //Followups -- RUN_BW_TESTS, RUN_WIFI_TESTS, RUN_DIAGNOSTICS
+                responseList.add(UserResponse.ResponseType.YES);
+                responseList.add(UserResponse.ResponseType.NO);
+                break;
+            case ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS:
+                responseList.add(UserResponse.ResponseType.CANCEL);
+                break;
+            case ACTION_TYPE_SHOW_SHORT_SUGGESTION:
+                break;
+            case ACTION_TYPE_SHOW_LONG_SUGGESTION:
+                responseList.add(UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS);
+                responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
+                responseList.add(UserResponse.ResponseType.RUN_WIFI_TESTS);
+                responseList.add(UserResponse.ResponseType.LIST_ALL_FUNCTIONS);
+                break;
+            case ACTION_TYPE_UNKNOWN:
+                break;
+            case ACTION_TYPE_DEFAULT_FALLBACK:
+                responseList.add(UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS);
+                responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
+                responseList.add(UserResponse.ResponseType.RUN_WIFI_TESTS);
+                responseList.add(UserResponse.ResponseType.LIST_ALL_FUNCTIONS);
+                break;
+            case ACTION_TYPE_ASK_FOR_LONG_SUGGESTION:
+                responseList.add(UserResponse.ResponseType.YES);
+                responseList.add(UserResponse.ResponseType.NO);
+                break;
+        }
+        //return UserResponse.convertResponseTypesToString(responseList);
+        return responseList;
     }
 
     private void showMessageToUser(String messageToShow) {

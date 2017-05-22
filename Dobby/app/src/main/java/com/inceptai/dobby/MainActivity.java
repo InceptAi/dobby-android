@@ -200,6 +200,12 @@ public class MainActivity extends AppCompatActivity
         chatFragment.showResponse(text);
     }
 
+    @Override
+    public void showUserActionOptions(List<Integer> userResponseTypes) {
+        DobbyLog.v("In showUserActionOptions of MainActivity: responseTypes: " + userResponseTypes);
+        chatFragment.showUserActionOptions(userResponseTypes);
+    }
+
     // From DobbyAi.ResponseCallback interface.
     @Override
     public void showRtGraph(RtDataSource<Float, Integer> rtDataSource) {
