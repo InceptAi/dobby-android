@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.utils.DobbyLog;
+import com.inceptai.dobby.utils.Utils;
 
 import java.util.List;
 /**
@@ -49,6 +50,9 @@ public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
         } else if (viewType == ChatEntry.RT_GRAPH) {
             View v = inflater.inflate(R.layout.rt_graph, parent, false);
             viewHolder = new RtGraphViewHolder(v);
+        } else if (viewType == ChatEntry.BW_RESULTS_GAUGE_CARDVIEW) {
+            View v = inflater.inflate(R.layout.bandwidth_results_cardview, parent, false);
+            viewHolder = new BandwidthResultsCardViewHolder(v);
         } else {
             View v = inflater.inflate(android.R.layout.simple_list_item_1, parent, false);
             viewHolder = new RecyclerViewSimpleTextViewHolder(v);
@@ -74,6 +78,11 @@ public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
               configureRtGraphViewHolder(vh3, position);
               break;
 
+          case ChatEntry.BW_RESULTS_GAUGE_CARDVIEW:
+              BandwidthResultsCardViewHolder viewHolder = (BandwidthResultsCardViewHolder) holder;
+              configureBandwidthResultsViewHolder(viewHolder, position);
+              break;
+
           default:
               RecyclerViewSimpleTextViewHolder vh = (RecyclerViewSimpleTextViewHolder) holder;
               configureDefaultViewHolder(vh, position);
@@ -91,6 +100,10 @@ public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
 
     private void configureUserViewHolder(UserChatViewHolder userChatViewHolder, int position) {
         userChatViewHolder.getUserChatTv().setText(entryList.get(position).getText());
+    }
+
+    private void configureBandwidthResultsViewHolder(BandwidthResultsCardViewHolder viewHolder, int position) {
+        viewHolder.showResults(entryList.get(position).getUploadMbps(), entryList.get(position).getDownloadMbps());
     }
 
     private void configureRtGraphViewHolder(RtGraphViewHolder viewHolder, int position) {

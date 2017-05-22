@@ -256,6 +256,13 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         chatRv.scrollToPosition(recyclerViewAdapter.getItemCount() - 1);
     }
 
+    public void addBandwidthResultsCardview(double uploadMbps, double downloadMbps) {
+        ChatEntry chatEntry = new ChatEntry(Utils.EMPTY_STRING, ChatEntry.BW_RESULTS_GAUGE_CARDVIEW);
+        chatEntry.setBandwidthResults(uploadMbps, downloadMbps);
+        recyclerViewAdapter.addEntryAtBottom(chatEntry);
+        chatRv.scrollToPosition(recyclerViewAdapter.getItemCount() - 1);
+    }
+
     public void observeBandwidthNonUi(BandwidthObserver observer) {
         Message.obtain(handler, MSG_SHOW_BW_GAUGE, observer).sendToTarget();
     }
