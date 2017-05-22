@@ -72,6 +72,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         void observeBandwidth(BandwidthObserver observer);
         void cancelTests();
         void showUserActionOptions(List<Integer> userResponseTypes);
+        void showBandwidthViewCard(DataInterpreter.BandwidthGrade bandwidthGrade);
     }
 
     public DobbyAi(DobbyThreadpool threadpool,
@@ -165,6 +166,10 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             case ACTION_TYPE_SHOW_SHORT_SUGGESTION:
                 //Send event for showing short suggestion
                 if (lastSuggestion != null) {
+                    if (responseCallback != null) {
+                        DataInterpreter.BandwidthGrade lastBandwidthGrade = lastSuggestion.suggestionCreatorParams.bandwidthGrade;
+                        responseCallback.showBandwidthViewCard(lastBandwidthGrade);
+                    }
                     showMessageToUser(lastSuggestion.getTitle());
                 }
                 sendEvent(ApiAiClient.APIAI_SHORT_SUGGESTION_SHOWN_EVENT);
@@ -238,26 +243,15 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     private List<Integer> getPotentialUserResponses(@Action.ActionType int lastActionShownToUser) {
         ArrayList<Integer> responseList = new ArrayList<Integer>();
         switch (lastActionShownToUser) {
-            case ACTION_TYPE_WELCOME:
-                //Followups -- RUN_BW_TESTS, RUN_WIFI_TESTS, RUN_DIAGNOSTICS
-                responseList.add(UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS);
-                responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
-                responseList.add(UserResponse.ResponseType.RUN_WIFI_TESTS);
-                responseList.add(UserResponse.ResponseType.LIST_ALL_FUNCTIONS);
-                break;
-            case ACTION_TYPE_NONE:
+            case ACTION_TYPE_ASK_FOR_LONG_SUGGESTION:
+                responseList.add(UserResponse.ResponseType.YES);
+                responseList.add(UserResponse.ResponseType.NO);
                 break;
             case ACTION_TYPE_BANDWIDTH_TEST:
                 responseList.add(UserResponse.ResponseType.CANCEL);
                 break;
             case ACTION_TYPE_WIFI_SCAN:
                 responseList.add(UserResponse.ResponseType.CANCEL);
-                break;
-            case ACTION_TYPE_CANCEL_BANDWIDTH_TEST:
-                responseList.add(UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS);
-                responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
-                responseList.add(UserResponse.ResponseType.RUN_WIFI_TESTS);
-                responseList.add(UserResponse.ResponseType.LIST_ALL_FUNCTIONS);
                 break;
             case ACTION_TYPE_DIAGNOSE_SLOW_INTERNET:
                 //Followups -- RUN_BW_TESTS, RUN_WIFI_TESTS, RUN_DIAGNOSTICS
@@ -269,26 +263,19 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 break;
             case ACTION_TYPE_SHOW_SHORT_SUGGESTION:
                 break;
+            case ACTION_TYPE_WELCOME:
+            case ACTION_TYPE_NONE:
+            case ACTION_TYPE_CANCEL_BANDWIDTH_TEST:
             case ACTION_TYPE_SHOW_LONG_SUGGESTION:
-                responseList.add(UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS);
-                responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
-                responseList.add(UserResponse.ResponseType.RUN_WIFI_TESTS);
-                responseList.add(UserResponse.ResponseType.LIST_ALL_FUNCTIONS);
-                break;
             case ACTION_TYPE_UNKNOWN:
-                break;
             case ACTION_TYPE_DEFAULT_FALLBACK:
+            default:
                 responseList.add(UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS);
                 responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
                 responseList.add(UserResponse.ResponseType.RUN_WIFI_TESTS);
                 responseList.add(UserResponse.ResponseType.LIST_ALL_FUNCTIONS);
-                break;
-            case ACTION_TYPE_ASK_FOR_LONG_SUGGESTION:
-                responseList.add(UserResponse.ResponseType.YES);
-                responseList.add(UserResponse.ResponseType.NO);
                 break;
         }
-        //return UserResponse.convertResponseTypesToString(responseList);
         return responseList;
     }
 

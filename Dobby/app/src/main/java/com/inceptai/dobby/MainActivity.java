@@ -29,6 +29,7 @@ import android.widget.Toast;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.dobby.ai.ApiAiClient;
+import com.inceptai.dobby.ai.DataInterpreter;
 import com.inceptai.dobby.ai.DobbyAi;
 import com.inceptai.dobby.ai.RtDataSource;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
@@ -198,6 +199,11 @@ public class MainActivity extends AppCompatActivity
     public void showResponse(String text) {
         DobbyLog.v("In showResponse of MainActivity: text: " + text);
         chatFragment.showResponse(text);
+    }
+
+    @Override
+    public void showBandwidthViewCard(DataInterpreter.BandwidthGrade bandwidthGrade) {
+        chatFragment.addBandwidthResultsCardView(bandwidthGrade);
     }
 
     @Override

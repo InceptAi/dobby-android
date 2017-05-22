@@ -25,6 +25,7 @@ import android.widget.Toast;
 
 import com.google.common.base.Preconditions;
 import com.inceptai.dobby.R;
+import com.inceptai.dobby.ai.DataInterpreter;
 import com.inceptai.dobby.ai.RtDataSource;
 import com.inceptai.dobby.ai.UserResponse;
 import com.inceptai.dobby.model.BandwidthStats;
@@ -64,6 +65,8 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     private static final int MSG_UPDATE_CIRCULAR_GAUGE = 4;
     private static final int MSG_UI_STATE_CHANGE = 5;
     private static final int MSG_SHOW_USER_ACTION_BUTTONS = 6;
+    private static final int MSG_SHOW_BANDWIDTH_RESULT_CARDVIEW = 7;
+
 
     private static final int BW_TEST_INITIATED = 200;
     private static final int BW_CONFIG_FETCHED = 201;
@@ -256,11 +259,8 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         chatRv.scrollToPosition(recyclerViewAdapter.getItemCount() - 1);
     }
 
-    public void addBandwidthResultsCardview(double uploadMbps, double downloadMbps) {
-        ChatEntry chatEntry = new ChatEntry(Utils.EMPTY_STRING, ChatEntry.BW_RESULTS_GAUGE_CARDVIEW);
-        chatEntry.setBandwidthResults(uploadMbps, downloadMbps);
-        recyclerViewAdapter.addEntryAtBottom(chatEntry);
-        chatRv.scrollToPosition(recyclerViewAdapter.getItemCount() - 1);
+    public void addBandwidthResultsCardView(DataInterpreter.BandwidthGrade bandwidthGrade) {
+        Message.obtain(handler, MSG_SHOW_BANDWIDTH_RESULT_CARDVIEW, bandwidthGrade).sendToTarget();
     }
 
     public void observeBandwidthNonUi(BandwidthObserver observer) {
@@ -314,6 +314,10 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
             case MSG_SHOW_USER_ACTION_BUTTONS:
                 showUserActionButtons((List<Integer>) msg.obj);
                 break;
+            case MSG_SHOW_BANDWIDTH_RESULT_CARDVIEW:
+                DataInterpreter.BandwidthGrade bandwidthGrade = (DataInterpreter.BandwidthGrade) msg.obj;
+                showBandwidthResultsCardView(bandwidthGrade.getUploadMbps(), bandwidthGrade.getDownloadMbps());
+                break;
         }
         return false;
     }
@@ -327,6 +331,13 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         if (textToSpeech != null) {
             useVoiceOutput = true;
         }
+    }
+
+    private void showBandwidthResultsCardView(double uploadMbps, double downloadMbps) {
+        ChatEntry chatEntry = new ChatEntry(Utils.EMPTY_STRING, ChatEntry.BW_RESULTS_GAUGE_CARDVIEW);
+        chatEntry.setBandwidthResults(uploadMbps, downloadMbps);
+        recyclerViewAdapter.addEntryAtBottom(chatEntry);
+        chatRv.scrollToPosition(recyclerViewAdapter.getItemCount() - 1);
     }
 
     private void makeUiChanges(View rootView) {
@@ -384,6 +395,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         observer.registerCallback(this);
         uiStateChange(UI_STATE_SHOW_BW_GAUGE);
     }
+
 
     private void showUserActionButtons(List<Integer> userResponseTypes) {
         actionMenu.removeAllViewsInLayout();

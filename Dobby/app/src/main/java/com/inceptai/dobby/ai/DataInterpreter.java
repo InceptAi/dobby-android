@@ -272,11 +272,11 @@ public class DataInterpreter {
             return downloadUpdatedAtMs > 0 && isFresh(downloadUpdatedAtMs);
         }
 
-        double getUploadMbps() {
+        public double getUploadMbps() {
             return uploadMbps;
         }
 
-        double getDownloadMbps() {
+        public double getDownloadMbps() {
             return downloadMbps;
         }
 
