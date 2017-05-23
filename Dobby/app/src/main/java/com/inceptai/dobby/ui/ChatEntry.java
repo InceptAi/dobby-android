@@ -1,5 +1,11 @@
 package com.inceptai.dobby.ui;
 
+import android.support.annotation.Nullable;
+
+import com.inceptai.dobby.ai.DataInterpreter;
+
+import lecho.lib.hellocharts.model.LineChartData;
+
 /**
  * Created by arunesh on 3/28/17.
  */
@@ -12,6 +18,8 @@ public class ChatEntry {
     public static final int USER_CHAT = 1;
     public static final int RT_GRAPH = 2; /* real time graph */
     public static final int BW_RESULTS_GAUGE_CARDVIEW = 3;
+    public static final int PING_RESULTS_CARDVIEW = 4;
+    public static final int OVERALL_NETWORK_CARDVIEW = 5;
 
 
     private static int UNKNOWN = -1;
@@ -20,6 +28,13 @@ public class ChatEntry {
     private GraphData<Float, Integer> graphData;
     private double uploadMbps, downloadMbps;
     private boolean isTestStatusMessage;
+
+    private DataInterpreter.PingGrade pingGrade;
+
+    // Overall network card has 3 data items:
+    private DataInterpreter.WifiGrade wifiGrade;
+    private String ispName;
+    private String routerIp;
 
     public ChatEntry(String text, int entryType) {
         this.text = text;
@@ -63,4 +78,36 @@ public class ChatEntry {
     }
 
     public boolean isTestStatusMessage() { return isTestStatusMessage; }
+    
+    public DataInterpreter.PingGrade getPingGrade() {
+        return pingGrade;
+    }
+
+    public void setPingGrade(DataInterpreter.PingGrade pingGrade) {
+        this.pingGrade = pingGrade;
+    }
+
+    public DataInterpreter.WifiGrade getWifiGrade() {
+        return wifiGrade;
+    }
+
+    public void setWifiGrade(DataInterpreter.WifiGrade wifiGrade) {
+        this.wifiGrade = wifiGrade;
+    }
+
+    public String getIspName() {
+        return ispName;
+    }
+
+    public void setIspName(String ispName) {
+        this.ispName = ispName;
+    }
+
+    public String getRouterIp() {
+        return routerIp;
+    }
+
+    public void setRouterIp(String routerIp) {
+        this.routerIp = routerIp;
+    }
 }

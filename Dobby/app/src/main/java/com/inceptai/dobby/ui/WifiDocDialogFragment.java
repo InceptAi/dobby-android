@@ -168,28 +168,6 @@ public class WifiDocDialogFragment extends DialogFragment {
         tv.setMovementMethod(LinkMovementMethod.getInstance());
     }
 
-    /*
-    private void addImageViewToLinearLayout(int imageResourceId) {
-        final int height = 28;
-        final int width = 28;
-        int heightInPixels = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, height, getResources().getDisplayMetrics());
-        int widthInPixels = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, width, getResources().getDisplayMetrics());
-        LinearLayout innerLinearLayout = new LinearLayout(getActivity());
-        ImageView imageView = new ImageView(getActivity());
-        imageView.setImageResource(imageResourceId);
-        imageView.getLayoutParams().height = heightInPixels;
-        imageView.getLayoutParams().width = widthInPixels;
-        innerLinearLayout.addView(imageView);
-        //
-        //android:id="@+id/wifi_doc_icon"
-        //android:layout_width="28dp"
-        //android:layout_height="28dp"
-        //android:layout_margin="10dp"
-        //android:src="@mipmap/wifi_doc_launcher" />
-    }
-    */
-
-
     private Dialog createFeedbackFormDialog(Bundle bundle) {
         final int parentViewId = bundle.getInt(PARENT_VIEW_ID);
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
@@ -199,8 +177,6 @@ public class WifiDocDialogFragment extends DialogFragment {
         submitButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //FrameLayout fl = (FrameLayout) getActivity().findViewById(R.id.wifi_doc_placeholder_fl);
-                //FrameLayout fl = (FrameLayout) getActivity().findViewById(parentViewId);
                 //Write the feedback to database
                 FeedbackRecord feedbackRecord = createFeedbackRecord(rootView);
                 feedbackDatabaseWriter.writeFeedbackToDatabase(feedbackRecord);
@@ -212,8 +188,6 @@ public class WifiDocDialogFragment extends DialogFragment {
         cancelButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //FrameLayout fl = (FrameLayout) getActivity().findViewById(R.id.wifi_doc_placeholder_fl);
-                //FrameLayout fl = (FrameLayout) getActivity().findViewById(parentViewId);
                 //Snackbar.make(fl, "Feedback cancelled.", Snackbar.LENGTH_SHORT).show();
                 dismiss();
             }

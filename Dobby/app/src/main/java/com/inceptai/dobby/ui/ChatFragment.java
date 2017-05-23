@@ -265,6 +265,22 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         Message.obtain(handler, MSG_SHOW_BANDWIDTH_RESULT_CARDVIEW, bandwidthGrade).sendToTarget();
     }
 
+    public void addPingResultsCardview(DataInterpreter.PingGrade pingGrade) {
+        ChatEntry chatEntry = new ChatEntry(Utils.EMPTY_STRING, ChatEntry.PING_RESULTS_CARDVIEW);
+        chatEntry.setPingGrade(pingGrade);
+        recyclerViewAdapter.addEntryAtBottom(chatEntry);
+        chatRv.scrollToPosition(recyclerViewAdapter.getItemCount() - 1);
+    }
+
+    public void addOverallNetworkResultsCardview(DataInterpreter.WifiGrade wifiGrade, String ispName, String routerIp) {
+        ChatEntry chatEntry = new ChatEntry(Utils.EMPTY_STRING, ChatEntry.OVERALL_NETWORK_CARDVIEW);
+        chatEntry.setWifiGrade(wifiGrade);
+        chatEntry.setIspName(ispName);
+        chatEntry.setRouterIp(routerIp);
+        recyclerViewAdapter.addEntryAtBottom(chatEntry);
+        chatRv.scrollToPosition(recyclerViewAdapter.getItemCount() - 1);
+    }
+
     public void observeBandwidthNonUi(BandwidthObserver observer) {
         Message.obtain(handler, MSG_SHOW_BW_GAUGE, observer).sendToTarget();
     }

@@ -51,11 +51,25 @@ public class Utils {
     private static final int READ_TIMEOUT_MS = 5000;
     private static final int CONNECTION_TIMEOUT_MS = 5000;
     public static final String ZERO_POINT_ZERO = "0.0";
+    public static final String UNKNOWN_LATENCY_STRING = "--";
+    private static final int MAX_SSID_LENGTH = 30;
     private static Random random = new Random();
 
     public static final String PREFERENCES_FILE = "wifi_tester_settings";
 
     private Utils() {
+    }
+
+    public static String limitSsid(String ssid) {
+        if (ssid != null && !ssid.isEmpty()) {
+            if (ssid.length() > MAX_SSID_LENGTH) {
+                ssid = ssid.substring(0, MAX_SSID_LENGTH);
+                if (ssid.startsWith("\"") || ssid.startsWith("'")) {
+                    ssid = ssid + ssid.substring(0, 1);
+                }
+            }
+        }
+        return ssid;
     }
 
     public static Random getRandom() {

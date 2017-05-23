@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/ping_cardview"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardBackgroundColor="@android:color/white"
+    app:cardCornerRadius="2dp"
+    app:cardElevation="4dp"
+    app:cardMaxElevation="5dp"
+    android:layout_margin="10dp">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:id="@+id/router_ping_rl"
+        android:paddingBottom="5dp"
+        android:orientation="vertical"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:textColor="@android:color/holo_blue_light"
+            android:id="@+id/ping_cardview_title_tv"
+            android:fontFamily="sans-serif-condensed"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="5dp"
+            android:textStyle="bold"
+            android:textSize="12sp"
+            android:text="@string/ping_latency" />
+
+        <include
+            layout="@layout/raw_data_card_row"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:id="@+id/ping_latency_row_inc1"
+            />
+
+        <include
+            layout="@layout/raw_data_card_row"
+            android:layout_marginTop="5dp"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:id="@+id/ping_latency_row_inc2"
+            />
+    </LinearLayout>
+</android.support.v7.widget.CardView>
