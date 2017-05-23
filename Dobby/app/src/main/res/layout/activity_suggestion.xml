@@ -11,7 +11,7 @@
     tools:context="com.inceptai.dobby.ui.WifiDocActivity">
 
     <android.support.v7.widget.Toolbar
-        android:id="@+id/suggestions_toolbar"
+        android:id="@+id/suggestions_activity_toolbar"
         android:minHeight="?attr/actionBarSize"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -23,7 +23,7 @@
         android:layout_width="0dp"
         android:orientation="vertical"
         android:id="@+id/top_bar"
-        app:layout_constraintTop_toBottomOf="@id/suggestions_toolbar"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         android:layout_marginTop="10dp"
