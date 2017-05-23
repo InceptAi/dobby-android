@@ -28,18 +28,20 @@ import javax.inject.Inject;
 import ai.api.model.Result;
 
 import static com.inceptai.dobby.DobbyApplication.TAG;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_ASK_FOR_BW_TESTS;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_ASK_FOR_LONG_SUGGESTION;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_BANDWIDTH_TEST;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_CANCEL_BANDWIDTH_TEST;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_DEFAULT_FALLBACK;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_DIAGNOSE_SLOW_INTERNET;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_LIST_DOBBY_FUNCTIONS;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_NONE;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_SHOW_LONG_SUGGESTION;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_SHOW_SHORT_SUGGESTION;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_UNKNOWN;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_WELCOME;
-import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_WIFI_SCAN;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_WIFI_CHECK;
 
 /**
  * This class is responsible for managing the user queries and showing the responses by working
@@ -73,6 +75,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         void cancelTests();
         void showUserActionOptions(List<Integer> userResponseTypes);
         void showBandwidthViewCard(DataInterpreter.BandwidthGrade bandwidthGrade);
+        void showNetworkInfoViewCard(DataInterpreter.WifiGrade wifiGrade, String isp, String ip);
     }
 
     public DobbyAi(DobbyThreadpool threadpool,
@@ -186,9 +189,20 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 sendEvent(ApiAiClient.APIAI_LONG_SUGGESTION_SHOWN_EVENT);
                 break;
             case ACTION_TYPE_NONE:
-                //showMessageToUser(action.getUserResponse());
                 break;
             case ACTION_TYPE_ASK_FOR_LONG_SUGGESTION:
+                break;
+            case ACTION_TYPE_WIFI_CHECK:
+                if (responseCallback != null) {
+                    responseCallback.showNetworkInfoViewCard(getCurrentWifiGrade(), getCurrentIsp(), getCurrentIp());
+                }
+                if (networkLayer.isWifiOnline()) {
+                    sendEvent(ApiAiClient.APIAI_WIFI_ANALYSIS_SHOWN_EVENT);
+                }
+                break;
+            case ACTION_TYPE_LIST_DOBBY_FUNCTIONS:
+                break;
+            case ACTION_TYPE_ASK_FOR_BW_TESTS:
                 break;
             default:
                 DobbyLog.i("Unknown Action");
@@ -250,8 +264,12 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             case ACTION_TYPE_BANDWIDTH_TEST:
                 responseList.add(UserResponse.ResponseType.CANCEL);
                 break;
-            case ACTION_TYPE_WIFI_SCAN:
-                responseList.add(UserResponse.ResponseType.CANCEL);
+            case ACTION_TYPE_WIFI_CHECK:
+                //responseList.add(UserResponse.ResponseType.YES);
+                //responseList.add(UserResponse.ResponseType.NO);
+                responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
+                //responseList.add(UserResponse.ResponseType.LIST_ALL_FUNCTIONS);
+                responseList.add(UserResponse.ResponseType.ASK_ABOUT_DOBBY);
                 break;
             case ACTION_TYPE_DIAGNOSE_SLOW_INTERNET:
             case ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS:
@@ -269,7 +287,19 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 responseList.add(UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS);
                 responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
                 responseList.add(UserResponse.ResponseType.RUN_WIFI_TESTS);
-                responseList.add(UserResponse.ResponseType.LIST_ALL_FUNCTIONS);
+                //responseList.add(UserResponse.ResponseType.LIST_ALL_FUNCTIONS);
+                responseList.add(UserResponse.ResponseType.ASK_ABOUT_DOBBY);
+                break;
+            case ACTION_TYPE_LIST_DOBBY_FUNCTIONS:
+                responseList.add(UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS);
+                responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
+                responseList.add(UserResponse.ResponseType.RUN_WIFI_TESTS);
+                responseList.add(UserResponse.ResponseType.ASK_ABOUT_DOBBY);
+                break;
+            case ACTION_TYPE_ASK_FOR_BW_TESTS:
+                responseList.add(UserResponse.ResponseType.YES);
+                responseList.add(UserResponse.ResponseType.NO);
+                responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
                 break;
         }
         return responseList;
@@ -295,6 +325,18 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     private void postBandwidthTestOperation() {
         ComposableOperation operation = bandwidthOperation();
         operation.post();
+    }
+
+    private DataInterpreter.WifiGrade getCurrentWifiGrade() {
+        return networkLayer.getCurrentWifiGrade();
+    }
+
+    private String getCurrentIsp() {
+        return networkLayer.getCachedClientIspIfAvailable();
+    }
+
+    private String getCurrentIp() {
+        return networkLayer.getCachedExternalIpIfAvailable();
     }
 
     private void postAllOperations() {

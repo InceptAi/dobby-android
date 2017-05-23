@@ -102,4 +102,5 @@
     <string name="about_button_title">About</string>
     <string name="wifi_expert_name">Wifi Expert</string>
     <string name="bandwidth_card_view_message">Here is how your current bandwidth looks like: </string>
+    <string name="wifi_status_view_message">Here is your current wifi network snapshot: </string>
 </resources>

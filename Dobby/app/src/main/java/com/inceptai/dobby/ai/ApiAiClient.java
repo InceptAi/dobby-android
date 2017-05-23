@@ -33,13 +33,17 @@ public class ApiAiClient implements AIListener {
     public static final String APIAI_WELCOME_EVENT = "welcome_dobby_event";
     public static final String APIAI_SHORT_SUGGESTION_SHOWN_EVENT = "short_suggestion_shown_event";
     public static final String APIAI_LONG_SUGGESTION_SHOWN_EVENT = "long_suggestion_shown_event";
+    public static final String APIAI_WIFI_ANALYSIS_SHOWN_EVENT = "wifi_analysis_shown_event";
 
     //API AI actions
     public static final String APIAI_ACTION_DIAGNOSE_SLOW_INTERNET = "diagnose-slow-internet-action";
     public static final String APIAI_PERFORM_BW_TEST_RETURN_RESULT = "perform-bw-test-return-result";
-    public static final String APIAI_ACTION_CANCEL = "cancel-slow-internet-diagnosis";
+    public static final String APIAI_ACTION_CANCEL = "cancel-bw-tests";
     public static final String APIAI_ACTION_SHOW_LONG_SUGGESTION = "show-long-suggestion";
     public static final String APIAI_ACTION_ASK_FOR_LONG_SUGGESTION = "ask-for-long-suggestion";
+    public static final String APIAI_ACTION_WIFI_CHECK = "run-wifi-check-action";
+    public static final String APIAI_ACTION_LIST_DOBBY_FUNCTIONS = "list-dobby-functions-action";
+    public static final String APIAI_ACTION_ASK_FOR_BW_TESTS = "ask-to-run-bw-tests";
 
 
     private static final String CLIENT_ACCESS_TOKEN = "81dbd5289ee74637bf582fc3112b7dcb";
@@ -107,22 +111,26 @@ public class ApiAiClient implements AIListener {
         Action actionToReturn = new Action(Utils.EMPTY_STRING, Action.ActionType.ACTION_TYPE_NONE);
         if (query != null && ! query.equals(Utils.EMPTY_STRING)) {
             DobbyLog.v("Submitting offline query with text " + query);
-            if (Utils.grepForString(query, Arrays.asList("run", "test", "bandwidth", "check", "find"))) {
+            if (Utils.grepForString(query, Arrays.asList("run", "test", "bandwidth", "find"))) {
                 //Run bw test
                 actionToReturn = new Action("Sure I can run some tests for you. " +
-                        "I will test your download and upload speeds to SpeedTest.org servers. ",
-                        Action.ActionType.ACTION_TYPE_BANDWIDTH_TEST);
+                        "I will start with a quick wifi check ... ",
+                        Action.ActionType.ACTION_TYPE_WIFI_CHECK);
 
             } else if (Utils.grepForString(query, Arrays.asList("slow", "sucks", "bad", "faults",
                     "doesn't", "laggy", "buffering", "disconnected", "problem", "shit"))) {
                 //Slow internet diagnosis
                 actionToReturn = new Action("Ah that's not good. Let me see whats going on. " +
-                        "Hang on for a sec..I will run some diagnostics for you ! ",
-                        Action.ActionType.ACTION_TYPE_DIAGNOSE_SLOW_INTERNET);
-
+                        "I will run some quick tests for you ! ",
+                        Action.ActionType.ACTION_TYPE_WIFI_CHECK);
+            } else if (Utils.grepForString(query, Arrays.asList("check", "how is my wifi", "check speed", "Check wifi"))) {
+                //Check wifi
+                actionToReturn = new Action("Ah that's not good. Let me see whats going on. " +
+                    "I will run some quick wifi tests for you ! ",
+                    Action.ActionType.ACTION_TYPE_WIFI_CHECK);
             } else if (Utils.grepForString(query, Arrays.asList("cancel", "stop", "later", "skip",
                     "never mind", "dismiss", "forget", "no", "nm"))) {
-                if (lastAction == Action.ActionType.ACTION_TYPE_ASK_FOR_LONG_SUGGESTION) {
+                if (lastAction == Action.ActionType.ACTION_TYPE_ASK_FOR_LONG_SUGGESTION || lastAction == Action.ActionType.ACTION_TYPE_ASK_FOR_BW_TESTS) {
                     actionToReturn = new Action("Ok sure. Hope I was of some help ! " +
                             "Let me know if I can answer any other questions.",
                             Action.ActionType.ACTION_TYPE_NONE);
@@ -132,7 +140,6 @@ public class ApiAiClient implements AIListener {
                             "Let me know if I can be of any other help ",
                             Action.ActionType.ACTION_TYPE_CANCEL_BANDWIDTH_TEST);
                 }
-
             } else if (Utils.grepForString(query, Arrays.asList("show", "yes", "sure", "of course", "sounds good", "ok", "kk", "k"))) {
                 //Show long suggestion
                 //Check if your last action was shown short suggestion
@@ -143,7 +150,16 @@ public class ApiAiClient implements AIListener {
                     actionToReturn = new Action("Hope I was of some help. " +
                             "Let me know if I can answer other questions.",
                             Action.ActionType.ACTION_TYPE_NONE);
+                } else if (lastAction == Action.ActionType.ACTION_TYPE_ASK_FOR_BW_TESTS) {
+                    actionToReturn = new Action("Sure, I will run some speed tests for you now. Hold tight ...",
+                            Action.ActionType.ACTION_TYPE_DIAGNOSE_SLOW_INTERNET);
                 }
+            } else if (Utils.grepForString(query, Arrays.asList("About WifiExpert", "About"))) {
+                    actionToReturn = new Action("Wifi Expert is your personal IT manager that helps " +
+                            "you diagnose issues with your wireless network. " +
+                            "It is developed by Incept AI, a company aimed at improving " +
+                            "network management through smart monitoring and analytics.",
+                        Action.ActionType.ACTION_TYPE_NONE);
             } else {
                 //Default fallback
                 actionToReturn = new Action("I'm sorry, I don't support that yet. " +
@@ -164,6 +180,9 @@ public class ApiAiClient implements AIListener {
                         Action.ActionType.ACTION_TYPE_ASK_FOR_LONG_SUGGESTION);
             } else if (event.equals(APIAI_LONG_SUGGESTION_SHOWN_EVENT)) {
 
+            } else if (event.equals(APIAI_WIFI_ANALYSIS_SHOWN_EVENT)) {
+                actionToReturn = new Action("Do you want to run detailed tests to see why we are offline ?",
+                        Action.ActionType.ACTION_TYPE_ASK_FOR_BW_TESTS);
             }
         }
         DobbyLog.v("Sending action to listeners" + actionToReturn.getAction() + " with user response: " + actionToReturn.getUserResponse());
@@ -193,6 +212,15 @@ public class ApiAiClient implements AIListener {
                 break;
             case APIAI_ACTION_ASK_FOR_LONG_SUGGESTION:
                 actionInt = Action.ActionType.ACTION_TYPE_ASK_FOR_LONG_SUGGESTION;
+                break;
+            case APIAI_ACTION_WIFI_CHECK:
+                actionInt = Action.ActionType.ACTION_TYPE_WIFI_CHECK;
+                break;
+            case APIAI_ACTION_LIST_DOBBY_FUNCTIONS:
+                actionInt = Action.ActionType.ACTION_TYPE_LIST_DOBBY_FUNCTIONS;
+                break;
+            case APIAI_ACTION_ASK_FOR_BW_TESTS:
+                actionInt = Action.ActionType.ACTION_TYPE_ASK_FOR_BW_TESTS;
                 break;
         }
         listener.onResult(new Action(response, actionInt), result);

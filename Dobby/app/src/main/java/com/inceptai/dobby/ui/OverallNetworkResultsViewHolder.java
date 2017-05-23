@@ -15,7 +15,6 @@ import static com.inceptai.dobby.ai.DataInterpreter.MetricType.AVERAGE;
 import static com.inceptai.dobby.ai.DataInterpreter.MetricType.EXCELLENT;
 import static com.inceptai.dobby.ai.DataInterpreter.MetricType.GOOD;
 import static com.inceptai.dobby.ai.DataInterpreter.MetricType.POOR;
-
 import static com.inceptai.dobby.utils.Utils.setImage;
 /**
  * Created by arunesh on 5/22/17.
@@ -28,10 +27,12 @@ public class OverallNetworkResultsViewHolder extends RecyclerView.ViewHolder {
     private ImageView wifiSignalIconIv;
     private TextView routerIpTv;
     private TextView ispNameTv;
+    private View rootView;
 
     public OverallNetworkResultsViewHolder(View rootView) {
         super(rootView);
         fetchViewInstances(rootView);
+        this.rootView = rootView;
     }
 
     private void fetchViewInstances(View rootView) {
@@ -55,6 +56,7 @@ public class OverallNetworkResultsViewHolder extends RecyclerView.ViewHolder {
                 wifiSignalIconIv, wifiGrade.getPrimaryApSignalMetric());
         ispNameTv.setText(ispName);
         routerIpTv.setText(routerIp);
+        rootView.requestLayout();
     }
 
     private void setWifiResult(Context context, TextView valueTv, String value, ImageView gradeIv, @DataInterpreter.MetricType int grade) {

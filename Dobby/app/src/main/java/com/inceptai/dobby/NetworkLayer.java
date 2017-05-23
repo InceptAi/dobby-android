@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.inceptai.dobby.ai.DataInterpreter;
 import com.inceptai.dobby.connectivity.ConnectivityAnalyzer;
 import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
@@ -17,6 +18,7 @@ import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
 import com.inceptai.dobby.speedtest.NewBandwidthAnalyzer;
 import com.inceptai.dobby.utils.DobbyLog;
+import com.inceptai.dobby.utils.Utils;
 import com.inceptai.dobby.wifi.WifiAnalyzer;
 import com.inceptai.dobby.wifi.WifiState;
 
@@ -78,6 +80,17 @@ public class NetworkLayer {
             return null;
         }
         return getWifiAnalyzerInstance().startWifiScan(MAX_AGE_GAP_TO_RETRIGGER_WIFI_SCAN_MS);
+    }
+
+
+    public DataInterpreter.WifiGrade getCurrentWifiGrade() {
+        HashMap<Integer, WifiState.ChannelInfo> channelMap = getWifiState().getChannelInfoMap();
+        DobbyWifiInfo wifiInfo = getWifiState().getLinkInfo();
+        DataInterpreter.WifiGrade wifiGrade = DataInterpreter.interpret(channelMap,
+                wifiInfo,
+                getWifiLinkMode(),
+                getCurrentConnectivityMode());
+        return wifiGrade;
     }
 
     public WifiState getWifiState() {
@@ -212,6 +225,22 @@ public class NetworkLayer {
 
     public boolean isWifiOnline() {
         return getConnectivityAnalyzerInstance().isWifiOnline();
+    }
+
+    public String getCachedClientIspIfAvailable() {
+        String clientIsp = Utils.EMPTY_STRING;
+        if (getNewBandwidthAnalyzerInstance().getSpeedTestConfig() != null) {
+            clientIsp = getNewBandwidthAnalyzerInstance().getSpeedTestConfig().clientConfig.isp;
+        }
+        return clientIsp;
+    }
+
+    public String getCachedExternalIpIfAvailable() {
+        String externalIp = Utils.EMPTY_STRING;
+        if (getNewBandwidthAnalyzerInstance().getSpeedTestConfig() != null) {
+            externalIp = getNewBandwidthAnalyzerInstance().getSpeedTestConfig().clientConfig.ip;
+        }
+        return externalIp;
     }
 
     // Process events from eventbus. Do a thread switch to prevent deadlocks.

@@ -68,6 +68,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     private static final int MSG_SHOW_USER_ACTION_BUTTONS = 6;
     private static final int MSG_SHOW_BANDWIDTH_RESULT_CARDVIEW = 7;
     private static final int MSG_SHOW_STATUS = 8;
+    private static final int MSG_SHOW_OVERALL_NETWORK_STATUS = 9;
 
 
     private static final int BW_TEST_INITIATED = 200;
@@ -265,6 +266,10 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         Message.obtain(handler, MSG_SHOW_BANDWIDTH_RESULT_CARDVIEW, bandwidthGrade).sendToTarget();
     }
 
+    public void addOverallNetworkResultsCardView(DataInterpreter.WifiGrade wifiGrade, String ispName, String externalIp) {
+        Message.obtain(handler, MSG_SHOW_OVERALL_NETWORK_STATUS, new OverallNetworkInfo(wifiGrade, ispName, externalIp)).sendToTarget();
+    }
+
     public void addPingResultsCardview(DataInterpreter.PingGrade pingGrade) {
         ChatEntry chatEntry = new ChatEntry(Utils.EMPTY_STRING, ChatEntry.PING_RESULTS_CARDVIEW);
         chatEntry.setPingGrade(pingGrade);
@@ -272,7 +277,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         chatRv.scrollToPosition(recyclerViewAdapter.getItemCount() - 1);
     }
 
-    public void addOverallNetworkResultsCardview(DataInterpreter.WifiGrade wifiGrade, String ispName, String routerIp) {
+    public void showNetworkResultsCardView(DataInterpreter.WifiGrade wifiGrade, String ispName, String routerIp) {
         ChatEntry chatEntry = new ChatEntry(Utils.EMPTY_STRING, ChatEntry.OVERALL_NETWORK_CARDVIEW);
         chatEntry.setWifiGrade(wifiGrade);
         chatEntry.setIspName(ispName);
@@ -341,6 +346,15 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
                 DataInterpreter.BandwidthGrade bandwidthGrade = (DataInterpreter.BandwidthGrade) msg.obj;
                 addDobbyChat(getString(R.string.bandwidth_card_view_message), false);
                 showBandwidthResultsCardView(bandwidthGrade.getUploadMbps(), bandwidthGrade.getDownloadMbps());
+                break;
+            case MSG_SHOW_OVERALL_NETWORK_STATUS:
+                OverallNetworkInfo overallNetworkInfo = (OverallNetworkInfo) msg.obj;
+                if (!(overallNetworkInfo.getWifiGrade().isWifiDisconnected() || overallNetworkInfo.getWifiGrade().isWifiOff())) {
+                    addDobbyChat(getString(R.string.wifi_status_view_message), false);
+                    showNetworkResultsCardView(overallNetworkInfo.getWifiGrade(),
+                            overallNetworkInfo.getIsp(), overallNetworkInfo.getIp());
+                }
+                addDobbyChat(overallNetworkInfo.getWifiGrade().userReadableInterpretation(), false);
                 break;
         }
         return false;
@@ -578,5 +592,29 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     public void onBandwidthTestError(@BandwithTestCodes.TestMode int testMode, @BandwithTestCodes.ErrorCodes int errorCode, @Nullable String errorMessage) {
         showStatus(R.string.status_error_bw_tests);
         dismissBandwidthGaugeNonUi();
+    }
+
+    private class OverallNetworkInfo {
+        public DataInterpreter.WifiGrade wifiGrade;
+        public String isp;
+        public String ip;
+
+        public OverallNetworkInfo(DataInterpreter.WifiGrade wifiGrade, String isp, String ip) {
+            this.wifiGrade = wifiGrade;
+            this.isp = isp;
+            this.ip = ip;
+        }
+
+        public DataInterpreter.WifiGrade getWifiGrade() {
+            return wifiGrade;
+        }
+
+        public String getIsp() {
+            return isp;
+        }
+
+        public String getIp() {
+            return ip;
+        }
     }
 }

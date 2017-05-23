@@ -207,6 +207,11 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    public void showNetworkInfoViewCard(DataInterpreter.WifiGrade wifiGrade, String isp, String ip) {
+        chatFragment.addOverallNetworkResultsCardView(wifiGrade, isp, ip);
+    }
+
+    @Override
     public void showUserActionOptions(List<Integer> userResponseTypes) {
         DobbyLog.v("In showUserActionOptions of MainActivity: responseTypes: " + userResponseTypes);
         chatFragment.showUserActionOptions(userResponseTypes);

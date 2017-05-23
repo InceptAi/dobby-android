@@ -177,7 +177,7 @@ public class NewBandwidthAnalyzer {
         }
     }
 
-    private SpeedTestConfig getSpeedTestConfig() {
+    public SpeedTestConfig getSpeedTestConfig() {
         return speedTestConfig;
     }
 

@@ -31,13 +31,6 @@ public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
         return entry.getEntryType();
     }
 
-    /*
-    public void addEntryAtBottom(ChatEntry entry) {
-        entryList.add(entry);
-        notifyItemChanged(entryList.size() - 1);
-    }
-    */
-
     public void addEntryAtBottom(ChatEntry entry) {
         ChatEntry lastChatEntry = null;
         if (entryList.size() > 1) {
@@ -69,10 +62,10 @@ public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
             View v = inflater.inflate(R.layout.bandwidth_results_cardview, parent, false);
             viewHolder = new BandwidthResultsCardViewHolder(v);
         } else if (viewType == ChatEntry.PING_RESULTS_CARDVIEW) {
-            View v = inflater.inflate(R.layout.bandwidth_results_cardview, parent, false);
+            View v = inflater.inflate(R.layout.ping_results_cardview, parent, false);
             viewHolder = new PingResultsViewHolder(v);
         } else if (viewType == ChatEntry.OVERALL_NETWORK_CARDVIEW) {
-            View v = inflater.inflate(R.layout.bandwidth_results_cardview, parent, false);
+            View v = inflater.inflate(R.layout.overall_network_cardview, parent, false);
             viewHolder = new OverallNetworkResultsViewHolder(v);
         } else {
             View v = inflater.inflate(android.R.layout.simple_list_item_1, parent, false);

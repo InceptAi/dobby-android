@@ -16,7 +16,7 @@ public class Action {
 
     @IntDef({ActionType.ACTION_TYPE_BANDWIDTH_TEST,
             ActionType.ACTION_TYPE_NONE,
-            ActionType.ACTION_TYPE_WIFI_SCAN,
+            ActionType.ACTION_TYPE_WIFI_CHECK,
             ActionType.ACTION_TYPE_CANCEL_BANDWIDTH_TEST,
             ActionType.ACTION_TYPE_DIAGNOSE_SLOW_INTERNET,
             ActionType.ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS,
@@ -25,13 +25,16 @@ public class Action {
             ActionType.ACTION_TYPE_UNKNOWN,
             ActionType.ACTION_TYPE_WELCOME,
             ActionType.ACTION_TYPE_DEFAULT_FALLBACK,
-            ActionType.ACTION_TYPE_ASK_FOR_LONG_SUGGESTION
+            ActionType.ACTION_TYPE_ASK_FOR_LONG_SUGGESTION,
+            ActionType.ACTION_TYPE_SHOW_WIFI_ANALYSIS,
+            ActionType.ACTION_TYPE_LIST_DOBBY_FUNCTIONS,
+            ActionType.ACTION_TYPE_ASK_FOR_BW_TESTS
     })
     @Retention(RetentionPolicy.SOURCE)
     public @interface ActionType {
         int ACTION_TYPE_NONE = 0;
         int ACTION_TYPE_BANDWIDTH_TEST = 1;
-        int ACTION_TYPE_WIFI_SCAN = 2;
+        int ACTION_TYPE_WIFI_CHECK = 2;
         int ACTION_TYPE_CANCEL_BANDWIDTH_TEST = 3;
         int ACTION_TYPE_DIAGNOSE_SLOW_INTERNET = 4;
         int ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS = 5;
@@ -41,6 +44,9 @@ public class Action {
         int ACTION_TYPE_WELCOME = 9;
         int ACTION_TYPE_DEFAULT_FALLBACK = 10;
         int ACTION_TYPE_ASK_FOR_LONG_SUGGESTION = 11;
+        int ACTION_TYPE_SHOW_WIFI_ANALYSIS = 12;
+        int ACTION_TYPE_LIST_DOBBY_FUNCTIONS = 13;
+        int ACTION_TYPE_ASK_FOR_BW_TESTS = 14;
     }
 
     /* User response to be shown, null for no response. */

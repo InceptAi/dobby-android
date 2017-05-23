@@ -90,7 +90,7 @@ public class UserResponse {
             case RUN_BW_TESTS:
                 return "Run speed test";
             case RUN_WIFI_TESTS:
-                return "Run wifi test";
+                return "Check wifi";
             case LIST_ALL_FUNCTIONS:
                 return "List functions";
             case ASK_ABOUT_DOBBY:
