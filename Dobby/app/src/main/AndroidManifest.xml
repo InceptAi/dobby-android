@@ -14,7 +14,8 @@
         android:screenOrientation="portrait"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".ui.SuggestionActivity"></activity>
+        <activity android:name=".ui.SuggestionActivity" />
+        <activity android:name=".ui.ExpertChatActivity"></activity>
     </application>
 
 </manifest>
