@@ -2,20 +2,22 @@ package com.inceptai.dobby.ui;
 
 
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.util.Pair;
 import android.support.v4.widget.NestedScrollView;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.ai.suggest.LocalSnippet;
 import com.inceptai.dobby.utils.DobbyLog;
-
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 
@@ -26,12 +28,13 @@ public class SuggestionsFragment extends Fragment {
     public static final String TAG = "SuggestionsFragment";
     private static final String ARG_PARAM1 = "param1";
     private LocalSnippet localSnippet;
-    private NestedScrollView nestedScrollView;
+    private ScrollView scrollView;
     private CardView bandwidthCardview;
 
     private TextView overallBwTv;
     private TextView uploadTv;
     private TextView downloadTv;
+    private Toolbar toolbar;
 
 
     public SuggestionsFragment() {
@@ -54,13 +57,23 @@ public class SuggestionsFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_suggestions, container, false);
-        nestedScrollView = (NestedScrollView) view.findViewById(R.id.suggestions_scroll_view);
+        View view = inflater.inflate(R.layout.fragment_suggestions_2, container, false);
+        scrollView = (ScrollView) view.findViewById(R.id.suggestions_scroll_view);
+        toolbar = (Toolbar) view.findViewById(R.id.toolbar);
 
         if (localSnippet != null) {
             fillSuggestions(inflater);
         }
         return view;
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        if (toolbar != null) {
+            ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
+            ((AppCompatActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
     }
 
     private void fetchViewInstances(View cardView) {
@@ -71,7 +84,7 @@ public class SuggestionsFragment extends Fragment {
 
     private void fillSuggestions(LayoutInflater inflater) {
         bandwidthCardview = (CardView) inflater.inflate(R.layout.bandwidth_suggestions_card, null);
-        nestedScrollView.addView(bandwidthCardview);
+        scrollView.addView(bandwidthCardview);
         fetchViewInstances(bandwidthCardview);
 
         ArrayList<Pair<String, String>> stringList = localSnippet.getStrings();

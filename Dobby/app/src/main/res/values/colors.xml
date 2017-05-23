@@ -33,4 +33,5 @@
     <!-- blue colors for WifiExpert -->
     <color name="lightBlue00">#99d6ff</color>
     <color name="lighterBlue00">#e6f2ff</color>
+    <color name="soberDarkBlue">#0066cc</color>
 </resources>

@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
     android:animateLayoutChanges="true"
-    android:id="@+id/suggestions_coordinator_layout"
+    android:id="@+id/suggestions_main_layout"
     tools:context="com.inceptai.dobby.ui.WifiDocActivity">
 
     <android.support.design.widget.AppBarLayout
@@ -27,7 +27,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:orientation="vertical"
-            android:layout_height="wrap_content">
+            android:layout_height="match_parent">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -42,7 +42,7 @@
 
                 <TextView
                     android:layout_width="match_parent"
-                    android:text="Diagnosis Report"
+                    android:text="Results and Analysis"
                     android:textSize="16sp"
                     android:gravity="center_vertical"
                     android:layout_gravity="center_vertical"
