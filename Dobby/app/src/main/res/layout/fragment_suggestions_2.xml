@@ -107,14 +107,13 @@
             style="@style/MyLargeImageButton.Base"
             android:focusable="true"
             android:clickable="true"
+            android:id="@+id/contact_expert_fl"
             android:layout_height="match_parent">
 
-            <ImageButton
+            <ImageView
                 android:id="@+id/bottom_expert"
-                style="@style/MyButton.Flat"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Contact an Expert"
                 android:layout_gravity="center_horizontal|top"
                 android:layout_marginTop="5dp"
                 android:src="@drawable/ic_person_64dp"
@@ -145,9 +144,10 @@
             style="@style/MyLargeImageButton.Base"
             android:focusable="true"
             android:clickable="true"
+            android:id="@+id/share_results_fl"
             android:layout_height="match_parent">
 
-            <ImageButton
+            <ImageView
                 android:id="@+id/bottom_email"
                 style="@style/MyButton.Flat"
                 android:layout_width="wrap_content"

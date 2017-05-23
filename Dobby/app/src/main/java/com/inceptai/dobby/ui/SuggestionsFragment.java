@@ -1,9 +1,12 @@
 package com.inceptai.dobby.ui;
 
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.ShareCompat;
 import android.support.v4.util.Pair;
 import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.AppCompatActivity;
@@ -12,6 +15,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -37,6 +41,8 @@ public class SuggestionsFragment extends Fragment {
     private TextView downloadTv;
     private Toolbar toolbar;
 
+    private FrameLayout shareResultsFl;
+    private FrameLayout contactExpertFl;
 
     public SuggestionsFragment() {
         // Required empty public constructor
@@ -61,6 +67,22 @@ public class SuggestionsFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_suggestions_2, container, false);
         scrollView = (ScrollView) view.findViewById(R.id.suggestions_scroll_view);
         toolbar = (Toolbar) view.findViewById(R.id.suggestions_toolbar);
+
+        shareResultsFl = (FrameLayout) view.findViewById(R.id.share_results_fl);
+        shareResultsFl.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                shareResults();
+            }
+        });
+
+        contactExpertFl = (FrameLayout) view.findViewById(R.id.contact_expert_fl);
+        contactExpertFl.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                contactExpertUi();
+            }
+        });
 
         if (localSnippet != null) {
             fillSuggestions(inflater);
@@ -102,5 +124,18 @@ public class SuggestionsFragment extends Fragment {
         if (stringList.size() >= 3) {
             downloadTv.setText(stringList.get(1).first);
         }
+    }
+
+    private void contactExpertUi() {
+        Snackbar.make(getView(), "Not implemented yet.", Snackbar.LENGTH_SHORT).show();
+    }
+
+    private void shareResults() {
+        Intent shareIntent = ShareCompat.IntentBuilder.from(getActivity())
+                .setType("text/html")
+                .setHtmlText("YOUR RESULTS LOOK GOOD.")
+                .setSubject("Definitely read this")
+                .getIntent();
+        startActivity(shareIntent);
     }
 }

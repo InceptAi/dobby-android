@@ -24,7 +24,7 @@ class FakeConfig:
         bundle_string = ""
         for (key, value) in self.keyDict.items():
             bundle_string = bundle_string + " --es " + key + " \"" + str(value) + "\""
-        return "adb shell am broadcast -a com.inceptai.dobby.wifi.fake.FAKE_DATA " + bundle_string
+        return "adb -s 84B5T15B03009672 shell am broadcast -a com.inceptai.dobby.wifi.fake.FAKE_DATA " + bundle_string
 
 def main():
     fake_config = FakeConfig();
