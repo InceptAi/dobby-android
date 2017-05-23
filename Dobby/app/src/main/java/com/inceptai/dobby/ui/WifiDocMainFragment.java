@@ -66,12 +66,12 @@ import static com.inceptai.dobby.ai.DataInterpreter.MetricType.AVERAGE;
 import static com.inceptai.dobby.ai.DataInterpreter.MetricType.EXCELLENT;
 import static com.inceptai.dobby.ai.DataInterpreter.MetricType.GOOD;
 import static com.inceptai.dobby.ai.DataInterpreter.MetricType.POOR;
+import static com.inceptai.dobby.utils.Utils.UNKNOWN_LATENCY_STRING;
 import static com.inceptai.dobby.utils.Utils.ZERO_POINT_ZERO;
 import static com.inceptai.dobby.utils.Utils.nonLinearBwScale;
 
 public class WifiDocMainFragment extends Fragment implements View.OnClickListener, NewBandwidthAnalyzer.ResultsCallback, Handler.Callback {
     public static final String TAG = "WifiDocMainFragment";
-    private static final String UNKNOWN_LATENCY_STRING = "--";
     private static final int PERMISSION_COARSE_LOCATION_REQUEST_CODE = 101;
     private static final String ARG_PARAM1 = "param1";
     private static final int MSG_UPDATED_CIRCULAR_GAUGE = 1001;
@@ -85,7 +85,6 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private static final int MSG_REQUEST_LAYOUT = 1009;
     private static final long SUGGESTION_FRESHNESS_TS_MS = 30000; // 30 seconds
     private static final int MAX_HANDLER_PAUSE_MS = 5000;
-    private static final int MAX_SSID_LENGTH = 30;
 
     private static final int UI_STATE_INIT_AND_READY = 101; // Ready to run tests. Initial state.
     private static final int UI_STATE_RUNNING_TESTS = 102; // Running tests.
@@ -513,18 +512,11 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         }
         String ssid = wifiGrade.getPrimaryApSsid();
         if (ssid != null && !ssid.isEmpty()) {
-            if (ssid.length() > MAX_SSID_LENGTH) {
-                ssid = ssid.substring(0, MAX_SSID_LENGTH);
-                if (ssid.startsWith("\"") || ssid.startsWith("'")) {
-                    ssid = ssid + ssid.substring(0, 1);
-                }
-            }
+            ssid = Utils.limitSsid(ssid);
             wifiSsidTv.setText(ssid);
         }
         setWifiResult(wifiSignalValueTv, String.valueOf(wifiGrade.getPrimaryApSignal()),
                 wifiSignalIconIv, wifiGrade.getPrimaryApSignalMetric());
-        // String availability = String.format("%2.1f", 100.0 *(wifiGradeJson.getPrimaryLinkCongestionPercentage()));
-        // setWifiResult(wifiCongestionValueTv, availability, wifiCongestionIconIv, wifiGradeJson.getPrimaryLinkChannelOccupancyMetric());
     }
 
     private void showPingResults(DataInterpreter.PingGrade pingGrade) {
