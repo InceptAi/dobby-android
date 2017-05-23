@@ -2,6 +2,7 @@
 <!-- set of strings for suggestions -->
 <resources>
 
+    <string name="suggestion_fragment_title">Results and Analysis</string>
     <string name="suggest_bw_unknown">Unable to compute your upload and download speeds.</string>
     <string name="suggest_bw_unknown_more">The speed tests did not run successfully. This could be due to many reasons. Please see if the detailed suggestions has an indication of why this might have happened.</string>
     <string name="suggest_download_bw_unknown">Unable to compute your download speeds.</string>

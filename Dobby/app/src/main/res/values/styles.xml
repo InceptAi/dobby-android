@@ -98,4 +98,10 @@
         <item name="android:layout_marginRight">@dimen/btn_margin</item>
     </style>
 
+    <style name="MyLargeImageButton.Base" parent="Base.TextAppearance.AppCompat.Button">
+        <item name="android:focusable">true</item>
+        <item name="android:clickable">true</item>
+    </style>
+
+
 </resources>

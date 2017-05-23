@@ -26,6 +26,7 @@ public class SuggestionActivity extends AppCompatActivity {
     private TextView uploadTv;
     private TextView downloadTv;
     private Toolbar toolbar;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
