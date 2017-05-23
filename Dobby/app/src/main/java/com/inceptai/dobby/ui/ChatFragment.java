@@ -1,6 +1,7 @@
 package com.inceptai.dobby.ui;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -11,6 +12,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.TypedValue;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,7 +25,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.common.base.Preconditions;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.ai.DataInterpreter;
 import com.inceptai.dobby.ai.RtDataSource;
@@ -66,6 +67,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     private static final int MSG_UI_STATE_CHANGE = 5;
     private static final int MSG_SHOW_USER_ACTION_BUTTONS = 6;
     private static final int MSG_SHOW_BANDWIDTH_RESULT_CARDVIEW = 7;
+    private static final int MSG_SHOW_STATUS = 8;
 
 
     private static final int BW_TEST_INITIATED = 200;
@@ -268,7 +270,6 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     }
 
     public void showResponse(String text) {
-        Preconditions.checkNotNull(handler);
         DobbyLog.v("ChatF: showResponse text " + text);
         Message.obtain(handler, MSG_SHOW_DOBBY_CHAT, text).sendToTarget();
     }
@@ -296,7 +297,13 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
                 // Add to the recycler view.
                 DobbyLog.v("In handleMessage for DobbyChat");
                 String text = (String) msg.obj;
-                addDobbyChat(text);
+                addDobbyChat(text, false);
+                break;
+            case MSG_SHOW_STATUS:
+                // Add to the recycler view.
+                DobbyLog.v("In handleMessage for DobbyChat");
+                String status = (String) msg.obj;
+                addDobbyChat(status, true);
                 break;
             case MSG_SHOW_RT_GRAPH:
                 RtDataSource<Float, Integer> rtDataSource = (RtDataSource<Float, Integer>) msg.obj;
@@ -316,6 +323,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
                 break;
             case MSG_SHOW_BANDWIDTH_RESULT_CARDVIEW:
                 DataInterpreter.BandwidthGrade bandwidthGrade = (DataInterpreter.BandwidthGrade) msg.obj;
+                addDobbyChat(getString(R.string.bandwidth_card_view_message), false);
                 showBandwidthResultsCardView(bandwidthGrade.getUploadMbps(), bandwidthGrade.getDownloadMbps());
                 break;
         }
@@ -381,9 +389,9 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         });
     }
 
-    public void addDobbyChat(String text) {
+    public void addDobbyChat(String text, boolean isStatusMessage) {
         DobbyLog.i("Adding dobby chat: " + text);
-        ChatEntry chatEntry = new ChatEntry(text.trim(), ChatEntry.DOBBY_CHAT);
+        ChatEntry chatEntry = new ChatEntry(text.trim(), ChatEntry.DOBBY_CHAT, isStatusMessage);
         recyclerViewAdapter.addEntryAtBottom(chatEntry);
         chatRv.scrollToPosition(recyclerViewAdapter.getItemCount() - 1);
         if (useVoiceOutput) {
@@ -404,17 +412,25 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
             if (buttonText == null || buttonText.equals(Utils.EMPTY_STRING)) {
                 continue;
             }
-            Button button = new Button(this.getContext());
-            button.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT));
-            button.setText(UserResponse.getStringForResponseType(userResponseType));
+            Button button = new Button(this.getContext(), null, android.R.attr.buttonStyleSmall);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            params.setMargins(10, 0, 10, 10);
+            button.setLayoutParams(params);
+            button.setTextColor(Color.LTGRAY); // light gray
+            button.setText(buttonText);
+            button.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+            //button.setMinHeight((int)Utils.convertPixelsToDp(10, this.getContext())); // In pixels
+            //button.setTextColor(getResources().getColor(R.color.basicRed));
+            button.setMinHeight(0);
+            button.setMinWidth(0);
             button.setClickable(true);
+            button.setAllCaps(false);
+            button.setBackgroundResource(R.drawable.rounded_shape_action_button);
             button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (mListener != null) {
-                        mListener.onUserQuery(buttonText);
-                    }
+                    processTextQuery(buttonText);
                 }
             });
             actionMenu.addView(button);
@@ -428,7 +444,9 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         addUserChat(text);
         useVoiceOutput = false;
         // Parent activity callback.
-        mListener.onUserQuery(text);
+        if (mListener != null) {
+            mListener.onUserQuery(text);
+        }
     }
 
     private void uiStateChangeNonUi(int newState) {
@@ -458,11 +476,12 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
 
     private void showStatus(int resourceId) {
         String message = getResources().getString(resourceId);
-        showResponse(message);
+        showStatus(message);
     }
 
     private void showStatus(String message) {
-        showResponse(message);
+        DobbyLog.v("ChatF: showResponse text " + message);
+        Message.obtain(handler, MSG_SHOW_STATUS, message).sendToTarget();
     }
 
     private void updateBandwidthGauge(Message msg) {

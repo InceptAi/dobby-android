@@ -14,6 +14,7 @@ public class DobbyChatViewHolder extends RecyclerView.ViewHolder {
     private TextView dobbyInitialsTv;
     private TextView dobbyChatTv;
 
+
     public DobbyChatViewHolder(View itemView) {
         super(itemView);
         dobbyInitialsTv = (TextView) itemView.findViewById(R.id.dobbyInitialsTv);

@@ -9,7 +9,6 @@ import android.view.ViewGroup;
 
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.utils.DobbyLog;
-import com.inceptai.dobby.utils.Utils;
 
 import java.util.List;
 /**
@@ -32,8 +31,24 @@ public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
         return entry.getEntryType();
     }
 
+    /*
     public void addEntryAtBottom(ChatEntry entry) {
         entryList.add(entry);
+        notifyItemChanged(entryList.size() - 1);
+    }
+    */
+
+    public void addEntryAtBottom(ChatEntry entry) {
+        ChatEntry lastChatEntry = null;
+        if (entryList.size() > 1) {
+            lastChatEntry = entryList.get(entryList.size() - 1);
+        }
+        if (lastChatEntry != null && lastChatEntry.isTestStatusMessage()) {
+            entryList.remove(entryList.size() - 1);
+            entryList.add(entry);
+        } else {
+            entryList.add(entry);
+        }
         notifyItemChanged(entryList.size() - 1);
     }
 
@@ -95,6 +110,7 @@ public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
     }
 
     private void configureDobbyViewHolder(DobbyChatViewHolder dobbyChatViewHolder, int position) {
+        ChatEntry entry = entryList.get(position);
         dobbyChatViewHolder.getDobbyChatTextView().setText(entryList.get(position).getText());
     }
 

@@ -87,6 +87,9 @@
                 android:id="@+id/action_menu"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.AppCompat.Button"
+                android:showDividers="middle"
+                android:divider="@drawable/empty_tall_divider"
                 android:orientation="horizontal">
                 <!--
                  <Button

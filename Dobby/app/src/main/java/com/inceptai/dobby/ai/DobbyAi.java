@@ -131,6 +131,9 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         DobbyLog.v("In takeAction with action: " + action.getAction() + " and user resp: " + action.getUserResponse());
         setLastAction(action.getAction());
         showMessageToUser(action.getUserResponse());
+        if (responseCallback != null) {
+            responseCallback.showUserActionOptions(getPotentialUserResponses(lastAction));
+        }
         switch (action.getAction()) {
             case ACTION_TYPE_BANDWIDTH_TEST:
                 DobbyLog.i("Starting ACTION BANDWIDTH TEST.");
@@ -190,9 +193,6 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             default:
                 DobbyLog.i("Unknown Action");
                 break;
-        }
-        if (responseCallback != null) {
-            responseCallback.showUserActionOptions(getPotentialUserResponses(lastAction));
         }
     }
 
@@ -254,10 +254,6 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 responseList.add(UserResponse.ResponseType.CANCEL);
                 break;
             case ACTION_TYPE_DIAGNOSE_SLOW_INTERNET:
-                //Followups -- RUN_BW_TESTS, RUN_WIFI_TESTS, RUN_DIAGNOSTICS
-                responseList.add(UserResponse.ResponseType.YES);
-                responseList.add(UserResponse.ResponseType.NO);
-                break;
             case ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS:
                 responseList.add(UserResponse.ResponseType.CANCEL);
                 break;
@@ -265,10 +261,10 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 break;
             case ACTION_TYPE_WELCOME:
             case ACTION_TYPE_NONE:
-            case ACTION_TYPE_CANCEL_BANDWIDTH_TEST:
             case ACTION_TYPE_SHOW_LONG_SUGGESTION:
             case ACTION_TYPE_UNKNOWN:
             case ACTION_TYPE_DEFAULT_FALLBACK:
+            case ACTION_TYPE_CANCEL_BANDWIDTH_TEST:
             default:
                 responseList.add(UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS);
                 responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);

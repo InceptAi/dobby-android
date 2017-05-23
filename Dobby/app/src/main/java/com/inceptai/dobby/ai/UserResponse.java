@@ -80,21 +80,21 @@ public class UserResponse {
     public static String getStringForResponseType(@ResponseType int inputResponseType) {
         switch(inputResponseType) {
             case YES:
-                return "yes";
+                return "Yes";
             case NO:
-                return "no";
+                return "No";
             case CANCEL:
-                return "cancel";
+                return "Cancel";
             case RUN_ALL_DIAGNOSTICS:
-                return "slow internet";
+                return "Slow internet";
             case RUN_BW_TESTS:
-                return "run speed test";
+                return "Run speed test";
             case RUN_WIFI_TESTS:
-                return "run wifi test";
+                return "Run wifi test";
             case LIST_ALL_FUNCTIONS:
-                return "list all functions";
+                return "List functions";
             case ASK_ABOUT_DOBBY:
-                return "what is Dobby ?";
+                return "About Wifi Expert";
             case NO_RESPONSE:
             default:
                 return Utils.EMPTY_STRING;
