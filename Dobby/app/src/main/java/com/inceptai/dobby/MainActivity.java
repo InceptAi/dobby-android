@@ -28,6 +28,8 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import com.inceptai.dobby.ai.ApiAiClient;
+import com.inceptai.dobby.ai.DataInterpreter;
 import com.inceptai.dobby.ai.DobbyAi;
 import com.inceptai.dobby.ai.RtDataSource;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
@@ -35,6 +37,7 @@ import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.ui.ChatFragment;
 import com.inceptai.dobby.ui.DebugFragment;
 import com.inceptai.dobby.ui.FakeDataFragment;
+import com.inceptai.dobby.ui.WifiDocDialogFragment;
 import com.inceptai.dobby.ui.WifiFragment;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
@@ -179,6 +182,10 @@ public class MainActivity extends AppCompatActivity
 
         } else if (id == R.id.nav_send) {
 
+        } else if (id == R.id.about_wifi_expert) {
+            showAboutAndPrivacyPolicy();
+        } else if (id == R.id.feedback_wifi_expert) {
+            showFeedbackForm();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -190,13 +197,35 @@ public class MainActivity extends AppCompatActivity
     // From DobbyAi.ResponseCallback interface.
     @Override
     public void showResponse(String text) {
+        DobbyLog.v("In showResponse of MainActivity: text: " + text);
         chatFragment.showResponse(text);
+    }
+
+    @Override
+    public void showBandwidthViewCard(DataInterpreter.BandwidthGrade bandwidthGrade) {
+        chatFragment.addBandwidthResultsCardView(bandwidthGrade);
+    }
+
+    @Override
+    public void showNetworkInfoViewCard(DataInterpreter.WifiGrade wifiGrade, String isp, String ip) {
+        chatFragment.addOverallNetworkResultsCardView(wifiGrade, isp, ip);
+    }
+
+    @Override
+    public void showUserActionOptions(List<Integer> userResponseTypes) {
+        DobbyLog.v("In showUserActionOptions of MainActivity: responseTypes: " + userResponseTypes);
+        chatFragment.showUserActionOptions(userResponseTypes);
     }
 
     // From DobbyAi.ResponseCallback interface.
     @Override
     public void showRtGraph(RtDataSource<Float, Integer> rtDataSource) {
         // chatFragment.showRtGraph(rtDataSource);
+    }
+
+    @Override
+    public void cancelTests() {
+        chatFragment.cancelTests();
     }
 
     @Override
@@ -207,6 +236,24 @@ public class MainActivity extends AppCompatActivity
     @Override
     public boolean handleMessage(Message msg) {
         return false;
+    }
+
+    public void sendEvent(String eventString) {
+        if (dobbyAi != null) {
+            dobbyAi.sendEvent(eventString);
+        }
+    }
+
+    private void showAboutAndPrivacyPolicy() {
+        WifiDocDialogFragment fragment = WifiDocDialogFragment.forAboutAndPrivacyPolicy();
+        fragment.show(getSupportFragmentManager(), "About");
+        //dobbyAnalytics.aboutShown();
+    }
+
+    private void showFeedbackForm() {
+        WifiDocDialogFragment fragment = WifiDocDialogFragment.forFeedback(R.layout.activity_main);
+        fragment.show(getSupportFragmentManager(), "Feedback");
+        //dobbyAnalytics.feedbackFormShown();
     }
 
     private Fragment getFragmentByTag(String tag) {
@@ -262,6 +309,14 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onMicPressed() {
         listen();
+    }
+
+    @Override
+    public void onRecyclerViewReady() {
+        //Get the welcome message
+        if (dobbyAi != null) {
+            dobbyAi.sendEvent(ApiAiClient.APIAI_WELCOME_EVENT);
+        }
     }
 
     @Override

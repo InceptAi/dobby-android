@@ -3,6 +3,7 @@ package com.inceptai.dobby.utils;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.os.Build;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -50,11 +51,25 @@ public class Utils {
     private static final int READ_TIMEOUT_MS = 5000;
     private static final int CONNECTION_TIMEOUT_MS = 5000;
     public static final String ZERO_POINT_ZERO = "0.0";
+    public static final String UNKNOWN_LATENCY_STRING = "--";
+    private static final int MAX_SSID_LENGTH = 30;
     private static Random random = new Random();
 
     public static final String PREFERENCES_FILE = "wifi_tester_settings";
 
     private Utils() {
+    }
+
+    public static String limitSsid(String ssid) {
+        if (ssid != null && !ssid.isEmpty()) {
+            if (ssid.length() > MAX_SSID_LENGTH) {
+                ssid = ssid.substring(0, MAX_SSID_LENGTH);
+                if (ssid.startsWith("\"") || ssid.startsWith("'")) {
+                    ssid = ssid + ssid.substring(0, 1);
+                }
+            }
+        }
+        return ssid;
     }
 
     public static Random getRandom() {
@@ -689,6 +704,33 @@ public class Utils {
         return Math.round(px / (metrics.ydpi / DisplayMetrics.DENSITY_DEFAULT));
     }
 
+    /**
+     * This method converts dp unit to equivalent pixels, depending on device density.
+     *
+     * @param dp A value in dp (density independent pixels) unit. Which we need to convert into pixels
+     * @param context Context to get resources and device specific display metrics
+     * @return A float value to represent px equivalent to dp depending on device density
+     */
+    public static float convertDpToPixel(float dp, Context context){
+        Resources resources = context.getResources();
+        DisplayMetrics metrics = resources.getDisplayMetrics();
+        float px = dp * ((float)metrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT);
+        return px;
+    }
+
+    /**
+     * This method converts device specific pixels to density independent pixels.
+     *
+     * @param px A value in px (pixels) unit. Which we need to convert into db
+     * @param context Context to get resources and device specific display metrics
+     * @return A float value to represent dp equivalent to px value
+     */
+    public static float convertPixelsToDp(float px, Context context){
+        Resources resources = context.getResources();
+        DisplayMetrics metrics = resources.getDisplayMetrics();
+        float dp = px / ((float)metrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT);
+        return dp;
+
     public static double toMbps(double bwBytes) {
         return bwBytes * 1.0e-6;
     }
@@ -699,6 +741,15 @@ public class Utils {
 
     public static String generateUUID() {
         return UUID.randomUUID().toString();
+    }
+
+    public static boolean grepForString(String stringToGrep, List<String> stringList) {
+        for (String stringToCheck: stringList) {
+            if (stringToCheck.toLowerCase().contains(stringToGrep.toLowerCase()) || stringToGrep.toLowerCase().contains(stringToCheck.toLowerCase())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static double nonLinearBwScale(double input) {

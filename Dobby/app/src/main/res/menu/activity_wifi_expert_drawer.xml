@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/about_wifi_expert"
+            android:icon="@drawable/ic_info_black_24dp"
+            android:title="@string/about_button_title" />
+        <item
+            android:id="@+id/feedback_wifi_expert"
+            android:icon="@drawable/ic_feedback_black_24dp"
+            android:title="@string/feedback_button_title" />
+    </group>
+
+</menu>

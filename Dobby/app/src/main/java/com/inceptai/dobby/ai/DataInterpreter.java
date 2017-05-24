@@ -8,6 +8,7 @@ import com.inceptai.dobby.model.DobbyWifiInfo;
 import com.inceptai.dobby.model.IPLayerInfo;
 import com.inceptai.dobby.model.PingStats;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
+import com.inceptai.dobby.utils.Utils;
 import com.inceptai.dobby.wifi.WifiState;
 
 import java.lang.annotation.Retention;
@@ -272,11 +273,11 @@ public class DataInterpreter {
             return downloadUpdatedAtMs > 0 && isFresh(downloadUpdatedAtMs);
         }
 
-        double getUploadMbps() {
+        public double getUploadMbps() {
             return uploadMbps;
         }
 
-        double getDownloadMbps() {
+        public double getDownloadMbps() {
             return downloadMbps;
         }
 
@@ -505,6 +506,69 @@ public class DataInterpreter {
             builder.append("\n primaryApChannelAps:" + primaryApChannelInterferingAps);
             builder.append("\n leastOccupiedChannelAps:" + leastOccupiedChannelAps);
             return builder.toString();
+        }
+
+        public boolean isWifiOff() {
+            return (wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.OFF);
+        }
+
+        public boolean isWifiDisconnected() {
+            return (wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.ON_AND_DISCONNECTED);
+        }
+
+        public String userReadableInterpretation() {
+            StringBuilder sb = new StringBuilder();
+            //Wifi is off
+            switch (wifiConnectivityMode) {
+                case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_ONLINE:
+                    sb.append("You are connected and online via wifi network: " + getPrimaryApSsid() + ".");
+                    sb.append(convertSignalToReadableMessage());
+                    break;
+                case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL:
+                    sb.append("You are behind a captive portal -- " +
+                            "basically the wifi you are connected to " +
+                            getPrimaryApSsid() + " is managed by someone who " +
+                            "restricts access unless you sign in. " +
+                            "You should launch a browser and it should take you to a login page");
+                    break;
+                case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_OFFLINE:
+                    sb.append("You are connected to wifi network: " + getPrimaryApSsid() + " but we can't reach Internet through this network. " +
+                            "This could be an issue with the router or your Internet provider. We can run full tests to see whats going on ?");
+                    break;
+                case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_UNKNOWN:
+                    sb.append("You are connected via wifi network: " + getPrimaryApSsid() + ".");
+                    sb.append(convertSignalToReadableMessage());
+                    break;
+                case ConnectivityAnalyzer.WifiConnectivityMode.ON_AND_DISCONNECTED:
+                    sb.append("You are currently not connected to any wifi network. If your phone is not connecting, try running full tests and we can diagnose why that could be ?");
+                    break;
+                case ConnectivityAnalyzer.WifiConnectivityMode.OFF:
+                    sb.append("Your wifi is currently switched off. Try turing it on from the settings and we can run some speed tests to see how much bandwidth you are getting.");
+                    break;
+            }
+            return sb.toString();
+        }
+
+        private String convertSignalToReadableMessage() {
+            if (DataInterpreter.isUnknown(getPrimaryApSignalMetric())) {
+                return Utils.EMPTY_STRING;
+            }
+            int signalPercent = Utils.convertSignalDbmToPercent(getPrimaryApSignal());
+            String message = Utils.EMPTY_STRING;
+            if (DataInterpreter.isPoorOrAbysmalOrNonFunctional(getPrimaryApSignalMetric())) {
+                message = "Your connection to your wifi is weak, at about " + signalPercent +
+                        "% strength (100% means very high signal, usually when you " +
+                        "are right next to wifi router).";
+            } else if (DataInterpreter.isAverage(getPrimaryApSignalMetric())) {
+                message = "You connection to your wifi is just ok, at about " + signalPercent +
+                        "% strength (100% means very high signal, usually when you " +
+                        "are right next to wifi router).";
+            } else if (DataInterpreter.isGoodOrExcellent(getPrimaryApSignalMetric())) {
+                message = "You connection to your wifi is really good, at about " + signalPercent +
+                        "% strength (100% means very high signal, usually when you " +
+                        "are right next to wifi router).";
+            }
+            return message;
         }
 
         public void clear() {

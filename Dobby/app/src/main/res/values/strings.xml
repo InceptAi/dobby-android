@@ -80,7 +80,7 @@
     <string name="status_error_bw_tests">Error running bandwidth tests. Please cancel and try again.</string>
     <string name="status_running_upload_tests">Running Upload test &#8230; </string>
     <string name="status_running_download_tests">Running Download test &#8230; </string>
-    <string name="status_finished_bw_tests">Finished bandwidth tests.</string>
+    <string name="status_finished_bw_tests">Finished bandwidth tests, preparing reports &#8230;</string>
     <string name="status_fetching_server_list">Fetching list of servers &#8230; </string>
     <string name="status_analyzing_speed_test_data">Analyzing speed test data ..</string>
     <string name="status_speed_test_analysis_ready">Speed test analysis ready ..</string>
@@ -98,4 +98,9 @@
     <string name="tap_anim_run_tests_long_msg">Tap the button to let Wifi Tester run some tests.</string>
     <string name="status_closest_servers" formatted="false">Computing closest out of %1$d servers &#8230;</string>
     <string name="status_found_closest_server" formatted="false">Closest server in %1$s has a latency of %2$.2f ms.</string>
+    <string name="feedback_button_title">Feedback</string>
+    <string name="about_button_title">About</string>
+    <string name="wifi_expert_name">Wifi Expert</string>
+    <string name="bandwidth_card_view_message">Here is how your current bandwidth looks like: </string>
+    <string name="wifi_status_view_message">Here is your current wifi network snapshot: </string>
 </resources>

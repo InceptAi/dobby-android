@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/bandwidth_results_cardview"
+    android:layout_width="match_parent" android:layout_height="wrap_content">
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:id="@+id/bw_gauge_fl"
+        android:orientation="horizontal"
+        android:layout_marginLeft="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:gravity="center_horizontal"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="8dp">
+
+        <include
+            layout="@layout/circular_gauge_with_text"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:id="@+id/cg_download"
+            />
+        <include
+            layout="@layout/circular_gauge_with_text"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginStart="10dp"
+            android:layout_width="wrap_content"
+            android:id="@+id/cg_upload"
+            />
+
+    </LinearLayout>
+</android.support.v7.widget.CardView>

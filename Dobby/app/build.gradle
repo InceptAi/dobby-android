@@ -3,15 +3,20 @@ apply plugin: 'com.google.firebase.firebase-crash'
 apply plugin: 'spoon'
 
 
-// Create a variable called keystorePropertiesFile, and initialize it to your
+// Create a variable called keystorePropertiesFileWifiDoc, and initialize it to your
 // keystore.properties file, in the rootProject folder.
-def keystorePropertiesFile = rootProject.file("../../Keystore/wifidoc-keystore.properties")
+def keystorePropertiesFileWifiDoc = rootProject.file("../../Keystore/wifidoc-keystore.properties")
+def keystorePropertiesFileWifiExpert = rootProject.file("../../Keystore/wifiexpert-keystore.properties")
 
-// Initialize a new Properties() object called keystoreProperties.
-def keystoreProperties = new Properties()
+// Initialize a new Properties() object called keystorePropertiesWifiDoc.
+def keystorePropertiesWifiDoc = new Properties()
+def keystorePropertiesWifiExpert = new Properties()
 
-// Load your keystore.properties file into the keystoreProperties object.
-keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+
+// Load your keystore.properties file into the keystorePropertiesWifiDoc object.
+keystorePropertiesWifiDoc.load(new FileInputStream(keystorePropertiesFileWifiDoc))
+keystorePropertiesWifiExpert.load(new FileInputStream(keystorePropertiesFileWifiExpert))
+
 
 android {
     compileSdkVersion 25
@@ -27,10 +32,16 @@ android {
     }
     signingConfigs {
         wifidoc_config {
-            keyAlias keystoreProperties['keyAlias']
-            keyPassword keystoreProperties['keyPassword']
-            storeFile file(keystoreProperties['storeFile'])
-            storePassword keystoreProperties['storePassword']
+            keyAlias keystorePropertiesWifiDoc['keyAlias']
+            keyPassword keystorePropertiesWifiDoc['keyPassword']
+            storeFile file(keystorePropertiesWifiDoc['storeFile'])
+            storePassword keystorePropertiesWifiDoc['storePassword']
+        }
+        wifiexpert_config {
+            keyAlias keystorePropertiesWifiExpert['keyAlias']
+            keyPassword keystorePropertiesWifiExpert['keyPassword']
+            storeFile file(keystorePropertiesWifiExpert['storeFile'])
+            storePassword keystorePropertiesWifiExpert['storePassword']
         }
     }
     productFlavors {
@@ -41,13 +52,14 @@ android {
         }
         dobby {
             applicationId "com.inceptai.wifiexpert"
-            versionCode 1
-            versionName "1.0-ai"
+            versionCode 3
+            versionName "1.0-wifiexpert-beta"
         }
     }
     buildTypes {
         release {
             productFlavors.wifidoc.signingConfig signingConfigs.wifidoc_config
+            productFlavors.dobby.signingConfig signingConfigs.wifiexpert_config
             minifyEnabled false
             useProguard false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'

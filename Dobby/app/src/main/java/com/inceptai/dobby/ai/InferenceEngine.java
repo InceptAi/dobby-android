@@ -183,8 +183,7 @@ public class InferenceEngine {
                 DobbyLog.i("Sending suggestions to DobbyAi");
                 actionListener.suggestionsAvailable(suggestion);
             }
-            sendResponseOnlyAction(suggestion.toString());
-
+            //sendResponseOnlyAction(suggestion.getTitle(), Action.ActionType.ACTION_TYPE_SHOW_SHORT_SUGGESTION);
             //Write the suggestion and inferencing parameters to DB
             InferenceRecord newInferenceRecord = createInferenceRecord(suggestion);
             inferenceDatabaseWriter.writeInferenceToDatabase(newInferenceRecord);
@@ -240,11 +239,13 @@ public class InferenceEngine {
                                                                     String clientIsp,
                                                                     String clientExternalIp) {
         DataInterpreter.BandwidthGrade bandwidthGrade = new DataInterpreter.BandwidthGrade();
+        /*
         if (bandwidth >= 0) {
-            sendResponseOnlyAction(testModeToString(testMode) + " Overall Bandwidth = " + String.format("%.2f", bandwidth / 1000000) + " Mbps");
+            //sendResponseOnlyAction(testModeToString(testMode) + " Overall Bandwidth = " + String.format("%.2f", bandwidth / 1000000) + " Mbps");
         } else {
-            sendResponseOnlyAction(testModeToString(testMode) + " Bandwidth error -- can't do bandwidth test.");
+            //sendResponseOnlyAction(testModeToString(testMode) + " Bandwidth error -- can't do bandwidth test.");
         }
+        */
         lastBandwidthUpdateTimestampMs = 0;
 
         if (testMode == BandwithTestCodes.TestMode.UPLOAD) {
@@ -313,7 +314,7 @@ public class InferenceEngine {
         // Timeouts etc.
     }
 
-    private void sendResponseOnlyAction(String response) {
+    private void sendResponseOnlyAction(String response, @Action.ActionType int action) {
         if (actionListener == null) {
             DobbyLog.w("Attempting to send action to non-existent listener");
             return;
@@ -321,6 +322,6 @@ public class InferenceEngine {
         if (response == null || response.isEmpty()) {
             response = CANNED_RESPONSE;
         }
-        actionListener.takeAction(new Action(response, Action.ActionType.ACTION_TYPE_NONE));
+        actionListener.takeAction(new Action(response, action));
     }
 }

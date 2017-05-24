@@ -38,7 +38,10 @@ public class WifiDocDialogFragment extends DialogFragment {
     public static final String DIALOG_SUGGESTION_TILTE = "suggestionTitle";
     public static final String DIALOG_SUGGESTION_LIST = "suggestionList";
     public static final String DIALOG_TYPE = "type";
-    public static final String VERSION_TEXT = "Wifi Tester App Version: ";
+    public static final String APP_NAME = "appName";
+    public static final String APP_ICON = "appIcon";
+    public static final String PARENT_VIEW_ID = "parentViewId";
+    public static final String VERSION_TEXT = "App Version: ";
 
     private static final String PRIVACY_POLICY = "Please click <a href=\"http://inceptai.com/privacy/\"> here </a> to read about our privacy policy.";
     private static final String ABOUT_STRING = "This app is offered by InceptAI. Copyright &#169; 2017. For detailed feedback or questions, email us at <a href=\"mailto:hello@obiai.tech\">hello@obiai.tech</a>.";
@@ -63,7 +66,7 @@ public class WifiDocDialogFragment extends DialogFragment {
             case DIALOG_SHOW_ABOUT_AND_PRIVACY_POLICY:
                 return createPrivacyPolicyDialog(bundle);
             case DIALOG_SHOW_FEEDBACK_FORM:
-                return createFeedbackFormDialog();
+                return createFeedbackFormDialogNoToast(bundle);
         }
         return new AlertDialog.Builder(getActivity()).create();
     }
@@ -82,14 +85,17 @@ public class WifiDocDialogFragment extends DialogFragment {
         WifiDocDialogFragment fragment = new WifiDocDialogFragment();
         Bundle bundle = new Bundle();
         bundle.putInt(DIALOG_TYPE, DIALOG_SHOW_ABOUT_AND_PRIVACY_POLICY);
+        //bundle.putString(APP_NAME, appName);
+        //bundle.putString(APP_ICON, appIcon);
         fragment.setArguments(bundle);
         return fragment;
     }
 
-    public static WifiDocDialogFragment forFeedback() {
+    public static WifiDocDialogFragment forFeedback(int parentViewId) {
         WifiDocDialogFragment fragment = new WifiDocDialogFragment();
         Bundle bundle = new Bundle();
         bundle.putInt(DIALOG_TYPE, DIALOG_SHOW_FEEDBACK_FORM);
+        bundle.putInt(PARENT_VIEW_ID, parentViewId);
         fragment.setArguments(bundle);
         return fragment;
     }
@@ -136,13 +142,16 @@ public class WifiDocDialogFragment extends DialogFragment {
 
     @NonNull
     private Dialog createPrivacyPolicyDialog(Bundle bundle) {
+        //String appName = bundle.getString(APP_NAME);
+        //String appIcon = bundle.getString(APP_ICON);
+        String versionString = "App Version:" + BuildConfig.VERSION_NAME;
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = getActivity().getLayoutInflater();
         rootView = inflater.inflate(R.layout.privacy_policy_dialog_fragment, null);
         TextView aboutTv = (TextView) rootView.findViewById(R.id.about_tv);
         TextView privacyTv = (TextView) rootView. findViewById(R.id.privacy_tv);
         TextView versionTv = (TextView) rootView.findViewById(R.id.version_tv);
-        versionTv.setText(VERSION_TEXT + BuildConfig.VERSION_NAME);
+        versionTv.setText(versionString);
         makeHtmlFriendly(privacyTv, PRIVACY_POLICY);
         makeHtmlFriendly(aboutTv, ABOUT_STRING);
         Button dismissButton = (Button) rootView.findViewById(R.id.privacy_policy_dismiss_button);
@@ -161,7 +170,8 @@ public class WifiDocDialogFragment extends DialogFragment {
         tv.setMovementMethod(LinkMovementMethod.getInstance());
     }
 
-    private Dialog createFeedbackFormDialog() {
+    private Dialog createFeedbackFormDialog(Bundle bundle) {
+        final int parentViewId = bundle.getInt(PARENT_VIEW_ID);
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = getActivity().getLayoutInflater();
         rootView = inflater.inflate(R.layout.feedback_dialog_fragment, null);
@@ -169,11 +179,12 @@ public class WifiDocDialogFragment extends DialogFragment {
         submitButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                FrameLayout fl = (FrameLayout) getActivity().findViewById(R.id.wifi_doc_placeholder_fl);
+                //FrameLayout fl = (FrameLayout) getActivity().findViewById(R.id.wifi_doc_placeholder_fl);
+                FrameLayout fl = (FrameLayout) getActivity().findViewById(parentViewId);
+                Snackbar.make(fl, "Thanks for your feedback !", Snackbar.LENGTH_SHORT).show();
                 //Write the feedback to database
                 FeedbackRecord feedbackRecord = createFeedbackRecord(rootView);
                 feedbackDatabaseWriter.writeFeedbackToDatabase(feedbackRecord);
-                Snackbar.make(fl, "Thanks for your feedback !", Snackbar.LENGTH_SHORT).show();
                 dismiss();
             }
         });
@@ -181,8 +192,35 @@ public class WifiDocDialogFragment extends DialogFragment {
         cancelButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                FrameLayout fl = (FrameLayout) getActivity().findViewById(R.id.wifi_doc_placeholder_fl);
+                //FrameLayout fl = (FrameLayout) getActivity().findViewById(R.id.wifi_doc_placeholder_fl);
+                FrameLayout fl = (FrameLayout) getActivity().findViewById(parentViewId);
                 Snackbar.make(fl, "Feedback cancelled.", Snackbar.LENGTH_SHORT).show();
+                dismiss();
+            }
+        });
+        builder.setView(rootView);
+        return builder.create();
+    }
+
+    private Dialog createFeedbackFormDialogNoToast(Bundle bundle) {
+        final int parentViewId = bundle.getInt(PARENT_VIEW_ID);
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        LayoutInflater inflater = getActivity().getLayoutInflater();
+        rootView = inflater.inflate(R.layout.feedback_dialog_fragment, null);
+        Button submitButton = (Button) rootView.findViewById(R.id.feedback_submit_button);
+        submitButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //Write the feedback to database
+                FeedbackRecord feedbackRecord = createFeedbackRecord(rootView);
+                feedbackDatabaseWriter.writeFeedbackToDatabase(feedbackRecord);
+                dismiss();
+            }
+        });
+        Button cancelButton = (Button) rootView.findViewById(R.id.feedback_cancel_button);
+        cancelButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
                 dismiss();
             }
         });

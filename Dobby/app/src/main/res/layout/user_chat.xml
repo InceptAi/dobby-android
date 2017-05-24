@@ -3,7 +3,12 @@
     android:orientation="horizontal" android:layout_width="match_parent"
     android:layout_gravity="end"
     android:gravity="end"
-    android:padding="5dp"
+    android:padding="3dp"
+    android:layout_marginTop="5dp"
+    android:layout_marginRight="10dp"
+    android:layout_marginEnd="10dp"
+    android:layout_marginLeft="80dp"
+    android:layout_marginStart="80dp"
     android:id="@+id/user_chat_layout"
     android:layout_height="wrap_content">
 
@@ -18,7 +23,7 @@
         android:layout_width="wrap_content"
         android:orientation="horizontal"
         android:layout_gravity="center_vertical|end"
-        android:background="@drawable/rounded_shape"
+        android:background="@drawable/rounded_shape_gray_background"
         android:padding="5dp"
         android:layout_height="wrap_content">
 
@@ -27,6 +32,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical|end"
+        android:textSize="15sp"
+        android:padding="2dp"
         android:text="@string/user_chat_text"
         />
 
@@ -37,8 +44,8 @@
         android:textSize="25sp"
         android:textColor="@color/main_bg_color"
         android:layout_gravity="center_vertical|end"
-        android:padding="5dp"
-        android:text="@string/user_initials" />
+        android:padding="2dp"
+        android:text="" />
     </LinearLayout>
 
 </LinearLayout>
