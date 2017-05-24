@@ -730,6 +730,13 @@ public class Utils {
         DisplayMetrics metrics = resources.getDisplayMetrics();
         float dp = px / ((float)metrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT);
         return dp;
+
+    public static double toMbps(double bwBytes) {
+        return bwBytes * 1.0e-6;
+    }
+
+    public static double toKbps(double bwBytes) {
+        return bwBytes * 1.0e-3;
     }
 
     public static String generateUUID() {

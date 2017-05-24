@@ -184,7 +184,6 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         this.bwTestState = bwTestState;
     }
 
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         ((DobbyApplication) getActivity().getApplication()).getProdComponent().inject(this);
@@ -288,6 +287,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             bandwidthObserver.unregisterCallback(this);
         }
         mListener = null;
+        if (eventBus != null) {
+            eventBus.unregisterListener(this);
+        }
     }
 
     @Override
@@ -475,6 +477,10 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             }
             return true;
         }
+        if (getActivity() == null) {
+            DobbyLog.e("WifiDocMainFragment not attached to any activity.");
+            return true;
+        }
         switch(msg.what) {
             case MSG_UPDATED_CIRCULAR_GAUGE:
                 updateBandwidthGauge(msg);
@@ -526,6 +532,10 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             return;
         }
 
+        if (getActivity() == null) {
+            DobbyLog.e("Fragment not attached to any activity.");
+            return;
+        }
         dobbyAnalytics.pingGrade(pingGrade);
         setPingResult(pingRouterValueTv, String.format("%02.1f", pingGrade.getRouterLatencyMs()),
                 pingRouterGradeIv, pingGrade.getRouterLatencyMetric());
@@ -541,6 +551,10 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     }
 
     private void resetPingData() {
+        if (getActivity() == null) {
+            DobbyLog.e("Fragment not attached to any activity.");
+            return;
+        }
         setPingResult(pingRouterValueTv, ZERO_POINT_ZERO,
                 pingRouterGradeIv, DataInterpreter.MetricType.UNKNOWN);
 
@@ -555,6 +569,10 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     }
 
     private void showSuggestion(SuggestionCreator.Suggestion suggestion) {
+        if (getActivity() == null) {
+            DobbyLog.e("Fragment not attached to any activity.");
+            return;
+        }
         ispNameTv.setText(suggestion.getIsp());
         routerIpTv.setText(suggestion.getExternalIp());
         if (suggestion == null) {
@@ -670,6 +688,10 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
 
     private void setPingResult(TextView valueTv, String value, ImageView gradeIv, @DataInterpreter.MetricType int grade) {
+        if (getActivity() == null) {
+            DobbyLog.e("Fragment not attached to any activity.");
+            return;
+        }
         valueTv.setText(value);
         switch (grade) {
             case EXCELLENT:
@@ -697,6 +719,10 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     }
 
     private void setWifiResult(TextView valueTv, String value, ImageView gradeIv, @DataInterpreter.MetricType int grade) {
+        if (getActivity() == null) {
+            DobbyLog.e("Fragment not attached to any activity.");
+            return;
+        }
         valueTv.setText(value);
         switch (grade) {
             case EXCELLENT:
