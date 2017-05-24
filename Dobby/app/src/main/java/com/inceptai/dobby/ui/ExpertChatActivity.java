@@ -19,23 +19,18 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.expert.ExpertChat;
 
-import de.hdodenhof.circleimageview.CircleImageView;
-
 public class ExpertChatActivity extends AppCompatActivity {
-    public static final String CHAT_MESSAGES_CHILD = "expert_chat_messages";
+    public static final String CHAT_MESSAGES_CHILD = "expert_chat_rooms";
+
 
     public static class MessageViewHolder extends RecyclerView.ViewHolder {
-        TextView messageTextView;
-        ImageView messageImageView;
-        TextView messengerTextView;
-        CircleImageView messengerImageView;
+        TextView expertMessageTv;
+        TextView userMessageTv;
 
         public MessageViewHolder(View v) {
             super(v);
-            messageTextView = (TextView) itemView.findViewById(R.id.messageTextView);
-            messageImageView = (ImageView) itemView.findViewById(R.id.messageImageView);
-            messengerTextView = (TextView) itemView.findViewById(R.id.messengerTextView);
-            messengerImageView = (CircleImageView) itemView.findViewById(R.id.messengerImageView);
+            expertMessageTv = (TextView) itemView.findViewById(R.id.expert_message_tv);
+            userMessageTv = (TextView) itemView.findViewById(R.id.user_message_tv);
         }
     }
 
@@ -74,15 +69,12 @@ public class ExpertChatActivity extends AppCompatActivity {
                                               ExpertChat friendlyMessage, int position) {
                 progressBar.setVisibility(ProgressBar.INVISIBLE);
                 if (friendlyMessage.getText() != null) {
-                    viewHolder.messageTextView.setText(friendlyMessage.getText());
-                    viewHolder.messageTextView.setVisibility(TextView.VISIBLE);
-                    viewHolder.messageImageView.setVisibility(ImageView.GONE);
+                    viewHolder.expertMessageTv.setText(friendlyMessage.getText());
+                    viewHolder.expertMessageTv.setVisibility(TextView.VISIBLE);
                 } else {
-                    viewHolder.messageImageView.setVisibility(ImageView.VISIBLE);
-                    viewHolder.messageTextView.setVisibility(TextView.GONE);
+                    viewHolder.expertMessageTv.setVisibility(TextView.GONE);
                 }
 
-                // viewHolder.messengerTextView.setText(friendlyMessage.getName());
             }
         };
 
@@ -131,10 +123,10 @@ public class ExpertChatActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 // Send messages on click.
-                ExpertChat friendlyMessage = new
+                ExpertChat expertChat = new
                         ExpertChat(mMessageEditText.getText().toString(), ExpertChat.MSG_TYPE_USER_TEXT);
                 mFirebaseDatabaseReference.child(CHAT_MESSAGES_CHILD)
-                        .push().setValue(friendlyMessage);
+                        .push().setValue(expertChat);
                 mMessageEditText.setText("");
             }
         });
