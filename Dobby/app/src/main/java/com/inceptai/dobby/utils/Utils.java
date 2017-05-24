@@ -546,7 +546,7 @@ public class Utils {
     }
 
     public static int convertSignalDbmToPercent(int signalDbm) {
-        final double MAX_SIGNAL_DBM = -50.0;
+        final double MAX_SIGNAL_DBM = -30.0;
         final double MIN_SIGNAL_DBM = -110.0;
         double percent = (((double) signalDbm - MIN_SIGNAL_DBM) / (MAX_SIGNAL_DBM - MIN_SIGNAL_DBM)) * 100.0;
         if (percent > 100) {

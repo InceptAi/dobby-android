@@ -292,7 +292,6 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             case ACTION_TYPE_ASK_FOR_BW_TESTS:
                 responseList.add(UserResponse.ResponseType.YES);
                 responseList.add(UserResponse.ResponseType.NO);
-                responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
                 break;
         }
         return responseList;

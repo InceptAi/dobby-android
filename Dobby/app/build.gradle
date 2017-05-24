@@ -54,8 +54,8 @@ android {
         }
         dobby {
             applicationId "com.inceptai.wifiexpert"
-            versionCode 4
-            versionName "1.0-wifiexpert-beta"
+            versionCode 7
+            versionName "1.0-wifiexpert"
         }
     }
     buildTypes {
@@ -144,6 +144,9 @@ dependencies {
     compile 'com.google.firebase:firebase-config:10.0.1'
     compile 'org.parceler:parceler-api:1.1.6'
     annotationProcessor 'org.parceler:parceler:1.1.6'
+
+    //For ManagementFactory classes
+    //compile group: 'com.sun', name: 'rt', version: '1.5.0_06'
 
 
     // Dependencies for tests:

@@ -92,7 +92,7 @@ public class MainActivity extends AppCompatActivity
         handler = new Handler(this);
 
         setupChatFragment();
-        requestPermissions();
+        //requestPermissions();
     }
 
     private Fragment setupFragment(Class fragmentClass, String tag) {
@@ -111,7 +111,7 @@ public class MainActivity extends AppCompatActivity
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.replace(R.id.placeholder_fl,
                 existingFragment, tag);
-        fragmentTransaction.addToBackStack(null);
+        //fragmentTransaction.addToBackStack(null);
         fragmentTransaction.commit();
         return existingFragment;
     }
@@ -122,7 +122,7 @@ public class MainActivity extends AppCompatActivity
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.replace(R.id.placeholder_fl,
                 chatFragment, ChatFragment.FRAGMENT_TAG);
-        fragmentTransaction.addToBackStack(null);
+        //fragmentTransaction.addToBackStack(null);
         fragmentTransaction.commit();
     }
 
