@@ -265,10 +265,6 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 responseList.add(UserResponse.ResponseType.CANCEL);
                 break;
             case ACTION_TYPE_WIFI_CHECK:
-                //responseList.add(UserResponse.ResponseType.YES);
-                //responseList.add(UserResponse.ResponseType.NO);
-                //responseList.add(UserResponse.ResponseType.LIST_ALL_FUNCTIONS);
-                //responseList.add(UserResponse.ResponseType.ASK_ABOUT_DOBBY);
                 responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
                 break;
             case ACTION_TYPE_DIAGNOSE_SLOW_INTERNET:
@@ -287,14 +283,11 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 responseList.add(UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS);
                 responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
                 responseList.add(UserResponse.ResponseType.RUN_WIFI_TESTS);
-                //responseList.add(UserResponse.ResponseType.LIST_ALL_FUNCTIONS);
-                //responseList.add(UserResponse.ResponseType.ASK_ABOUT_DOBBY);
                 break;
             case ACTION_TYPE_LIST_DOBBY_FUNCTIONS:
                 responseList.add(UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS);
                 responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
                 responseList.add(UserResponse.ResponseType.RUN_WIFI_TESTS);
-                //responseList.add(UserResponse.ResponseType.ASK_ABOUT_DOBBY);
                 break;
             case ACTION_TYPE_ASK_FOR_BW_TESTS:
                 responseList.add(UserResponse.ResponseType.YES);
