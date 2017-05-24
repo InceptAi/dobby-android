@@ -3,6 +3,7 @@ package com.inceptai.dobby.ui;
 import android.app.Dialog;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
 import android.text.Html;
@@ -12,6 +13,7 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ListView;
 import android.widget.RadioGroup;
 import android.widget.TextView;
@@ -64,7 +66,7 @@ public class WifiDocDialogFragment extends DialogFragment {
             case DIALOG_SHOW_ABOUT_AND_PRIVACY_POLICY:
                 return createPrivacyPolicyDialog(bundle);
             case DIALOG_SHOW_FEEDBACK_FORM:
-                return createFeedbackFormDialog(bundle);
+                return createFeedbackFormDialogNoToast(bundle);
         }
         return new AlertDialog.Builder(getActivity()).create();
     }
@@ -177,10 +179,12 @@ public class WifiDocDialogFragment extends DialogFragment {
         submitButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //FrameLayout fl = (FrameLayout) getActivity().findViewById(R.id.wifi_doc_placeholder_fl);
+                FrameLayout fl = (FrameLayout) getActivity().findViewById(parentViewId);
+                Snackbar.make(fl, "Thanks for your feedback !", Snackbar.LENGTH_SHORT).show();
                 //Write the feedback to database
                 FeedbackRecord feedbackRecord = createFeedbackRecord(rootView);
                 feedbackDatabaseWriter.writeFeedbackToDatabase(feedbackRecord);
-                //Snackbar.make(fl, "Thanks for your feedback !", Snackbar.LENGTH_SHORT).show();
                 dismiss();
             }
         });
@@ -188,7 +192,35 @@ public class WifiDocDialogFragment extends DialogFragment {
         cancelButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //Snackbar.make(fl, "Feedback cancelled.", Snackbar.LENGTH_SHORT).show();
+                //FrameLayout fl = (FrameLayout) getActivity().findViewById(R.id.wifi_doc_placeholder_fl);
+                FrameLayout fl = (FrameLayout) getActivity().findViewById(parentViewId);
+                Snackbar.make(fl, "Feedback cancelled.", Snackbar.LENGTH_SHORT).show();
+                dismiss();
+            }
+        });
+        builder.setView(rootView);
+        return builder.create();
+    }
+
+    private Dialog createFeedbackFormDialogNoToast(Bundle bundle) {
+        final int parentViewId = bundle.getInt(PARENT_VIEW_ID);
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        LayoutInflater inflater = getActivity().getLayoutInflater();
+        rootView = inflater.inflate(R.layout.feedback_dialog_fragment, null);
+        Button submitButton = (Button) rootView.findViewById(R.id.feedback_submit_button);
+        submitButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //Write the feedback to database
+                FeedbackRecord feedbackRecord = createFeedbackRecord(rootView);
+                feedbackDatabaseWriter.writeFeedbackToDatabase(feedbackRecord);
+                dismiss();
+            }
+        });
+        Button cancelButton = (Button) rootView.findViewById(R.id.feedback_cancel_button);
+        cancelButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
                 dismiss();
             }
         });
