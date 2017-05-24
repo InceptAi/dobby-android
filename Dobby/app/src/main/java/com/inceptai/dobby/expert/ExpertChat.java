@@ -1,18 +1,21 @@
-package com.inceptai.dobby.ui;
+package com.inceptai.dobby.expert;
 
 /**
  * Created by arunesh on 5/23/17.
  */
 
-public class ExpertChatMessage {
+public class ExpertChat {
+    public static final int MSG_TYPE_EXPERT_TEXT = 1001;
+    public static final int MSG_TYPE_USER_TEXT = 1002;
+
 
     String id;
     String text;
-    String name;
+    int messageType;
 
-    public ExpertChatMessage(String text, String name) {
+    public ExpertChat(String text, int messageType) {
         this.text = text;
-        this.name = name;
+        this.messageType = messageType;
     }
 
     public String getId() {
@@ -29,13 +32,5 @@ public class ExpertChatMessage {
 
     public void setText(String text) {
         this.text = text;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 }

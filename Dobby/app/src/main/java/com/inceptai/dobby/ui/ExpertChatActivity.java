@@ -1,14 +1,10 @@
 package com.inceptai.dobby.ui;
 
-import android.net.Uri;
-import android.support.annotation.NonNull;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
-import android.text.InputFilter;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
@@ -18,20 +14,15 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
 import com.inceptai.dobby.R;
-import com.inceptai.dobby.utils.DobbyLog;
+import com.inceptai.dobby.expert.ExpertChat;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class ExpertChatActivity extends AppCompatActivity {
     public static final String CHAT_MESSAGES_CHILD = "expert_chat_messages";
-
 
     public static class MessageViewHolder extends RecyclerView.ViewHolder {
         TextView messageTextView;
@@ -50,7 +41,7 @@ public class ExpertChatActivity extends AppCompatActivity {
 
     // Firebase instance variables
     private DatabaseReference mFirebaseDatabaseReference;
-    private FirebaseRecyclerAdapter<ExpertChatMessage, MessageViewHolder> mFirebaseAdapter;
+    private FirebaseRecyclerAdapter<ExpertChat, MessageViewHolder> mFirebaseAdapter;
 
     private RecyclerView mMessageRecyclerView;
     private LinearLayoutManager mLinearLayoutManager;
@@ -72,15 +63,15 @@ public class ExpertChatActivity extends AppCompatActivity {
 
         // New child entries
         mFirebaseDatabaseReference = FirebaseDatabase.getInstance().getReference();
-        mFirebaseAdapter = new FirebaseRecyclerAdapter<ExpertChatMessage, MessageViewHolder>(
-                ExpertChatMessage.class,
+        mFirebaseAdapter = new FirebaseRecyclerAdapter<ExpertChat, MessageViewHolder>(
+                ExpertChat.class,
                 R.layout.expert_chat_message_item,
                 MessageViewHolder.class,
                 mFirebaseDatabaseReference.child(CHAT_MESSAGES_CHILD)) {
 
             @Override
             protected void populateViewHolder(final MessageViewHolder viewHolder,
-                                              ExpertChatMessage friendlyMessage, int position) {
+                                              ExpertChat friendlyMessage, int position) {
                 progressBar.setVisibility(ProgressBar.INVISIBLE);
                 if (friendlyMessage.getText() != null) {
                     viewHolder.messageTextView.setText(friendlyMessage.getText());
@@ -91,7 +82,7 @@ public class ExpertChatActivity extends AppCompatActivity {
                     viewHolder.messageTextView.setVisibility(TextView.GONE);
                 }
 
-                viewHolder.messengerTextView.setText(friendlyMessage.getName());
+                // viewHolder.messengerTextView.setText(friendlyMessage.getName());
             }
         };
 
@@ -140,8 +131,8 @@ public class ExpertChatActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 // Send messages on click.
-                ExpertChatMessage friendlyMessage = new
-                        ExpertChatMessage(mMessageEditText.getText().toString(), "Your Name");
+                ExpertChat friendlyMessage = new
+                        ExpertChat(mMessageEditText.getText().toString(), ExpertChat.MSG_TYPE_USER_TEXT);
                 mFirebaseDatabaseReference.child(CHAT_MESSAGES_CHILD)
                         .push().setValue(friendlyMessage);
                 mMessageEditText.setText("");

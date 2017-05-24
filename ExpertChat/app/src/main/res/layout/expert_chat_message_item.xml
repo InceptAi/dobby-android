@@ -17,7 +17,7 @@
             android:layout_width="36dp"
             android:layout_height="36dp"
             android:layout_margin="5dp"
-            android:src="@mipmap/wifi_doc_launcher"/>
+            android:src="@mipmap/ic_chat_avatar"/>
 
 
         <TextView
