@@ -25,6 +25,8 @@ android {
         applicationId "com.inceptai.wifiexpert"
         minSdkVersion 15
         targetSdkVersion 25
+        //TODO: Remove this once API.AI fix is there
+        maxSdkVersion 25
         versionCode 1
         versionName "1.0"
        // testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -52,7 +54,7 @@ android {
         }
         dobby {
             applicationId "com.inceptai.wifiexpert"
-            versionCode 3
+            versionCode 4
             versionName "1.0-wifiexpert-beta"
         }
     }
