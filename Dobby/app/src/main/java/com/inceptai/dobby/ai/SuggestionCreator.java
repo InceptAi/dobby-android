@@ -71,7 +71,7 @@ public class SuggestionCreator {
                 suggestionList = shortSuggestionList;
             }
             if (suggestionList.size() == 0) {
-                sb.append(NO_CONDITION_MESSAGE);
+                sb.append(getNoConditionMessageList(suggestionCreatorParams));
             } else if (suggestionList.size() == 1) {
                 sb.append(suggestionList.get(0));
             } else {
