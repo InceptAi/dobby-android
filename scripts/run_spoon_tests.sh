@@ -1,7 +1,10 @@
+#!/bin/bash
 if [ $# -ne 2 ]; then
     echo "Usage: $0 dobby-android_GIT_PATH emulator_id_list"
     exit
 fi
+
+source ~/.bash_profile
 
 PATH_TO_BASE_DIR=$1
 EMULATOR_LIST_FILE=$2
@@ -110,6 +113,7 @@ clean_slate () {
 }
 
 cd $PATH_TO_BASE_DIR
+git pull
 cd Dobby
 
 
