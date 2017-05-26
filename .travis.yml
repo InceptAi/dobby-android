@@ -44,6 +44,7 @@ before_install:
     - mkdir ../Keystore
     - cp dummy-keystore.properties ../Keystore/wifidoc-keystore.properties
     - cp dummy-keystore.jks ../Keystore/
+    - cp dummy-keystore.properties ../Keystore/wifiexpert-keystore.properties
     - cd Dobby; ./gradlew dependencies || true
 
 #before_script:

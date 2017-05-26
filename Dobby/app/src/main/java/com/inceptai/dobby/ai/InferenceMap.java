@@ -130,6 +130,7 @@ public class InferenceMap {
             //TODO: Decide whether to exclude wifi conditions here
             conditions.exclude(ROUTER_CONDITIONS);
             conditions.exclude(WIFI_CONDITIONS);
+            conditions.exclude(Condition.DNS_UNREACHABLE);
             return conditions;
         }
 
@@ -138,16 +139,19 @@ public class InferenceMap {
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
             conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
             conditions.include(Condition.ISP_INTERNET_SLOW_UPLOAD, 0.7);
+            conditions.exclude(Condition.DNS_UNREACHABLE);
         } else if (DataInterpreter.isPoorOrAbysmal(bandwidthGrade.getDownloadBandwidthMetric()) &&
                 DataInterpreter.isGoodOrExcellentOrAverage(bandwidthGrade.getUploadBandwidthMetric())) {
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
             conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
             conditions.include(Condition.ISP_INTERNET_SLOW_DOWNLOAD, 0.7);
+            conditions.exclude(Condition.DNS_UNREACHABLE);
         } else if (DataInterpreter.isPoorOrAbysmal(bandwidthGrade.getDownloadBandwidthMetric()) &&
                 DataInterpreter.isPoorOrAbysmal(bandwidthGrade.getUploadBandwidthMetric())) {
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
             conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
             conditions.include(Condition.ISP_INTERNET_SLOW, 0.7);
+            conditions.exclude(Condition.DNS_UNREACHABLE);
         } else if (DataInterpreter.isNonFunctional(bandwidthGrade.getDownloadBandwidthMetric()) ||
                 DataInterpreter.isNonFunctional(bandwidthGrade.getUploadBandwidthMetric())) {
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.7);
@@ -328,7 +332,7 @@ public class InferenceMap {
         }
 
         if (DataInterpreter.isNonFunctional(pingGrade.dnsServerLatencyMetric)) {
-            conditions.exclude(ISP_CONDITIONS);
+            //conditions.exclude(ISP_CONDITIONS);
             if (DataInterpreter.isGoodOrExcellentOrAverage(pingGrade.alternativeDnsMetric)) {
                 conditions.exclude(Condition.CABLE_MODEM_FAULT);
             }
