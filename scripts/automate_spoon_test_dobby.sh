@@ -17,6 +17,7 @@ cat << EOF
         -f|--emulator_file_list   github clone repo (default:dobby-android -- https://github.com/InceptAi/dobby-android.git)
         -v|--verbose  verbose mode. Can be used multiple times for increased verbosity.
         -c|--checkconfig            check config and exit.
+        -e|--emailtonotify   email address to notify (make sure your mail is set up).
 EOF
 }
 
@@ -90,15 +91,15 @@ install_app () {
 
 notify_failure () {
 	echo "BUILD FAILED"
-	BODY="Gradle build failed: See http://dobby1743.duckdns.org:5187/ for UI test results"
+	BODY="Gradle build failed: See the results at $DOBBY_SERVER_HOME/spoon for UI test results. You can also just run the server like python $DOBBY_SERVER_HOME/server.py and see the results at http://0.0.0.0/index.html"
 	ATTACHMENT="/tmp/gradle.log"
-	echo ${BODY}| mail -s "Gradle Build Failed for WifiDoc" -A ${ATTACHMENT} $VIVEK_EMAIL $ARUNESH_EMAIL
+	echo ${BODY}| mail -s "Gradle Build Failed for WifiDoc" -A ${ATTACHMENT} $EMAIL_TO_NOTIFY
 }
 
 notify_success () {
 	echo "BUILD SUCCEEDED"
-	BODY="Gradle build succeeded: See http://dobby1743.duckdns.org:5187/ for UI screenshots"
-	echo ${BODY}| mail -s "Gradle Build Success for WifiDoc" $VIVEK_EMAIL $ARUNESH_EMAIL
+	BODY="Gradle build succeeded: See the results at $DOBBY_SERVER_HOME/spoon for UI test results. You can also just run the server like python $DOBBY_SERVER_HOME/server.py and see the results at http://0.0.0.0/index.html"
+	echo ${BODY}| mail -s "Gradle Build Success for WifiDoc" $EMAIL_TO_NOTIFY
 }
 
 wait_for_emulator () {
@@ -372,10 +373,10 @@ run_tests_one_iteration () {
 
     if [ $should_report_failure -gt 0 ]; then
         echo "notify_failure"
-		#notify_failure
+		notify_failure
     else 
 		echo "notify_success"
-        #notify_success
+        notify_success
     fi
 }
 
@@ -395,6 +396,7 @@ VBOX_MANAGE=
 ANDROID_HOME_PATH=
 ADB=
 JAVA_HOME_PATH=
+EMAIL_TO_NOTIFY=hello@obiai.tech
 
 if [ "$#" -lt 1 ]; then
     show_help
@@ -479,23 +481,33 @@ while :; do
                 exit 1
             fi
             ;;
-        -v|--verbose)
+          -e|--emailtonotify)       # Takes an option argument, ensuring it has been specified.
+            if [ -n "$2" ]; then
+                EMAIL_TO_NOTIFY=$2
+                shift
+            else
+                printf 'ERROR: "--emailtonotify|-e" requires a non-empty option argument.\n' >&2
+                exit 1
+            fi
+            ;;
+ 
+          -v|--verbose)
             VERBOSE=$((VERBOSE + 1)) # Each -v argument adds 1 to verbosity.
             ;;
-        -r|--repeat)
+          -r|--repeat)
             REPEAT_TESTS=$((REPEAT_TESTS + 1)) 
             ;;
-        -c|--checkconfig)
+          -c|--checkconfig)
             CHECK_CONFIG_ONLY=$((CHECK_CONFIG_ONLY + 1)) # Each -v argument adds 1 to verbosity.
             ;;
-        --)              # End of all options.
+          --)              # End of all options.
             shift
             break
             ;;
-        -?*)
+          -?*)
             printf 'WARN: Unknown option (ignored): %s\n' "$1" >&2
             ;;
-        *)               # Default case: If no more options then break out of the loop.
+          *)               # Default case: If no more options then break out of the loop.
             break
     esac
     shift
