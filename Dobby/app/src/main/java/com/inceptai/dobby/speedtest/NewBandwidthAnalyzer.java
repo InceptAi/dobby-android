@@ -402,9 +402,9 @@ public class NewBandwidthAnalyzer {
         if (testsCurrentlyRunning()) {
             //We don't want to report tests already running as an error --
             // since the UI shows this as an indication for user to restart the tests.
-            //reportBandwidthError(TestMode.STARTING,
-            //        ErrorCodes.ERROR_TEST_ALREADY_RUNNING,
-            //        "Tests are already running.");
+            reportBandwidthError(TestMode.STARTING,
+                    ErrorCodes.ERROR_TEST_ALREADY_RUNNING,
+                    "Tests are already running.");
             return false;
         } else {
             bandwidthAnalyzerState = BandwidthAnalyzerState.RUNNING;
