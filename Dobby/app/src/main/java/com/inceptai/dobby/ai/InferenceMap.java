@@ -278,6 +278,7 @@ public class InferenceMap {
         if (DataInterpreter.isGoodOrExcellent(allPingMetrics)) {
             //conditions.exclude(ROUTER_CONDITIONS);
             conditions.exclude(DNS_CONDITIONS);
+            conditions.exclude(Condition.ISP_INTERNET_DOWN);
             return conditions;
         }
         //Router is quick
@@ -338,6 +339,9 @@ public class InferenceMap {
             }
         }
 
+        if (!DataInterpreter.isNonFunctionalOrUnknown(pingGrade.externalServerLatencyMetric)) {
+            conditions.exclude(Condition.ISP_INTERNET_DOWN);
+        }
 
         return conditions;
     }
