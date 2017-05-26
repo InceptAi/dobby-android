@@ -462,7 +462,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     }
 
     @Override
-    public void onBandwidthTestError(@BandwithTestCodes.TestMode int testMode, @BandwithTestCodes.ErrorCodes int errorCode, @Nullable String errorMessage) {
+    public void onBandwidthTestError(@BandwithTestCodes.TestMode int testMode,
+                                     @BandwithTestCodes.ErrorCodes int errorCode,
+                                     @Nullable String errorMessage) {
         showStatusMessageAsync(R.string.status_error_bw_tests);
     }
 
