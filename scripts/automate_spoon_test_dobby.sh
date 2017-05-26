@@ -227,15 +227,15 @@ run_emulator_tests () {
         #Run the test
 		cd $GRADLEW_PATH
 		echo $PWD
-        $GRADLEW_PATH/gradlew spoonWifidocDebugAndroidTest --stacktrace >>  /tmp/gradle.log
-        
+        $GRADLEW_PATH/gradlew spoonWifidocDebugAndroidTest --stacktrace --info --debug >>  /tmp/gradle.log
+        if [ $? -gt 0 ]; then
+            should_report_failure=1
+        fi
+
         #Store the output in a diff location
         mkdir -p $DOBBY_SERVER_HOME/spoon/wifidoc/$api_level
         cp -r $OUTPUT_PATH/debug/* $DOBBY_SERVER_HOME/spoon/wifidoc/$api_level/
         
-        if [ $? -gt 0 ]; then
-            should_report_failure=1
-        fi
 
         #Repeat for different emulators
         uninstall_app
