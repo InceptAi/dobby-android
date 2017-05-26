@@ -4,6 +4,8 @@ import android.support.annotation.IntDef;
 
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.connectivity.ConnectivityAnalyzer;
+import com.inceptai.dobby.database.FailureDatabaseWriter;
+import com.inceptai.dobby.database.FailureRecord;
 import com.inceptai.dobby.database.InferenceDatabaseWriter;
 import com.inceptai.dobby.database.InferenceRecord;
 import com.inceptai.dobby.model.DobbyWifiInfo;
@@ -60,6 +62,7 @@ public class InferenceEngine {
     private MetricsDb metricsDb;
     private PossibleConditions currentConditions = PossibleConditions.NOOP_CONDITION;
     private InferenceDatabaseWriter inferenceDatabaseWriter;
+    private FailureDatabaseWriter failureDatabaseWriter;
     private DobbyApplication dobbyApplication;
 
     @Mode
@@ -84,12 +87,14 @@ public class InferenceEngine {
     InferenceEngine(ScheduledExecutorService scheduledExecutorService,
                     ActionListener actionListener,
                     InferenceDatabaseWriter inferenceDatabaseWriter,
+                    FailureDatabaseWriter failureDatabaseWriter,
                     DobbyApplication dobbyApplication) {
         bandwidthTestState = STATE_BANDWIDTH_TEST_NONE;
         this.scheduledExecutorService = scheduledExecutorService;
         this.actionListener = actionListener;
         metricsDb = new MetricsDb();
         this.inferenceDatabaseWriter = inferenceDatabaseWriter;
+        this.failureDatabaseWriter = failureDatabaseWriter;
         this.dobbyApplication = dobbyApplication;
     }
 
@@ -217,6 +222,22 @@ public class InferenceEngine {
         return inferenceRecord;
     }
 
+    private FailureRecord createFailureRecord(@BandwithTestCodes.TestMode int testMode,
+                                                @BandwithTestCodes.ErrorCodes int errorCode,
+                                                String errorMessage) {
+        FailureRecord failureRecord = new FailureRecord();
+        failureRecord.uid = dobbyApplication.getUserUuid();
+        failureRecord.phoneInfo = dobbyApplication.getPhoneInfo();
+        failureRecord.appVersion = dobbyApplication.getAppVersion();
+        failureRecord.errorCode = errorCode;
+        failureRecord.testMode = testMode;
+        failureRecord.errorMessage = errorMessage;
+        //Assign the timestamp
+        failureRecord.timestamp = System.currentTimeMillis();
+        return failureRecord;
+    }
+
+
     // Bandwidth test notifications:
     public void notifyBandwidthTestStart(@BandwithTestCodes.TestMode int testMode) {
         if (testMode == BandwithTestCodes.TestMode.UPLOAD) {
@@ -270,10 +291,12 @@ public class InferenceEngine {
     }
 
 
-    public DataInterpreter.BandwidthGrade notifyBandwidthTestError(@BandwithTestCodes.ErrorCodes int errorCode,
+    public DataInterpreter.BandwidthGrade notifyBandwidthTestError(@BandwithTestCodes.TestMode int testMode,
+                                                                   @BandwithTestCodes.ErrorCodes int errorCode,
+                                                                   String errorMessage,
                                                                    double bandwidth) {
         lastBandwidthUpdateTimestampMs = 0;
-        DataInterpreter.BandwidthGrade bandwidthGrade = DataInterpreter.interpret(0.0, 0.0,
+        DataInterpreter.BandwidthGrade bandwidthGrade = DataInterpreter.interpret(bandwidth, bandwidth,
                 Utils.EMPTY_STRING, Utils.EMPTY_STRING, errorCode);
         metricsDb.updateBandwidthGrade(bandwidthGrade);
         PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(bandwidthGrade);
@@ -282,6 +305,8 @@ public class InferenceEngine {
         DobbyLog.i("InferenceEngine which gives conditions: " + conditions.toString());
         DobbyLog.i("InferenceEngine After merging: " + currentConditions.toString());
         checkAndSendSuggestions();
+        //Write failure to database
+        writeFailureToDatabase(testMode, errorCode, errorMessage);
         return bandwidthGrade;
     }
 
@@ -292,6 +317,14 @@ public class InferenceEngine {
             bandwidthCheckFuture = null;
         }
         previousAction = Action.ACTION_NONE;
+    }
+
+    private void writeFailureToDatabase(@BandwithTestCodes.TestMode int testMode,
+                                        @BandwithTestCodes.ErrorCodes int errorCode,
+                                        String errorMessage) {
+        //Write failure to database
+        FailureRecord newFailureRecord = createFailureRecord(testMode, errorCode, errorMessage);
+        failureDatabaseWriter.writeFailureToDatabase(newFailureRecord);
     }
 
     private void updateBandwidthState(int toState) {

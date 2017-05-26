@@ -490,7 +490,9 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             threadpool.submit(new Runnable() {
                 @Override
                 public void run() {
-                    inferenceEngine.notifyBandwidthTestError(BandwithTestCodes.ErrorCodes.ERROR_WIFI_OFFLINE, -1.0);
+                    inferenceEngine.notifyBandwidthTestError(BandwithTestCodes.TestMode.DOWNLOAD_AND_UPLOAD,
+                            BandwithTestCodes.ErrorCodes.ERROR_WIFI_OFFLINE,
+                            "Wifi is offline, so cannot run bw tests", -1.0);
                 }
             });
             return null;
