@@ -340,12 +340,7 @@ public class SuggestionCreator {
                 }
                 break;
             case Condition.ISP_INTERNET_DOWN:
-                if (!baseMessage.equals(Utils.EMPTY_STRING)) {
-                    baseMessage += " However, looks ";
-                } else {
-                    baseMessage = "Looks ";
-                }
-                baseMessage +=  "like your Internet service is down. " +
+                baseMessage =  "Looks like your Internet service is down. " +
                         "We are unable to reach external servers for any bandwidth testing.";
                 if (!params.bandwidthGrade.isp.equals(Utils.EMPTY_STRING)) {
                     conditionalMessage = "You should contact " + params.bandwidthGrade.isp + " to see if they know about any issues " +
@@ -353,12 +348,7 @@ public class SuggestionCreator {
                 }
                 break;
             case Condition.ISP_INTERNET_SLOW:
-                if (!baseMessage.equals(Utils.EMPTY_STRING)) {
-                    baseMessage += " However, looks ";
-                } else {
-                    baseMessage = "Looks ";
-                }
-                baseMessage += "like your Internet service could be slow at the moment. " +
+                baseMessage = "Looks like your Internet service could be slow at the moment. " +
                         "You are getting about " + String.format("%.2f", params.bandwidthGrade.getDownloadBandwidth()) + " Mbps download and " +
                         String.format("%.2f", params.bandwidthGrade.getUploadBandwidth()) + " Mbps upload. If these speeds seem low as per your " +
                         "contract, you should reach out to " + params.bandwidthGrade.isp + " and see why you are getting such low speeds. " +
@@ -398,30 +388,23 @@ public class SuggestionCreator {
                 }
                 break;
             case Condition.DNS_SLOW_TO_REACH:
-                if (!baseMessage.equals(Utils.EMPTY_STRING)) {
-                    baseMessage += " However, your ";
-                } else {
-                    baseMessage = "Your ";
-                }
-                baseMessage += "current DNS server has a high latency, " +
+                baseMessage = "Your current DNS server has a high latency, " +
                         "which can cause an initial lag during the load time of an app or a " +
                         "webpage.";
                 break;
             case Condition.DNS_UNREACHABLE:
-                if (!baseMessage.equals(Utils.EMPTY_STRING)) {
-                    baseMessage += " However, we ";
-                } else {
-                    baseMessage = "we ";
-                }
-                baseMessage += "are unable to reach your DNS server, which means you can't access " +
-                        "the Internet on your phone and other devices. This could be because the DNS " +
-                        "server you have configured is down. ";
-                if (isAlternateDNSBetter(params)) {
-                    conditionalMessage = "Our tests show that using other public DNSs than the one you " +
-                            "are currently configured for can speed up your load times. Try changing " +
-                            "your DNS server with " + params.pingGrade.getAlternativeDns() + " and re-run the test. " +
-                            "You can change your DNS settings just for your phone first and see if " +
-                            "that improves things.";
+                if (DataInterpreter.isNonFunctional(params.bandwidthGrade.getDownloadBandwidthMetric()) &&
+                        DataInterpreter.isNonFunctional(params.bandwidthGrade.getUploadBandwidthMetric())) {
+                    baseMessage = "We are unable to reach your DNS server, which means you can't access " +
+                            "the Internet on your phone and other devices. This could be because the DNS " +
+                            "server you have configured is down. ";
+                    if (isAlternateDNSBetter(params)) {
+                        conditionalMessage = "Our tests show that using other public DNSs than the one you " +
+                                "are currently configured for can speed up your load times. Try changing " +
+                                "your DNS server with " + params.pingGrade.getAlternativeDns() + " and re-run the test. " +
+                                "You can change your DNS settings just for your phone first and see if " +
+                                "that improves things.";
+                    }
                 }
                 break;
             case Condition.CABLE_MODEM_FAULT:
