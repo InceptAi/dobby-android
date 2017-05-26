@@ -122,7 +122,7 @@ public class InferenceEngine {
         return testModeString;
     }
 
-    public DataInterpreter.WifiGrade notifyWifiState(WifiState wifiState, @WifiState.WifiLinkMode int wifiLinkMode,
+    synchronized public DataInterpreter.WifiGrade notifyWifiState(WifiState wifiState, @WifiState.WifiLinkMode int wifiLinkMode,
                                                      @ConnectivityAnalyzer.WifiConnectivityMode int wifiConnectivityMode) {
         DataInterpreter.WifiGrade wifiGrade = new DataInterpreter.WifiGrade();
         if (wifiState != null) {
@@ -140,7 +140,7 @@ public class InferenceEngine {
         return wifiGrade;
     }
 
-    public DataInterpreter.PingGrade notifyPingStats(HashMap<String, PingStats> pingStatsMap, IPLayerInfo ipLayerInfo) {
+    synchronized public DataInterpreter.PingGrade notifyPingStats(HashMap<String, PingStats> pingStatsMap, IPLayerInfo ipLayerInfo) {
         DataInterpreter.PingGrade pingGrade = new DataInterpreter.PingGrade();
         if (pingStatsMap != null && ipLayerInfo != null) {
             pingGrade = DataInterpreter.interpret(pingStatsMap, ipLayerInfo);
@@ -155,7 +155,7 @@ public class InferenceEngine {
         return pingGrade;
     }
 
-    public DataInterpreter.HttpGrade notifyGatewayHttpStats(PingStats gatewayHttpStats) {
+   synchronized public DataInterpreter.HttpGrade notifyGatewayHttpStats(PingStats gatewayHttpStats) {
         DataInterpreter.HttpGrade httpGrade = new DataInterpreter.HttpGrade();
         if (gatewayHttpStats != null) {
             httpGrade = DataInterpreter.interpret(gatewayHttpStats);
@@ -183,7 +183,6 @@ public class InferenceEngine {
                 metricsDb.hasFreshWifiGrade() &&
                 metricsDb.hasFreshHttpGrade()) {
             SuggestionCreator.Suggestion suggestion = suggest();
-
             if (actionListener != null) {
                 DobbyLog.i("Sending suggestions to DobbyAi");
                 actionListener.suggestionsAvailable(suggestion);
@@ -192,7 +191,6 @@ public class InferenceEngine {
             //Write the suggestion and inferencing parameters to DB
             InferenceRecord newInferenceRecord = createInferenceRecord(suggestion);
             inferenceDatabaseWriter.writeInferenceToDatabase(newInferenceRecord);
-
         }
     }
 
@@ -255,7 +253,7 @@ public class InferenceEngine {
         }
     }
 
-    public DataInterpreter.BandwidthGrade notifyBandwidthTestResult(@BandwithTestCodes.TestMode int testMode,
+    synchronized public DataInterpreter.BandwidthGrade notifyBandwidthTestResult(@BandwithTestCodes.TestMode int testMode,
                                                                     double bandwidth,
                                                                     String clientIsp,
                                                                     String clientExternalIp) {
@@ -291,7 +289,7 @@ public class InferenceEngine {
     }
 
 
-    public DataInterpreter.BandwidthGrade notifyBandwidthTestError(@BandwithTestCodes.TestMode int testMode,
+    synchronized public DataInterpreter.BandwidthGrade notifyBandwidthTestError(@BandwithTestCodes.TestMode int testMode,
                                                                    @BandwithTestCodes.ErrorCodes int errorCode,
                                                                    String errorMessage,
                                                                    double bandwidth) {
