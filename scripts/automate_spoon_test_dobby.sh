@@ -380,6 +380,10 @@ run_tests_one_iteration () {
     fi
 }
 
+export_display () {
+	export DISPLAY=:0 
+}
+
 echo "Android home is $ANDROID_HOME"
 echo "Android SDK home is $ANDROID_SDK_HOME"
 
@@ -530,6 +534,8 @@ REL_PATH_INSTRUMENTATION_APK="app/build/outputs/apk/app-wifidoc-debug-androidTes
 MIN_API_LEVEL_TO_USE_G_INSTALL_OPTION=23
 OUTPUT_PATH="$PATH_TO_REPO_DIR/Dobby/app/build/spoon/wifidoc"
 
+#Export display, so it runs well if run from cron or ssh
+export_display
 
 #Check config first
 check_config
