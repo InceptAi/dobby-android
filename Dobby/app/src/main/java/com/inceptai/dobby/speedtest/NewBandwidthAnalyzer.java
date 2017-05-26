@@ -123,7 +123,9 @@ public class NewBandwidthAnalyzer {
      * @return Instance of NewBandwidthAnalyzer or null on error.
      */
     @Nullable
-    public static NewBandwidthAnalyzer create(ResultsCallback resultsCallback, DobbyThreadpool dobbyThreadpool, DobbyEventBus eventBus) {
+    public static NewBandwidthAnalyzer create(ResultsCallback resultsCallback,
+                                              DobbyThreadpool dobbyThreadpool,
+                                              DobbyEventBus eventBus) {
         Preconditions.checkNotNull(dobbyThreadpool);
         NewBandwidthAnalyzer analyzer = new NewBandwidthAnalyzer(dobbyThreadpool, eventBus);
         analyzer.registerCallback(resultsCallback);
@@ -197,10 +199,8 @@ public class NewBandwidthAnalyzer {
             SpeedTestConfig speedTestConfig = parseSpeedTestConfig.getConfig(downloadMode);
             DobbyLog.v("NBA Fetched new config");
             if (speedTestConfig == null) {
-                if (resultsCallback != null) {
-                     resultsCallback.onBandwidthTestError(BandwithTestCodes.TestMode.CONFIG_FETCH,
-                             ErrorCodes.ERROR_FETCHING_CONFIG, "Config fetch returned null");
-                }
+                reportBandwidthError(BandwithTestCodes.TestMode.CONFIG_FETCH,
+                        ErrorCodes.ERROR_FETCHING_CONFIG, "Config fetch returned null");
                 return null;
             }
             //Update speed test config
@@ -220,11 +220,9 @@ public class NewBandwidthAnalyzer {
             DobbyLog.v("NBA Server info not fresh, getting again");
             ServerInformation serverInformation = parseServerInformation.getServerInfo();
             if (serverInformation == null) {
-                if (resultsCallback != null) {
-                    resultsCallback.onBandwidthTestError(BandwithTestCodes.TestMode.SERVER_FETCH,
-                            ErrorCodes.ERROR_FETCHING_SERVER_INFO,
-                            "Server info fetch returned null");
-                }
+                reportBandwidthError(BandwithTestCodes.TestMode.SERVER_FETCH,
+                        ErrorCodes.ERROR_FETCHING_SERVER_INFO,
+                        "Server info fetch returned null");
                 return null;
             }
             //Set server information
@@ -234,11 +232,9 @@ public class NewBandwidthAnalyzer {
             DobbyLog.v("NBA Getting best server again, since not fresh");
             ServerInformation.ServerDetails bestServer = computeBestServer(getSpeedTestConfig(), getServerInformation());
             if (bestServer == null) {
-                if (resultsCallback != null) {
-                    resultsCallback.onBandwidthTestError(BandwithTestCodes.TestMode.SERVER_FETCH,
-                            ErrorCodes.ERROR_SELECTING_BEST_SERVER,
-                            "best server returned as null");
-                }
+                reportBandwidthError(BandwithTestCodes.TestMode.SERVER_FETCH,
+                        ErrorCodes.ERROR_SELECTING_BEST_SERVER,
+                        "best server returned as null");
                 return null;
             }
             //Set best server
@@ -281,11 +277,9 @@ public class NewBandwidthAnalyzer {
         @Override
         public void onConfigFetchError(String error) {
             DobbyLog.v("NBA Speed test config fetched error: " + error);
-            if (resultsCallback != null) {
-                resultsCallback.onBandwidthTestError(BandwithTestCodes.TestMode.CONFIG_FETCH,
-                        ErrorCodes.ERROR_FETCHING_CONFIG,
-                        error);
-            }
+            reportBandwidthError(BandwithTestCodes.TestMode.CONFIG_FETCH,
+                    ErrorCodes.ERROR_FETCHING_CONFIG,
+                    error);
         }
 
         // Server information callbacks
@@ -296,7 +290,7 @@ public class NewBandwidthAnalyzer {
                 if (serverInformation != null && serverInformation.serverList.size() > 0) {
                     resultsCallback.onServerInformationFetch(serverInformation);
                 } else {
-                    resultsCallback.onBandwidthTestError(BandwithTestCodes.TestMode.SERVER_FETCH,
+                    reportBandwidthError(BandwithTestCodes.TestMode.SERVER_FETCH,
                             ErrorCodes.ERROR_FETCHING_SERVER_INFO,
                             "Server information returned empty");
                 }
@@ -305,11 +299,9 @@ public class NewBandwidthAnalyzer {
 
         @Override
         public void onServerInformationFetchError(String error) {
-            if (resultsCallback != null) {
-                resultsCallback.onBandwidthTestError(BandwithTestCodes.TestMode.SERVER_FETCH,
-                        ErrorCodes.ERROR_FETCHING_SERVER_INFO,
-                        error);
-            }
+            reportBandwidthError(BandwithTestCodes.TestMode.SERVER_FETCH,
+                    ErrorCodes.ERROR_FETCHING_SERVER_INFO,
+                    error);
         }
 
         //Best server selection
@@ -322,10 +314,8 @@ public class NewBandwidthAnalyzer {
 
         @Override
         public void onBestServerSelectionError(String error) {
-            if (resultsCallback != null) {
-                resultsCallback.onBandwidthTestError(BandwithTestCodes.TestMode.SERVER_FETCH,
-                        ErrorCodes.ERROR_SELECTING_BEST_SERVER, error);
-            }
+            reportBandwidthError(BandwithTestCodes.TestMode.SERVER_FETCH,
+                    ErrorCodes.ERROR_SELECTING_BEST_SERVER, error);
         }
 
         @Override
@@ -366,11 +356,9 @@ public class NewBandwidthAnalyzer {
 
         @Override
         public void onError(@BandwithTestCodes.TestMode int callbackTestMode, SpeedTestError speedTestError, String errorMessage) {
+            reportBandwidthError(callbackTestMode,
+                    convertToBandwidthTestCodes(speedTestError), errorMessage);
             //Cancel bandwidth tests.
-            if (resultsCallback != null) {
-                resultsCallback.onBandwidthTestError(callbackTestMode,
-                        convertToBandwidthTestCodes(speedTestError), errorMessage);
-            }
             cancelBandwidthTests();
         }
     }
@@ -412,11 +400,11 @@ public class NewBandwidthAnalyzer {
 
     synchronized private boolean checkTestStatusAndMarkRunningIfInactive() {
         if (testsCurrentlyRunning()) {
-            if (resultsCallback != null) {
-                resultsCallback.onBandwidthTestError(TestMode.STARTING,
-                        ErrorCodes.ERROR_TEST_ALREADY_RUNNING,
-                        "Tests are already running.");
-            }
+            //We don't want to report tests already running as an error --
+            // since the UI shows this as an indication for user to restart the tests.
+            //reportBandwidthError(TestMode.STARTING,
+            //        ErrorCodes.ERROR_TEST_ALREADY_RUNNING,
+            //        "Tests are already running.");
             return false;
         } else {
             bandwidthAnalyzerState = BandwidthAnalyzerState.RUNNING;
@@ -496,4 +484,13 @@ public class NewBandwidthAnalyzer {
         }
         return errorCodeToReturn;
     }
+
+    private void reportBandwidthError(@BandwithTestCodes.TestMode int testMode,
+                              @ErrorCodes int errorCode,
+                              @Nullable String errorMessage) {
+        if (resultsCallback != null) {
+            resultsCallback.onBandwidthTestError(testMode, errorCode, errorMessage);
+        }
+    }
+
 }
