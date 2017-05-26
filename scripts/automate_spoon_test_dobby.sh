@@ -28,14 +28,11 @@ verbose_echo () {
 }
 
 gen_fake_keystore () {
-	mkdir -p $TEST_DIR/Keystore
-	cd $TEST_DIR/Keystore
-	touch foo.jks
-	echo "storePassword=foo" > wifidoc-keystore.properties
-	echo "keyPassword=foo" >> wifidoc-keystore.properties
-	echo "keyAlias=foo" >> wifidoc-keystore.properties
-	echo "storeFile=$TEST_DIR/Keystore/foo.jks" >> wifidoc-keystore.properties
-	cp wifidoc-keystore.properties wifiexpert-keystore.properties
+	cd $PATH_TO_REPO_DIR
+	mkdir ../Keystore
+	cp dummy-keystore.properties ../Keystore/wifidoc-keystore.properties
+	cp dummy-keystore.properties ../Keystore/wifiexpert-keystore.properties
+	cp dummy-keystore.jks ../Keystore/
 }
 
 one_time_setup () {
@@ -251,10 +248,11 @@ run_emulator_tests () {
 
 
 build_test_targets () {
+	echo "CHECKED:3 CONFIG: JAVA_HOME:$JAVA_HOME ANDROID_SDK:$ANDROID_HOME" 
     cd $GRADLEW_PATH
     echo "Starting gradle build" > /tmp/gradle.log
     #./gradlew clean assembleDebug assembleAndroidTest >> /tmp/gradle.log
-    ./gradlew clean assembleDebug >> /tmp/gradle.log
+    $GRADLEW_PATH/gradlew clean build assembleDebug >> /tmp/gradle.log
     if [ $? -gt 0 ]; then
         notify_failure
         exit 1
@@ -278,11 +276,14 @@ check_config () {
 			all_reqs_met=0
 		fi
 		JAVA_HOME=$JAVA_HOME_PATH
+		export $JAVA_HOME
 	elif [ ! -z $current_java_home ]; then
 		if [ ! -f $current_java_home/bin/java ]; then
 			echo "Incorrect Java Home path; $current_java_home/bin/java not found"		
 			all_reqs_met=0
 		fi
+		JAVA_HOME=$current_java_home
+		export $JAVA_HOME
 	else
 		#TODO:Install java and set java home
 		echo "JAVA_HOME not set, either set in shell or provide java path to script"		
@@ -298,6 +299,7 @@ check_config () {
 			all_reqs_met=0
 		fi
 		ANDROID_HOME=$ANDROID_HOME_PATH
+		export $ANDROID_HOME
 		ADB=$ANDROID_HOME/platform-tools/adb
 	elif [ -z $current_android_home ]; then
 		echo "ANDROID_HOME not set, make sure it is in the path or specify path via -a|--androidhomepath"
@@ -336,6 +338,7 @@ check_config () {
 		exit 1
 	fi
 
+	echo "Done checking config: JAVA_HOME:$JAVA_HOME, ANDROID_HOME:$ANDROID_HOME"
 	if [ $CHECK_CONFIG_ONLY -gt 0 ]; then
 		echo "Configs are all good. You can run the tests"
 		exit 0
@@ -343,13 +346,17 @@ check_config () {
 }
 
 run_tests_one_iteration () {
+
+	echo "CHECKED:2 CONFIG: JAVA_HOME:$JAVA_HOME ANDROID_SDK:$ANDROID_HOME" 
+
     cd $PATH_TO_REPO_DIR
 	#git changed, do a pull and run tests
     git_pull
 
     #build the tests
-    #build_test_targets
-
+    build_test_targets
+	
+	echo "CHECKED:4 CONFIG: JAVA_HOME:$JAVA_HOME ANDROID_SDK:$ANDROID_HOME" 
     #Check emulator list exists
     if [ -z $EMULATOR_LIST_FILE ]; then
 		echo "Generating emulator test file"
@@ -539,7 +546,9 @@ export_display
 
 #Check config first
 check_config
- 
+
+echo "CHECKED:1 CONFIG: JAVA_HOME:$JAVA_HOME ANDROID_SDK:$ANDROID_HOME" 
+
 #Starting tests
 #set up the dirs
 one_time_setup
