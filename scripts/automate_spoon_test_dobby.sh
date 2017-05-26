@@ -3,7 +3,7 @@
 # Usage info
 show_help() {
 cat << EOF
-        Usage: ${0##*/} [-hvr] [-d TESTDIR] [-i MIN_TEST_INTERVAL_MINS] [-g githubrepo]
+        Usage: ${0##*/} [-hvrc] [-d TESTDIR] [-i MIN_TEST_INTERVAL_MINS] [-p GENYMOTION_PLAYER_PATH] [-k JAVA_HOME_PATH] [-b VBOX_MANAGE_PATH] [-a ANDROID_HOME_PATH] [-f EMULATOR_LIST] [-e EMAIL_TO_NOTIFY] [-o OUTPUT_DIR] [-n MAX_VMS_TO_RUN] [-g GITHUB_CLONE_URL] [-u RESULT_URL]
 
         -h|--help display this help and exit
         -r|--repeat   check for git updates after interval and run tests if new updates (default: run once)
@@ -13,11 +13,14 @@ cat << EOF
         -b|--vboxmanagepath Path to virtual box installtion (Make sure virtualbox/bin/VBoxManage exist, only needed if VBoxManage is NOT in your path)
         -a|--androidhomepath Android Home path (Only needed if ANDROID_HOME is not set)
         -i|--interval min interval between tests in mins(default is 10 mins)
-        -g|--github   github clone repo (default:dobby-android -- https://github.com/InceptAi/dobby-android.git)
-        -f|--emulator_file_list   github clone repo (default:dobby-android -- https://github.com/InceptAi/dobby-android.git)
+        -g|--github github clone repo (default:dobby-android -- https://github.com/InceptAi/dobby-android.git)
+        -f|--emulator_file_list (Optional -- specify explicitly which vms to use) 
         -v|--verbose  verbose mode. Can be used multiple times for increased verbosity.
         -c|--checkconfig            check config and exit.
         -e|--emailtonotify   email address to notify (make sure your mail is set up).
+        -o|--outputdir  Output dir to copy all the results
+        -n|--numvms Number of vms to run test on (def: 1, will pick top n from the list returned by VBoxManage)
+        -u|--resulturl URL for viewing results (default: 0.0.0.0:5187/ -- if running server.py in the repo).
 EOF
 }
 
@@ -88,14 +91,22 @@ install_app () {
 
 notify_failure () {
 	echo "BUILD FAILED"
-	BODY="Gradle build failed: See the results at $DOBBY_SERVER_HOME/spoon for UI test results. You can also just run the server like python $DOBBY_SERVER_HOME/server.py and see the results at http://0.0.0.0/index.html"
+	if [ -z $RESULT_URL ]; then
+		BODY="Gradle build failed: You can also just run the server like python $DOBBY_SERVER_HOME/server.py and see the results at http://0.0.0.0/index.html"
+	else
+		BODY="Gradle build failed: See the results $RESULT_URL for UI test results."
+	fi
 	ATTACHMENT="/tmp/gradle.log"
 	echo ${BODY}| mail -s "Gradle Build Failed for WifiDoc" -A ${ATTACHMENT} $EMAIL_TO_NOTIFY
 }
 
 notify_success () {
 	echo "BUILD SUCCEEDED"
-	BODY="Gradle build succeeded: See the results at $DOBBY_SERVER_HOME/spoon for UI test results. You can also just run the server like python $DOBBY_SERVER_HOME/server.py and see the results at http://0.0.0.0/index.html"
+	if [ -z $RESULT_URL ]; then
+		BODY="Gradle build succeeded: You can also just run the server like python $DOBBY_SERVER_HOME/server.py and see the results at http://0.0.0.0/index.html"
+	else
+		BODY="Gradle build succeeded: See the results $RESULT_URL for UI test results."
+	fi
 	echo ${BODY}| mail -s "Gradle Build Success for WifiDoc" $EMAIL_TO_NOTIFY
 }
 
@@ -181,6 +192,7 @@ run_emulator_tests () {
     rm -rf $DOBBY_SERVER_HOME/spoon/wifidoc
     clean_slate
     num_lines=`wc -l $EMULATOR_LIST_FILE | cut -d ' ' -f1`
+	vm_number=0
     for i in $(seq 1 $num_lines); do
    	    line=`sed -n ${i}p $EMULATOR_LIST_FILE`
         emulator_info="$line"
@@ -233,6 +245,12 @@ run_emulator_tests () {
         mkdir -p $DOBBY_SERVER_HOME/spoon/wifidoc/$api_level
         cp -r $OUTPUT_PATH/debug/* $DOBBY_SERVER_HOME/spoon/wifidoc/$api_level/
         
+		if [ ! -z $OUTPUT_DIR_TO_SERVE_FILES ]; then
+			echo "$OUTPUT_DIR_TO_SERVE_FILES is specified, so copying results there"
+			rm -rf $OUTPUT_DIR_TO_SERVE_FILES/wifidoc
+			mkdir -p $OUTPUT_DIR_TO_SERVE_FILES/wifidoc/$api_level
+        	cp -r $OUTPUT_PATH/debug/* $OUTPUT_DIR_TO_SERVE_FILES/wifidoc/$api_level/
+		fi
 
         #Repeat for different emulators
         uninstall_app
@@ -242,6 +260,13 @@ run_emulator_tests () {
         sleep 10
         
         clean_slate
+		
+		#Check if we need to run more
+        vm_number=$((vm_number + 1))
+		if [ $vm_number -ge $MAX_VMS_TO_RUN ]; then
+			echo "Reached max vm limit. Returning"
+			return 0
+		fi
         echo "Done sleeping, onto the next one"
     done
 }
@@ -255,7 +280,7 @@ build_test_targets () {
     $GRADLEW_PATH/gradlew clean build assembleDebug >> /tmp/gradle.log
     if [ $? -gt 0 ]; then
         notify_failure
-        exit 1
+        return 1
     fi
 }
 
@@ -276,14 +301,14 @@ check_config () {
 			all_reqs_met=0
 		fi
 		JAVA_HOME=$JAVA_HOME_PATH
-		export $JAVA_HOME
+		#export $JAVA_HOME
 	elif [ ! -z $current_java_home ]; then
 		if [ ! -f $current_java_home/bin/java ]; then
 			echo "Incorrect Java Home path; $current_java_home/bin/java not found"		
 			all_reqs_met=0
 		fi
 		JAVA_HOME=$current_java_home
-		export $JAVA_HOME
+		#export $JAVA_HOME
 	else
 		#TODO:Install java and set java home
 		echo "JAVA_HOME not set, either set in shell or provide java path to script"		
@@ -299,7 +324,7 @@ check_config () {
 			all_reqs_met=0
 		fi
 		ANDROID_HOME=$ANDROID_HOME_PATH
-		export $ANDROID_HOME
+		#export $ANDROID_HOME
 		ADB=$ANDROID_HOME/platform-tools/adb
 	elif [ -z $current_android_home ]; then
 		echo "ANDROID_HOME not set, make sure it is in the path or specify path via -a|--androidhomepath"
@@ -332,6 +357,12 @@ check_config () {
 		all_reqs_met=0
 	fi
 
+	if [ ! -z $EMULATOR_LIST_FILE ]; then
+	    if [ ! -f $EMULATOR_LIST_FILE ]; then
+        	echo "Emulator list file not found at $EMULATOR_LIST_FILE"
+        	all_reqs_met=0
+		fi
+    fi
 
 	if [ $all_reqs_met -eq 0 ]; then
 		echo "Fix issues with script pre-reqs. And then restart"
@@ -363,20 +394,8 @@ run_tests_one_iteration () {
 		generate_emulator_list_file
     fi
 
-    if [ ! -f $EMULATOR_LIST_FILE ]; then
-        echo "Emulator list file not found"
-        exit 0
-    fi
-
-    if [ -z $GENYMOTION_PLAYER ]; then
-        echo "Genymotion player path not defined, can't run emulator tests"
-        exit 0
-    fi
-
-
     #run the tests
     run_emulator_tests
-
 
     if [ $should_report_failure -gt 0 ]; then
         echo "notify_failure"
@@ -407,6 +426,9 @@ ANDROID_HOME_PATH=
 ADB=
 JAVA_HOME_PATH=
 EMAIL_TO_NOTIFY=hello@obiai.tech
+OUTPUT_DIR_TO_SERVE_FILES=
+MAX_VMS_TO_RUN=1
+RESULT_URL=
 
 if [ "$#" -lt 1 ]; then
     show_help
@@ -500,7 +522,33 @@ while :; do
                 exit 1
             fi
             ;;
- 
+         -o|--outputdir)       # Takes an option argument, ensuring it has been specified.
+            if [ -n "$2" ]; then
+                OUTPUT_DIR_TO_SERVE_FILES=$2
+                shift
+            else
+                printf 'ERROR: "--outputdir|-o" requires a non-empty option argument.\n' >&2
+                exit 1
+            fi
+            ;;
+         -n|--numvms)       # Takes an option argument, ensuring it has been specified.
+            if [ -n "$2" ]; then
+                MAX_VMS_TO_RUN=$2
+                shift
+            else
+                printf 'ERROR: "--numvms|-n" requires a non-empty option argument.\n' >&2
+                exit 1
+            fi
+            ;;
+         -u|--resulturl)       # Takes an option argument, ensuring it has been specified.
+            if [ -n "$2" ]; then
+                RESULT_URL=$2
+                shift
+            else
+                printf 'ERROR: "--resulturl|-u" requires a non-empty option argument.\n' >&2
+                exit 1
+            fi
+            ;;
           -v|--verbose)
             VERBOSE=$((VERBOSE + 1)) # Each -v argument adds 1 to verbosity.
             ;;
@@ -522,8 +570,6 @@ while :; do
     esac
     shift
 done
-
-
 
 GITHUB_REPO_NAME=`echo $GITHUB_REPO | rev | cut -d "/" -f 1 | rev | cut -d "." -f 1`
 PATH_TO_REPO_DIR="$TEST_DIR/$GITHUB_REPO_NAME"
