@@ -392,7 +392,6 @@ export_display () {
 }
 
 echo "Android home is $ANDROID_HOME"
-echo "Android SDK home is $ANDROID_SDK_HOME"
 
 # Reset all variables that might be set
 GENYMOTION_PLAYER=
