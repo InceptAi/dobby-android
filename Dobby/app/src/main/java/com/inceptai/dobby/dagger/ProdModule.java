@@ -4,6 +4,7 @@ import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.NetworkLayer;
 import com.inceptai.dobby.ai.DobbyAi;
+import com.inceptai.dobby.database.FailureDatabaseWriter;
 import com.inceptai.dobby.database.InferenceDatabaseWriter;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 
@@ -50,8 +51,9 @@ public class ProdModule {
     @Provides
     public DobbyAi providesDobbyAi(DobbyApplication application,
                                    DobbyThreadpool threadpool,
-                                   InferenceDatabaseWriter inferenceDatabaseWriter) {
-        DobbyAi dobbyAi = new DobbyAi(threadpool, inferenceDatabaseWriter, application);
+                                   InferenceDatabaseWriter inferenceDatabaseWriter,
+                                   FailureDatabaseWriter failureDatabaseWriter) {
+        DobbyAi dobbyAi = new DobbyAi(threadpool, inferenceDatabaseWriter, failureDatabaseWriter, application);
         application.getProdComponent().inject(dobbyAi);
         return dobbyAi;
     }
