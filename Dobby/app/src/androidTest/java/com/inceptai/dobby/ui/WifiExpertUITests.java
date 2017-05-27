@@ -14,6 +14,7 @@ import android.view.ViewParent;
 import com.inceptai.dobby.MainActivity;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.utils.Utils;
+import com.squareup.spoon.Spoon;
 
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -78,7 +79,7 @@ public class WifiExpertUITests {
     }
 
     private void checkIdleState(boolean initialAppLaunch) {
-
+        Spoon.screenshot(getActivity(), "idle_state");
         checkSlowInternetCheckWifiAndRunSpeedTestButtons();
 
         if (initialAppLaunch) {
@@ -97,6 +98,8 @@ public class WifiExpertUITests {
     }
 
     private void checkShowingWifiAnalysisState() {
+        Spoon.screenshot(getActivity(), "wifi_analysis_state");
+
         ViewInteraction frameLayout = onView(withId(R.id.net_cardview));
         frameLayout.check(matches(isDisplayed()));
 
@@ -126,6 +129,7 @@ public class WifiExpertUITests {
     }
 
     private void checkRunningDownloadSpeedTestState() {
+        Spoon.screenshot(getActivity(), "running_download_test_state");
         onView(allOf(withParent(withId(R.id.cg_download)), withId(R.id.gauge_tv))).check(matches(withText(not(containsString(Utils.ZERO_POINT_ZERO)))));
         onView(allOf(withParent(withId(R.id.cg_upload)), withId(R.id.gauge_tv))).check(matches(withText(containsString(Utils.ZERO_POINT_ZERO))));
 
@@ -151,6 +155,7 @@ public class WifiExpertUITests {
     }
 
     private void checkCancelledTestState() {
+        Spoon.screenshot(getActivity(), "cancelled_state");
 
         ViewInteraction textView4 = onView(
                 allOf(withId(R.id.user_text_tv), withText("Cancel"),
@@ -178,6 +183,8 @@ public class WifiExpertUITests {
     }
 
     private void checkShowingSpeedTestAnalysisState() {
+        Spoon.screenshot(getActivity(), "speed_test_analysis_state");
+
         ViewInteraction frameLayout2 = onView(withId(R.id.bandwidth_results_cardview));
         frameLayout2.check(matches(isDisplayed()));
 
@@ -206,6 +213,7 @@ public class WifiExpertUITests {
     }
 
     private void checkShowingDetailedSuggestionState () {
+        Spoon.screenshot(getActivity(), "detailed_suggestion_state");
         checkSlowInternetCheckWifiAndRunSpeedTestButtons();
     }
 
@@ -217,8 +225,37 @@ public class WifiExpertUITests {
         }
     }
 
+    private void checkDecliningFullSpeedTestState () {
+        Spoon.screenshot(getActivity(), "declining_speed_test_state");
+        ViewInteraction textView2 = onView(
+                allOf(withId(R.id.user_text_tv), withText("No"),
+                        childAtPosition(
+                                childAtPosition(
+                                        withId(R.id.user_chat_layout),
+                                        1),
+                                0),
+                        isDisplayed()));
+        textView2.check(matches(withText("No")));
+        checkSlowInternetCheckWifiAndRunSpeedTestButtons();
+
+        ViewInteraction textView = onView(
+                allOf(withId(R.id.dobbyTextTv), withText("Ok no worries. Let me know if you want to run tests at any time."),
+                        childAtPosition(
+                                allOf(withId(R.id.dobbyChatLayout),
+                                        childAtPosition(
+                                                withId(R.id.chatRv),
+                                                4)),
+                                1),
+                        isDisplayed()));
+        textView.check(matches(withText("Ok no worries. Let me know if you want to run tests at any time.")));
+
+        checkSlowInternetCheckWifiAndRunSpeedTestButtons();
+    }
+
     private void checkOneFullRun (boolean initialAppLaunch) {
+
         checkIdleState(initialAppLaunch);
+
         //Press slow internet
         ViewInteraction button4 = onView(
                 allOf(withText("Slow internet"),
@@ -355,29 +392,7 @@ public class WifiExpertUITests {
 
         safeSleep(1000);
 
-        ViewInteraction textView2 = onView(
-                allOf(withId(R.id.user_text_tv), withText("No"),
-                        childAtPosition(
-                                childAtPosition(
-                                        withId(R.id.user_chat_layout),
-                                        1),
-                                0),
-                        isDisplayed()));
-        textView2.check(matches(withText("No")));
-        checkSlowInternetCheckWifiAndRunSpeedTestButtons();
-
-        ViewInteraction textView = onView(
-                allOf(withId(R.id.dobbyTextTv), withText("Ok no worries. Let me know if you want to run tests at any time."),
-                        childAtPosition(
-                                allOf(withId(R.id.dobbyChatLayout),
-                                        childAtPosition(
-                                                withId(R.id.chatRv),
-                                                4)),
-                                1),
-                        isDisplayed()));
-        textView.check(matches(withText("Ok no worries. Let me know if you want to run tests at any time.")));
-
-        checkSlowInternetCheckWifiAndRunSpeedTestButtons();
+        checkDecliningFullSpeedTestState();
     }
 
     private static Matcher<View> childAtPosition(
