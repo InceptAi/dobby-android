@@ -388,8 +388,9 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         } else if (uiState == UI_STATE_SHOW_BW_GAUGE) {
             bwGaugeLayout.setVisibility(View.VISIBLE);
         }
-
-        rootView.requestLayout();
+        if (rootView != null) {
+            rootView.requestLayout();
+        }
         chatRv.requestLayout();
     }
 
