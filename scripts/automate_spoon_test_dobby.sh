@@ -58,11 +58,11 @@ check_git () {
 	if [ $LOCAL = $REMOTE ]; then
     	echo "up-to-date"
 	elif [ $LOCAL = $BASE ]; then
-    	echo "Need to pull"
+    	echo "need-to-pull"
 	elif [ $REMOTE = $BASE ]; then
-    	echo "Need to push"
+    	echo "need-to-push"
 	else
-    	echo "Diverged"
+    	echo "diverged"
 	fi
 }
 
@@ -178,7 +178,8 @@ wait_for_git_changes () {
 	git_status="up-to-date"
 	while [[ "$git_status" == "up-to-date" ]]; do
 		sleep ${TEST_INTERVAL}m #Sleep for interval mins
-		git_status=check_git
+		git_status=`check_git`
+		echo "New git status is $git_status"
 	done
 }
 
