@@ -272,7 +272,7 @@ run_emulator_tests () {
             should_report_failure=1
 			return
 		fi
-		echo "Running ./gradlew $SPOON_TASK -Dspoon.test.class=$TEST_CLASS --stacktrace >>  /tmp/gradle.log"
+		echo "./gradlew $SPOON_TASK -PspoonClassName=$TEST_CLASS --stacktrace >>  /tmp/gradle.log"
 		#./gradlew $SPOON_TASK -Dspoon.test.class=$TEST_CLASS --stacktrace >>  /tmp/gradle.log
 		./gradlew $SPOON_TASK -PspoonClassName=$TEST_CLASS --stacktrace >>  /tmp/gradle.log
         if [ $? -gt 0 ]; then
