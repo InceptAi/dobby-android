@@ -5,9 +5,9 @@ show_help() {
 cat << EOF
         Usage: ${0##*/} [-hvrc] [-d TESTDIR] [-i MIN_TEST_INTERVAL_MINS] [-p
         GENYMOTION_PLAYER_PATH] [-k JAVA_HOME_PATH] [-b VBOX_MANAGE_PATH] [-a
-        ANDROID_HOME_PATH] [-f EMULATOR_LIST] [-e EMAIL_TO_NOTIFY] [-o
+        ANDROID_HOME_PATH] [-f EMULATOR_LIST] [-e EMAILS_TO_NOTIFY] [-o
         OUTPUT_DIR] [-n MAX_VMS_TO_RUN] [-g GITHUB_CLONE_URL] [-u RESULT_URL]
-        [-z BUILD_FLAVOR]
+        [-z BUILD_FLAVORS]
 
         -h|--help display this help and exit
         -r|--repeat   check for git updates after interval and run tests if new updates (default: run once)
@@ -21,12 +21,23 @@ cat << EOF
         -f|--emulator_file_list (Optional -- specify explicitly which vms to use) 
         -v|--verbose  verbose mode. Can be used multiple times for increased verbosity.
         -c|--checkconfig            check config and exit.
-        -e|--emailtonotify   email address to notify (make sure your mail is set up).
+        -e|--emailstonotify   email address to notify (make sure your mail is set up).
         -o|--outputdir  Output dir to copy all the results
         -n|--numvms Number of vms to run test on (def: 1, will pick top n from the list returned by VBoxManage)
         -u|--resulturl URL for viewing results (default: 0.0.0.0:5187/ -- if running server.py in the repo).
-        -z|--buildflavor (default:wifidoc)
+        -z|--buildflavors (comma separated. default:wifidoc,dobby)
 EOF
+}
+
+generate_space_separated_emails () {
+	emails_to_separate=$1
+	IFS=',' read -r -a email_list <<< "$emails_to_separate"
+	emails_space_sep=""
+	for email_id in "${email_list[@]}"
+	do
+		emails_space_sep="$emails_space_sep $email_id"
+	done
+	echo "$emails_space_sep"	
 }
 
 verbose_echo () {
@@ -81,26 +92,31 @@ check_git () {
 }
 
 uninstall_app () {
+	current_build_flavor=$1
     #uninstall the apks from the device
-    $ADB shell pm uninstall com.inceptai.dobby.${BUILD_FLAVOR}.debug >> /tmp/gradle.log
-    $ADB shell pm uninstall com.inceptai.dobby.${BUILD_FLAVOR}.debug.test >> /tmp/gradle.log
+    $ADB shell pm uninstall com.inceptai.dobby.${current_build_flavor}.debug >> /tmp/gradle.log
+    $ADB shell pm uninstall com.inceptai.dobby.${current_build_flavor}.debug.test >> /tmp/gradle.log
 }
 
 install_app () {
-    if [ $# -ne 1 ]; then
-		echo "Need API level for installation"
+    if [ $# -ne 2 ]; then
+		echo "Need API level, BUILD flavor for installation"
 		exit
 	fi
 	api_level=$1
-    #install the apks on the target device
-    $ADB push $DOBBY_PATH/$REL_PATH_DEBUG_APK /data/local/tmp/com.inceptai.dobby.${BUILD_FLAVOR}.debug >> /tmp/gradle.log
+	current_build_flavor=$2
+	relavtive_path_debug_apk="app/build/outputs/apk/app-${current_build_flavor}-debug.apk"
+	relative_path_instrumentation_apk="app/build/outputs/apk/app-${current_build_flavor}-debug-androidTest.apk"
+	#install the apks on the target device
+	
+    $ADB push $DOBBY_PATH/$relavtive_path_debug_apk /data/local/tmp/com.inceptai.dobby.${current_build_flavor}.debug >> /tmp/gradle.log
 	if [ $api_level -lt 23 ]; then
-		$ADB shell pm install -r "/data/local/tmp/com.inceptai.dobby.${BUILD_FLAVOR}.debug" >> /tmp/gradle.log
+		$ADB shell pm install -r "/data/local/tmp/com.inceptai.dobby.${current_build_flavor}.debug" >> /tmp/gradle.log
 	else
-    	$ADB shell pm install -r -g "/data/local/tmp/com.inceptai.dobby.${BUILD_FLAVOR}.debug" >> /tmp/gradle.log
+    	$ADB shell pm install -r -g "/data/local/tmp/com.inceptai.dobby.${current_build_flavor}.debug" >> /tmp/gradle.log
 	fi
-    $ADB push $DOBBY_PATH/$REL_PATH_INSTRUMENTATION_APK /data/local/tmp/com.inceptai.dobby.${BUILD_FLAVOR}.debug.test >> /tmp/gradle.log
-    $ADB shell pm install -r "/data/local/tmp/com.inceptai.dobby.${BUILD_FLAVOR}.debug.test" >> /tmp/gradle.log
+    $ADB push $DOBBY_PATH/$relative_path_instrumentation_apk /data/local/tmp/com.inceptai.dobby.${current_build_flavor}.debug.test >> /tmp/gradle.log
+    $ADB shell pm install -r "/data/local/tmp/com.inceptai.dobby.${current_build_flavor}.debug.test" >> /tmp/gradle.log
 }
 
 notify_failure () {
@@ -111,7 +127,9 @@ notify_failure () {
 		BODY="Gradle build failed: See the results $RESULT_URL for UI test results."
 	fi
 	ATTACHMENT="/tmp/gradle.log"
-	echo ${BODY}| mail -s "Gradle Build Failed for WifiDoc" -A ${ATTACHMENT} $EMAIL_TO_NOTIFY
+	emails_to_send=`generate_space_separated_emails $EMAILS_TO_NOTIFY`
+	echo "Running echo ${BODY}| mail -s \"Gradle Build Failed for WifiDoc\" -A ${ATTACHMENT} $emails_to_send"
+	echo ${BODY}| mail -s "Gradle Build Failed for WifiDoc" -A ${ATTACHMENT} $emails_to_send
 }
 
 notify_success () {
@@ -121,7 +139,9 @@ notify_success () {
 	else
 		BODY="Gradle build succeeded: See the results $RESULT_URL for UI test results."
 	fi
-	echo ${BODY}| mail -s "Gradle Build Success for WifiDoc" $EMAIL_TO_NOTIFY
+	emails_to_send=`generate_space_separated_emails $EMAILS_TO_NOTIFY`
+	echo "echo ${BODY}| mail -s \"Gradle Build Success for WifiDoc\" $emails_to_send"
+	echo ${BODY}| mail -s "Gradle Build Success for WifiDoc" $emails_to_send
 }
 
 wait_for_emulator () {
@@ -198,13 +218,13 @@ wait_for_git_changes () {
 }
 
 run_emulator_tests () {
-
+	current_build_flavor=$1
     echo "List of emulators:"
     cat $EMULATOR_LIST_FILE
     should_report_failure=0
 
 
-    rm -rf $DOBBY_SERVER_HOME/spoon/${BUILD_FLAVOR}
+    rm -rf $DOBBY_SERVER_HOME/spoon/${current_build_flavor}
     clean_slate
     num_lines=`wc -l $EMULATOR_LIST_FILE | cut -d ' ' -f1`
 	vm_number=0
@@ -243,29 +263,29 @@ run_emulator_tests () {
         sleep 15
 
         #Uninstall the app
-        uninstall_app
+        uninstall_app $current_build_flavor
 
         #Install the app
-        install_app $api_level
+        install_app $api_level $current_build_flavor
 
         #Run the test
 		cd $GRADLEW_PATH
 		echo $PWD
 
 		#Run unit tests
-        UNIT_TEST_TASK=`./gradlew tasks | grep -i test${BUILD_FLAVOR}DebugUnitTest | cut -d " " -f 1`
+        UNIT_TEST_TASK=`./gradlew tasks | grep -i test${current_build_flavor}DebugUnitTest | cut -d " " -f 1`
 		./gradlew $UNIT_TEST_TASK --stacktrace >>  /tmp/gradle.log
         if [ $? -gt 0 ]; then
             should_report_failure=1
         fi
 		
 		#Run espresso tests
-        SPOON_TASK=`./gradlew tasks | grep -i spoon${BUILD_FLAVOR}DebugAndroidTest | cut -d " " -f 1`
+        SPOON_TASK=`./gradlew tasks | grep -i spoon${current_build_flavor}DebugAndroidTest | cut -d " " -f 1`
 		echo "RUNNING gradle task $SPOON_TASK"
 		TEST_CLASS=""
-		if [ $BUILD_FLAVOR = "dobby" ]; then
+		if [ $current_build_flavor = "dobby" ]; then
 			TEST_CLASS="com.inceptai.dobby.ui.WifiExpertUITests"
-		elif [ $BUILD_FLAVOR = "wifidoc" ]; then
+		elif [ $current_build_flavor = "wifidoc" ]; then
 			TEST_CLASS="com.inceptai.dobby.ui.CheckMainScreenWifiDocTest"
 		else
 			echo "UNSUPPORTED BUILD FLAVOR FOR TESTS, FAILING" >> /tmp/gradle.log
@@ -280,18 +300,19 @@ run_emulator_tests () {
         fi
 
         #Store the output in a diff location
-        mkdir -p $DOBBY_SERVER_HOME/spoon/${BUILD_FLAVOR}/$api_level
-        cp -r $OUTPUT_PATH/debug/* $DOBBY_SERVER_HOME/spoon/${BUILD_FLAVOR}/$api_level/
+		output_path_spoon_results="$PATH_TO_REPO_DIR/Dobby/app/build/spoon/${current_build_flavor}"
+        mkdir -p $DOBBY_SERVER_HOME/spoon/${current_build_flavor}/$api_level
+        cp -r $output_path_spoon_results/debug/* $DOBBY_SERVER_HOME/spoon/${current_build_flavor}/$api_level/
         
 		if [ ! -z $OUTPUT_DIR_TO_SERVE_FILES ]; then
 			echo "$OUTPUT_DIR_TO_SERVE_FILES is specified, so copying results there"
-			rm -rf $OUTPUT_DIR_TO_SERVE_FILES/${BUILD_FLAVOR}
-			mkdir -p $OUTPUT_DIR_TO_SERVE_FILES/${BUILD_FLAVOR}/$api_level
-        	cp -r $OUTPUT_PATH/debug/* $OUTPUT_DIR_TO_SERVE_FILES/${BUILD_FLAVOR}/$api_level/
+			rm -rf $OUTPUT_DIR_TO_SERVE_FILES/${current_build_flavor}
+			mkdir -p $OUTPUT_DIR_TO_SERVE_FILES/${current_build_flavor}/$api_level
+        	cp -r $output_path_spoon_results/debug/* $OUTPUT_DIR_TO_SERVE_FILES/${current_build_flavor}/$api_level/
 		fi
 
         #Repeat for different emulators
-        uninstall_app
+        uninstall_app $current_build_flavor
         
         #Kill the emulator
         kill $EMULATOR_PID
@@ -314,8 +335,7 @@ build_test_targets () {
 	echo "CHECKED:3 CONFIG: JAVA_HOME:$JAVA_HOME ANDROID_SDK:$ANDROID_HOME" 
     cd $GRADLEW_PATH
     echo "Starting gradle build" > /tmp/gradle.log
-    #./gradlew clean assembleDebug assembleAndroidTest >> /tmp/gradle.log
-    $GRADLEW_PATH/gradlew clean build assembleDebug assembleAndroidTest >> /tmp/gradle.log
+    ./gradlew clean build assembleDebug assembleAndroidTest >> /tmp/gradle.log
     if [ $? -gt 0 ]; then
         notify_failure
         return 1
@@ -415,10 +435,10 @@ check_config () {
 }
 
 run_tests_one_iteration () {
-
+	current_build_flavor=$1
 	echo "CHECKED:2 CONFIG: JAVA_HOME:$JAVA_HOME ANDROID_SDK:$ANDROID_HOME" 
-
-    cd $PATH_TO_REPO_DIR
+    
+	cd $PATH_TO_REPO_DIR
 	#git changed, do a pull and run tests
     git_pull
 
@@ -433,7 +453,7 @@ run_tests_one_iteration () {
     fi
 
     #run the tests
-    run_emulator_tests
+    run_emulator_tests $current_build_flavor
 
     if [ $should_report_failure -gt 0 ]; then
         echo "notify_failure"
@@ -448,7 +468,16 @@ export_display () {
 	export DISPLAY=:0 
 }
 
-echo "Android home is $ANDROID_HOME"
+run_tests_one_iteration_all_flavors () {
+	IFS=',' read -r -a build_flavor_list <<< "$BUILD_FLAVORS"
+	for build_flavor in "${build_flavor_list[@]}"
+	do
+    	echo "Running for $build_flavor"
+		run_tests_one_iteration $build_flavor
+	done
+}
+
+
 
 # Reset all variables that might be set
 GENYMOTION_PLAYER=
@@ -463,11 +492,11 @@ VBOX_MANAGE=
 ANDROID_HOME_PATH=
 ADB=
 JAVA_HOME_PATH=
-EMAIL_TO_NOTIFY=hello@obiai.tech
+EMAILS_TO_NOTIFY=hello@obiai.tech
 OUTPUT_DIR_TO_SERVE_FILES=
 MAX_VMS_TO_RUN=1
 RESULT_URL=
-BUILD_FLAVOR="wifidoc"
+BUILD_FLAVORS="wifidoc,dobby"
 
 if [ "$#" -lt 1 ]; then
     show_help
@@ -552,12 +581,12 @@ while :; do
                 exit 1
             fi
             ;;
-          -e|--emailtonotify)       # Takes an option argument, ensuring it has been specified.
+          -e|--emailstonotify)       # Takes an option argument, ensuring it has been specified.
             if [ -n "$2" ]; then
-                EMAIL_TO_NOTIFY=$2
+                EMAILS_TO_NOTIFY=$2
                 shift
             else
-                printf 'ERROR: "--emailtonotify|-e" requires a non-empty option argument.\n' >&2
+                printf 'ERROR: "--emailstonotify|-e" requires a non-empty option argument.\n' >&2
                 exit 1
             fi
             ;;
@@ -590,7 +619,7 @@ while :; do
             ;;
           -z|--buildflavor)       # Takes an option argument, ensuring it has been specified.
             if [ -n "$2" ]; then
-                BUILD_FLAVOR=$2
+                BUILD_FLAVORS=$2
                 shift
             else
                 printf 'ERROR: "--buildflavor|-z" requires a non-empty option argument.\n' >&2
@@ -629,10 +658,7 @@ ARUNESH_EMAIL="arunesh@obiai.tech"
 VIVEK_EMAIL="vivek@obiai.tech"
 BODY="Test Email"
 SUBJECT="Gradle Build"
-REL_PATH_DEBUG_APK="app/build/outputs/apk/app-${BUILD_FLAVOR}-debug.apk"
-REL_PATH_INSTRUMENTATION_APK="app/build/outputs/apk/app-${BUILD_FLAVOR}-debug-androidTest.apk"
 MIN_API_LEVEL_TO_USE_G_INSTALL_OPTION=23
-OUTPUT_PATH="$PATH_TO_REPO_DIR/Dobby/app/build/spoon/${BUILD_FLAVOR}"
 
 #Export display, so it runs well if run from cron or ssh
 export_display
@@ -647,12 +673,14 @@ echo "CHECKED:1 CONFIG: JAVA_HOME:$JAVA_HOME ANDROID_SDK:$ANDROID_HOME"
 one_time_setup
 
 #One iteration of tests
-run_tests_one_iteration
+run_tests_one_iteration_all_flavors
+#run_tests_one_iteration $current_build_flavor
 
 while [ $REPEAT_TESTS -gt 0 ]; do 
     #Wait for more git changes
     wait_for_git_changes
 	
 	#Run another iteration
-	run_tests_one_iteration
+	run_tests_one_iteration_all_flavors
+	#run_tests_one_iteration $current_build_flavor
 done 
