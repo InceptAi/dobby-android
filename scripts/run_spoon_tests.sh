@@ -81,7 +81,7 @@ wait_for_emulator () {
 kill_emulators () {
 
 	#Killing the genymotion player
-	player_pids=`ps aux | grep player | tr -s " " | cut -d " " -f 2`
+	player_pids=`ps aux | grep player | grep -v "automate" | grep -v "spoon" | tr -s " " | cut -d " " -f 2`
 	if [ ! -z "$player_pids" ]; then
 		num_players=`echo $player_pids | wc -w`
 		for (( i=1; i<=$(( $num_players )); i++ ))

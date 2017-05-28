@@ -96,7 +96,7 @@ spoon {
     debug = true
 
     // To run a single test class
-    className = 'com.inceptai.dobby.ui.CheckMainScreenWifiDocTest'
+    //className = 'com.inceptai.dobby.ui.WifiExpertUITests'
 
     // To run a single method in TestCase
     //methodName = 'bwTestDefaultTest'
@@ -106,6 +106,14 @@ spoon {
 
     // To grant permissions to Android M >= devices */
     grantAllPermissions = true
+
+    if (project.hasProperty('spoonClassName')) {
+        className = project.spoonClassName
+
+        if (project.hasProperty('spoonMethodName')) {
+            methodName = project.spoonMethodName
+        }
+    }
 }
 
 dependencies {

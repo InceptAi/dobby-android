@@ -35,6 +35,15 @@ verbose_echo () {
     fi
 }
 
+# Define a timestamp function
+timestamp() {
+  date +"%Y-%m-%d-%H-%M-%S"
+}
+
+echo_ts () {
+    echo "$(timestamp) : $1"
+}
+
 gen_fake_keystore () {
 	cd $PATH_TO_REPO_DIR
 	mkdir ../Keystore
@@ -142,7 +151,7 @@ wait_for_emulator () {
 kill_emulators () {
 
 	#Killing the genymotion player
-	player_pids=`ps aux | grep -v "automate" | grep player | tr -s " " | cut -d " " -f 2`
+	player_pids=`ps aux | grep -v "automate" | grep -v "spoon" | grep player | tr -s " " | cut -d " " -f 2`
 	if [ ! -z "$player_pids" ]; then
 		num_players=`echo $player_pids | wc -w`
 		for (( i=1; i<=$(( $num_players )); i++ ))
@@ -184,7 +193,7 @@ wait_for_git_changes () {
 	while [[ "$git_status" == "up-to-date" ]]; do
 		sleep ${TEST_INTERVAL}m #Sleep for interval mins
 		git_status=`check_git`
-		echo "New git status is $git_status"
+		echo_ts "New git status is $git_status"
 	done
 }
 
@@ -242,7 +251,30 @@ run_emulator_tests () {
         #Run the test
 		cd $GRADLEW_PATH
 		echo $PWD
-        $GRADLEW_PATH/gradlew spoonWifidocDebugAndroidTest --stacktrace --info --debug >>  /tmp/gradle.log
+
+		#Run unit tests
+        UNIT_TEST_TASK=`./gradlew tasks | grep -i test${BUILD_FLAVOR}DebugUnitTest | cut -d " " -f 1`
+		./gradlew $UNIT_TEST_TASK --stacktrace >>  /tmp/gradle.log
+        if [ $? -gt 0 ]; then
+            should_report_failure=1
+        fi
+		
+		#Run espresso tests
+        SPOON_TASK=`./gradlew tasks | grep -i spoon${BUILD_FLAVOR}DebugAndroidTest | cut -d " " -f 1`
+		echo "RUNNING gradle task $SPOON_TASK"
+		TEST_CLASS=""
+		if [ $BUILD_FLAVOR = "dobby" ]; then
+			TEST_CLASS="com.inceptai.dobby.ui.WifiExpertUITests"
+		elif [ $BUILD_FLAVOR = "wifidoc" ]; then
+			TEST_CLASS="com.inceptai.dobby.ui.CheckMainScreenWifiDocTest"
+		else
+			echo "UNSUPPORTED BUILD FLAVOR FOR TESTS, FAILING" >> /tmp/gradle.log
+            should_report_failure=1
+			return
+		fi
+		echo "Running ./gradlew $SPOON_TASK -Dspoon.test.class=$TEST_CLASS --stacktrace >>  /tmp/gradle.log"
+		#./gradlew $SPOON_TASK -Dspoon.test.class=$TEST_CLASS --stacktrace >>  /tmp/gradle.log
+		./gradlew $SPOON_TASK -PspoonClassName=$TEST_CLASS --stacktrace >>  /tmp/gradle.log
         if [ $? -gt 0 ]; then
             should_report_failure=1
         fi
@@ -283,7 +315,7 @@ build_test_targets () {
     cd $GRADLEW_PATH
     echo "Starting gradle build" > /tmp/gradle.log
     #./gradlew clean assembleDebug assembleAndroidTest >> /tmp/gradle.log
-    $GRADLEW_PATH/gradlew clean build assembleDebug >> /tmp/gradle.log
+    $GRADLEW_PATH/gradlew clean build assembleDebug assembleAndroidTest >> /tmp/gradle.log
     if [ $? -gt 0 ]; then
         notify_failure
         return 1
