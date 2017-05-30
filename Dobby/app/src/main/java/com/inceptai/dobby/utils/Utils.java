@@ -779,6 +779,14 @@ public class Utils {
         return 12.5 * (input - 50.0) / 50.0 + 87.5;
     }
 
+    public static void safeSleep(int sleepTimeMs) {
+        try {
+            Thread.sleep(sleepTimeMs);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static class BandwidthValue {
         @BandwithTestCodes.TestMode
         public int mode;

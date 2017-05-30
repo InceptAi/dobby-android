@@ -40,7 +40,7 @@ import static org.hamcrest.Matchers.not;
 @LargeTest
 public class WifiExpertUITests {
 
-    private static final boolean ENABLE_SCREENSHOTS = false;
+    private static final boolean ENABLE_SCREENSHOTS = true;
 
     @Rule
     public ActivityTestRule<MainActivity> mActivityTestRule = new ActivityTestRule<>(MainActivity.class);
@@ -224,14 +224,6 @@ public class WifiExpertUITests {
         checkSlowInternetCheckWifiAndRunSpeedTestButtons();
     }
 
-    private void safeSleep(int sleepTimeMs) {
-        try {
-            Thread.sleep(sleepTimeMs);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
     private void checkDecliningFullSpeedTestState () {
         captureScreenshot("declining_speed_test_state");
         ViewInteraction textView2 = onView(
@@ -262,7 +254,7 @@ public class WifiExpertUITests {
                                 withParent(withId(R.id.scrollview_buttons))))));
         button4.perform(scrollTo(), click());
 
-        safeSleep(2000);
+        Utils.safeSleep(2000);
 
         checkShowingWifiAnalysisState();
 
@@ -273,11 +265,11 @@ public class WifiExpertUITests {
                                 withParent(withId(R.id.scrollview_buttons))))));
         button7.perform(scrollTo(), click());
 
-        safeSleep(2000);
+        Utils.safeSleep(1000);
 
         checkRunningDownloadSpeedTestState();
 
-        safeSleep(30000);
+        Utils.safeSleep(30000);
 
         checkShowingSpeedTestAnalysisState();
 
@@ -288,7 +280,7 @@ public class WifiExpertUITests {
                                 withParent(withId(R.id.scrollview_buttons))))));
         button11.perform(scrollTo(), click());
 
-        safeSleep(2000);
+        Utils.safeSleep(2000);
 
         checkShowingDetailedSuggestionState();
     }
@@ -299,7 +291,7 @@ public class WifiExpertUITests {
         // The recommended way to handle such scenarios is to use Espresso idling resources:
         // https://google.github.io/android-testing-support-library/docs/espresso/idling-resource/index.html
 
-        safeSleep(10000);
+        Utils.safeSleep(5000);
         checkOneFullRun(true);
     }
 
@@ -309,7 +301,7 @@ public class WifiExpertUITests {
         // The recommended way to handle such scenarios is to use Espresso idling resources:
         // https://google.github.io/android-testing-support-library/docs/espresso/idling-resource/index.html
 
-        safeSleep(10000);
+        Utils.safeSleep(5000);
 
         checkIdleState(true);
 
@@ -320,7 +312,7 @@ public class WifiExpertUITests {
                                 withParent(withId(R.id.scrollview_buttons))))));
         slowInternetButton.perform(scrollTo(), click());
 
-        safeSleep(2000);
+        Utils.safeSleep(2000);
 
         checkShowingWifiAnalysisState();
 
@@ -331,7 +323,7 @@ public class WifiExpertUITests {
                                 withParent(withId(R.id.scrollview_buttons))))));
         button7.perform(scrollTo(), click());
 
-        safeSleep(5000);
+        Utils.safeSleep(1000);
 
         checkRunningDownloadSpeedTestState();
 
@@ -341,7 +333,7 @@ public class WifiExpertUITests {
                                 withParent(withId(R.id.scrollview_buttons))))));
         cancelButton.perform(scrollTo(), click());
 
-        safeSleep(2000);
+        Utils.safeSleep(2000);
 
         checkCancelledTestState();
 
@@ -354,7 +346,7 @@ public class WifiExpertUITests {
         // The recommended way to handle such scenarios is to use Espresso idling resources:
         // https://google.github.io/android-testing-support-library/docs/espresso/idling-resource/index.html
 
-        safeSleep(10000);
+        Utils.safeSleep(5000);
 
         checkOneFullRun(true);
 
@@ -367,7 +359,7 @@ public class WifiExpertUITests {
         // The recommended way to handle such scenarios is to use Espresso idling resources:
         // https://google.github.io/android-testing-support-library/docs/espresso/idling-resource/index.html
 
-        safeSleep(5000);
+        Utils.safeSleep(5000);
 
         checkIdleState(true);
 
@@ -378,7 +370,7 @@ public class WifiExpertUITests {
                                 withParent(withId(R.id.scrollview_buttons))))));
         button4.perform(scrollTo(), click());
 
-        safeSleep(2000);
+        Utils.safeSleep(2000);
 
         checkShowingWifiAnalysisState();
 
@@ -389,7 +381,7 @@ public class WifiExpertUITests {
                                 withParent(withId(R.id.scrollview_buttons))))));
         button7.perform(scrollTo(), click());
 
-        safeSleep(1000);
+        Utils.safeSleep(1000);
 
         checkDecliningFullSpeedTestState();
     }

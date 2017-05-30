@@ -172,6 +172,7 @@ public class CheckMainScreenWifiDocTest {
 
     @Test
     public void bwTestDefaultTest() {
+        Utils.safeSleep(5000);
         checkIdleUIState();
         Spoon.screenshot(getActivity(), "initial_state");
         //Click the run tests button
@@ -193,6 +194,8 @@ public class CheckMainScreenWifiDocTest {
 
     @Test
     public void bwTestCancelTest() {
+        Utils.safeSleep(5000);
+
         Spoon.screenshot(getActivity(), "initial_state");
 
         checkIdleUIState();
@@ -214,6 +217,8 @@ public class CheckMainScreenWifiDocTest {
 
     @Test
     public void bwTestRerunAfterCancelTest() {
+        Utils.safeSleep(5000);
+
         Spoon.screenshot(getActivity(), "initial_state");
         checkIdleUIState();
 
@@ -255,6 +260,9 @@ public class CheckMainScreenWifiDocTest {
 
     @Test
     public void bwTestRunBackToBackTest() {
+        Utils.safeSleep(5000);
+
+
         Spoon.screenshot(getActivity(), "first_initial_state");
         checkIdleUIState();
         //Click the run tests button
