@@ -214,13 +214,13 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
             }
         });
 
-        View downloadView = fragmentView.findViewById(R.id.cg_download);
+        View downloadView = fragmentView.findViewById(R.id.cg_download_test);
         downloadCircularGauge = (CircularGauge) downloadView.findViewById(R.id.bw_gauge);
         downloadGaugeTv = (TextView) downloadView.findViewById(R.id.gauge_tv);
         downloadGaugeTitleTv = (TextView) downloadView.findViewById(R.id.title_tv);
         downloadGaugeTitleTv.setText(R.string.download_bw);
 
-        View uploadView = fragmentView.findViewById(R.id.cg_upload);
+        View uploadView = fragmentView.findViewById(R.id.cg_upload_test);
         uploadCircularGauge = (CircularGauge) uploadView.findViewById(R.id.bw_gauge);
         uploadGaugeTv = (TextView) uploadView.findViewById(R.id.gauge_tv);
         uploadGaugeTitleTv = (TextView) uploadView.findViewById(R.id.title_tv);

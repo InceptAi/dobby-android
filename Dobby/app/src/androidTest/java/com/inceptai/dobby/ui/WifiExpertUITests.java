@@ -130,8 +130,8 @@ public class WifiExpertUITests {
 
     private void checkRunningDownloadSpeedTestState() {
         Spoon.screenshot(getActivity(), "running_download_test_state");
-        onView(allOf(withParent(withId(R.id.cg_download)), withId(R.id.gauge_tv))).check(matches(withText(not(containsString(Utils.ZERO_POINT_ZERO)))));
-        onView(allOf(withParent(withId(R.id.cg_upload)), withId(R.id.gauge_tv))).check(matches(withText(containsString(Utils.ZERO_POINT_ZERO))));
+        onView(allOf(withParent(withId(R.id.cg_download_test)), withId(R.id.gauge_tv))).check(matches(withText(not(containsString(Utils.ZERO_POINT_ZERO)))));
+        onView(allOf(withParent(withId(R.id.cg_upload_test)), withId(R.id.gauge_tv))).check(matches(withText(containsString(Utils.ZERO_POINT_ZERO))));
 
         ViewInteraction linearLayout = onView(
                 allOf(withId(R.id.bw_gauge_ll),

@@ -32,7 +32,7 @@
             android:layout_width="wrap_content"
             android:layout_marginLeft="20dp"
             android:layout_marginStart="20dp"
-            android:id="@+id/cg_download"
+            android:id="@+id/cg_download_test"
             />
         <include
             layout="@layout/circular_gauge_with_text"
@@ -42,7 +42,7 @@
             android:layout_marginEnd="20dp"
             android:layout_marginStart="10dp"
             android:layout_width="wrap_content"
-            android:id="@+id/cg_upload"
+            android:id="@+id/cg_upload_test"
             />
     </LinearLayout>
 
