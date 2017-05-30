@@ -1,0 +1,1 @@
+~/Work/dobby-android/scripts/automate_spoon_test.sh -p /usr/local/bin/genymotion/player -d /home/vivek/Work/DobbyOnDemandTests -e vivek@obiai.tech,arunesh@obiai.tech -j /usr/local/android-studio/jre -a /home/vivek/Android/Sdk -o /home/vivek/Work/dobby-android/server/spoon -u http://dobby1743.duckdns.org:5187 -r -i 20

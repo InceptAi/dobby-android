@@ -120,6 +120,7 @@ install_app () {
 }
 
 notify_failure () {
+	current_build_flavor=$1
 	echo "BUILD FAILED"
 	if [ -z $RESULT_URL ]; then
 		BODY="Gradle build failed: You can also just run the server like python $DOBBY_SERVER_HOME/server.py and see the results at http://0.0.0.0/index.html"
@@ -128,11 +129,12 @@ notify_failure () {
 	fi
 	ATTACHMENT="/tmp/gradle.log"
 	emails_to_send=`generate_space_separated_emails $EMAILS_TO_NOTIFY`
-	echo "Running echo ${BODY}| mail -s \"Gradle Build Failed for WifiDoc\" -A ${ATTACHMENT} $emails_to_send"
-	echo ${BODY}| mail -s "Gradle Build Failed for WifiDoc" -A ${ATTACHMENT} $emails_to_send
+	echo "Running echo ${BODY}| mail -s \"Gradle Build Failed for $current_build_flavor\" -A ${ATTACHMENT} $emails_to_send"
+	echo ${BODY}| mail -s "Gradle Build Failed for $current_build_flavor" -A ${ATTACHMENT} $emails_to_send
 }
 
 notify_success () {
+	current_build_flavor=$1
 	echo "BUILD SUCCEEDED"
 	if [ -z $RESULT_URL ]; then
 		BODY="Gradle build succeeded: You can also just run the server like python $DOBBY_SERVER_HOME/server.py and see the results at http://0.0.0.0/index.html"
@@ -140,8 +142,8 @@ notify_success () {
 		BODY="Gradle build succeeded: See the results $RESULT_URL for UI test results."
 	fi
 	emails_to_send=`generate_space_separated_emails $EMAILS_TO_NOTIFY`
-	echo "echo ${BODY}| mail -s \"Gradle Build Success for WifiDoc\" $emails_to_send"
-	echo ${BODY}| mail -s "Gradle Build Success for WifiDoc" $emails_to_send
+	echo "echo ${BODY}| mail -s \"Gradle Build Success for $current_build_flavor\" $emails_to_send"
+	echo ${BODY}| mail -s "Gradle Build Success for $current_build_flavor" $emails_to_send
 }
 
 wait_for_emulator () {
@@ -332,12 +334,13 @@ run_emulator_tests () {
 
 
 build_test_targets () {
+	current_build_flavor=$1
 	echo "CHECKED:3 CONFIG: JAVA_HOME:$JAVA_HOME ANDROID_SDK:$ANDROID_HOME" 
     cd $GRADLEW_PATH
     echo "Starting gradle build" > /tmp/gradle.log
     ./gradlew clean build assembleDebug assembleAndroidTest >> /tmp/gradle.log
     if [ $? -gt 0 ]; then
-        notify_failure
+        notify_failure $current_build_flavor 
         return 1
     fi
 }
@@ -443,7 +446,7 @@ run_tests_one_iteration () {
     git_pull
 
     #build the tests
-    build_test_targets
+    build_test_targets $current_build_flavor
 	
 	echo "CHECKED:4 CONFIG: JAVA_HOME:$JAVA_HOME ANDROID_SDK:$ANDROID_HOME" 
     #Check emulator list exists
@@ -457,10 +460,10 @@ run_tests_one_iteration () {
 
     if [ $should_report_failure -gt 0 ]; then
         echo "notify_failure"
-		notify_failure
+		notify_failure $current_build_flavor
     else 
 		echo "notify_success"
-        notify_success
+        notify_success $current_build_flavor
     fi
 }
 
