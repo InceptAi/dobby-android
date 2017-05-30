@@ -239,16 +239,8 @@ public class WifiExpertUITests {
         checkSlowInternetCheckWifiAndRunSpeedTestButtons();
 
         ViewInteraction textView = onView(
-                allOf(withId(R.id.dobbyTextTv), withText("Ok no worries. Let me know if you want to run tests at any time."),
-                        childAtPosition(
-                                allOf(withId(R.id.dobbyChatLayout),
-                                        childAtPosition(
-                                                withId(R.id.chatRv),
-                                                4)),
-                                1),
-                        isDisplayed()));
-        textView.check(matches(withText("Ok no worries. Let me know if you want to run tests at any time.")));
-
+                allOf(withId(R.id.dobbyTextTv), withText("Ok no worries. Let me know if you want to run tests at any time.")));
+        textView.check(matches(isDisplayed()));
         checkSlowInternetCheckWifiAndRunSpeedTestButtons();
     }
 
