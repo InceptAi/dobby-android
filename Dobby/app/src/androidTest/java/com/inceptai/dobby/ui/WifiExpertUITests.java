@@ -13,6 +13,7 @@ import android.view.ViewParent;
 
 import com.inceptai.dobby.MainActivity;
 import com.inceptai.dobby.R;
+import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 import com.squareup.spoon.Spoon;
 
@@ -39,11 +40,19 @@ import static org.hamcrest.Matchers.not;
 @LargeTest
 public class WifiExpertUITests {
 
+    private static final boolean ENABLE_SCREENSHOTS = false;
+
     @Rule
     public ActivityTestRule<MainActivity> mActivityTestRule = new ActivityTestRule<>(MainActivity.class);
 
     private Activity getActivity() {
         return mActivityTestRule.getActivity();
+    }
+
+    private void captureScreenshot(String label) {
+        if (ENABLE_SCREENSHOTS) {
+            Spoon.screenshot(getActivity(), label);
+        }
     }
 
     private void checkSlowInternetCheckWifiAndRunSpeedTestButtons () {
@@ -79,7 +88,7 @@ public class WifiExpertUITests {
     }
 
     private void checkIdleState(boolean initialAppLaunch) {
-        Spoon.screenshot(getActivity(), "idle_state");
+        captureScreenshot("idle_state");
         checkSlowInternetCheckWifiAndRunSpeedTestButtons();
 
         if (initialAppLaunch) {
@@ -98,8 +107,7 @@ public class WifiExpertUITests {
     }
 
     private void checkShowingWifiAnalysisState() {
-        Spoon.screenshot(getActivity(), "wifi_analysis_state");
-
+        captureScreenshot("wifi_analysis_state");
         ViewInteraction frameLayout = onView(withId(R.id.net_cardview));
         frameLayout.check(matches(isDisplayed()));
 
@@ -129,9 +137,10 @@ public class WifiExpertUITests {
     }
 
     private void checkRunningDownloadSpeedTestState() {
-        Spoon.screenshot(getActivity(), "running_download_test_state");
-        onView(allOf(withParent(withId(R.id.cg_download_test)), withId(R.id.gauge_tv))).check(matches(withText(not(containsString(Utils.ZERO_POINT_ZERO)))));
-        onView(allOf(withParent(withId(R.id.cg_upload_test)), withId(R.id.gauge_tv))).check(matches(withText(containsString(Utils.ZERO_POINT_ZERO))));
+        captureScreenshot("running_download_test_state");
+        DobbyLog.v("Checking for download guage text value");
+        onView(allOf(withParent(withId(R.id.cg_download_test)), withId(R.id.gauge_tv), isDisplayed())).check(matches(withText(not(containsString(Utils.ZERO_POINT_ZERO)))));
+        onView(allOf(withParent(withId(R.id.cg_upload_test)), withId(R.id.gauge_tv), isDisplayed())).check(matches(withText(containsString(Utils.ZERO_POINT_ZERO))));
 
         ViewInteraction linearLayout = onView(
                 allOf(withId(R.id.bw_gauge_ll),
@@ -155,8 +164,7 @@ public class WifiExpertUITests {
     }
 
     private void checkCancelledTestState() {
-        Spoon.screenshot(getActivity(), "cancelled_state");
-
+        captureScreenshot("cancelled_state");
         ViewInteraction textView4 = onView(
                 allOf(withId(R.id.user_text_tv), withText("Cancel"),
                         childAtPosition(
@@ -183,8 +191,7 @@ public class WifiExpertUITests {
     }
 
     private void checkShowingSpeedTestAnalysisState() {
-        Spoon.screenshot(getActivity(), "speed_test_analysis_state");
-
+        captureScreenshot("speed_test_analysis_state");
         ViewInteraction frameLayout2 = onView(withId(R.id.bandwidth_results_cardview));
         frameLayout2.check(matches(isDisplayed()));
 
@@ -213,7 +220,7 @@ public class WifiExpertUITests {
     }
 
     private void checkShowingDetailedSuggestionState () {
-        Spoon.screenshot(getActivity(), "detailed_suggestion_state");
+        captureScreenshot("detailed_suggestion_state");
         checkSlowInternetCheckWifiAndRunSpeedTestButtons();
     }
 
@@ -226,7 +233,7 @@ public class WifiExpertUITests {
     }
 
     private void checkDecliningFullSpeedTestState () {
-        Spoon.screenshot(getActivity(), "declining_speed_test_state");
+        captureScreenshot("declining_speed_test_state");
         ViewInteraction textView2 = onView(
                 allOf(withId(R.id.user_text_tv), withText("No"),
                         childAtPosition(
@@ -266,7 +273,7 @@ public class WifiExpertUITests {
                                 withParent(withId(R.id.scrollview_buttons))))));
         button7.perform(scrollTo(), click());
 
-        safeSleep(5000);
+        safeSleep(2000);
 
         checkRunningDownloadSpeedTestState();
 
