@@ -1,7 +1,10 @@
 package com.inceptai.dobby.ui;
 
 
+import android.annotation.TargetApi;
 import android.app.Activity;
+import android.os.Build;
+import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.ViewInteraction;
 import android.support.test.espresso.matcher.ViewMatchers;
 import android.support.test.rule.ActivityTestRule;
@@ -20,6 +23,7 @@ import com.squareup.spoon.Spoon;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,6 +45,9 @@ import static org.hamcrest.Matchers.not;
 public class WifiExpertUITests {
 
     private static final boolean ENABLE_SCREENSHOTS = true;
+
+    //@ClassRule
+    //public static DisableAnimationsRule disableAnimationsRule = new DisableAnimationsRule();
 
     @Rule
     public ActivityTestRule<MainActivity> mActivityTestRule = new ActivityTestRule<>(MainActivity.class);
@@ -284,6 +291,23 @@ public class WifiExpertUITests {
 
         checkShowingDetailedSuggestionState();
     }
+
+
+
+    @TargetApi(Build.VERSION_CODES.KITKAT)
+    @Test
+    public void animationScalesSetToZeroDuringTest() throws Exception {
+        boolean isSystemAnimationEnabled = Utils.areSystemAnimationsEnabled(InstrumentationRegistry.getTargetContext());
+        Assert.assertFalse(isSystemAnimationEnabled);
+        //final ContentResolver contentResolver = InstrumentationRegistry.getTargetContext().getContentResolver();
+        //for (String key : new String[]{"transition_animation", "window_animation", "animator_duration"}) {
+        //    final int value = Settings.Global.getInt(contentResolver, key + "_scale");
+        //    Assert.assertEquals(key, 0, value);
+        //}
+    }
+
+
+
 
     @Test
     public void wifiExpertRunOnceTest() {

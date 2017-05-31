@@ -91,6 +91,12 @@ check_git () {
 	fi
 }
 
+disable_animations () {
+    $ADB shell settings put global window_animation_scale 0
+    $ADB shell settings put global transition_animation_scale 0
+    $ADB shell settings put global animator_duration_scale 0
+}
+
 uninstall_app () {
 	current_build_flavor=$1
     #uninstall the apks from the device
@@ -263,6 +269,9 @@ run_emulator_tests () {
 
         #Sleep for a few secs	
         sleep 15
+
+		#Disable the animations for non-flaky tests
+		disable_animations
 
         #Uninstall the app
         uninstall_app $current_build_flavor

@@ -5,6 +5,7 @@ import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Build;
+import android.provider.Settings;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -785,6 +786,28 @@ public class Utils {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    public static boolean areSystemAnimationsEnabled(Context context) {
+        float duration = 1;
+        float transition = 1;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            duration = Settings.Global.getFloat(
+                    context.getContentResolver(),
+                    Settings.Global.ANIMATOR_DURATION_SCALE, 1);
+            transition = Settings.Global.getFloat(
+                    context.getContentResolver(),
+                    Settings.Global.TRANSITION_ANIMATION_SCALE, 1);
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+            duration = Settings.System.getFloat(
+                    context.getContentResolver(),
+                    Settings.System.ANIMATOR_DURATION_SCALE, 1);
+            transition = Settings.System.getFloat(
+                    context.getContentResolver(),
+                    Settings.System.TRANSITION_ANIMATION_SCALE, 1);
+        }
+        DobbyLog.v("Animation duration == " + duration + " and transition = " + transition);
+        return (duration != 0 && transition != 0);
     }
 
     public static class BandwidthValue {
