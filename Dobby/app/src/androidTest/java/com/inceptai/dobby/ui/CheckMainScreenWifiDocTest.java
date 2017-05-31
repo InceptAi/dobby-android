@@ -1,8 +1,10 @@
 package com.inceptai.dobby.ui;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.os.Build;
 import android.os.SystemClock;
+import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.Espresso;
 import android.support.test.espresso.IdlingPolicies;
 import android.support.test.espresso.IdlingResource;
@@ -19,6 +21,7 @@ import com.inceptai.dobby.testutils.ElapsedTimeIdlingResource;
 import com.inceptai.dobby.utils.Utils;
 import com.squareup.spoon.Spoon;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -172,7 +175,7 @@ public class CheckMainScreenWifiDocTest {
 
     @Test
     public void bwTestDefaultTest() {
-        Utils.safeSleep(5000);
+        Utils.safeSleep(10000);
         checkIdleUIState();
         Spoon.screenshot(getActivity(), "initial_state");
         //Click the run tests button
@@ -194,7 +197,7 @@ public class CheckMainScreenWifiDocTest {
 
     @Test
     public void bwTestCancelTest() {
-        Utils.safeSleep(5000);
+        Utils.safeSleep(10000);
 
         Spoon.screenshot(getActivity(), "initial_state");
 
@@ -217,7 +220,7 @@ public class CheckMainScreenWifiDocTest {
 
     @Test
     public void bwTestRerunAfterCancelTest() {
-        Utils.safeSleep(5000);
+        Utils.safeSleep(10000);
 
         Spoon.screenshot(getActivity(), "initial_state");
         checkIdleUIState();
@@ -260,7 +263,7 @@ public class CheckMainScreenWifiDocTest {
 
     @Test
     public void bwTestRunBackToBackTest() {
-        Utils.safeSleep(5000);
+        Utils.safeSleep(10000);
 
 
         Spoon.screenshot(getActivity(), "first_initial_state");
@@ -310,6 +313,12 @@ public class CheckMainScreenWifiDocTest {
         checkSuggestionsAvailableState();
     }
 
-
+    @TargetApi(Build.VERSION_CODES.KITKAT)
+    @Test
+    public void animationScalesSetToZeroDuringTest() throws Exception {
+        Utils.safeSleep(10000);
+        boolean isSystemAnimationEnabled = Utils.areSystemAnimationsEnabled(InstrumentationRegistry.getTargetContext());
+        Assert.assertFalse(isSystemAnimationEnabled);
+    }
 
 }
