@@ -267,8 +267,8 @@ run_emulator_tests () {
         #Wait for it to start
         wait_for_emulator
 
-        #Sleep for a few secs	
-        sleep 15
+        #Sleep for a min	
+        sleep 60
 
 		#Disable the animations for non-flaky tests
 		disable_animations
