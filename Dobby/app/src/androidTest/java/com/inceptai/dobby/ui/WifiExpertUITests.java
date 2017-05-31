@@ -144,7 +144,8 @@ public class WifiExpertUITests {
     }
 
     private void checkRunningDownloadSpeedTestState() {
-        captureScreenshot("running_download_test_state");
+        //Commenting this out to reduce the delay and see if the issues are gone
+        //captureScreenshot("running_download_test_state");
         DobbyLog.v("Checking for download guage text value");
         onView(allOf(withParent(withId(R.id.cg_download_test)), withId(R.id.gauge_tv), isDisplayed())).check(matches(withText(not(containsString(Utils.ZERO_POINT_ZERO)))));
         onView(allOf(withParent(withId(R.id.cg_upload_test)), withId(R.id.gauge_tv), isDisplayed())).check(matches(withText(containsString(Utils.ZERO_POINT_ZERO))));
@@ -168,6 +169,7 @@ public class WifiExpertUITests {
                         0),
                         isDisplayed()));
         button3.check(matches(isDisplayed()));
+        captureScreenshot("after_checking_running_download_test_state");
     }
 
     private void checkCancelledTestState() {
@@ -272,7 +274,7 @@ public class WifiExpertUITests {
                                 withParent(withId(R.id.scrollview_buttons))))));
         button7.perform(scrollTo(), click());
 
-        Utils.safeSleep(1000);
+        Utils.safeSleep(2000);
 
         checkRunningDownloadSpeedTestState();
 
@@ -347,7 +349,7 @@ public class WifiExpertUITests {
                                 withParent(withId(R.id.scrollview_buttons))))));
         button7.perform(scrollTo(), click());
 
-        Utils.safeSleep(1000);
+        Utils.safeSleep(2000);
 
         checkRunningDownloadSpeedTestState();
 
