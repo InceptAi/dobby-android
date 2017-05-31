@@ -285,30 +285,44 @@ run_emulator_tests () {
 
 		#Run unit tests
         UNIT_TEST_TASK=`./gradlew tasks | grep -i test${current_build_flavor}DebugUnitTest | cut -d " " -f 1`
-		./gradlew $UNIT_TEST_TASK --stacktrace >>  /tmp/gradle.log
-        if [ $? -gt 0 ]; then
-            should_report_failure=1
-        fi
+		if [ ! -z $UNIT_TEST_TASK ]; then
+			echo "./gradlew $UNIT_TEST_TASK --stacktrace >>  /tmp/gradle.log"
+			./gradlew $UNIT_TEST_TASK --stacktrace >>  /tmp/gradle.log
+        	if [ $? -gt 0 ]; then
+            	should_report_failure=1
+        	fi
+		fi
+		
+		#Run unit tests
+        CONNECTED_TEST_TASK=`./gradlew tasks | grep -i connected${current_build_flavor}DebugAndroidTest | cut -d " " -f 1`
+		if [ ! -z $CONNECTED_TEST_TASK ]; then
+			echo "./gradlew $CONNECTED_TEST_TASK -Pandroid.testInstrumentationRunnerArguments.class=com.inceptai.dobby.BandwidthAnalyzerTest --stacktrace >>  /tmp/gradle.log"
+			./gradlew $CONNECTED_TEST_TASK -Pandroid.testInstrumentationRunnerArguments.class=com.inceptai.dobby.BandwidthAnalyzerTest --stacktrace >>  /tmp/gradle.log
+    	    if [ $? -gt 0 ]; then
+        	    should_report_failure=1
+        	fi
+		fi
 		
 		#Run espresso tests
         SPOON_TASK=`./gradlew tasks | grep -i spoon${current_build_flavor}DebugAndroidTest | cut -d " " -f 1`
-		echo "RUNNING gradle task $SPOON_TASK"
-		TEST_CLASS=""
-		if [ $current_build_flavor = "dobby" ]; then
-			TEST_CLASS="com.inceptai.dobby.ui.WifiExpertUITests"
-		elif [ $current_build_flavor = "wifidoc" ]; then
-			TEST_CLASS="com.inceptai.dobby.ui.CheckMainScreenWifiDocTest"
-		else
-			echo "UNSUPPORTED BUILD FLAVOR FOR TESTS, FAILING" >> /tmp/gradle.log
-            should_report_failure=1
-			return
+		if [ ! -z $SPOON_TASK ]; then	
+			echo "RUNNING gradle task $SPOON_TASK"
+			TEST_CLASS=""
+			if [ $current_build_flavor = "dobby" ]; then
+				TEST_CLASS="com.inceptai.dobby.ui.WifiExpertUITests"
+			elif [ $current_build_flavor = "wifidoc" ]; then
+				TEST_CLASS="com.inceptai.dobby.ui.CheckMainScreenWifiDocTest"
+			else
+				echo "UNSUPPORTED BUILD FLAVOR FOR TESTS, FAILING" >> /tmp/gradle.log
+            	should_report_failure=1
+				return
+			fi
+			echo "./gradlew $SPOON_TASK -PspoonClassName=$TEST_CLASS --stacktrace >>  /tmp/gradle.log"
+			./gradlew $SPOON_TASK -PspoonClassName=$TEST_CLASS --stacktrace >>  /tmp/gradle.log
+        	if [ $? -gt 0 ]; then
+            	should_report_failure=1
+        	fi
 		fi
-		echo "./gradlew $SPOON_TASK -PspoonClassName=$TEST_CLASS --stacktrace >>  /tmp/gradle.log"
-		#./gradlew $SPOON_TASK -Dspoon.test.class=$TEST_CLASS --stacktrace >>  /tmp/gradle.log
-		./gradlew $SPOON_TASK -PspoonClassName=$TEST_CLASS --stacktrace >>  /tmp/gradle.log
-        if [ $? -gt 0 ]; then
-            should_report_failure=1
-        fi
 
         #Store the output in a diff location
 		output_path_spoon_results="$PATH_TO_REPO_DIR/Dobby/app/build/spoon/${current_build_flavor}"
