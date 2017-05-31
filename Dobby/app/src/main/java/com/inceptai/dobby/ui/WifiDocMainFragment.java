@@ -59,6 +59,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import uk.co.samuelwall.materialtaptargetprompt.BuildConfig;
 import uk.co.samuelwall.materialtaptargetprompt.MaterialTapTargetPrompt;
 
 import static com.inceptai.dobby.ai.DataInterpreter.MetricType.ABYSMAL;
@@ -257,7 +258,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                     }
                 })
                 .create();
-        fabPrompt.show();
+        if (!BuildConfig.DEBUG) {
+            fabPrompt.show();
+        }
     }
 
     public void onButtonPressed(Uri uri) {
