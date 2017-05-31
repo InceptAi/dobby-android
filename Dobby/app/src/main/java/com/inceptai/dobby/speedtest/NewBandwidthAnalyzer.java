@@ -8,7 +8,9 @@ import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
 
 import com.google.common.base.Preconditions;
+import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.DobbyThreadpool;
+import com.inceptai.dobby.R;
 import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.BandwidthStats;
@@ -106,12 +108,14 @@ public class NewBandwidthAnalyzer {
     }
 
     @Inject
-    public NewBandwidthAnalyzer(DobbyThreadpool dobbyThreadpool, DobbyEventBus eventBus) {
+    public NewBandwidthAnalyzer(DobbyThreadpool dobbyThreadpool, DobbyEventBus eventBus, DobbyApplication dobbyApplication) {
         this.bandwidthTestListener = new BandwidthTestListener();
         this.testMode = BandwithTestCodes.TestMode.IDLE;
         this.eventBus = eventBus;
         this.parseSpeedTestConfig = new ParseSpeedTestConfig(this.bandwidthTestListener);
-        this.parseServerInformation = new ParseServerInformation(this.bandwidthTestListener);
+        //this.parseServerInformation = new ParseServerInformation(this.bandwidthTestListener);
+        this.parseServerInformation = new ParseServerInformation(R.xml.speed_test_server_list,
+                dobbyApplication.getApplicationContext(), this.bandwidthTestListener);
         this.dobbyThreadpool = dobbyThreadpool;
         lastConfigFetchTimestampMs = 0;
         lastBestServerDeterminationTimestampMs = 0;
@@ -125,9 +129,10 @@ public class NewBandwidthAnalyzer {
     @Nullable
     public static NewBandwidthAnalyzer create(ResultsCallback resultsCallback,
                                               DobbyThreadpool dobbyThreadpool,
-                                              DobbyEventBus eventBus) {
+                                              DobbyEventBus eventBus,
+                                              DobbyApplication dobbyApplication) {
         Preconditions.checkNotNull(dobbyThreadpool);
-        NewBandwidthAnalyzer analyzer = new NewBandwidthAnalyzer(dobbyThreadpool, eventBus);
+        NewBandwidthAnalyzer analyzer = new NewBandwidthAnalyzer(dobbyThreadpool, eventBus, dobbyApplication);
         analyzer.registerCallback(resultsCallback);
         return analyzer;
     }

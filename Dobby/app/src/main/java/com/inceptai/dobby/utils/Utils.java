@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
+import android.content.res.XmlResourceParser;
 import android.os.Build;
 import android.provider.Settings;
 import android.support.v4.app.Fragment;
@@ -808,6 +809,33 @@ public class Utils {
         }
         DobbyLog.v("Animation duration == " + duration + " and transition = " + transition);
         return (duration != 0 && transition != 0);
+    }
+
+    public static void printXmlResourceParser(XmlResourceParser xmlResourceParser) {
+        try {
+            int eventType = xmlResourceParser.getEventType();
+            while (eventType != XmlPullParser.END_DOCUMENT) {
+                switch (eventType) {
+                    case XmlPullParser.START_DOCUMENT:
+                        DobbyLog.v("Start document");
+                        break;
+                    case XmlPullParser.START_TAG:
+                        DobbyLog.v("Start tag " + xmlResourceParser.getName());
+                        break;
+                    case XmlPullParser.END_TAG:
+                        DobbyLog.v("End tag " + xmlResourceParser.getName());
+                        break;
+                    case XmlPullParser.TEXT:
+                        DobbyLog.v("Text " + xmlResourceParser.getText());
+                        break;
+                    default:
+                        DobbyLog.e("Unexpected eventType = " + eventType);
+                }
+                eventType = xmlResourceParser.next();
+            }
+        } catch (XmlPullParserException|IOException e) {
+            DobbyLog.e("Error while parsing xml " + e);
+        }
     }
 
     public static class BandwidthValue {

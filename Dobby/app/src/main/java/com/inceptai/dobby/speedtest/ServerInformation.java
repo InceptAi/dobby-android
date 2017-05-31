@@ -1,7 +1,9 @@
 package com.inceptai.dobby.speedtest;
 
+import android.content.res.XmlResourceParser;
 import android.util.Xml;
 
+import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -27,6 +29,14 @@ public class ServerInformation {
     public ServerInformation(InputStream in) {
         this.serverList = new ArrayList<ServerDetails>();
         ServerInformation info = parseServerInformation(in);
+        if (info != null) {
+            this.serverList = info.serverList;
+        }
+    }
+
+    public ServerInformation(XmlResourceParser xmlResourceParser) {
+        this.serverList = new ArrayList<ServerDetails>();
+        ServerInformation info = readServerInformationSafely(xmlResourceParser);
         if (info != null) {
             this.serverList = info.serverList;
         }
@@ -63,6 +73,7 @@ public class ServerInformation {
     // Parses the contents of an client config. If it encounters a ip, summary, or link tag, hands them off
     // to their respective "read" methods for processing. Otherwise, skips the tag.
     private ServerInformation readServerInformation(XmlPullParser parser) throws XmlPullParserException, IOException {
+        DobbyLog.v("Xml parser is " + parser);
         parser.require(XmlPullParser.START_TAG, ns, "settings");
         parser.nextTag();
         parser.require(XmlPullParser.START_TAG, ns, "servers");
@@ -81,6 +92,19 @@ public class ServerInformation {
             }
         }
         return new ServerInformation(serverList);
+    }
+
+    private ServerInformation readServerInformationSafely(XmlPullParser xmlPullParser) {
+        ServerInformation serverInformation = null;
+        try {
+            xmlPullParser.next(); // We need to skip over start document twice
+            xmlPullParser.next();
+            serverInformation = readServerInformation(xmlPullParser);
+        } catch (XmlPullParserException|IOException e) {
+            /* no - op */
+            DobbyLog.e("Exception while parsing server list " +  e);
+        }
+        return serverInformation;
     }
 
     // Processes link tags in the feed.
@@ -119,4 +143,7 @@ public class ServerInformation {
         }
         return info;
     }
+
+
+
 }

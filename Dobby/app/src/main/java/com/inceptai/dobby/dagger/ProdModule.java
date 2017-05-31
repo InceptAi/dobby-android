@@ -37,16 +37,6 @@ public class ProdModule {
         return new DobbyThreadpool();
     }
 
-
-    //Commented here since we are creating a singleton right in DobbyEventBus.java
-    /*
-    @Singleton
-    @Provides
-    public DobbyEventBus providesEventBus() {
-        return new DobbyEventBus();
-    }
-    */
-
     @Singleton
     @Provides
     public DobbyAi providesDobbyAi(DobbyApplication application,

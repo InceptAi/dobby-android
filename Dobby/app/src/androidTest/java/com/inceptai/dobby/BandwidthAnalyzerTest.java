@@ -38,7 +38,7 @@ public class BandwidthAnalyzerTest {
     @Before
     public void setupInstance() {
         objectRegistry = ObjectRegistry.get();
-        newBandwidthAnalyzer = new NewBandwidthAnalyzer(objectRegistry.getThreadpool(), objectRegistry.getEventBus());
+        newBandwidthAnalyzer = new NewBandwidthAnalyzer(objectRegistry.getThreadpool(), objectRegistry.getEventBus(), objectRegistry.getApplication());
         random = new Random();
     }
 
