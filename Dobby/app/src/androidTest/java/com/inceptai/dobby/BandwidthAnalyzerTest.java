@@ -1,8 +1,6 @@
 package com.inceptai.dobby;
 
-import android.content.Context;
 import android.support.annotation.Nullable;
-import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -18,7 +16,6 @@ import com.inceptai.dobby.utils.DobbyLog;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.internal.runners.statements.ExpectException;
 import org.junit.runner.RunWith;
 
 import java.util.List;
@@ -26,9 +23,7 @@ import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-import javax.inject.Inject;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Runs upload / download tests.
@@ -47,6 +42,7 @@ public class BandwidthAnalyzerTest {
         random = new Random();
     }
 
+    /*
     @Test
     public void useAppContext() throws Exception {
         // Context of the app under test.
@@ -54,6 +50,7 @@ public class BandwidthAnalyzerTest {
 
         assertEquals("com.inceptai.dobby.wifidoc", appContext.getPackageName());
     }
+    */
 
     @Test
     public void runUploadTest() throws InterruptedException, ExecutionException {
