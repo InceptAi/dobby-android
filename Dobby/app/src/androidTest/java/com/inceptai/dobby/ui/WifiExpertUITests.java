@@ -301,11 +301,6 @@ public class WifiExpertUITests {
     public void animationScalesSetToZeroDuringTest() throws Exception {
         boolean isSystemAnimationEnabled = Utils.areSystemAnimationsEnabled(InstrumentationRegistry.getTargetContext());
         Assert.assertFalse(isSystemAnimationEnabled);
-        //final ContentResolver contentResolver = InstrumentationRegistry.getTargetContext().getContentResolver();
-        //for (String key : new String[]{"transition_animation", "window_animation", "animator_duration"}) {
-        //    final int value = Settings.Global.getInt(contentResolver, key + "_scale");
-        //    Assert.assertEquals(key, 0, value);
-        //}
     }
 
 
@@ -321,6 +316,7 @@ public class WifiExpertUITests {
         checkOneFullRun(true);
     }
 
+    /*
     @Test
     public void wifiExpertRunCancelRun() {
         // Added a sleep statement to match the app's execution delay.
@@ -365,6 +361,7 @@ public class WifiExpertUITests {
 
         checkOneFullRun(false);
     }
+    */
 
     @Test
     public void wifiExpertRunBackToBack() {
