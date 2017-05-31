@@ -1,33 +1,30 @@
 package com.inceptai.dobby.ui;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.os.Build;
 import android.os.SystemClock;
+import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.Espresso;
-import android.support.test.espresso.IdlingPolicies;
-import android.support.test.espresso.IdlingResource;
+import android.support.test.espresso.NoActivityResumedException;
 import android.support.test.espresso.action.ViewActions;
 import android.support.test.espresso.matcher.ViewMatchers;
 import android.support.test.filters.LargeTest;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
-import android.test.ActivityInstrumentationTestCase2;
-import android.view.WindowManager;
+import android.util.Log;
 
 import com.inceptai.dobby.R;
-import com.inceptai.dobby.testutils.ElapsedTimeIdlingResource;
 import com.inceptai.dobby.utils.Utils;
 import com.squareup.spoon.Spoon;
 
+import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.util.concurrent.TimeUnit;
-
-import static android.support.test.InstrumentationRegistry.getInstrumentation;
-import static android.support.test.InstrumentationRegistry.getTargetContext;
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
@@ -35,6 +32,7 @@ import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withParent;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
+import static com.inceptai.dobby.DobbyApplication.TAG;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
@@ -64,7 +62,7 @@ public class CheckMainScreenWifiDocTest {
 
 
 
-
+    /*
     private IdlingResource waitFor(long waitMs) {
         // Make sure Espresso does not time out
         IdlingPolicies.setMasterPolicyTimeout(waitMs * 4, TimeUnit.MILLISECONDS);
@@ -98,7 +96,26 @@ public class CheckMainScreenWifiDocTest {
                             + " android.permission.WRITE_EXTERNAL_STORAGE");
         }
     }
+    */
 
+    @After
+    public void tearDown() throws Exception {
+        Log.d(TAG, "TEARDOWN");
+
+        goBackN();
+
+        //super.tearDown();
+    }
+
+    private void goBackN() {
+        final int N = 10; // how many times to hit back button
+        try {
+            for (int i = 0; i < N; i++)
+                Espresso.pressBack();
+        } catch (NoActivityResumedException e) {
+            Log.e(TAG, "Closed all activities", e);
+        }
+    }
 
     /**
      * A JUnit {@link Rule @Rule} to launch your activity under test. This is a replacement
@@ -172,7 +189,7 @@ public class CheckMainScreenWifiDocTest {
 
     @Test
     public void bwTestDefaultTest() {
-        Utils.safeSleep(5000);
+        Utils.safeSleep(10000);
         checkIdleUIState();
         Spoon.screenshot(getActivity(), "initial_state");
         //Click the run tests button
@@ -180,6 +197,7 @@ public class CheckMainScreenWifiDocTest {
         SystemClock.sleep(BOTTOM_DRAWER_WAITING_TIME_MS);
         //Check that the status card view text changes
         Spoon.screenshot(getActivity(), "running_state");
+
         checkRunningUIState();
         // Now we wait
         SystemClock.sleep(BW_WAITING_TIME_MS);
@@ -192,9 +210,10 @@ public class CheckMainScreenWifiDocTest {
 
     }
 
+    /*
     @Test
     public void bwTestCancelTest() {
-        Utils.safeSleep(5000);
+        Utils.safeSleep(10000);
 
         Spoon.screenshot(getActivity(), "initial_state");
 
@@ -217,7 +236,7 @@ public class CheckMainScreenWifiDocTest {
 
     @Test
     public void bwTestRerunAfterCancelTest() {
-        Utils.safeSleep(5000);
+        Utils.safeSleep(10000);
 
         Spoon.screenshot(getActivity(), "initial_state");
         checkIdleUIState();
@@ -256,11 +275,11 @@ public class CheckMainScreenWifiDocTest {
         Spoon.screenshot(getActivity(), "suggestions_available_state");
         checkSuggestionsAvailableState();
     }
-
+*/
 
     @Test
     public void bwTestRunBackToBackTest() {
-        Utils.safeSleep(5000);
+        Utils.safeSleep(10000);
 
 
         Spoon.screenshot(getActivity(), "first_initial_state");
@@ -310,6 +329,12 @@ public class CheckMainScreenWifiDocTest {
         checkSuggestionsAvailableState();
     }
 
-
+    @TargetApi(Build.VERSION_CODES.KITKAT)
+    @Test
+    public void animationScalesSetToZeroDuringTest() throws Exception {
+        Utils.safeSleep(10000);
+        boolean isSystemAnimationEnabled = Utils.areSystemAnimationsEnabled(InstrumentationRegistry.getTargetContext());
+        Assert.assertFalse(isSystemAnimationEnabled);
+    }
 
 }
