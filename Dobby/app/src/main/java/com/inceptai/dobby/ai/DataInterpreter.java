@@ -214,8 +214,7 @@ public class DataInterpreter {
         private double downloadMbps;
         String isp;
         String externalIP;
-        @BandwithTestCodes.ErrorCodes
-        int errorCode = BandwithTestCodes.ErrorCodes.ERROR_UNKNOWN;
+        @BandwithTestCodes.ErrorCodes int errorCode = BandwithTestCodes.ErrorCodes.ERROR_UNINITIAlIZED;
 
         public BandwidthGrade() {
             //Set timestamp here
@@ -340,8 +339,8 @@ public class DataInterpreter {
         double dnsServerLatencyMs;
         double externalServerLatencyMs;
         double alternativeDnsLatencyMs;
-
-        private long updatedAtMs;
+        long updatedAtMs;
+        @BandwithTestCodes.ErrorCodes int errorCode = BandwithTestCodes.ErrorCodes.ERROR_UNINITIAlIZED;
 
 
         public PingGrade() {}
@@ -431,6 +430,7 @@ public class DataInterpreter {
     public static class HttpGrade {
         @MetricType int httpDownloadLatencyMetric = MetricType.UNKNOWN;
         private long updatedAtMs;
+        @BandwithTestCodes.ErrorCodes int errorCode = BandwithTestCodes.ErrorCodes.ERROR_UNINITIAlIZED;
 
         public HttpGrade() {
         }
@@ -476,8 +476,9 @@ public class DataInterpreter {
         int primaryApChannelInterferingAps;
         int leastOccupiedChannelAps;
         int primaryApSignal;
-
         private long updatedAtMs;
+        @BandwithTestCodes.ErrorCodes int errorCode = BandwithTestCodes.ErrorCodes.ERROR_UNINITIAlIZED;
+
 
         public WifiGrade() {
             wifiChannelOccupancyMetric = new HashMap<>();

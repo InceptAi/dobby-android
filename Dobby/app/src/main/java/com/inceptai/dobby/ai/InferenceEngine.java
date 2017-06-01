@@ -23,7 +23,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-
 /**
  * Inference engine consumes actions from the NLU engine (ApiAi or local) and creates Actions.
  * It also consumes network metrics as a result of Actions such as bandwidth tests, etc, to further
@@ -123,12 +122,13 @@ public class InferenceEngine {
     }
 
     synchronized public DataInterpreter.WifiGrade notifyWifiState(WifiState wifiState, @WifiState.WifiLinkMode int wifiLinkMode,
-                                                     @ConnectivityAnalyzer.WifiConnectivityMode int wifiConnectivityMode) {
+                                                                  @ConnectivityAnalyzer.WifiConnectivityMode int wifiConnectivityMode) {
         DataInterpreter.WifiGrade wifiGrade = new DataInterpreter.WifiGrade();
         if (wifiState != null) {
             HashMap<Integer, WifiState.ChannelInfo> channelMap = wifiState.getChannelInfoMap();
             DobbyWifiInfo wifiInfo = wifiState.getLinkInfo();
             wifiGrade = DataInterpreter.interpret(channelMap, wifiInfo, wifiLinkMode, wifiConnectivityMode);
+            wifiGrade.errorCode = getWifiErrorCode(wifiConnectivityMode);
         }
         metricsDb.updateWifiGrade(wifiGrade);
         PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(wifiGrade);
@@ -144,6 +144,11 @@ public class InferenceEngine {
         DataInterpreter.PingGrade pingGrade = new DataInterpreter.PingGrade();
         if (pingStatsMap != null && ipLayerInfo != null) {
             pingGrade = DataInterpreter.interpret(pingStatsMap, ipLayerInfo);
+            pingGrade.errorCode = BandwithTestCodes.ErrorCodes.NO_ERROR;
+        } else if (ipLayerInfo == null || ipLayerInfo.gateway == null || ipLayerInfo.gateway.equals("0.0.0.0")) {
+            pingGrade.errorCode = BandwithTestCodes.ErrorCodes.ERROR_DHCP_INFO_UNAVAILABLE;
+        } else if (pingStatsMap == null || pingStatsMap.isEmpty()) {
+            pingGrade.errorCode = BandwithTestCodes.ErrorCodes.ERROR_PERFORMING_PING;
         }
         metricsDb.updatePingGrade(pingGrade);
         PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(pingGrade);
@@ -155,10 +160,12 @@ public class InferenceEngine {
         return pingGrade;
     }
 
-   synchronized public DataInterpreter.HttpGrade notifyGatewayHttpStats(PingStats gatewayHttpStats) {
+    synchronized public DataInterpreter.HttpGrade notifyGatewayHttpStats(PingStats gatewayHttpStats) {
         DataInterpreter.HttpGrade httpGrade = new DataInterpreter.HttpGrade();
         if (gatewayHttpStats != null) {
             httpGrade = DataInterpreter.interpret(gatewayHttpStats);
+        } else {
+            httpGrade.errorCode = BandwithTestCodes.ErrorCodes.ERROR_DHCP_INFO_UNAVAILABLE;
         }
         metricsDb.updateHttpGrade(httpGrade);
         PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(httpGrade);
@@ -170,12 +177,12 @@ public class InferenceEngine {
         return httpGrade;
     }
 
-
     public SuggestionCreator.Suggestion suggest() {
         HashMap<Integer, Double> conditionMapToUse = currentConditions.getTopConditionsMap(
                 MAX_SUGGESTIONS_TO_SHOW, MAX_GAP_IN_SUGGESTION_WEIGHT);
         return SuggestionCreator.get(conditionMapToUse, metricsDb.getParamsForSuggestions());
     }
+
 
     private void checkAndSendSuggestions() {
         if (metricsDb.hasValidUpload() && metricsDb.hasValidDownload() &&
@@ -187,13 +194,33 @@ public class InferenceEngine {
                 DobbyLog.i("Sending suggestions to DobbyAi");
                 actionListener.suggestionsAvailable(suggestion);
             }
-            //sendResponseOnlyAction(suggestion.getTitle(), Action.ActionType.ACTION_TYPE_SHOW_SHORT_SUGGESTION);
             //Write the suggestion and inferencing parameters to DB
             InferenceRecord newInferenceRecord = createInferenceRecord(suggestion);
             inferenceDatabaseWriter.writeInferenceToDatabase(newInferenceRecord);
         }
     }
 
+    @BandwithTestCodes.ErrorCodes
+    private int getWifiErrorCode(@ConnectivityAnalyzer.WifiConnectivityMode int wifiConnectivityMode) {
+        switch (wifiConnectivityMode) {
+            case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_ONLINE:
+                return BandwithTestCodes.ErrorCodes.NO_ERROR;
+            case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL:
+                return BandwithTestCodes.ErrorCodes.ERROR_WIFI_IN_CAPTIVE_PORTAL;
+            case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_OFFLINE:
+                return BandwithTestCodes.ErrorCodes.ERROR_WIFI_IN_CAPTIVE_PORTAL;
+            case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_UNKNOWN:
+                return BandwithTestCodes.ErrorCodes.ERROR_WIFI_CONNECTED_AND_UNKNOWN;
+            case ConnectivityAnalyzer.WifiConnectivityMode.ON_AND_DISCONNECTED:
+                return BandwithTestCodes.ErrorCodes.ERROR_WIFI_ON_AND_DISCONNECTED;
+            case ConnectivityAnalyzer.WifiConnectivityMode.OFF:
+                return BandwithTestCodes.ErrorCodes.ERROR_WIFI_OFF;
+            case ConnectivityAnalyzer.WifiConnectivityMode.UNKNOWN:
+                return BandwithTestCodes.ErrorCodes.ERROR_WIFI_UNKNOWN_STATE;
+            default:
+                return BandwithTestCodes.ErrorCodes.ERROR_UNKNOWN;
+        }
+    }
 
     private InferenceRecord createInferenceRecord(SuggestionCreator.Suggestion suggestion) {
         InferenceRecord inferenceRecord = new InferenceRecord();
@@ -221,8 +248,8 @@ public class InferenceEngine {
     }
 
     private FailureRecord createFailureRecord(@BandwithTestCodes.TestMode int testMode,
-                                                @BandwithTestCodes.ErrorCodes int errorCode,
-                                                String errorMessage) {
+                                              @BandwithTestCodes.ErrorCodes int errorCode,
+                                              String errorMessage) {
         FailureRecord failureRecord = new FailureRecord();
         failureRecord.uid = dobbyApplication.getUserUuid();
         failureRecord.phoneInfo = dobbyApplication.getPhoneInfo();
@@ -254,9 +281,9 @@ public class InferenceEngine {
     }
 
     synchronized public DataInterpreter.BandwidthGrade notifyBandwidthTestResult(@BandwithTestCodes.TestMode int testMode,
-                                                                    double bandwidth,
-                                                                    String clientIsp,
-                                                                    String clientExternalIp) {
+                                                                                 double bandwidth,
+                                                                                 String clientIsp,
+                                                                                 String clientExternalIp) {
         DataInterpreter.BandwidthGrade bandwidthGrade = new DataInterpreter.BandwidthGrade();
         /*
         if (bandwidth >= 0) {
@@ -290,9 +317,9 @@ public class InferenceEngine {
 
 
     synchronized public DataInterpreter.BandwidthGrade notifyBandwidthTestError(@BandwithTestCodes.TestMode int testMode,
-                                                                   @BandwithTestCodes.ErrorCodes int errorCode,
-                                                                   String errorMessage,
-                                                                   double bandwidth) {
+                                                                                @BandwithTestCodes.ErrorCodes int errorCode,
+                                                                                String errorMessage,
+                                                                                double bandwidth) {
         lastBandwidthUpdateTimestampMs = 0;
         DataInterpreter.BandwidthGrade bandwidthGrade = DataInterpreter.interpret(bandwidth, bandwidth,
                 Utils.EMPTY_STRING, Utils.EMPTY_STRING, errorCode);
