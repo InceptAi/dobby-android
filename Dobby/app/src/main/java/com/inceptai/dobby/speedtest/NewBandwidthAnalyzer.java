@@ -61,6 +61,7 @@ public class NewBandwidthAnalyzer {
     private DobbyEventBus eventBus;
     private long lastConfigFetchTimestampMs;
     private long lastBestServerDeterminationTimestampMs;
+    private boolean enableServerListFetch = true;
 
     private BandwidthTestListener bandwidthTestListener;
 
@@ -108,7 +109,16 @@ public class NewBandwidthAnalyzer {
     }
 
     @Inject
-    public NewBandwidthAnalyzer(DobbyThreadpool dobbyThreadpool, DobbyEventBus eventBus, DobbyApplication dobbyApplication) {
+    public NewBandwidthAnalyzer(DobbyThreadpool dobbyThreadpool,
+                                DobbyEventBus eventBus,
+                                DobbyApplication dobbyApplication) {
+        this(dobbyThreadpool, eventBus, dobbyApplication, true); //Enabling server list fetch
+    }
+
+    public NewBandwidthAnalyzer(DobbyThreadpool dobbyThreadpool,
+                                DobbyEventBus eventBus,
+                                DobbyApplication dobbyApplication,
+                                boolean enableServerListFetch) {
         this.bandwidthTestListener = new BandwidthTestListener();
         this.testMode = BandwithTestCodes.TestMode.IDLE;
         this.eventBus = eventBus;
@@ -119,8 +129,10 @@ public class NewBandwidthAnalyzer {
         this.dobbyThreadpool = dobbyThreadpool;
         lastConfigFetchTimestampMs = 0;
         lastBestServerDeterminationTimestampMs = 0;
+        this.enableServerListFetch = enableServerListFetch;
         DobbyLog.v("NEW BANDWIDTH ANALYZER INSTANCE CREATED.");
     }
+
 
     /**
      * Factory constructor to create an instance
@@ -188,7 +200,7 @@ public class NewBandwidthAnalyzer {
         return speedTestConfig;
     }
 
-    private ServerInformation getServerInformation() {
+    public ServerInformation getServerInformation() {
         return serverInformation;
     }
 
@@ -223,7 +235,7 @@ public class NewBandwidthAnalyzer {
         //Get best server information if stale
         if (bestServer == null || System.currentTimeMillis() - lastBestServerDeterminationTimestampMs > MAX_AGE_FOR_FRESHNESS_MS) {
             DobbyLog.v("NBA Server info not fresh, getting again");
-            ServerInformation serverInformation = parseServerInformation.getServerInfo();
+            ServerInformation serverInformation = parseServerInformation.getServerInfo(enableServerListFetch);
             if (serverInformation == null) {
                 reportBandwidthError(BandwithTestCodes.TestMode.SERVER_FETCH,
                         ErrorCodes.ERROR_FETCHING_SERVER_INFO,

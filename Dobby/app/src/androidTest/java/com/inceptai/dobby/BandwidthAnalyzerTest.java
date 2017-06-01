@@ -38,7 +38,8 @@ public class BandwidthAnalyzerTest {
     @Before
     public void setupInstance() {
         objectRegistry = ObjectRegistry.get();
-        newBandwidthAnalyzer = new NewBandwidthAnalyzer(objectRegistry.getThreadpool(), objectRegistry.getEventBus(), objectRegistry.getApplication());
+        newBandwidthAnalyzer = new NewBandwidthAnalyzer(objectRegistry.getThreadpool(),
+                objectRegistry.getEventBus(), objectRegistry.getApplication());
         random = new Random();
     }
 
@@ -54,6 +55,8 @@ public class BandwidthAnalyzerTest {
 
     @Test
     public void runUploadTest() throws InterruptedException, ExecutionException {
+        newBandwidthAnalyzer = new NewBandwidthAnalyzer(objectRegistry.getThreadpool(),
+                objectRegistry.getEventBus(), objectRegistry.getApplication());
         Future<BandwidthResult> statsFuture = startBandwidthTest(BandwithTestCodes.TestMode.UPLOAD);
         while (!statsFuture.isDone()) {
             Thread.sleep(2500);
@@ -111,6 +114,19 @@ public class BandwidthAnalyzerTest {
                 throw new RuntimeException(e);
             }
         }
+    }
+
+
+    @Test
+    public void runBothUploadAndDownloadTestWithoutServerListFetch() throws InterruptedException, ExecutionException {
+        newBandwidthAnalyzer = new NewBandwidthAnalyzer(objectRegistry.getThreadpool(),
+                objectRegistry.getEventBus(), objectRegistry.getApplication(), false);
+        Future<BandwidthResult> statsFuture = startBandwidthTest(BandwithTestCodes.TestMode.DOWNLOAD_AND_UPLOAD);
+        while (!statsFuture.isDone()) {
+            Thread.sleep(2500);
+        }
+        assertNotNull(statsFuture.get());
+        assertNotNull(newBandwidthAnalyzer.getServerInformation());
     }
 
     private ListenableFuture<BandwidthResult> startBandwidthTest(@BandwithTestCodes.TestMode int testMode) {
