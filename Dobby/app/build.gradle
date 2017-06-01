@@ -63,8 +63,8 @@ android {
             productFlavors.wifidoc.signingConfig signingConfigs.wifidoc_config
             productFlavors.dobby.signingConfig signingConfigs.wifiexpert_config
             minifyEnabled false
-            useProguard true
-            shrinkResources true
+            useProguard false
+            shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
 
