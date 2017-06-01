@@ -102,11 +102,11 @@ public class ParseServerInformation {
         return info;
     }
 
-    ServerInformation getServerInfo() {
-        if (this.serverInformation != null) {
-            return this.serverInformation;
+    ServerInformation getServerInfo(boolean enableFetchIfNeeded) {
+        //No fetch, just return what we have
+        if (! enableFetchIfNeeded || serverInformation != null) {
+            return serverInformation;
         }
-        //Fetch the info and return
         return fetchServerInfo();
     }
 
