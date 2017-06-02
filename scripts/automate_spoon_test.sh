@@ -22,7 +22,7 @@ cat << EOF
         -v|--verbose  verbose mode. Can be used multiple times for increased verbosity.
         -c|--checkconfig            check config and exit.
         -e|--emailstonotify   email address to notify (make sure your mail is set up).
-        -o|--outputdir  Output dir to copy all the results
+        -o|--outputdir  Output dir to copy all the results (def:pathToRepo/server/)
         -n|--numvms Number of vms to run test on (def: 1, will pick top n from the list returned by VBoxManage)
         -u|--resulturl URL for viewing results (default: 0.0.0.0:5187/ -- if running server.py in the repo).
         -z|--buildflavors (comma separated. default:wifidoc,dobby)
@@ -129,7 +129,7 @@ notify_failure () {
 	current_build_flavor=$1
 	echo "BUILD FAILED"
 	if [ -z $RESULT_URL ]; then
-		BODY="Gradle build failed: You can also just run the server like python $DOBBY_SERVER_HOME/server.py and see the results at http://0.0.0.0/index.html"
+		BODY="Gradle build failed: You can also just run the server like python $OUTPUT_DIR_TO_SERVE_FILES/server.py and see the results at http://0.0.0.0/index.html"
 	else
 		BODY="Gradle build failed: See the results $RESULT_URL for UI test results."
 	fi
@@ -143,7 +143,7 @@ notify_success () {
 	current_build_flavor=$1
 	echo "BUILD SUCCEEDED"
 	if [ -z $RESULT_URL ]; then
-		BODY="Gradle build succeeded: You can also just run the server like python $DOBBY_SERVER_HOME/server.py and see the results at http://0.0.0.0/index.html"
+		BODY="Gradle build succeeded: You can also just run the server like python $OUTPUT_DIR_TO_SERVE_FILES/server.py and see the results at http://0.0.0.0/index.html"
 	else
 		BODY="Gradle build succeeded: See the results $RESULT_URL for UI test results."
 	fi
@@ -232,7 +232,10 @@ run_emulator_tests () {
     should_report_failure=0
 
 
-    rm -rf $DOBBY_SERVER_HOME/spoon/${current_build_flavor}
+	if [ ! -z $OUTPUT_DIR_TO_SERVE_FILES ]; then
+		rm -rf $OUTPUT_DIR_TO_SERVE_FILES/${current_build_flavor}
+	fi
+
     clean_slate
     num_lines=`wc -l $EMULATOR_LIST_FILE | cut -d ' ' -f1`
 	vm_number=0
@@ -326,12 +329,8 @@ run_emulator_tests () {
 
         #Store the output in a diff location
 		output_path_spoon_results="$PATH_TO_REPO_DIR/Dobby/app/build/spoon/${current_build_flavor}"
-        mkdir -p $DOBBY_SERVER_HOME/spoon/${current_build_flavor}/$api_level
-        cp -r $output_path_spoon_results/debug/* $DOBBY_SERVER_HOME/spoon/${current_build_flavor}/$api_level/
-        
 		if [ ! -z $OUTPUT_DIR_TO_SERVE_FILES ]; then
 			echo "$OUTPUT_DIR_TO_SERVE_FILES is specified, so copying results there"
-			rm -rf $OUTPUT_DIR_TO_SERVE_FILES/${current_build_flavor}/${api_level}
 			mkdir -p $OUTPUT_DIR_TO_SERVE_FILES/${current_build_flavor}/$api_level
         	cp -r $output_path_spoon_results/debug/* $OUTPUT_DIR_TO_SERVE_FILES/${current_build_flavor}/$api_level/
 		fi
@@ -678,7 +677,9 @@ GITHUB_REPO_NAME=`echo $GITHUB_REPO | rev | cut -d "/" -f 1 | rev | cut -d "." -
 PATH_TO_REPO_DIR="$TEST_DIR/$GITHUB_REPO_NAME"
 GRADLEW_PATH="$PATH_TO_REPO_DIR/Dobby"
 DOBBY_PATH="$PATH_TO_REPO_DIR/Dobby"
-DOBBY_SERVER_HOME="$PATH_TO_REPO_DIR/server"
+if [ -z $OUTPUT_DIR_TO_SERVE_FILES ]; then
+	OUTPUT_DIR_TO_SERVE_FILES="$PATH_TO_REPO_DIR/server/spoon"
+fi
 
 ARUNESH_EMAIL="arunesh@obiai.tech"
 VIVEK_EMAIL="vivek@obiai.tech"
