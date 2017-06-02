@@ -11,14 +11,14 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.inceptai.dobby.R;
-import com.inceptai.dobby.ai.suggest.LocalSnippet;
+import com.inceptai.dobby.ai.suggest.LocalSummary;
 import com.inceptai.dobby.utils.DobbyLog;
 
 import java.util.ArrayList;
 
 public class SuggestionActivity extends AppCompatActivity {
 
-    private LocalSnippet localSnippet;
+    private LocalSummary localSummary;
     private ScrollView scrollView;
     private CardView bandwidthCardview;
 
@@ -42,13 +42,13 @@ public class SuggestionActivity extends AppCompatActivity {
         scrollView = (ScrollView) findViewById(R.id.suggestions_scroll_view);
         toolbar = (Toolbar) findViewById(R.id.toolbar);
 
-        if (localSnippet != null) {
+        if (localSummary != null) {
             fillSuggestions(getLayoutInflater());
         }
     }
 
-    public void setSuggestions(LocalSnippet localSnippet) {
-        this.localSnippet = localSnippet;
+    public void setSuggestions(LocalSummary localSummary) {
+        this.localSummary = localSummary;
     }
 
     private void fetchViewInstances(View cardView) {
@@ -62,7 +62,7 @@ public class SuggestionActivity extends AppCompatActivity {
         scrollView.addView(bandwidthCardview);
         fetchViewInstances(bandwidthCardview);
 
-        ArrayList<Pair<String, String>> stringList = localSnippet.getStrings();
+        ArrayList<Pair<String, String>> stringList = localSummary.getStrings();
         DobbyLog.i("StringList size = " + stringList.size());
         if (stringList.size() >= 1) {
             overallBwTv.setText(stringList.get(0).first);

@@ -7,7 +7,7 @@ package com.inceptai.dobby.fake;
 import android.content.Context;
 
 import com.inceptai.dobby.ai.DataInterpreter;
-import com.inceptai.dobby.ai.suggest.LocalSnippet;
+import com.inceptai.dobby.ai.suggest.LocalSummary;
 import com.inceptai.dobby.ai.suggest.NewSuggestions;
 
 /**
@@ -32,7 +32,7 @@ public class BetaInferenceEngine {
         bandwidthGrade = DataInterpreter.interpret(download, upload, FAKE_ISP, FAKE_EXTERNAL_IP, 0);
     }
 
-    LocalSnippet doInference(Context context) {
+    LocalSummary doInference(Context context) {
         NewSuggestions.DataSummary dataSummary = new NewSuggestions.DataSummary(bandwidthGrade, null, null, null);
         NewSuggestions newSuggestions = new NewSuggestions(dataSummary, context);
         return newSuggestions.getSuggestions();

@@ -4,11 +4,9 @@ package com.inceptai.dobby.ui;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.ShareCompat;
 import android.support.v4.util.Pair;
-import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
@@ -21,7 +19,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.inceptai.dobby.R;
-import com.inceptai.dobby.ai.suggest.LocalSnippet;
+import com.inceptai.dobby.ai.suggest.LocalSummary;
 import com.inceptai.dobby.utils.DobbyLog;
 
 import java.util.ArrayList;
@@ -32,9 +30,10 @@ import java.util.ArrayList;
 public class SuggestionsFragment extends Fragment {
     public static final String TAG = "SuggestionsFragment";
     private static final String ARG_PARAM1 = "param1";
-    private LocalSnippet localSnippet;
+    private LocalSummary localSummary;
     private ScrollView scrollView;
     private CardView bandwidthCardview;
+    private CardView overallSummaryCv;
 
     private TextView overallBwTv;
     private TextView uploadTv;
@@ -48,8 +47,8 @@ public class SuggestionsFragment extends Fragment {
         // Required empty public constructor
     }
 
-    public void setSuggestions(LocalSnippet localSnippet) {
-        this.localSnippet = localSnippet;
+    public void setSuggestions(LocalSummary localSummary) {
+        this.localSummary = localSummary;
     }
 
     public static SuggestionsFragment newInstance(String param1) {
@@ -84,7 +83,7 @@ public class SuggestionsFragment extends Fragment {
             }
         });
 
-        if (localSnippet != null) {
+        if (localSummary != null) {
             fillSuggestions(inflater);
         }
         return view;
@@ -113,7 +112,7 @@ public class SuggestionsFragment extends Fragment {
         scrollView.addView(bandwidthCardview);
         fetchViewInstances(bandwidthCardview);
 
-        ArrayList<Pair<String, String>> stringList = localSnippet.getStrings();
+        ArrayList<Pair<String, String>> stringList = localSummary.getStrings();
         DobbyLog.i("StringList size = " + stringList.size());
         if (stringList.size() >= 1) {
             overallBwTv.setText(stringList.get(0).first);
@@ -124,6 +123,32 @@ public class SuggestionsFragment extends Fragment {
         if (stringList.size() >= 3) {
             downloadTv.setText(stringList.get(1).first);
         }
+    }
+
+    private void fillSuggestions2(LayoutInflater inflater) {
+        overallSummaryCv = (CardView) inflater.inflate(R.layout.wd_result_summary_cardview, null);
+        scrollView.addView(overallSummaryCv);
+        fetchOverallSummaryViews(overallSummaryCv);
+
+        localSummary.getSummary().getBandwidth()
+
+        ArrayList<Pair<String, String>> stringList = localSummary.getStrings();
+        DobbyLog.i("StringList size = " + stringList.size());
+        if (stringList.size() >= 1) {
+            overallBwTv.setText(stringList.get(0).first);
+        }
+        if (stringList.size() >= 2) {
+            uploadTv.setText(stringList.get(1).first);
+        }
+        if (stringList.size() >= 3) {
+            downloadTv.setText(stringList.get(1).first);
+        }
+    }
+
+    private void fetchOverallSummaryViews(View rootView) {
+        overallBwTv = (TextView) rootView.findViewById(R.id.overall_bw_tv);
+        uploadTv = (TextView) rootView.findViewById(R.id.upload_bw_tv);
+        downloadTv = (TextView) rootView.findViewById(R.id.download_bw_tv);
     }
 
     private void contactExpertUi() {

@@ -17,7 +17,7 @@ import com.inceptai.dobby.NetworkLayer;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.ai.Action;
 import com.inceptai.dobby.ai.DobbyAi;
-import com.inceptai.dobby.ai.suggest.LocalSnippet;
+import com.inceptai.dobby.ai.suggest.LocalSummary;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.fake.FakeDataIntentReceiver;
 import com.inceptai.dobby.utils.DobbyLog;
@@ -75,14 +75,14 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
         mainFragment = (WifiDocMainFragment) existingFragment;
     }
 
-    public void setupSuggestionsFragment(LocalSnippet localSnippet) {
+    public void setupSuggestionsFragment(LocalSummary localSummary) {
         // Insert the fragment by replacing any existing fragment
         FragmentManager fragmentManager = getSupportFragmentManager();
         suggestionsFragment = (SuggestionsFragment) fragmentManager.findFragmentByTag(SuggestionsFragment.TAG);
         if (suggestionsFragment == null) {
             try {
                 suggestionsFragment = SuggestionsFragment.newInstance(Utils.EMPTY_STRING);
-                suggestionsFragment.setSuggestions(localSnippet);
+                suggestionsFragment.setSuggestions(localSummary);
             } catch (Exception e) {
                 DobbyLog.e("Unable to create SuggestionsFragment");
             }
@@ -153,15 +153,15 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
         DobbyLog.v("WifiDocActivity end with bw cancellation");
     }
 
-    public void showFakeSuggestionsUi(LocalSnippet localSnippet) {
-        setupSuggestionsFragment(localSnippet);
+    public void showFakeSuggestionsUi(LocalSummary localSummary) {
+        setupSuggestionsFragment(localSummary);
     }
 
     @Override
     public boolean handleMessage(Message msg) {
         switch (msg.what) {
             case MSG_SHOW_SUGGESTIONS_UI:
-                setupSuggestionsFragment((LocalSnippet) msg.obj);
+                setupSuggestionsFragment((LocalSummary) msg.obj);
                 break;
             default:
                 return false;

@@ -7,7 +7,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Toast;
 
-import com.inceptai.dobby.ai.suggest.LocalSnippet;
+import com.inceptai.dobby.ai.suggest.LocalSummary;
 import com.inceptai.dobby.ui.WifiDocActivity;
 import com.inceptai.dobby.utils.DobbyLog;
 
@@ -56,7 +56,7 @@ public class FakeDataIntentReceiver extends BroadcastReceiver {
         String showSuggestionsString = bundle.getString(KEY_SHOW_SUGGESTIONS);
         if (Strings.isNotBlank(showSuggestionsString)) {
             if (Boolean.valueOf(showSuggestionsString)) {
-                LocalSnippet snippet = BetaInferenceEngine.get().doInference(context);
+                LocalSummary snippet = BetaInferenceEngine.get().doInference(context);
                 wifiDocActivity.showFakeSuggestionsUi(snippet);
             }
         }
