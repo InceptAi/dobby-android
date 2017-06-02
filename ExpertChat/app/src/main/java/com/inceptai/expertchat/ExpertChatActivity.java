@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -33,13 +34,17 @@ public class ExpertChatActivity extends AppCompatActivity {
     public static final String UUID_EXTRA = "UUID";
 
     public static class MessageViewHolder extends RecyclerView.ViewHolder {
+        LinearLayout fromExpertLayout;
+        LinearLayout fromUserLayout;
         TextView expertMessageTv;
         TextView userMessageTv;
 
         public MessageViewHolder(View v) {
             super(v);
-            expertMessageTv = (TextView) itemView.findViewById(R.id.expert_message_tv);
-            userMessageTv = (TextView) itemView.findViewById(R.id.user_message_tv);
+            fromExpertLayout = (LinearLayout) itemView.findViewById(R.id.expert_chat_ll);
+            fromUserLayout = (LinearLayout) itemView.findViewById(R.id.user_chat_ll);
+            expertMessageTv = (TextView) itemView.findViewById(R.id.expert_chat_tv);
+            userMessageTv = (TextView) itemView.findViewById(R.id.user_chat_tv);
         }
     }
 
@@ -68,7 +73,7 @@ public class ExpertChatActivity extends AppCompatActivity {
         setContentView(R.layout.activity_expert_chat);
 
         userUuid = getIntent().getStringExtra(UUID_EXTRA);
-        childPath = CHAT_ROOM_CHILD_BASE_WIFI_TESTER + "/" + "user_" + userUuid;
+        childPath = CHAT_ROOM_CHILD_BASE_WIFI_TESTER + "/" + userUuid;
         roomTitleTv = (TextView) findViewById(R.id.roomTitleTv);
         roomTitleTv.setText(childPath);
 
@@ -101,14 +106,16 @@ public class ExpertChatActivity extends AppCompatActivity {
             protected void populateViewHolder(final MessageViewHolder viewHolder,
                                               ExpertChat expertChat, int position) {
                 mProgressBar.setVisibility(ProgressBar.INVISIBLE);
-                if (expertChat.getText() != null) {
+                if (ExpertChat.isExpertChat(expertChat)) {
+                    viewHolder.fromUserLayout.setVisibility(View.GONE);
+                    viewHolder.fromExpertLayout.setVisibility(View.VISIBLE);
                     viewHolder.expertMessageTv.setText(expertChat.getText());
-                    viewHolder.expertMessageTv.setVisibility(TextView.VISIBLE);
-                } else {
-                    viewHolder.expertMessageTv.setVisibility(TextView.GONE);
+                } else if (ExpertChat.isUserChat(expertChat)) {
+                    viewHolder.fromExpertLayout.setVisibility(View.GONE);
+                    viewHolder.fromUserLayout.setVisibility(View.VISIBLE);
+                    viewHolder.userMessageTv.setText(expertChat.getText());
                 }
 
-                viewHolder.userMessageTv.setText(expertChat.getText());
                 if (expertChat.getText() != null) {
                     // write this message to the on-device index
                     FirebaseAppIndex.getInstance().update(getMessageIndexable(expertChat));

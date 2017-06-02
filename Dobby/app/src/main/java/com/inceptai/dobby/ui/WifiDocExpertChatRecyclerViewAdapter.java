@@ -72,11 +72,11 @@ public class WifiDocExpertChatRecyclerViewAdapter extends Adapter<RecyclerView.V
             return;
         }
         ExpertChat expertChat = expertChatList.get(position);
-        if (expertChat.isExpertChat()) {
+        if (ExpertChat.isExpertChat(expertChat)) {
             viewHolder.fromUserLayout.setVisibility(View.GONE);
             viewHolder.fromExpertLayout.setVisibility(View.VISIBLE);
             viewHolder.expertChatTv.setText(expertChat.getText());
-        } else if (expertChat.isUserChat()) {
+        } else if (ExpertChat.isUserChat(expertChat)) {
             viewHolder.fromExpertLayout.setVisibility(View.GONE);
             viewHolder.fromUserLayout.setVisibility(View.VISIBLE);
             viewHolder.userChatTv.setText(expertChat.getText());

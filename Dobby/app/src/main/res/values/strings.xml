@@ -97,5 +97,6 @@
     <string name="tap_anim_run_tests">Run some tests</string>
     <string name="tap_anim_run_tests_long_msg">Tap the button to let Wifi Tester run some tests.</string>
     <string name="status_closest_servers" formatted="false">Computing closest out of %1$d servers &#8230;</string>
-    <string name="status_found_closest_server" formatted="false">Closest server in %1$s has a latency of %2$.2f ms.</string>
+    <string name="status_found_closest_server" formatted="false">Closest server in %1%s has a latency of %2$.2f ms.</string>
+    <string name="expert_chat_title">Chat with an Expert</string>
 </resources>
