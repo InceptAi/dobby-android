@@ -127,7 +127,7 @@ public class SuggestionsFragment extends Fragment {
     }
 
     private void contactExpertUi() {
-        Snackbar.make(getView(), "Not implemented yet.", Snackbar.LENGTH_SHORT).show();
+        startActivity(new Intent(getContext(), ExpertChatActivity.class));
     }
 
     private void shareResults() {

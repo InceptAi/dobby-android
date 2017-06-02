@@ -8,6 +8,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -27,7 +28,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 public class ExpertChatActivity extends AppCompatActivity {
-    public static final String CHAT_MESSAGES_CHILD = "expert_chat_messages";
+    public static final String CHAT_ROOM_CHILD_BASE_DOBBY = "dobby_chat_rooms";
+    public static final String CHAT_ROOM_CHILD_BASE_WIFI_TESTER = "wifitester_chat_rooms";
 
     public static class MessageViewHolder extends RecyclerView.ViewHolder {
         TextView expertMessageTv;
@@ -74,7 +76,7 @@ public class ExpertChatActivity extends AppCompatActivity {
                 ExpertChat.class,
                 R.layout.expert_chat_message_item,
                 MessageViewHolder.class,
-                mFirebaseDatabaseReference.child(CHAT_MESSAGES_CHILD)) {
+                mFirebaseDatabaseReference.child(CHAT_ROOM_CHILD_BASE_WIFI_TESTER)) {
 
             @Override
             protected ExpertChat parseSnapshot(DataSnapshot snapshot) {
@@ -82,6 +84,7 @@ public class ExpertChatActivity extends AppCompatActivity {
                 if (expertChat != null) {
                     expertChat.setId(snapshot.getKey());
                 }
+                Log.w("ExpertChat", "Received chat:" + expertChat.getText());
                 return expertChat;
             }
 
@@ -153,7 +156,7 @@ public class ExpertChatActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 ExpertChat expertChat = new ExpertChat(mMessageEditText.getText().toString(), ExpertChat.MSG_TYPE_EXPERT_TEXT);
-                mFirebaseDatabaseReference.child(CHAT_MESSAGES_CHILD).push().setValue(expertChat);
+                mFirebaseDatabaseReference.child(CHAT_ROOM_CHILD_BASE_WIFI_TESTER).push().setValue(expertChat);
                 mMessageEditText.setText("");
                 mFirebaseAnalytics.logEvent(MESSAGE_SENT_EVENT, null);
             }

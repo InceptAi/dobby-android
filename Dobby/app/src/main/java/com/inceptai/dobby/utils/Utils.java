@@ -47,12 +47,13 @@ public class Utils {
     public static final String EMPTY_STRING = "";
     public static final String TRUE_STRING = "true";
     public static final String FALSE_STRING = "false";
+    public static final String ZERO_POINT_ZERO = "0.0";
+    public static final String WIFIDOC_FLAVOR = "wifidoc";
+    public static final String PREFERENCES_FILE = "wifi_tester_settings";
+
     private static final int READ_TIMEOUT_MS = 5000;
     private static final int CONNECTION_TIMEOUT_MS = 5000;
-    public static final String ZERO_POINT_ZERO = "0.0";
     private static Random random = new Random();
-
-    public static final String PREFERENCES_FILE = "wifi_tester_settings";
 
     private Utils() {
     }

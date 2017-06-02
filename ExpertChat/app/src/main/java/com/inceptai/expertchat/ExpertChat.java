@@ -41,4 +41,11 @@ public class ExpertChat {
         this.text = text;
     }
 
+    public boolean isUserChat() {
+        return messageType == MSG_TYPE_USER_TEXT;
+    }
+
+    public boolean isExpertChat() {
+        return messageType == MSG_TYPE_EXPERT_TEXT;
+    }
 }

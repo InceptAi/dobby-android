@@ -1,5 +1,7 @@
 package com.inceptai.dobby.ui;
 
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -16,12 +18,16 @@ import android.widget.TextView;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.expert.ExpertChat;
+import com.inceptai.dobby.expert.ExpertChatService;
 
-public class ExpertChatActivity extends AppCompatActivity {
+import java.util.ArrayList;
+
+public class ExpertChatActivity extends AppCompatActivity implements ExpertChatService.ChatCallback, Handler.Callback {
     public static final String CHAT_MESSAGES_CHILD = "expert_chat_rooms";
-
+    private static final int MSG_UPDATE_CHAT = 1001;
 
     public static class MessageViewHolder extends RecyclerView.ViewHolder {
         TextView expertMessageTv;
@@ -45,10 +51,18 @@ public class ExpertChatActivity extends AppCompatActivity {
     private Button mSendButton;
     private ImageView mAddMessageImageView;
 
+    private ExpertChatService expertChatService;
+    private WifiDocExpertChatRecyclerViewAdapter recyclerViewAdapter;
+    private DobbyApplication dobbyApplication;
+
+    private Handler handler;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_expert_chat);
+
+        handler = new Handler(this);
 
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
         mMessageRecyclerView = (RecyclerView) findViewById(R.id.messageRecyclerView);
@@ -56,6 +70,9 @@ public class ExpertChatActivity extends AppCompatActivity {
         mLinearLayoutManager.setStackFromEnd(true);
         mMessageRecyclerView.setLayoutManager(mLinearLayoutManager);
 
+        dobbyApplication = (DobbyApplication) getApplication();
+
+        recyclerViewAdapter = new WifiDocExpertChatRecyclerViewAdapter(this, new ArrayList<ExpertChat>());
         // New child entries
         mFirebaseDatabaseReference = FirebaseDatabase.getInstance().getReference();
         mFirebaseAdapter = new FirebaseRecyclerAdapter<ExpertChat, MessageViewHolder>(
@@ -96,7 +113,7 @@ public class ExpertChatActivity extends AppCompatActivity {
             }
         });
         mMessageRecyclerView.setLayoutManager(mLinearLayoutManager);
-        mMessageRecyclerView.setAdapter(mFirebaseAdapter);
+        mMessageRecyclerView.setAdapter(recyclerViewAdapter);
 
         mMessageEditText = (EditText) findViewById(R.id.messageEditText);
         mMessageEditText.addTextChangedListener(new TextWatcher() {
@@ -138,5 +155,34 @@ public class ExpertChatActivity extends AppCompatActivity {
                 // Select image for image message on click.
             }
         });
+
+        expertChatService = ExpertChatService.newInstance(dobbyApplication.getUserUuid());
+        expertChatService.setCallback(this);
+    }
+
+    @Override
+    public void onMessageAvailable(ExpertChat expertChat) {
+        Message.obtain(handler, MSG_UPDATE_CHAT, expertChat).sendToTarget();
+    }
+
+    @Override
+    public boolean handleMessage(Message msg) {
+        switch (msg.what) {
+            case MSG_UPDATE_CHAT:
+                addChatEntry((ExpertChat) msg.obj);
+                return true;
+        }
+        return false;
+    }
+
+    private void addChatEntry(ExpertChat expertChat) {
+        recyclerViewAdapter.addChatEntry(expertChat);
+        mMessageRecyclerView.smoothScrollToPosition(recyclerViewAdapter.getItemCount());
+    }
+
+    @Override
+    protected void onStop() {
+        expertChatService.disconnect();
+        super.onStop();
     }
 }
