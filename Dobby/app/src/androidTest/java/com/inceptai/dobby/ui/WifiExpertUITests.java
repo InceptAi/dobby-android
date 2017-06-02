@@ -204,7 +204,7 @@ public class WifiExpertUITests {
         ViewInteraction frameLayout2 = onView(withId(R.id.bandwidth_results_cardview));
         frameLayout2.check(matches(isDisplayed()));
 
-        ViewInteraction textView3 = onView(allOf(withId(R.id.dobbyTextTv), withText(containsString("?"))));
+        ViewInteraction textView3 = onView(allOf(withId(R.id.dobbyTextTv), withText(containsString("details"))));
         textView3.check(matches(isDisplayed()));
 
         ViewInteraction button9 = onView(
