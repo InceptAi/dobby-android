@@ -21,7 +21,9 @@ import javax.inject.Singleton;
  */
 @Singleton
 public class InferenceDatabaseWriter {
-    private static final String INFERENCE_DB_ROOT = BuildConfig.FLAVOR + "/" + BuildConfig.BUILD_TYPE + "/" + "inferences";
+    private static final String INFERENCES_NODE_NAME = "inferences";
+    private static final String INFERENCE_DB_ROOT = BuildConfig.FLAVOR + "/" + BuildConfig.BUILD_TYPE + "/" + INFERENCES_NODE_NAME;
+    private static final String USERS_DB_ROOT = BuildConfig.FLAVOR + "/" + BuildConfig.BUILD_TYPE + "/" + "users";
     private DatabaseReference mDatabase;
     private ExecutorService executorService;
 
@@ -36,13 +38,25 @@ public class InferenceDatabaseWriter {
         Map<String, Object> childUpdates = new HashMap<>();
         //Update the inferencing
         String inferenceKey = mDatabase.child(INFERENCE_DB_ROOT).push().getKey();
+        //String inferenceKey = mDatabase.child("users").child(inferenceRecord.uid).child("inferences").push().getKey()
         DobbyLog.i("Inference key: " + inferenceKey);
         Map<String, Object> inferenceValues = inferenceRecord.toMap();
         childUpdates.put("/" + INFERENCE_DB_ROOT + "/" + inferenceKey, inferenceValues);
-        mDatabase.child(INFERENCE_DB_ROOT).child(inferenceKey).addValueEventListener(postListener);
+        mDatabase.child(INFERENCE_DB_ROOT).child(inferenceKey).addValueEventListener(inferenceListener);
         mDatabase.updateChildren(childUpdates);
-        //TODO: Update the user index with the inference. Create a user if it doesn't exist.
-        //String keyForUserInferenceList = mDatabase.child("users").child(inferenceRecord.uid).child("inferences").push().getKey();
+
+        //TODO: Create/Update the user index with the inference. Create a user if it doesn't exist.
+        String userKey = "DUMMY";
+        if (inferenceRecord.uid != null) {
+            userKey = inferenceRecord.uid;
+        } else {
+            userKey = mDatabase.child(USERS_DB_ROOT).push().getKey();
+        }
+        DobbyLog.i("Inference key: " + inferenceKey);
+        Map<String, Object> userUpdates = new HashMap<>();
+        userUpdates.put("/" + USERS_DB_ROOT + "/" + userKey + "/" + INFERENCES_NODE_NAME + "/" + inferenceKey , inferenceValues);
+        mDatabase.child(USERS_DB_ROOT).child(userKey).child(INFERENCES_NODE_NAME).child(inferenceKey).addValueEventListener(userListener);
+        mDatabase.updateChildren(userUpdates);
     }
 
     public void writeInferenceToDatabase(final InferenceRecord inferenceRecord) {
@@ -54,7 +68,7 @@ public class InferenceDatabaseWriter {
         });
     }
 
-    private ValueEventListener postListener = new ValueEventListener() {
+    private ValueEventListener inferenceListener = new ValueEventListener() {
         @Override
         public void onDataChange(DataSnapshot dataSnapshot) {
             final DataSnapshot snapshot = dataSnapshot;
@@ -65,6 +79,37 @@ public class InferenceDatabaseWriter {
                     InferenceRecord inferenceRecord = snapshot.getValue(InferenceRecord.class);
                     if (inferenceRecord != null) {
                         DobbyLog.v("Wrote to record: " + inferenceRecord.toString());
+                    } else {
+                        DobbyLog.v("Got null record from db");
+                    }
+                }
+            });
+        }
+
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+            // Getting Post failed, log a message
+            final DatabaseError error = databaseError;
+            executorService.submit(new Runnable() {
+                @Override
+                public void run() {
+                    DobbyLog.w("loadPost:onCancelled" + error.toException());
+                }
+            });
+        }
+    };
+
+    private ValueEventListener userListener = new ValueEventListener() {
+        @Override
+        public void onDataChange(DataSnapshot dataSnapshot) {
+            final DataSnapshot snapshot = dataSnapshot;
+            // Get Post object and use the values to update the UI
+            executorService.submit(new Runnable() {
+                @Override
+                public void run() {
+                    InferenceRecord inferenceRecord = snapshot.getValue(InferenceRecord.class);
+                    if (inferenceRecord != null) {
+                        DobbyLog.v("Wrote to User record: " + inferenceRecord.toString());
                     } else {
                         DobbyLog.v("Got null record from db");
                     }

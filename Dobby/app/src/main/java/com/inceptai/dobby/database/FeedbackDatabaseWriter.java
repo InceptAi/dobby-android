@@ -21,7 +21,9 @@ import javax.inject.Singleton;
  */
 @Singleton
 public class FeedbackDatabaseWriter {
-    private static final String FEEDBACK_DB_ROOT = BuildConfig.FLAVOR + "/" + BuildConfig.BUILD_TYPE  + "/" + "feedbacks";
+    private static final String FEEDBACK_NODE_NAME = "feedbacks";
+    private static final String FEEDBACK_DB_ROOT = BuildConfig.FLAVOR + "/" + BuildConfig.BUILD_TYPE  + "/" + FEEDBACK_NODE_NAME;
+    private static final String USERS_DB_ROOT = BuildConfig.FLAVOR + "/" + BuildConfig.BUILD_TYPE + "/" + "users";
     private DatabaseReference mDatabase;
     private ExecutorService executorService;
 
@@ -41,6 +43,19 @@ public class FeedbackDatabaseWriter {
         childUpdates.put("/" + FEEDBACK_DB_ROOT + "/" + feedbackKey, feedbackValues);
         mDatabase.child(FEEDBACK_DB_ROOT).child(feedbackKey).addValueEventListener(feedbackPostListener);
         mDatabase.updateChildren(childUpdates);
+
+
+        String userKey = "DUMMY";
+        if (feedbackRecord.uid != null) {
+            userKey = feedbackRecord.uid;
+        } else {
+            userKey = mDatabase.child(USERS_DB_ROOT).push().getKey();
+        }
+        DobbyLog.i("User key: " + userKey);
+        Map<String, Object> userUpdates = new HashMap<>();
+        userUpdates.put("/" + USERS_DB_ROOT + "/" + userKey + "/" + FEEDBACK_NODE_NAME + "/" + feedbackKey , feedbackValues);
+        mDatabase.child(USERS_DB_ROOT).child(userKey).child(FEEDBACK_NODE_NAME).child(feedbackKey).addValueEventListener(userFeedbackListener);
+        mDatabase.updateChildren(userUpdates);
     }
 
     public void writeFeedbackToDatabase(final FeedbackRecord feedbackRecord) {
@@ -53,6 +68,37 @@ public class FeedbackDatabaseWriter {
     }
 
     private ValueEventListener feedbackPostListener = new ValueEventListener() {
+        @Override
+        public void onDataChange(DataSnapshot dataSnapshot) {
+            final DataSnapshot snapshot = dataSnapshot;
+            // Get Post object and use the values to update the UI
+            executorService.submit(new Runnable() {
+                @Override
+                public void run() {
+                    FeedbackRecord feedbackRecord = snapshot.getValue(FeedbackRecord.class);
+                    if (feedbackRecord != null) {
+                        DobbyLog.v("Wrote to record: " + feedbackRecord.toString());
+                    } else {
+                        DobbyLog.v("Got null record from db");
+                    }
+                }
+            });
+        }
+
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+            // Getting Post failed, log a message
+            final DatabaseError error = databaseError;
+            executorService.submit(new Runnable() {
+                @Override
+                public void run() {
+                    DobbyLog.w("loadPost:onCancelled" + error.toException());
+                }
+            });
+        }
+    };
+
+    private ValueEventListener userFeedbackListener = new ValueEventListener() {
         @Override
         public void onDataChange(DataSnapshot dataSnapshot) {
             final DataSnapshot snapshot = dataSnapshot;
