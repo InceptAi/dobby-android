@@ -331,7 +331,7 @@ run_emulator_tests () {
         
 		if [ ! -z $OUTPUT_DIR_TO_SERVE_FILES ]; then
 			echo "$OUTPUT_DIR_TO_SERVE_FILES is specified, so copying results there"
-			rm -rf $OUTPUT_DIR_TO_SERVE_FILES/${current_build_flavor}
+			rm -rf $OUTPUT_DIR_TO_SERVE_FILES/${current_build_flavor}/${api_level}
 			mkdir -p $OUTPUT_DIR_TO_SERVE_FILES/${current_build_flavor}/$api_level
         	cp -r $output_path_spoon_results/debug/* $OUTPUT_DIR_TO_SERVE_FILES/${current_build_flavor}/$api_level/
 		fi
