@@ -35,8 +35,8 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
 
         public MessageViewHolder(View v) {
             super(v);
-            expertMessageTv = (TextView) itemView.findViewById(R.id.expert_message_tv);
-            userMessageTv = (TextView) itemView.findViewById(R.id.user_message_tv);
+            expertMessageTv = (TextView) itemView.findViewById(R.id.wd_expert_chat_tv);
+            userMessageTv = (TextView) itemView.findViewById(R.id.wd_user_chat_tv);
         }
     }
 

@@ -30,6 +30,7 @@ import com.google.firebase.database.FirebaseDatabase;
 public class ExpertChatActivity extends AppCompatActivity {
     public static final String CHAT_ROOM_CHILD_BASE_DOBBY = "dobby_chat_rooms";
     public static final String CHAT_ROOM_CHILD_BASE_WIFI_TESTER = "wifitester_chat_rooms";
+    public static final String UUID_EXTRA = "UUID";
 
     public static class MessageViewHolder extends RecyclerView.ViewHolder {
         TextView expertMessageTv;
@@ -57,11 +58,19 @@ public class ExpertChatActivity extends AppCompatActivity {
     private DatabaseReference mFirebaseDatabaseReference;
     private FirebaseAnalytics mFirebaseAnalytics;
     private EditText mMessageEditText;
+    private String userUuid;
+    private String childPath;
+    private TextView roomTitleTv;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_expert_chat);
+
+        userUuid = getIntent().getStringExtra(UUID_EXTRA);
+        childPath = CHAT_ROOM_CHILD_BASE_WIFI_TESTER + "/" + "user_" + userUuid;
+        roomTitleTv = (TextView) findViewById(R.id.roomTitleTv);
+        roomTitleTv.setText(childPath);
 
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mUsername = ANONYMOUS;
@@ -76,7 +85,7 @@ public class ExpertChatActivity extends AppCompatActivity {
                 ExpertChat.class,
                 R.layout.expert_chat_message_item,
                 MessageViewHolder.class,
-                mFirebaseDatabaseReference.child(CHAT_ROOM_CHILD_BASE_WIFI_TESTER)) {
+                mFirebaseDatabaseReference.child(childPath)) {
 
             @Override
             protected ExpertChat parseSnapshot(DataSnapshot snapshot) {
@@ -156,7 +165,7 @@ public class ExpertChatActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 ExpertChat expertChat = new ExpertChat(mMessageEditText.getText().toString(), ExpertChat.MSG_TYPE_EXPERT_TEXT);
-                mFirebaseDatabaseReference.child(CHAT_ROOM_CHILD_BASE_WIFI_TESTER).push().setValue(expertChat);
+                mFirebaseDatabaseReference.child(childPath).push().setValue(expertChat);
                 mMessageEditText.setText("");
                 mFirebaseAnalytics.logEvent(MESSAGE_SENT_EVENT, null);
             }

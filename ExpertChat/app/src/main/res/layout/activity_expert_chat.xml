@@ -11,10 +11,19 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".ExpertChatActivity">
 
+    <TextView
+        android:layout_width="match_parent"
+        android:id="@+id/roomTitleTv"
+        tools:text="user_UUID"
+        android:paddingBottom="10dp"
+        android:gravity="center_horizontal"
+        android:layout_height="wrap_content" />
+
     <android.support.v7.widget.RecyclerView
         android:id="@+id/messageRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_below="@id/roomTitleTv"
         android:layout_above="@+id/linearLayout" />
 
     <LinearLayout
