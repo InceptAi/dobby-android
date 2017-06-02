@@ -17,7 +17,7 @@ import android.widget.ImageView;
 
 import com.google.common.net.InetAddresses;
 import com.google.gson.Gson;
-import com.inceptai.dobby.speedtest.BandwithTestCodes;
+import com.inceptai.dobby.speedtest.BandwidthTestCodes;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -839,7 +839,7 @@ public class Utils {
     }
 
     public static class BandwidthValue {
-        @BandwithTestCodes.TestMode
+        @BandwidthTestCodes.TestMode
         public int mode;
         public double value;
         public static BandwidthValue from(int mode, double value) {

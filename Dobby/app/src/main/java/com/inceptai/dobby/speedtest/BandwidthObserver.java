@@ -30,12 +30,12 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
     private String clientExternalIp = Utils.EMPTY_STRING;
     private BandwidthResult result;
 
-    @BandwithTestCodes.TestMode
+    @BandwidthTestCodes.TestMode
     private int testModeRequested;
 
-    @BandwithTestCodes.TestMode private int testsDone;
+    @BandwidthTestCodes.TestMode private int testsDone;
 
-    public BandwidthObserver(@BandwithTestCodes.TestMode int testMode) {
+    public BandwidthObserver(@BandwidthTestCodes.TestMode int testMode) {
         this.testModeRequested = testMode;
         listenersUpload = new HashSet<>();
         listenersDownload = new HashSet<>();
@@ -43,7 +43,7 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
         markTestsAsRunning();
         operationFuture = SettableFuture.create();
         result = new BandwidthResult(testMode);
-        testsDone = BandwithTestCodes.TestMode.IDLE;
+        testsDone = BandwidthTestCodes.TestMode.IDLE;
     }
 
     public synchronized void setInferenceEngine(InferenceEngine inferenceEngine) {
@@ -71,7 +71,7 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
         return operationFuture;
     }
 
-    @BandwithTestCodes.TestMode
+    @BandwidthTestCodes.TestMode
     public int getTestModeRequested() {
         return testModeRequested;
     }
@@ -112,7 +112,7 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
     }
 
     @Override
-    public synchronized void onTestFinished(@BandwithTestCodes.TestMode int testMode, BandwidthStats stats) {
+    public synchronized void onTestFinished(@BandwidthTestCodes.TestMode int testMode, BandwidthStats stats) {
         DobbyLog.v("BandwidthObserver onTestFinished");
         if (inferenceEngine != null) {
             DobbyLog.v("BandwidthObserver: Notifying bw stats with testmode " + testMode + " stats: " + stats.toString());
@@ -122,7 +122,7 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
             }
         }
 
-        HashSet<RtDataListener<Float>> listenerSet = testMode == BandwithTestCodes.TestMode.UPLOAD ? listenersUpload : listenersDownload;
+        HashSet<RtDataListener<Float>> listenerSet = testMode == BandwidthTestCodes.TestMode.UPLOAD ? listenersUpload : listenersDownload;
         for (RtDataListener<Float> listener : listenerSet) {
             listener.onClose();
         }
@@ -130,9 +130,9 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
         for (NewBandwidthAnalyzer.ResultsCallback callback : resultsCallbacks) {
             callback.onTestFinished(testMode, stats);
         }
-        if (testMode == BandwithTestCodes.TestMode.UPLOAD) {
+        if (testMode == BandwidthTestCodes.TestMode.UPLOAD) {
             result.setUploadStats(stats);
-        } else if (testMode == BandwithTestCodes.TestMode.DOWNLOAD) {
+        } else if (testMode == BandwidthTestCodes.TestMode.DOWNLOAD) {
             result.setDownloadStats(stats);
         }
 
@@ -145,13 +145,13 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
     }
 
     @Override
-    public synchronized void onTestProgress(@BandwithTestCodes.TestMode int testMode, double instantBandwidth) {
+    public synchronized void onTestProgress(@BandwidthTestCodes.TestMode int testMode, double instantBandwidth) {
         DobbyLog.v("BandwidthObserver onTestProgress");
         if (inferenceEngine != null) {
             inferenceEngine.notifyBandwidthTestProgress(testMode, instantBandwidth);
         }
 
-        HashSet<RtDataListener<Float>> listenerSet = testMode == BandwithTestCodes.TestMode.UPLOAD ? listenersUpload : listenersDownload;
+        HashSet<RtDataListener<Float>> listenerSet = testMode == BandwidthTestCodes.TestMode.UPLOAD ? listenersUpload : listenersDownload;
         for (RtDataListener<Float> listener : listenerSet) {
             listener.onUpdate((float) (instantBandwidth / 1.0E6));
         }
@@ -161,8 +161,8 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
     }
 
     @Override
-    public synchronized void onBandwidthTestError(@BandwithTestCodes.TestMode int testMode,
-                                     @BandwithTestCodes.ErrorCodes int errorCode,
+    public synchronized void onBandwidthTestError(@BandwidthTestCodes.TestMode int testMode,
+                                     @BandwidthTestCodes.ErrorCodes int errorCode,
                                      @Nullable String errorMessage) {
         //TODO: Inform the inference engine that we encountered an error during bandwidth tests.
         DobbyLog.v("BandwidthObserver: onBandwidthTestError Got bw test error: " + errorCode + " testmode: " + testMode);
@@ -185,9 +185,9 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
 
     @Override
     public synchronized void registerListener(RtDataListener<Float> listener, Integer sourceType) {
-        if (sourceType == BandwithTestCodes.TestMode.UPLOAD) {
+        if (sourceType == BandwidthTestCodes.TestMode.UPLOAD) {
             listenersUpload.add(listener);
-        } else if (sourceType == BandwithTestCodes.TestMode.DOWNLOAD) {
+        } else if (sourceType == BandwidthTestCodes.TestMode.DOWNLOAD) {
             listenersDownload.add(listener);
         }
     }
@@ -216,18 +216,18 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
         }
     }
 
-    private boolean areTestsDone(@BandwithTestCodes.TestMode int testModeDone) {
-        if (testsDone == BandwithTestCodes.TestMode.IDLE) {
+    private boolean areTestsDone(@BandwidthTestCodes.TestMode int testModeDone) {
+        if (testsDone == BandwidthTestCodes.TestMode.IDLE) {
             testsDone = testModeDone;
             return testsDone == testModeRequested;
         }
 
-        if (testsDone == BandwithTestCodes.TestMode.UPLOAD && testModeDone == BandwithTestCodes.TestMode.DOWNLOAD) {
-            testsDone = BandwithTestCodes.TestMode.DOWNLOAD_AND_UPLOAD;
+        if (testsDone == BandwidthTestCodes.TestMode.UPLOAD && testModeDone == BandwidthTestCodes.TestMode.DOWNLOAD) {
+            testsDone = BandwidthTestCodes.TestMode.DOWNLOAD_AND_UPLOAD;
         }
 
-        if (testsDone == BandwithTestCodes.TestMode.DOWNLOAD && testModeDone == BandwithTestCodes.TestMode.UPLOAD) {
-            testsDone = BandwithTestCodes.TestMode.DOWNLOAD_AND_UPLOAD;
+        if (testsDone == BandwidthTestCodes.TestMode.DOWNLOAD && testModeDone == BandwidthTestCodes.TestMode.UPLOAD) {
+            testsDone = BandwidthTestCodes.TestMode.DOWNLOAD_AND_UPLOAD;
         }
         return testsDone == testModeRequested;
     }

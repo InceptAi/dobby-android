@@ -66,7 +66,7 @@ public class CallbackThreadSwitcher implements NewBandwidthAnalyzer.ResultsCallb
     }
 
     @Override
-    public void onTestFinished(final @BandwithTestCodes.TestMode int testMode,
+    public void onTestFinished(final @BandwidthTestCodes.TestMode int testMode,
                                final BandwidthStats stats) {
         executorService.submit(new Runnable() {
             @Override
@@ -77,7 +77,7 @@ public class CallbackThreadSwitcher implements NewBandwidthAnalyzer.ResultsCallb
     }
 
     @Override
-    public void onTestProgress(final @BandwithTestCodes.TestMode int testMode,
+    public void onTestProgress(final @BandwidthTestCodes.TestMode int testMode,
                                final double instantBandwidth) {
         executorService.submit(new Runnable() {
             @Override
@@ -88,8 +88,8 @@ public class CallbackThreadSwitcher implements NewBandwidthAnalyzer.ResultsCallb
     }
 
     @Override
-    public void onBandwidthTestError(final @BandwithTestCodes.TestMode int testMode,
-                                     final @BandwithTestCodes.ErrorCodes int errorCode,
+    public void onBandwidthTestError(final @BandwidthTestCodes.TestMode int testMode,
+                                     final @BandwidthTestCodes.ErrorCodes int errorCode,
                                      final @Nullable String errorMessage) {
         executorService.submit(new Runnable() {
             @Override

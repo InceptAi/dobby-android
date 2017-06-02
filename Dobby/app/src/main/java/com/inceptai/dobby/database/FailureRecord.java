@@ -2,7 +2,7 @@ package com.inceptai.dobby.database;
 
 import com.google.firebase.database.Exclude;
 import com.google.firebase.database.IgnoreExtraProperties;
-import com.inceptai.dobby.speedtest.BandwithTestCodes;
+import com.inceptai.dobby.speedtest.BandwidthTestCodes;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,9 +18,9 @@ public class FailureRecord {
     public String appVersion;
     public String errorMessage;
     public long timestamp;
-    @BandwithTestCodes.TestMode
+    @BandwidthTestCodes.TestMode
     public int testMode;
-    @BandwithTestCodes.ErrorCodes
+    @BandwidthTestCodes.ErrorCodes
     public int errorCode;
 
     public FailureRecord() {}

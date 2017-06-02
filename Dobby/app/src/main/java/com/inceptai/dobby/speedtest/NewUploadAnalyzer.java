@@ -3,7 +3,7 @@ package com.inceptai.dobby.speedtest;
 import android.support.annotation.Nullable;
 
 import com.inceptai.dobby.model.BandwidthStats;
-import com.inceptai.dobby.speedtest.BandwithTestCodes.TestMode;
+import com.inceptai.dobby.speedtest.BandwidthTestCodes.TestMode;
 import com.inceptai.dobby.utils.DobbyLog;
 
 import java.util.concurrent.ExecutorService;
@@ -134,7 +134,7 @@ public class NewUploadAnalyzer {
         @Override
         public void onFinish(BandwidthStats stats) {
             if (resultsCallback != null) {
-                resultsCallback.onFinish(BandwithTestCodes.TestMode.UPLOAD, stats);
+                resultsCallback.onFinish(BandwidthTestCodes.TestMode.UPLOAD, stats);
             }
             cleanup();
         }

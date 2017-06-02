@@ -5,19 +5,19 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-import static com.inceptai.dobby.speedtest.BandwithTestCodes.ErrorCodes.ERROR_FETCHING_CONFIG;
-import static com.inceptai.dobby.speedtest.BandwithTestCodes.ErrorCodes.ERROR_WIFI_CONNECTED_AND_OFFLINE;
-import static com.inceptai.dobby.speedtest.BandwithTestCodes.ErrorCodes.ERROR_WIFI_CONNECTED_AND_UNKNOWN;
-import static com.inceptai.dobby.speedtest.BandwithTestCodes.ErrorCodes.ERROR_WIFI_IN_CAPTIVE_PORTAL;
-import static com.inceptai.dobby.speedtest.BandwithTestCodes.ErrorCodes.ERROR_WIFI_OFF;
-import static com.inceptai.dobby.speedtest.BandwithTestCodes.ErrorCodes.ERROR_WIFI_ON_AND_DISCONNECTED;
-import static com.inceptai.dobby.speedtest.BandwithTestCodes.ErrorCodes.ERROR_WIFI_UNKNOWN_STATE;
+import static com.inceptai.dobby.speedtest.BandwidthTestCodes.ErrorCodes.ERROR_FETCHING_CONFIG;
+import static com.inceptai.dobby.speedtest.BandwidthTestCodes.ErrorCodes.ERROR_WIFI_CONNECTED_AND_OFFLINE;
+import static com.inceptai.dobby.speedtest.BandwidthTestCodes.ErrorCodes.ERROR_WIFI_CONNECTED_AND_UNKNOWN;
+import static com.inceptai.dobby.speedtest.BandwidthTestCodes.ErrorCodes.ERROR_WIFI_IN_CAPTIVE_PORTAL;
+import static com.inceptai.dobby.speedtest.BandwidthTestCodes.ErrorCodes.ERROR_WIFI_OFF;
+import static com.inceptai.dobby.speedtest.BandwidthTestCodes.ErrorCodes.ERROR_WIFI_ON_AND_DISCONNECTED;
+import static com.inceptai.dobby.speedtest.BandwidthTestCodes.ErrorCodes.ERROR_WIFI_UNKNOWN_STATE;
 
 /**
  * Created by vivek on 4/5/17.
  */
 
-public class BandwithTestCodes {
+public class BandwidthTestCodes {
 
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({TestMode.DOWNLOAD_AND_UPLOAD, TestMode.DOWNLOAD,

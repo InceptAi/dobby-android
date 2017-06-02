@@ -25,7 +25,7 @@ import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.BandwidthStats;
 import com.inceptai.dobby.model.PingStats;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
-import com.inceptai.dobby.speedtest.BandwithTestCodes;
+import com.inceptai.dobby.speedtest.BandwidthTestCodes;
 import com.inceptai.dobby.speedtest.NewBandwidthAnalyzer;
 import com.inceptai.dobby.speedtest.ServerInformation;
 import com.inceptai.dobby.speedtest.SpeedTestConfig;
@@ -37,10 +37,10 @@ import java.util.concurrent.ExecutionException;
 
 import javax.inject.Inject;
 
-import static com.inceptai.dobby.speedtest.BandwithTestCodes.TestMode.DOWNLOAD;
-import static com.inceptai.dobby.speedtest.BandwithTestCodes.TestMode.DOWNLOAD_AND_UPLOAD;
-import static com.inceptai.dobby.speedtest.BandwithTestCodes.TestMode.IDLE;
-import static com.inceptai.dobby.speedtest.BandwithTestCodes.TestMode.UPLOAD;
+import static com.inceptai.dobby.speedtest.BandwidthTestCodes.TestMode.DOWNLOAD;
+import static com.inceptai.dobby.speedtest.BandwidthTestCodes.TestMode.DOWNLOAD_AND_UPLOAD;
+import static com.inceptai.dobby.speedtest.BandwidthTestCodes.TestMode.IDLE;
+import static com.inceptai.dobby.speedtest.BandwidthTestCodes.TestMode.UPLOAD;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -61,8 +61,8 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
     private TextView consoleTv;
     private long bwDisplayTs;
     private boolean scheduleFollowupBandwidthTest = false;
-    @BandwithTestCodes.TestMode
-    private int followupBandwidthTestMode = BandwithTestCodes.TestMode.IDLE;
+    @BandwidthTestCodes.TestMode
+    private int followupBandwidthTestMode = BandwidthTestCodes.TestMode.IDLE;
 
     @Inject
     NetworkLayer networkLayer;
@@ -121,11 +121,11 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
     public void onClick(View v) {
         String tag = (String) v.getTag();
         if (TAG_BW_TEST.equals(tag)) {
-            @BandwithTestCodes.TestMode int testMode = IDLE;
+            @BandwidthTestCodes.TestMode int testMode = IDLE;
             String config = "";
             if (uploadSwitchButton.isChecked()) {
                 config = "Upload ";
-                testMode = BandwithTestCodes.TestMode.UPLOAD;
+                testMode = BandwidthTestCodes.TestMode.UPLOAD;
             }
             if (downloadSwitchButton.isChecked()) {
                 config += "Download ";
@@ -220,7 +220,7 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
         addConsoleText("\nWifi Channel Stats:" + networkLayer.getChannelStats().toString());
     }
 
-    private void startBandwidthTest(@BandwithTestCodes.TestMode final int testMode) {
+    private void startBandwidthTest(@BandwidthTestCodes.TestMode final int testMode) {
         threadpool.submit(new Runnable() {
             @Override
             public void run() {
@@ -258,7 +258,7 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
     }
 
     @Override
-    public void onTestFinished(@BandwithTestCodes.TestMode int testMode, BandwidthStats stats) {
+    public void onTestFinished(@BandwidthTestCodes.TestMode int testMode, BandwidthStats stats) {
         addConsoleText("Bandwidth Test finished: " + stats.getOverallBandwidth() / 1.0E6 + " Mbps.");
         bwDisplayTs = 0;
         if (scheduleFollowupBandwidthTest) {
@@ -267,7 +267,7 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
     }
 
     @Override
-    public void onTestProgress(@BandwithTestCodes.TestMode int testMode, double instantBandwidth) {
+    public void onTestProgress(@BandwidthTestCodes.TestMode int testMode, double instantBandwidth) {
         long currentTs = System.currentTimeMillis();
         String type = testMode == UPLOAD ? "Upload " : "Download";
         if (currentTs - bwDisplayTs > 1000L) {
@@ -277,7 +277,7 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
     }
 
     @Override
-    public void onBandwidthTestError(@BandwithTestCodes.TestMode int testMode, @BandwithTestCodes.ErrorCodes int errorCode, @Nullable String errorMessage) {
+    public void onBandwidthTestError(@BandwidthTestCodes.TestMode int testMode, @BandwidthTestCodes.ErrorCodes int errorCode, @Nullable String errorMessage) {
         String msg = Strings.isNullOrEmpty(errorMessage) ? "" : errorMessage;
         addConsoleText("Bandwidth test error, exceptionCode: " + errorCode + ",  " + msg);
         if (scheduleFollowupBandwidthTest) {
@@ -290,14 +290,14 @@ public class DebugFragment extends Fragment implements View.OnClickListener, New
         addConsoleText("Found event on dobby event bus: " + event.toString());
     }
 
-    private void setFollowUpBandwidthTest(@BandwithTestCodes.TestMode int testMode) {
+    private void setFollowUpBandwidthTest(@BandwidthTestCodes.TestMode int testMode) {
         followupBandwidthTestMode = testMode;
         scheduleFollowupBandwidthTest = true;
     }
 
     private void clearFollowupBandwidthTest() {
         scheduleFollowupBandwidthTest = false;
-        followupBandwidthTestMode = BandwithTestCodes.TestMode.IDLE;
+        followupBandwidthTestMode = BandwidthTestCodes.TestMode.IDLE;
     }
 
     private void followupBandwidthTest() {

@@ -11,7 +11,7 @@ import com.inceptai.dobby.database.InferenceRecord;
 import com.inceptai.dobby.model.DobbyWifiInfo;
 import com.inceptai.dobby.model.IPLayerInfo;
 import com.inceptai.dobby.model.PingStats;
-import com.inceptai.dobby.speedtest.BandwithTestCodes;
+import com.inceptai.dobby.speedtest.BandwidthTestCodes;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 import com.inceptai.dobby.wifi.WifiState;
@@ -111,11 +111,11 @@ public class InferenceEngine {
     }
 
 
-    private String testModeToString(@BandwithTestCodes.TestMode int testMode) {
+    private String testModeToString(@BandwidthTestCodes.TestMode int testMode) {
         String testModeString = "UNKNOWN";
-        if (testMode == BandwithTestCodes.TestMode.DOWNLOAD) {
+        if (testMode == BandwidthTestCodes.TestMode.DOWNLOAD) {
             testModeString = "DOWNLOAD";
-        } else if (testMode == BandwithTestCodes.TestMode.UPLOAD) {
+        } else if (testMode == BandwidthTestCodes.TestMode.UPLOAD) {
             testModeString = "UPLOAD";
         }
         return testModeString;
@@ -144,11 +144,13 @@ public class InferenceEngine {
         DataInterpreter.PingGrade pingGrade = new DataInterpreter.PingGrade();
         if (pingStatsMap != null && ipLayerInfo != null) {
             pingGrade = DataInterpreter.interpret(pingStatsMap, ipLayerInfo);
-            pingGrade.errorCode = BandwithTestCodes.ErrorCodes.NO_ERROR;
+            pingGrade.errorCode = BandwidthTestCodes.ErrorCodes.NO_ERROR;
         } else if (ipLayerInfo == null || ipLayerInfo.gateway == null || ipLayerInfo.gateway.equals("0.0.0.0")) {
-            pingGrade.errorCode = BandwithTestCodes.ErrorCodes.ERROR_DHCP_INFO_UNAVAILABLE;
-        } else if (pingStatsMap == null || pingStatsMap.isEmpty()) {
-            pingGrade.errorCode = BandwithTestCodes.ErrorCodes.ERROR_PERFORMING_PING;
+            pingGrade.errorCode = BandwidthTestCodes.ErrorCodes.ERROR_DHCP_INFO_UNAVAILABLE;
+        } else if (pingStatsMap == null) {
+            pingGrade.errorCode = BandwidthTestCodes.ErrorCodes.ERROR_DHCP_INFO_UNAVAILABLE;
+        } else if (pingStatsMap.isEmpty()) {
+            pingGrade.errorCode = BandwidthTestCodes.ErrorCodes.ERROR_PERFORMING_PING;
         }
         metricsDb.updatePingGrade(pingGrade);
         PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(pingGrade);
@@ -165,7 +167,7 @@ public class InferenceEngine {
         if (gatewayHttpStats != null) {
             httpGrade = DataInterpreter.interpret(gatewayHttpStats);
         } else {
-            httpGrade.errorCode = BandwithTestCodes.ErrorCodes.ERROR_DHCP_INFO_UNAVAILABLE;
+            httpGrade.errorCode = BandwidthTestCodes.ErrorCodes.ERROR_DHCP_INFO_UNAVAILABLE;
         }
         metricsDb.updateHttpGrade(httpGrade);
         PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(httpGrade);
@@ -200,25 +202,25 @@ public class InferenceEngine {
         }
     }
 
-    @BandwithTestCodes.ErrorCodes
+    @BandwidthTestCodes.ErrorCodes
     private int getWifiErrorCode(@ConnectivityAnalyzer.WifiConnectivityMode int wifiConnectivityMode) {
         switch (wifiConnectivityMode) {
             case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_ONLINE:
-                return BandwithTestCodes.ErrorCodes.NO_ERROR;
+                return BandwidthTestCodes.ErrorCodes.NO_ERROR;
             case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL:
-                return BandwithTestCodes.ErrorCodes.ERROR_WIFI_IN_CAPTIVE_PORTAL;
+                return BandwidthTestCodes.ErrorCodes.ERROR_WIFI_IN_CAPTIVE_PORTAL;
             case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_OFFLINE:
-                return BandwithTestCodes.ErrorCodes.ERROR_WIFI_IN_CAPTIVE_PORTAL;
+                return BandwidthTestCodes.ErrorCodes.ERROR_WIFI_IN_CAPTIVE_PORTAL;
             case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_UNKNOWN:
-                return BandwithTestCodes.ErrorCodes.ERROR_WIFI_CONNECTED_AND_UNKNOWN;
+                return BandwidthTestCodes.ErrorCodes.ERROR_WIFI_CONNECTED_AND_UNKNOWN;
             case ConnectivityAnalyzer.WifiConnectivityMode.ON_AND_DISCONNECTED:
-                return BandwithTestCodes.ErrorCodes.ERROR_WIFI_ON_AND_DISCONNECTED;
+                return BandwidthTestCodes.ErrorCodes.ERROR_WIFI_ON_AND_DISCONNECTED;
             case ConnectivityAnalyzer.WifiConnectivityMode.OFF:
-                return BandwithTestCodes.ErrorCodes.ERROR_WIFI_OFF;
+                return BandwidthTestCodes.ErrorCodes.ERROR_WIFI_OFF;
             case ConnectivityAnalyzer.WifiConnectivityMode.UNKNOWN:
-                return BandwithTestCodes.ErrorCodes.ERROR_WIFI_UNKNOWN_STATE;
+                return BandwidthTestCodes.ErrorCodes.ERROR_WIFI_UNKNOWN_STATE;
             default:
-                return BandwithTestCodes.ErrorCodes.ERROR_UNKNOWN;
+                return BandwidthTestCodes.ErrorCodes.ERROR_UNKNOWN;
         }
     }
 
@@ -247,8 +249,8 @@ public class InferenceEngine {
         return inferenceRecord;
     }
 
-    private FailureRecord createFailureRecord(@BandwithTestCodes.TestMode int testMode,
-                                              @BandwithTestCodes.ErrorCodes int errorCode,
+    private FailureRecord createFailureRecord(@BandwidthTestCodes.TestMode int testMode,
+                                              @BandwidthTestCodes.ErrorCodes int errorCode,
                                               String errorMessage) {
         FailureRecord failureRecord = new FailureRecord();
         failureRecord.uid = dobbyApplication.getUserUuid();
@@ -264,15 +266,15 @@ public class InferenceEngine {
 
 
     // Bandwidth test notifications:
-    public void notifyBandwidthTestStart(@BandwithTestCodes.TestMode int testMode) {
-        if (testMode == BandwithTestCodes.TestMode.UPLOAD) {
+    public void notifyBandwidthTestStart(@BandwidthTestCodes.TestMode int testMode) {
+        if (testMode == BandwidthTestCodes.TestMode.UPLOAD) {
             metricsDb.clearUploadBandwidthGrade();
-        } else if (testMode == BandwithTestCodes.TestMode.DOWNLOAD) {
+        } else if (testMode == BandwidthTestCodes.TestMode.DOWNLOAD) {
             metricsDb.clearDownloadBandwidthGrade();
         }
     }
 
-    public void notifyBandwidthTestProgress(@BandwithTestCodes.TestMode int testMode, double bandwidth) {
+    public void notifyBandwidthTestProgress(@BandwidthTestCodes.TestMode int testMode, double bandwidth) {
         long currentTs = System.currentTimeMillis();
         if ((currentTs - lastBandwidthUpdateTimestampMs) > 500L) {
             // sendResponseOnlyAction(testModeToString(testMode) + " Current Bandwidth: " + String.format("%.2f", bandwidth / 1000000) + " Mbps");
@@ -280,7 +282,7 @@ public class InferenceEngine {
         }
     }
 
-    synchronized public DataInterpreter.BandwidthGrade notifyBandwidthTestResult(@BandwithTestCodes.TestMode int testMode,
+    synchronized public DataInterpreter.BandwidthGrade notifyBandwidthTestResult(@BandwidthTestCodes.TestMode int testMode,
                                                                                  double bandwidth,
                                                                                  String clientIsp,
                                                                                  String clientExternalIp) {
@@ -294,15 +296,15 @@ public class InferenceEngine {
         */
         lastBandwidthUpdateTimestampMs = 0;
 
-        if (testMode == BandwithTestCodes.TestMode.UPLOAD) {
+        if (testMode == BandwidthTestCodes.TestMode.UPLOAD) {
             metricsDb.updateUploadBandwidthGrade(bandwidth * 1.0e-6, DataInterpreter.MetricType.UNKNOWN);
-        } else if (testMode == BandwithTestCodes.TestMode.DOWNLOAD) {
+        } else if (testMode == BandwidthTestCodes.TestMode.DOWNLOAD) {
             metricsDb.updateDownloadBandwidthGrade(bandwidth * 1.0e-6, DataInterpreter.MetricType.UNKNOWN);
         }
 
         if (metricsDb.hasValidDownload() && metricsDb.hasValidUpload()) {
             bandwidthGrade = DataInterpreter.interpret(metricsDb.getDownloadMbps(),
-                    metricsDb.getUploadMbps(), clientIsp, clientExternalIp, BandwithTestCodes.ErrorCodes.NO_ERROR);
+                    metricsDb.getUploadMbps(), clientIsp, clientExternalIp, BandwidthTestCodes.ErrorCodes.NO_ERROR);
             //Update the bandwidth grade, overwriting earlier info.
             metricsDb.updateBandwidthGrade(bandwidthGrade);
             PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(bandwidthGrade);
@@ -316,8 +318,8 @@ public class InferenceEngine {
     }
 
 
-    synchronized public DataInterpreter.BandwidthGrade notifyBandwidthTestError(@BandwithTestCodes.TestMode int testMode,
-                                                                                @BandwithTestCodes.ErrorCodes int errorCode,
+    synchronized public DataInterpreter.BandwidthGrade notifyBandwidthTestError(@BandwidthTestCodes.TestMode int testMode,
+                                                                                @BandwidthTestCodes.ErrorCodes int errorCode,
                                                                                 String errorMessage,
                                                                                 double bandwidth) {
         lastBandwidthUpdateTimestampMs = 0;
@@ -344,8 +346,8 @@ public class InferenceEngine {
         previousAction = Action.ACTION_NONE;
     }
 
-    private void writeFailureToDatabase(@BandwithTestCodes.TestMode int testMode,
-                                        @BandwithTestCodes.ErrorCodes int errorCode,
+    private void writeFailureToDatabase(@BandwidthTestCodes.TestMode int testMode,
+                                        @BandwidthTestCodes.ErrorCodes int errorCode,
                                         String errorMessage) {
         //Write failure to database
         FailureRecord newFailureRecord = createFailureRecord(testMode, errorCode, errorMessage);

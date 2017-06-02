@@ -15,7 +15,7 @@ import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.PingStats;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.speedtest.BandwidthResult;
-import com.inceptai.dobby.speedtest.BandwithTestCodes;
+import com.inceptai.dobby.speedtest.BandwidthTestCodes;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 
@@ -483,8 +483,8 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
 
     private ListenableFuture<BandwidthResult> startBandwidthTest() {
         DobbyLog.i("Going to start bandwidth test.");
-        @BandwithTestCodes.TestMode
-        int testMode = BandwithTestCodes.TestMode.DOWNLOAD_AND_UPLOAD;
+        @BandwidthTestCodes.TestMode
+        int testMode = BandwidthTestCodes.TestMode.DOWNLOAD_AND_UPLOAD;
         BandwidthObserver observer = networkLayer.startBandwidthTest(testMode);
         if (observer == null) {
             Log.w(TAG, "Null observer returned from NL, abandoning bandwidth test.");
@@ -492,8 +492,8 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             threadpool.submit(new Runnable() {
                 @Override
                 public void run() {
-                    inferenceEngine.notifyBandwidthTestError(BandwithTestCodes.TestMode.DOWNLOAD_AND_UPLOAD,
-                            BandwithTestCodes.ErrorCodes.ERROR_WIFI_OFFLINE,
+                    inferenceEngine.notifyBandwidthTestError(BandwidthTestCodes.TestMode.DOWNLOAD_AND_UPLOAD,
+                            BandwidthTestCodes.ErrorCodes.ERROR_WIFI_OFFLINE,
                             "Wifi is offline, so cannot run bw tests", -1.0);
                 }
             });

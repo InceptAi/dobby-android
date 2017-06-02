@@ -8,7 +8,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import com.inceptai.dobby.dagger.ObjectRegistry;
 import com.inceptai.dobby.model.BandwidthStats;
 import com.inceptai.dobby.speedtest.BandwidthResult;
-import com.inceptai.dobby.speedtest.BandwithTestCodes;
+import com.inceptai.dobby.speedtest.BandwidthTestCodes;
 import com.inceptai.dobby.speedtest.NewBandwidthAnalyzer;
 import com.inceptai.dobby.speedtest.ServerInformation;
 import com.inceptai.dobby.speedtest.SpeedTestConfig;
@@ -57,7 +57,7 @@ public class BandwidthAnalyzerTest {
     public void runUploadTest() throws InterruptedException, ExecutionException {
         newBandwidthAnalyzer = new NewBandwidthAnalyzer(objectRegistry.getThreadpool(),
                 objectRegistry.getEventBus(), objectRegistry.getApplication());
-        Future<BandwidthResult> statsFuture = startBandwidthTest(BandwithTestCodes.TestMode.UPLOAD);
+        Future<BandwidthResult> statsFuture = startBandwidthTest(BandwidthTestCodes.TestMode.UPLOAD);
         while (!statsFuture.isDone()) {
             Thread.sleep(2500);
         }
@@ -66,7 +66,7 @@ public class BandwidthAnalyzerTest {
 
     @Test
     public void runDownloadTest() throws InterruptedException, ExecutionException {
-        Future<BandwidthResult> statsFuture = startBandwidthTest(BandwithTestCodes.TestMode.DOWNLOAD);
+        Future<BandwidthResult> statsFuture = startBandwidthTest(BandwidthTestCodes.TestMode.DOWNLOAD);
         while (!statsFuture.isDone()) {
             Thread.sleep(2500);
         }
@@ -75,7 +75,7 @@ public class BandwidthAnalyzerTest {
 
     @Test
     public void runBothUploadAndDownloadTest() throws InterruptedException, ExecutionException {
-        Future<BandwidthResult> statsFuture = startBandwidthTest(BandwithTestCodes.TestMode.DOWNLOAD_AND_UPLOAD);
+        Future<BandwidthResult> statsFuture = startBandwidthTest(BandwidthTestCodes.TestMode.DOWNLOAD_AND_UPLOAD);
         while (!statsFuture.isDone()) {
             Thread.sleep(2500);
         }
@@ -87,7 +87,7 @@ public class BandwidthAnalyzerTest {
         for (int i = 0; i < 10; i ++) {
             int randomDelay = random.nextInt(5000);
             DobbyLog.i("Starting tests with delay of " + randomDelay);
-            Future<BandwidthResult> statsFuture = startBandwidthTest(BandwithTestCodes.TestMode.UPLOAD);
+            Future<BandwidthResult> statsFuture = startBandwidthTest(BandwidthTestCodes.TestMode.UPLOAD);
             try {
                 Thread.sleep(randomDelay);
                 newBandwidthAnalyzer.cancelBandwidthTests();
@@ -104,7 +104,7 @@ public class BandwidthAnalyzerTest {
         for (int i = 0; i < 10; i ++) {
             int randomDelay = random.nextInt(5000);
             DobbyLog.i("Starting tests with delay of " + randomDelay);
-            Future<BandwidthResult> statsFuture = startBandwidthTest(BandwithTestCodes.TestMode.DOWNLOAD);
+            Future<BandwidthResult> statsFuture = startBandwidthTest(BandwidthTestCodes.TestMode.DOWNLOAD);
             try {
                 Thread.sleep(randomDelay);
                 newBandwidthAnalyzer.cancelBandwidthTests();
@@ -121,7 +121,7 @@ public class BandwidthAnalyzerTest {
     public void runBothUploadAndDownloadTestWithoutServerListFetch() throws InterruptedException, ExecutionException {
         newBandwidthAnalyzer = new NewBandwidthAnalyzer(objectRegistry.getThreadpool(),
                 objectRegistry.getEventBus(), objectRegistry.getApplication(), false);
-        Future<BandwidthResult> statsFuture = startBandwidthTest(BandwithTestCodes.TestMode.DOWNLOAD_AND_UPLOAD);
+        Future<BandwidthResult> statsFuture = startBandwidthTest(BandwidthTestCodes.TestMode.DOWNLOAD_AND_UPLOAD);
         while (!statsFuture.isDone()) {
             Thread.sleep(2500);
         }
@@ -129,7 +129,7 @@ public class BandwidthAnalyzerTest {
         assertNotNull(newBandwidthAnalyzer.getServerInformation());
     }
 
-    private ListenableFuture<BandwidthResult> startBandwidthTest(@BandwithTestCodes.TestMode int testMode) {
+    private ListenableFuture<BandwidthResult> startBandwidthTest(@BandwidthTestCodes.TestMode int testMode) {
         BandwidthCallback callback = new BandwidthCallback(testMode);
         newBandwidthAnalyzer.registerCallback(callback);
         newBandwidthAnalyzer.startBandwidthTestSync(testMode);
@@ -140,14 +140,14 @@ public class BandwidthAnalyzerTest {
         SettableFuture<BandwidthResult> future = SettableFuture.create();
         private BandwidthResult result;
 
-        @BandwithTestCodes.TestMode
+        @BandwidthTestCodes.TestMode
         private int testModeRequested;
-        @BandwithTestCodes.TestMode private int testsDone;
+        @BandwidthTestCodes.TestMode private int testsDone;
 
         BandwidthCallback(int testModeRequested) {
             this.testModeRequested = testModeRequested;
             result = new BandwidthResult(testModeRequested);
-            testsDone = BandwithTestCodes.TestMode.IDLE;
+            testsDone = BandwidthTestCodes.TestMode.IDLE;
         }
 
         ListenableFuture<BandwidthResult> asFuture() {
@@ -175,11 +175,11 @@ public class BandwidthAnalyzerTest {
         }
 
         @Override
-        public void onTestFinished(@BandwithTestCodes.TestMode int testMode, BandwidthStats stats) {
+        public void onTestFinished(@BandwidthTestCodes.TestMode int testMode, BandwidthStats stats) {
             DobbyLog.i("Test finished: " + testMode);
-            if (testMode == BandwithTestCodes.TestMode.UPLOAD) {
+            if (testMode == BandwidthTestCodes.TestMode.UPLOAD) {
                 result.setUploadStats(stats);
-            } else if (testMode == BandwithTestCodes.TestMode.DOWNLOAD) {
+            } else if (testMode == BandwidthTestCodes.TestMode.DOWNLOAD) {
                 result.setDownloadStats(stats);
             }
             if (areTestsDone(testMode)) {
@@ -188,27 +188,27 @@ public class BandwidthAnalyzerTest {
         }
 
         @Override
-        public void onTestProgress(@BandwithTestCodes.TestMode int testMode, double instantBandwidth) {
+        public void onTestProgress(@BandwidthTestCodes.TestMode int testMode, double instantBandwidth) {
             DobbyLog.i("Test mode = " + testMode + " bw = " + instantBandwidth / 1.0e-6 + " Mbps." );
         }
 
         @Override
-        public void onBandwidthTestError(@BandwithTestCodes.TestMode int testMode, @BandwithTestCodes.ErrorCodes int errorCode, @Nullable String errorMessage) {
+        public void onBandwidthTestError(@BandwidthTestCodes.TestMode int testMode, @BandwidthTestCodes.ErrorCodes int errorCode, @Nullable String errorMessage) {
             future.set(null);
         }
 
-        private boolean areTestsDone(@BandwithTestCodes.TestMode int testModeDone) {
-            if (testsDone == BandwithTestCodes.TestMode.IDLE) {
+        private boolean areTestsDone(@BandwidthTestCodes.TestMode int testModeDone) {
+            if (testsDone == BandwidthTestCodes.TestMode.IDLE) {
                 testsDone = testModeDone;
                 return testsDone == testModeRequested;
             }
 
-            if (testsDone == BandwithTestCodes.TestMode.UPLOAD && testModeDone == BandwithTestCodes.TestMode.DOWNLOAD) {
-                testsDone = BandwithTestCodes.TestMode.DOWNLOAD_AND_UPLOAD;
+            if (testsDone == BandwidthTestCodes.TestMode.UPLOAD && testModeDone == BandwidthTestCodes.TestMode.DOWNLOAD) {
+                testsDone = BandwidthTestCodes.TestMode.DOWNLOAD_AND_UPLOAD;
             }
 
-            if (testsDone == BandwithTestCodes.TestMode.DOWNLOAD && testModeDone == BandwithTestCodes.TestMode.UPLOAD) {
-                testsDone = BandwithTestCodes.TestMode.DOWNLOAD_AND_UPLOAD;
+            if (testsDone == BandwidthTestCodes.TestMode.DOWNLOAD && testModeDone == BandwidthTestCodes.TestMode.UPLOAD) {
+                testsDone = BandwidthTestCodes.TestMode.DOWNLOAD_AND_UPLOAD;
             }
             return testsDone == testModeRequested;
         }

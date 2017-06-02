@@ -14,8 +14,8 @@ import com.inceptai.dobby.R;
 import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.BandwidthStats;
-import com.inceptai.dobby.speedtest.BandwithTestCodes.ErrorCodes;
-import com.inceptai.dobby.speedtest.BandwithTestCodes.TestMode;
+import com.inceptai.dobby.speedtest.BandwidthTestCodes.ErrorCodes;
+import com.inceptai.dobby.speedtest.BandwidthTestCodes.TestMode;
 import com.inceptai.dobby.utils.DobbyLog;
 
 import java.lang.annotation.Retention;
@@ -65,7 +65,7 @@ public class NewBandwidthAnalyzer {
 
     private BandwidthTestListener bandwidthTestListener;
 
-    @BandwithTestCodes.TestMode
+    @BandwidthTestCodes.TestMode
     private int testMode;
     //Callbacks
     private ResultsCallback resultsCallback;
@@ -85,11 +85,11 @@ public class NewBandwidthAnalyzer {
         void onBestServerSelected(ServerInformation.ServerDetails bestServer);
 
         //Test callbacks
-        void onTestFinished(@BandwithTestCodes.TestMode int testMode, BandwidthStats stats);
-        void onTestProgress(@BandwithTestCodes.TestMode int testMode, double instantBandwidth);
+        void onTestFinished(@BandwidthTestCodes.TestMode int testMode, BandwidthStats stats);
+        void onTestProgress(@BandwidthTestCodes.TestMode int testMode, double instantBandwidth);
 
         //Error callback
-        void onBandwidthTestError(@BandwithTestCodes.TestMode int testMode,
+        void onBandwidthTestError(@BandwidthTestCodes.TestMode int testMode,
                                   @ErrorCodes int errorCode,
                                   @Nullable String errorMessage);
     }
@@ -120,7 +120,7 @@ public class NewBandwidthAnalyzer {
                                 DobbyApplication dobbyApplication,
                                 boolean enableServerListFetch) {
         this.bandwidthTestListener = new BandwidthTestListener();
-        this.testMode = BandwithTestCodes.TestMode.IDLE;
+        this.testMode = BandwidthTestCodes.TestMode.IDLE;
         this.eventBus = eventBus;
         this.parseSpeedTestConfig = new ParseSpeedTestConfig(this.bandwidthTestListener);
         //this.parseServerInformation = new ParseServerInformation(this.bandwidthTestListener);
@@ -216,7 +216,7 @@ public class NewBandwidthAnalyzer {
             SpeedTestConfig speedTestConfig = parseSpeedTestConfig.getConfig(downloadMode);
             DobbyLog.v("NBA Fetched new config");
             if (speedTestConfig == null) {
-                reportBandwidthError(BandwithTestCodes.TestMode.CONFIG_FETCH,
+                reportBandwidthError(BandwidthTestCodes.TestMode.CONFIG_FETCH,
                         ErrorCodes.ERROR_FETCHING_CONFIG, "Config fetch returned null");
                 return null;
             }
@@ -237,7 +237,7 @@ public class NewBandwidthAnalyzer {
             DobbyLog.v("NBA Server info not fresh, getting again");
             ServerInformation serverInformation = parseServerInformation.getServerInfo(enableServerListFetch);
             if (serverInformation == null) {
-                reportBandwidthError(BandwithTestCodes.TestMode.SERVER_FETCH,
+                reportBandwidthError(BandwidthTestCodes.TestMode.SERVER_FETCH,
                         ErrorCodes.ERROR_FETCHING_SERVER_INFO,
                         "Server info fetch returned null");
                 return null;
@@ -249,7 +249,7 @@ public class NewBandwidthAnalyzer {
             DobbyLog.v("NBA Getting best server again, since not fresh");
             ServerInformation.ServerDetails bestServer = computeBestServer(getSpeedTestConfig(), getServerInformation());
             if (bestServer == null) {
-                reportBandwidthError(BandwithTestCodes.TestMode.SERVER_FETCH,
+                reportBandwidthError(BandwidthTestCodes.TestMode.SERVER_FETCH,
                         ErrorCodes.ERROR_SELECTING_BEST_SERVER,
                         "best server returned as null");
                 return null;
@@ -294,7 +294,7 @@ public class NewBandwidthAnalyzer {
         @Override
         public void onConfigFetchError(String error) {
             DobbyLog.v("NBA Speed test config fetched error: " + error);
-            reportBandwidthError(BandwithTestCodes.TestMode.CONFIG_FETCH,
+            reportBandwidthError(BandwidthTestCodes.TestMode.CONFIG_FETCH,
                     ErrorCodes.ERROR_FETCHING_CONFIG,
                     error);
         }
@@ -307,7 +307,7 @@ public class NewBandwidthAnalyzer {
                 if (serverInformation != null && serverInformation.serverList.size() > 0) {
                     resultsCallback.onServerInformationFetch(serverInformation);
                 } else {
-                    reportBandwidthError(BandwithTestCodes.TestMode.SERVER_FETCH,
+                    reportBandwidthError(BandwidthTestCodes.TestMode.SERVER_FETCH,
                             ErrorCodes.ERROR_FETCHING_SERVER_INFO,
                             "Server information returned empty");
                 }
@@ -316,7 +316,7 @@ public class NewBandwidthAnalyzer {
 
         @Override
         public void onServerInformationFetchError(String error) {
-            reportBandwidthError(BandwithTestCodes.TestMode.SERVER_FETCH,
+            reportBandwidthError(BandwidthTestCodes.TestMode.SERVER_FETCH,
                     ErrorCodes.ERROR_FETCHING_SERVER_INFO,
                     error);
         }
@@ -331,7 +331,7 @@ public class NewBandwidthAnalyzer {
 
         @Override
         public void onBestServerSelectionError(String error) {
-            reportBandwidthError(BandwithTestCodes.TestMode.SERVER_FETCH,
+            reportBandwidthError(BandwidthTestCodes.TestMode.SERVER_FETCH,
                     ErrorCodes.ERROR_SELECTING_BEST_SERVER, error);
         }
 
@@ -342,15 +342,15 @@ public class NewBandwidthAnalyzer {
         }
 
         @Override
-        public void onFinish(@BandwithTestCodes.TestMode int callbackTestMode, BandwidthStats bandwidthStats) {
+        public void onFinish(@BandwidthTestCodes.TestMode int callbackTestMode, BandwidthStats bandwidthStats) {
             DobbyLog.v("NewBandwidthAnalyzer onFinish");
             if (resultsCallback != null) {
                 resultsCallback.onTestFinished(callbackTestMode, bandwidthStats);
             }
             //Do we need to do upload here ?
             if (bandwidthAnalyzerState == BandwidthAnalyzerState.RUNNING &&
-                    callbackTestMode == BandwithTestCodes.TestMode.DOWNLOAD &&
-                    testMode == BandwithTestCodes.TestMode.DOWNLOAD_AND_UPLOAD) {
+                    callbackTestMode == BandwidthTestCodes.TestMode.DOWNLOAD &&
+                    testMode == BandwidthTestCodes.TestMode.DOWNLOAD_AND_UPLOAD) {
                 dobbyThreadpool.submit(new Runnable() {
                     @Override
                     public void run() {
@@ -364,7 +364,7 @@ public class NewBandwidthAnalyzer {
         }
 
         @Override
-        public void onProgress(@BandwithTestCodes.TestMode int callbackTestMode, double instantBandwidth) {
+        public void onProgress(@BandwidthTestCodes.TestMode int callbackTestMode, double instantBandwidth) {
             DobbyLog.v("NewBandwidthAnalyzer onProgress");
             if (resultsCallback != null) {
                 resultsCallback.onTestProgress(callbackTestMode, instantBandwidth);
@@ -372,7 +372,7 @@ public class NewBandwidthAnalyzer {
         }
 
         @Override
-        public void onError(@BandwithTestCodes.TestMode int callbackTestMode, SpeedTestError speedTestError, String errorMessage) {
+        public void onError(@BandwidthTestCodes.TestMode int callbackTestMode, SpeedTestError speedTestError, String errorMessage) {
             reportBandwidthError(callbackTestMode,
                     convertToBandwidthTestCodes(speedTestError), errorMessage);
             //Cancel bandwidth tests.
@@ -452,7 +452,7 @@ public class NewBandwidthAnalyzer {
     /**
      * start the speed test
      */
-    private void startBandwidthTest(@BandwithTestCodes.TestMode int testMode) {
+    private void startBandwidthTest(@BandwidthTestCodes.TestMode int testMode) {
         if (!checkTestStatusAndMarkRunningIfInactive()) {
             DobbyLog.i("Tests already running.");
             //Tests are already
@@ -472,11 +472,11 @@ public class NewBandwidthAnalyzer {
             cancelBandwidthTests();
             return;
         }
-        if (testMode == TestMode.DOWNLOAD_AND_UPLOAD || testMode == BandwithTestCodes.TestMode.DOWNLOAD) {
+        if (testMode == TestMode.DOWNLOAD_AND_UPLOAD || testMode == BandwidthTestCodes.TestMode.DOWNLOAD) {
             DobbyLog.i("NBA starting download.");
             performDownload();
         }
-        if (testMode == BandwithTestCodes.TestMode.UPLOAD) {
+        if (testMode == BandwidthTestCodes.TestMode.UPLOAD) {
             DobbyLog.i("NBA starting upload.");
             performUpload();
         }
@@ -502,7 +502,7 @@ public class NewBandwidthAnalyzer {
         return errorCodeToReturn;
     }
 
-    private void reportBandwidthError(@BandwithTestCodes.TestMode int testMode,
+    private void reportBandwidthError(@BandwidthTestCodes.TestMode int testMode,
                               @ErrorCodes int errorCode,
                               @Nullable String errorMessage) {
         if (resultsCallback != null) {

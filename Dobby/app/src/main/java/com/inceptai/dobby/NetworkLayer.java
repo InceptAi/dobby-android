@@ -15,7 +15,7 @@ import com.inceptai.dobby.model.IPLayerInfo;
 import com.inceptai.dobby.model.PingStats;
 import com.inceptai.dobby.ping.PingAnalyzer;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
-import com.inceptai.dobby.speedtest.BandwithTestCodes;
+import com.inceptai.dobby.speedtest.BandwidthTestCodes;
 import com.inceptai.dobby.speedtest.NewBandwidthAnalyzer;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
@@ -173,7 +173,7 @@ public class NetworkLayer {
         getPingAnalyzerInstance().clearPingStatsCache();
     }
 
-    public synchronized BandwidthObserver startBandwidthTest(final @BandwithTestCodes.TestMode int mode) {
+    public synchronized BandwidthObserver startBandwidthTest(final @BandwidthTestCodes.TestMode int mode) {
         if (bandwidthObserver != null && bandwidthObserver.testsRunning()) {
             DobbyLog.i("Bandwidth tests already running.");
             // We have an already running bandwidth operation.

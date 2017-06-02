@@ -45,7 +45,7 @@ import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.BandwidthStats;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
-import com.inceptai.dobby.speedtest.BandwithTestCodes;
+import com.inceptai.dobby.speedtest.BandwidthTestCodes;
 import com.inceptai.dobby.speedtest.NewBandwidthAnalyzer;
 import com.inceptai.dobby.speedtest.ServerInformation;
 import com.inceptai.dobby.speedtest.SpeedTestConfig;
@@ -444,20 +444,20 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     }
 
     @Override
-    public void onTestFinished(@BandwithTestCodes.TestMode int testMode, BandwidthStats stats) {
+    public void onTestFinished(@BandwidthTestCodes.TestMode int testMode, BandwidthStats stats) {
         Message.obtain(handler, MSG_UPDATED_CIRCULAR_GAUGE, Utils.BandwidthValue.from(testMode, (stats.getOverallBandwidth() / 1.0e6))).sendToTarget();
-        if (testMode == BandwithTestCodes.TestMode.UPLOAD) {
+        if (testMode == BandwidthTestCodes.TestMode.UPLOAD) {
             showStatusMessageAsync(R.string.status_finished_bw_tests);
             sendSwitchStateMessage(UI_STATE_READY_WITH_RESULTS);
         }
     }
 
     @Override
-    public void onTestProgress(@BandwithTestCodes.TestMode int testMode, double instantBandwidth) {
-        if (testMode == BandwithTestCodes.TestMode.DOWNLOAD && getBwTestState() != BW_DOWNLOAD_RUNNING) {
+    public void onTestProgress(@BandwidthTestCodes.TestMode int testMode, double instantBandwidth) {
+        if (testMode == BandwidthTestCodes.TestMode.DOWNLOAD && getBwTestState() != BW_DOWNLOAD_RUNNING) {
             setBwTestState(BW_DOWNLOAD_RUNNING);
             showStatusMessageAsync(R.string.status_running_download_tests);
-        } else if (testMode == BandwithTestCodes.TestMode.UPLOAD && getBwTestState() != BW_UPLOAD_RUNNING) {
+        } else if (testMode == BandwidthTestCodes.TestMode.UPLOAD && getBwTestState() != BW_UPLOAD_RUNNING) {
             setBwTestState(BW_UPLOAD_RUNNING);
             showStatusMessageAsync(R.string.status_running_upload_tests);
         }
@@ -465,8 +465,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     }
 
     @Override
-    public void onBandwidthTestError(@BandwithTestCodes.TestMode int testMode,
-                                     @BandwithTestCodes.ErrorCodes int errorCode,
+    public void onBandwidthTestError(@BandwidthTestCodes.TestMode int testMode,
+                                     @BandwidthTestCodes.ErrorCodes int errorCode,
                                      @Nullable String errorMessage) {
         showStatusMessageAsync(R.string.status_error_bw_tests);
     }
@@ -682,10 +682,10 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
     private void updateBandwidthGauge(Message msg) {
         Utils.BandwidthValue bandwidthValue = (Utils.BandwidthValue) msg.obj;
-        if (bandwidthValue.mode == BandwithTestCodes.TestMode.UPLOAD) {
+        if (bandwidthValue.mode == BandwidthTestCodes.TestMode.UPLOAD) {
             uploadCircularGauge.setValue((int) nonLinearBwScale(bandwidthValue.value));
             uploadGaugeTv.setText(String.format("%2.2f", bandwidthValue.value));
-        } else if (bandwidthValue.mode == BandwithTestCodes.TestMode.DOWNLOAD) {
+        } else if (bandwidthValue.mode == BandwidthTestCodes.TestMode.DOWNLOAD) {
             downloadCircularGauge.setValue((int) nonLinearBwScale(bandwidthValue.value));
             downloadGaugeTv.setText(String.format("%2.2f", bandwidthValue.value));
         }

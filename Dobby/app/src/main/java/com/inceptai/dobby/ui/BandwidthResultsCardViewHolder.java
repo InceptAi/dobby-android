@@ -5,7 +5,6 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.inceptai.dobby.R;
-import com.inceptai.dobby.speedtest.BandwithTestCodes;
 
 import static com.inceptai.dobby.utils.Utils.nonLinearBwScale;
 

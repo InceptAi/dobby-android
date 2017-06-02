@@ -7,7 +7,7 @@ import com.inceptai.dobby.connectivity.ConnectivityAnalyzer;
 import com.inceptai.dobby.model.DobbyWifiInfo;
 import com.inceptai.dobby.model.IPLayerInfo;
 import com.inceptai.dobby.model.PingStats;
-import com.inceptai.dobby.speedtest.BandwithTestCodes;
+import com.inceptai.dobby.speedtest.BandwidthTestCodes;
 import com.inceptai.dobby.utils.Utils;
 import com.inceptai.dobby.wifi.WifiState;
 
@@ -214,7 +214,7 @@ public class DataInterpreter {
         private double downloadMbps;
         String isp;
         String externalIP;
-        @BandwithTestCodes.ErrorCodes int errorCode = BandwithTestCodes.ErrorCodes.ERROR_UNINITIAlIZED;
+        @BandwidthTestCodes.ErrorCodes int errorCode = BandwidthTestCodes.ErrorCodes.ERROR_UNINITIAlIZED;
 
         public BandwidthGrade() {
             //Set timestamp here
@@ -340,7 +340,7 @@ public class DataInterpreter {
         double externalServerLatencyMs;
         double alternativeDnsLatencyMs;
         long updatedAtMs;
-        @BandwithTestCodes.ErrorCodes int errorCode = BandwithTestCodes.ErrorCodes.ERROR_UNINITIAlIZED;
+        @BandwidthTestCodes.ErrorCodes int errorCode = BandwidthTestCodes.ErrorCodes.ERROR_UNINITIAlIZED;
 
 
         public PingGrade() {}
@@ -430,7 +430,7 @@ public class DataInterpreter {
     public static class HttpGrade {
         @MetricType int httpDownloadLatencyMetric = MetricType.UNKNOWN;
         private long updatedAtMs;
-        @BandwithTestCodes.ErrorCodes int errorCode = BandwithTestCodes.ErrorCodes.ERROR_UNINITIAlIZED;
+        @BandwidthTestCodes.ErrorCodes int errorCode = BandwidthTestCodes.ErrorCodes.ERROR_UNINITIAlIZED;
 
         public HttpGrade() {
         }
@@ -477,7 +477,7 @@ public class DataInterpreter {
         int leastOccupiedChannelAps;
         int primaryApSignal;
         private long updatedAtMs;
-        @BandwithTestCodes.ErrorCodes int errorCode = BandwithTestCodes.ErrorCodes.ERROR_UNINITIAlIZED;
+        @BandwidthTestCodes.ErrorCodes int errorCode = BandwidthTestCodes.ErrorCodes.ERROR_UNINITIAlIZED;
 
 
         public WifiGrade() {
