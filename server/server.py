@@ -1,4 +1,5 @@
 import os
+from collections import OrderedDict
 from flask import Flask, send_from_directory, make_response, render_template
 from functools import update_wrapper
 app = Flask(__name__)
@@ -19,7 +20,8 @@ def generate_link_map(input_path):
 		for api in list_of_apis:
 			link_key = flavor + api
 			link_map[link_key] = os.path.join(flavor, api, 'index.html')
-	return link_map
+    sorted_link_map = OrderedDict(sorted(link_map.items(), key=lambda t: t[0]))
+	return sorted_link_map
 	
 
 @app.route('/')
