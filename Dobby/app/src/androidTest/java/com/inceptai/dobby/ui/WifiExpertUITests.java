@@ -31,7 +31,6 @@ import org.junit.runner.RunWith;
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.scrollTo;
-import static android.support.test.espresso.assertion.ViewAssertions.doesNotExist;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
@@ -75,8 +74,8 @@ public class WifiExpertUITests {
         button.check(matches(isDisplayed()));
     }
 
-    private void checkDetailsButtonDoesNotExist () {
-        onView(withText("Details")).check(doesNotExist());
+    private void checkDetailsButtonisNotDisplayed() {
+        onView(withText("Details")).check(matches(not(isDisplayed())));
     }
 
     private void checkSlowInternetCheckWifiAndRunSpeedTestButtons () {
@@ -115,9 +114,7 @@ public class WifiExpertUITests {
         captureScreenshot("idle_state");
         checkSlowInternetCheckWifiAndRunSpeedTestButtons();
 
-        if (initialAppLaunch) {
-            checkDetailsButtonDoesNotExist();
-        } else {
+        if (!initialAppLaunch) {
             checkDetailsButton(3);
         }
 
