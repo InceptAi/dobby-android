@@ -31,6 +31,7 @@ import org.junit.runner.RunWith;
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.scrollTo;
+import static android.support.test.espresso.assertion.ViewAssertions.doesNotExist;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
@@ -60,6 +61,22 @@ public class WifiExpertUITests {
         if (ENABLE_SCREENSHOTS) {
             Spoon.screenshot(getActivity(), label);
         }
+    }
+
+    private void checkDetailsButton (int positionInScrollView) {
+        ViewInteraction button = onView(
+                allOf(withText("Details"), childAtPosition(
+                        allOf(ViewMatchers.withId(R.id.action_menu),
+                                childAtPosition(
+                                        withId(R.id.scrollview_buttons),
+                                        0)),
+                        positionInScrollView),
+                        isDisplayed()));
+        button.check(matches(isDisplayed()));
+    }
+
+    private void checkDetailsButtonDoesNotExist () {
+        onView(withText("Details")).check(doesNotExist());
     }
 
     private void checkSlowInternetCheckWifiAndRunSpeedTestButtons () {
@@ -97,6 +114,12 @@ public class WifiExpertUITests {
     private void checkIdleState(boolean initialAppLaunch) {
         captureScreenshot("idle_state");
         checkSlowInternetCheckWifiAndRunSpeedTestButtons();
+
+        if (initialAppLaunch) {
+            checkDetailsButtonDoesNotExist();
+        } else {
+            checkDetailsButton(3);
+        }
 
         if (initialAppLaunch) {
             ViewInteraction textView = onView(
@@ -204,7 +227,7 @@ public class WifiExpertUITests {
         ViewInteraction frameLayout2 = onView(withId(R.id.bandwidth_results_cardview));
         frameLayout2.check(matches(isDisplayed()));
 
-        ViewInteraction textView3 = onView(allOf(withId(R.id.dobbyTextTv), withText(containsString("details"))));
+        ViewInteraction textView3 = onView(allOf(withId(R.id.dobbyTextTv), withText(containsString("detail"))));
         textView3.check(matches(isDisplayed()));
 
         ViewInteraction button9 = onView(
@@ -230,7 +253,19 @@ public class WifiExpertUITests {
 
     private void checkShowingDetailedSuggestionState () {
         captureScreenshot("detailed_suggestion_state");
-        checkSlowInternetCheckWifiAndRunSpeedTestButtons();
+
+        ViewInteraction frameLayout = onView(withId(R.id.custom));
+        frameLayout.check(matches(isDisplayed()));
+
+        ViewInteraction button4 = onView(withId(R.id.more_suggestions_dismiss_button));
+        button4.check(matches(isDisplayed()));
+
+        ViewInteraction listView = onView(withId(R.id.more_suggest_listview));
+        listView.check(matches(isDisplayed()));
+
+        ViewInteraction textView = onView(withText(containsString("Summary and suggestions")));
+        textView.check(matches(isDisplayed()));
+
     }
 
     private void checkDecliningFullSpeedTestState () {
@@ -292,6 +327,13 @@ public class WifiExpertUITests {
         Utils.safeSleep(2000);
 
         checkShowingDetailedSuggestionState();
+
+        ViewInteraction appCompatButton = onView(
+                allOf(withId(R.id.more_suggestions_dismiss_button), withText("DISMISS"), isDisplayed()));
+        appCompatButton.perform(click());
+
+        checkSlowInternetCheckWifiAndRunSpeedTestButtons();
+        checkDetailsButton(3);
     }
 
 
