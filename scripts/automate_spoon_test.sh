@@ -3,7 +3,7 @@
 # Usage info
 show_help() {
 cat << EOF
-        Usage: ${0##*/} [-hvrc] [-d TESTDIR] [-i MIN_TEST_INTERVAL_MINS] [-p
+        Usage: ${0##*/} [-hvrcy] [-d TESTDIR] [-i MIN_TEST_INTERVAL_MINS] [-p
         GENYMOTION_PLAYER_PATH] [-k JAVA_HOME_PATH] [-b VBOX_MANAGE_PATH] [-a
         ANDROID_HOME_PATH] [-f EMULATOR_LIST] [-e EMAILS_TO_NOTIFY] [-o
         OUTPUT_DIR] [-n MAX_VMS_TO_RUN] [-g GITHUB_CLONE_URL] [-u RESULT_URL]
@@ -11,6 +11,7 @@ cat << EOF
 
         -h|--help display this help and exit
         -r|--repeat   check for git updates after interval and run tests if new updates (default: run once)
+        -y|--onlynotifyonfailure 
         -d|--testdir  test dir (/tmp/SpoonTests) by default
         -p|--gmplayerpath  Genymotion player path
         -j|--javahomepath  Path to java installation (Make sure javahome/bin/java and javahome/bin/javac exist, only needed if JAVA_HOME is not set) 
@@ -140,6 +141,9 @@ notify_failure () {
 }
 
 notify_success () {
+	if [ $ONLY_NOTIFY_ON_FAILURE -gt 0 ]; then
+        return 1
+    fi
 	current_build_flavor=$1
 	echo "BUILD SUCCEEDED"
 	if [ -z $RESULT_URL ]; then
@@ -522,6 +526,7 @@ OUTPUT_DIR_TO_SERVE_FILES=
 MAX_VMS_TO_RUN=1
 RESULT_URL=
 BUILD_FLAVORS="wifidoc,dobby"
+ONLY_NOTIFY_ON_FAILURE=0
 
 if [ "$#" -lt 1 ]; then
     show_help
@@ -659,6 +664,9 @@ while :; do
             ;;
           -c|--checkconfig)
             CHECK_CONFIG_ONLY=$((CHECK_CONFIG_ONLY + 1)) # Each -v argument adds 1 to verbosity.
+            ;;
+          -y|--onlynotifyonfailure)
+            ONLY_NOTIFY_ON_FAILURE=$((ONLY_NOTIFY_ON_FAILURE + 1)) 
             ;;
           --)              # End of all options.
             shift
