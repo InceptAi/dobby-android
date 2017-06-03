@@ -102,4 +102,12 @@ public class Summary {
     public int getUploadType() {
         return upload;
     }
+
+    public double getDownloadMbps() {
+        return bandwidthGrade.getDownloadBandwidth();
+    }
+
+    public double getUploadMbps() {
+        return bandwidthGrade.getUploadBandwidth();
+    }
 }

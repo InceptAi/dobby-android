@@ -45,77 +45,84 @@ public class SnippetLocalizer {
         switch (summary.getOverallType()) {
 
             case TYPE_OVERALL_BANDWIDTH_GOOD:
+                localSummary.setOverall(resources.getString(R.string.suggest_bandwidth_overall_good), resources.getString(R.string.suggest_bandwidth_overall_good_more));
                 break;
             case TYPE_OVERALL_BANDWIDTH_OK:
-                localSummary.addString(resources.getString(R.string.suggest_bandwidth_overall_ok), resources.getString(R.string.suggest_bandwidth_overall_ok_more));
+                localSummary.setOverall(resources.getString(R.string.suggest_bandwidth_overall_ok), resources.getString(R.string.suggest_bandwidth_overall_ok_more));
                 break;
             case TYPE_OVERALL_BANDWIDTH_POOR:
+                localSummary.setOverall(resources.getString(R.string.suggest_bandwidth_overall_poor), resources.getString(R.string.suggest_bandwidth_overall_poor_more));
                 break;
         }
 
         switch (summary.getDownloadType()) {
             case TYPE_BW_UNKNOWN:
-                localSummary.addString(resources.getString(R.string.suggest_bw_unknown),
+                localSummary.setDownload(resources.getString(R.string.suggest_bw_unknown),
                         resources.getString(R.string.suggest_bw_unknown_more));
                 break;
             case TYPE_DOWNLOAD_BW_UNKNOWN:
-                localSummary.addString(resources.getString(R.string.suggest_download_bw_unknown),
+                localSummary.setDownload(resources.getString(R.string.suggest_download_bw_unknown),
                         resources.getString(R.string.suggest_download_bw_unknown_more));
                 break;
             case TYPE_DOWNLOAD_BW_LT_1MBPS:
-                localSummary.addString(resources.getString(R.string.suggest_download_bw_lt1mbps, summary.getBandwidth()),
+                localSummary.setDownload(resources.getString(R.string.suggest_download_bw_lt1mbps, summary.getDownloadMbps()),
                         resources.getString(R.string.suggest_download_bw_1mbps_more));
                 break;
             case TYPE_DOWNLOAD_BW_1MBPS:
-                localSummary.addString(resources.getString(R.string.suggest_download_bw_1mbps, summary.getBandwidth()),
+                localSummary.setDownload(resources.getString(R.string.suggest_download_bw_1mbps, summary.getDownloadMbps()),
                         resources.getString(R.string.suggest_download_bw_1mbps_more));
                 break;
             case TYPE_DOWNLOAD_BW_2MBPS:
-                localSummary.addString(resources.getString(R.string.suggest_download_bw_2mbps, summary.getBandwidth()),
+                localSummary.setDownload(resources.getString(R.string.suggest_download_bw_2mbps, summary.getDownloadMbps()),
                         resources.getString(R.string.suggest_download_bw_2mbps_more));
                 break;
             case TYPE_DOWNLOAD_BW_4MBPS:
-                localSummary.addString(resources.getString(R.string.suggest_download_bw_4mbps, summary.getBandwidth()),
+                localSummary.setDownload(resources.getString(R.string.suggest_download_bw_4mbps, summary.getDownloadMbps()),
                         resources.getString(R.string.suggest_download_bw_4mbps_more));
                 break;
             case TYPE_DOWNLOAD_BW_6TO8:
-                localSummary.addString(resources.getString(R.string.suggest_download_bw_6to8mbps, summary.getBandwidth()),
+                localSummary.setDownload(resources.getString(R.string.suggest_download_bw_6to8mbps, summary.getDownloadMbps()),
                         resources.getString(R.string.suggest_download_bw_6to8mbps_more));
                 break;
             case TYPE_DOWNLOAD_BW_8TO20:
-                localSummary.addString(resources.getString(R.string.suggest_download_bw_8to20mbps, summary.getBandwidth()),
+                localSummary.setDownload(resources.getString(R.string.suggest_download_bw_8to20mbps, summary.getDownloadMbps()),
                         resources.getString(R.string.suggest_download_bw_8to20mbps_more));
                 break;
             case TYPE_DOWNLOAD_BW_ABOVE20:
-                localSummary.addString(resources.getString(R.string.suggest_download_bw_above20mbps, summary.getBandwidth()),
+                localSummary.setDownload(resources.getString(R.string.suggest_download_bw_above20mbps, summary.getDownloadMbps()),
                         resources.getString(R.string.suggest_download_bw_above20mbps_more));
                 break;
             case TYPE_DOWNLOAD_BW_LT500KBPS:
-                localSummary.addString(resources.getString(R.string.suggest_download_bw_lt500kbps, summary.getBandwidth()),
+                localSummary.setDownload(resources.getString(R.string.suggest_download_bw_lt500kbps, summary.getDownloadMbps()),
                         resources.getString(R.string.suggest_download_bw_lt500kbps_more));
                 break;
             case TYPE_DOWNLOAD_BW_LT100KBPS:
-                localSummary.addString(resources.getString(R.string.suggest_download_bw_lt100kbps, summary.getBandwidth()),
+                localSummary.setDownload(resources.getString(R.string.suggest_download_bw_lt100kbps, summary.getDownloadMbps()),
                         resources.getString(R.string.suggest_download_bw_lt100kbps_more));
                 break;
             case TYPE_DOWNLOAD_BW_LT40KBPS:
-                localSummary.addString(resources.getString(R.string.suggest_download_bw_lt40kbps, summary.getBandwidth()),
+                localSummary.setDownload(resources.getString(R.string.suggest_download_bw_lt40kbps, summary.getDownloadMbps()),
                         resources.getString(R.string.suggest_download_bw_lt40kbps_more));
                 break;
         }
         switch (summary.getUploadType()) {
             case TYPE_UPLOAD_BW_UNKNOWN:
-                localSummary.addString(resources.getString(R.string.suggest_upload_bw_unknown), resources.getString(R.string.suggest_upload_bw_unknown_more));
+                localSummary.setUpload(resources.getString(R.string.suggest_upload_bw_unknown), resources.getString(R.string.suggest_upload_bw_unknown_more));
                 break;
             case TYPE_UPLOAD_BW_RATIO_VERY_POOR:
+                localSummary.setUpload(resources.getString(R.string.suggest_upload_ratio_very_poor), resources.getString(R.string.suggest_upload_ratio_very_poor_more));
                 break;
             case TYPE_UPLOAD_BW_RATIO_LT_1PERCENT:
+                localSummary.setUpload(resources.getString(R.string.suggest_upload_bw_unknown), resources.getString(R.string.suggest_upload_bw_unknown_more));
                 break;
             case TYPE_UPLOAD_BW_RATIO_LT_10PERCENT:
+                localSummary.setUpload(resources.getString(R.string.suggest_upload_bw_unknown), resources.getString(R.string.suggest_upload_bw_unknown_more));
                 break;
             case TYPE_UPLOAD_BW_RATIO_LT_25PERCENT:
+                localSummary.setUpload(resources.getString(R.string.suggest_upload_bw_unknown), resources.getString(R.string.suggest_upload_bw_unknown_more));
                 break;
             case TYPE_UPLOAD_BW_RATIO_GT_25PERCENT:
+                localSummary.setUpload(resources.getString(R.string.suggest_upload_bw_unknown), resources.getString(R.string.suggest_upload_bw_unknown_more));
                 break;
         }
         return localSummary;

@@ -43,6 +43,25 @@
     <string name="suggest_upload_ratio_very_poor">The upload bandwidth is too low in comparison to the download bandwidth.</string>
     <string name="suggest_upload_ratio_very_poor_more">A very low upload bandwidth ratio when compared to the download bandwidth might indicate issues with the network or the internet provider. It could cause issues with using streaming apps, browsing or downloads.</string>
 
-    <string name="suggest_bandwidth_overall_ok">Internet speeds are GOOD.</string>
+    <string name="suggest_bandwidth_overall_ok">Overall your wifi internet looks fine.</string>
     <string name="suggest_bandwidth_overall_ok_more">Your overall download and upload bandwidth speeds look reasonably good. This usually means that should not be any unexpected issues with your Internet. If you are still seeing problems, it is possible that they are intermittent. Running this test a few times might help.</string>
+
+    <string name="suggest_bandwidth_overall_good">Overall your wifi internet looks good.</string>
+    <string name="suggest_bandwidth_overall_good_more">Your overall download and upload bandwidth speeds are very good. You not experience any issues due to the Wifi internet. </string>
+
+    <string name="suggest_bandwidth_overall_poor">Overall your wifi internet connectivity is poor.</string>
+    <string name="suggest_bandwidth_overall_poor_more">Your overall download and upload bandwidth speeds are not good enough to for apps to use them. You will experience delays and high loading times. </string>
+
+    <string name="suggest_upload_ratio_lt1percent">The upload bandwidth is too low in comparison to the download bandwidth.</string>
+    <string name="suggest_upload_ratio_lt1percent_more">A very low upload bandwidth ratio when compared to the download bandwidth might indicate issues with the network or the internet provider. It could cause issues with using streaming apps, browsing or downloads.</string>
+
+    <string name="suggest_upload_ratio_lt10percent">The upload bandwidth is slightly on the lower side with respect to the download bandwidth.</string>
+    <string name="suggest_upload_ratio_lt10percent_more">The upload bandwidth is too low in comparison to the download bandwidth.</string>
+
+    <string name="suggest_upload_ratio_lt25percent">The upload bandwidth is good relative to the download bandwidth.</string>
+    <string name="suggest_upload_ratio_lt25percent_more">The upload bandwidth is too low in comparison to the download bandwidth.</string>
+
+    <string name="suggest_upload_ratio_gt25percent">The upload bandwidth is good relative to the download bandwidth.</string>
+    <string name="suggest_upload_ratio_gt25percent_more">You should not have issues due to the upload bandwidth which </string>
+
 </resources>

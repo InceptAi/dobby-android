@@ -84,7 +84,7 @@ public class SuggestionsFragment extends Fragment {
         });
 
         if (localSummary != null) {
-            fillSuggestions(inflater);
+            fillSuggestions2(inflater);
         }
         return view;
     }
@@ -130,7 +130,7 @@ public class SuggestionsFragment extends Fragment {
         scrollView.addView(overallSummaryCv);
         fetchOverallSummaryViews(overallSummaryCv);
 
-        localSummary.getSummary().getBandwidth()
+        localSummary.getOverall();
 
         ArrayList<Pair<String, String>> stringList = localSummary.getStrings();
         DobbyLog.i("StringList size = " + stringList.size());

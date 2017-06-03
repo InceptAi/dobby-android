@@ -29,4 +29,43 @@ public class LocalSummary {
     public Summary getSummary() {
         return summary;
     }
+
+    public void setOverall(String overall, String overallDetailed) {
+        this.overall = overall;
+        this.overallDetailed = overallDetailed;
+    }
+
+    public void setUpload(String upload, String uploadDetailed) {
+        this.upload = upload;
+        this.uploadDetailed = uploadDetailed;
+    }
+
+    public void setDownload(String download, String downloadDetailed) {
+        this.download = download;
+        this.downloadDetailed = downloadDetailed;
+    }
+
+    public String getOverall() {
+        return overall;
+    }
+
+    public String getOverallDetailed() {
+        return overallDetailed;
+    }
+
+    public String getUpload() {
+        return upload;
+    }
+
+    public String getUploadDetailed() {
+        return uploadDetailed;
+    }
+
+    public String getDownload() {
+        return download;
+    }
+
+    public String getDownloadDetailed() {
+        return downloadDetailed;
+    }
 }
