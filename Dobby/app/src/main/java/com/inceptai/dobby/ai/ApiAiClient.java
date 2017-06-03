@@ -154,6 +154,11 @@ public class ApiAiClient implements AIListener {
                     actionToReturn = new Action("Sure, I will run some speed tests for you now. Hold tight ...",
                             Action.ActionType.ACTION_TYPE_DIAGNOSE_SLOW_INTERNET);
                 }
+            } else if (Utils.grepForString(query, Arrays.asList("details", "more", "summary"))) {
+                //Show long suggestion
+                //Check if your last action was shown short suggestion
+                actionToReturn = new Action(Utils.EMPTY_STRING,
+                        Action.ActionType.ACTION_TYPE_SHOW_LONG_SUGGESTION);
             } else if (Utils.grepForString(query, Arrays.asList("About WifiExpert", "About"))) {
                     actionToReturn = new Action("Wifi Expert is your personal IT manager that helps " +
                             "you diagnose issues with your wireless network. " +

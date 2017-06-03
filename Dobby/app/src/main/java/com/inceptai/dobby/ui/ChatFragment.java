@@ -28,6 +28,7 @@ import android.widget.Toast;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.ai.DataInterpreter;
 import com.inceptai.dobby.ai.RtDataSource;
+import com.inceptai.dobby.ai.SuggestionCreator;
 import com.inceptai.dobby.ai.UserResponse;
 import com.inceptai.dobby.model.BandwidthStats;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
@@ -69,6 +70,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     private static final int MSG_SHOW_BANDWIDTH_RESULT_CARDVIEW = 7;
     private static final int MSG_SHOW_STATUS = 8;
     private static final int MSG_SHOW_OVERALL_NETWORK_STATUS = 9;
+    private static final int MSG_SHOW_DETAILED_SUGGESTIONS = 10;
 
 
     private static final int BW_TEST_INITIATED = 200;
@@ -109,6 +111,8 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     private int uiState = UI_STATE_FULL_CHAT;
 
     private int bwTestState = BW_IDLE;
+
+    private boolean shownDetailsHint = false;
 
     /**
      * Interface for parent activities to implement.
@@ -272,6 +276,14 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         Message.obtain(handler, MSG_SHOW_OVERALL_NETWORK_STATUS, new OverallNetworkInfo(wifiGrade, ispName, externalIp)).sendToTarget();
     }
 
+    public void showDetailedSuggestionsView(SuggestionCreator.Suggestion suggestion) {
+        if (suggestion != null) {
+            Message.obtain(handler, MSG_SHOW_DETAILED_SUGGESTIONS, suggestion).sendToTarget();
+        } else {
+            showResponse(getString(R.string.detailed_suggestion_not_available));
+        }
+    }
+
     public void addPingResultsCardview(DataInterpreter.PingGrade pingGrade) {
         ChatEntry chatEntry = new ChatEntry(Utils.EMPTY_STRING, ChatEntry.PING_RESULTS_CARDVIEW);
         chatEntry.setPingGrade(pingGrade);
@@ -358,6 +370,15 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
                 }
                 addDobbyChat(overallNetworkInfo.getWifiGrade().userReadableInterpretation(), false);
                 break;
+            case MSG_SHOW_DETAILED_SUGGESTIONS:
+                SuggestionCreator.Suggestion suggestionToShow = (SuggestionCreator.Suggestion) msg.obj;
+                showDetailedSuggestionsAlert(suggestionToShow);
+                addDobbyChat(getString(R.string.detailed_suggestion_status_message), false);
+                if (! shownDetailsHint) {
+                    addDobbyChat(getString(R.string.detailed_suggestion_tip), false);
+                    shownDetailsHint = true;
+                }
+                break;
         }
         return false;
     }
@@ -378,6 +399,17 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         chatEntry.setBandwidthResults(uploadMbps, downloadMbps);
         recyclerViewAdapter.addEntryAtBottom(chatEntry);
         chatRv.scrollToPosition(recyclerViewAdapter.getItemCount() - 1);
+    }
+
+    private void showDetailedSuggestionsAlert(SuggestionCreator.Suggestion suggestion) {
+        if (suggestion == null) {
+            DobbyLog.v("Attempting to show more suggestions when currentSuggestions are null.");
+        }
+        WifiDocDialogFragment fragment = WifiDocDialogFragment.forSuggestion(suggestion.getTitle(),
+                suggestion.getLongSuggestionList());
+        fragment.show(getActivity().getSupportFragmentManager(), "Suggestions");
+        //dobbyAnalytics.moreSuggestionsShown(currentSuggestion.getTitle(),
+        //        new ArrayList<String>(currentSuggestion.getShortSuggestionList()));
     }
 
     private void makeUiChanges(View rootView) {

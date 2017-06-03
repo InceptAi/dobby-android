@@ -32,6 +32,7 @@ import com.inceptai.dobby.ai.ApiAiClient;
 import com.inceptai.dobby.ai.DataInterpreter;
 import com.inceptai.dobby.ai.DobbyAi;
 import com.inceptai.dobby.ai.RtDataSource;
+import com.inceptai.dobby.ai.SuggestionCreator;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.ui.ChatFragment;
@@ -217,6 +218,13 @@ public class MainActivity extends AppCompatActivity
         chatFragment.showUserActionOptions(userResponseTypes);
     }
 
+    @Override
+    public void showDetailedSuggestions(SuggestionCreator.Suggestion suggestion) {
+        DobbyLog.v("In showDetailedSuggestions of MainActivity");
+        //showDetailedSuggestionsAlert(suggestion);
+        chatFragment.showDetailedSuggestionsView(suggestion);
+    }
+
     // From DobbyAi.ResponseCallback interface.
     @Override
     public void showRtGraph(RtDataSource<Float, Integer> rtDataSource) {
@@ -255,6 +263,18 @@ public class MainActivity extends AppCompatActivity
         fragment.show(getSupportFragmentManager(), "Feedback");
         //dobbyAnalytics.feedbackFormShown();
     }
+
+    private void showDetailedSuggestionsAlert(SuggestionCreator.Suggestion suggestion) {
+        if (suggestion == null) {
+            DobbyLog.v("Attempting to show more suggestions when currentSuggestions are null.");
+        }
+        WifiDocDialogFragment fragment = WifiDocDialogFragment.forSuggestion(suggestion.getTitle(),
+                suggestion.getLongSuggestionList());
+        fragment.show(getSupportFragmentManager(), "Suggestions");
+        //dobbyAnalytics.moreSuggestionsShown(currentSuggestion.getTitle(),
+        //        new ArrayList<String>(currentSuggestion.getShortSuggestionList()));
+    }
+
 
     private Fragment getFragmentByTag(String tag) {
         FragmentManager fragmentManager = getSupportFragmentManager();

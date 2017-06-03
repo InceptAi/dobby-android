@@ -151,8 +151,14 @@ public class SuggestionCreator {
         if (conditionList.size() > 0) {
             for (int index = 0; index < conditionList.size(); index++) {
                 @Condition int condition = conditionList.get(index);
-                suggestionToReturn.longSuggestionList.add(getSuggestionForCondition(condition, params));
-                suggestionToReturn.shortSuggestionList.add(getShortSuggestionForCondition(condition, params));
+                String shortSuggestion = getShortSuggestionForCondition(condition, params);
+                String longSuggestion = getSuggestionForCondition(condition, params);
+                if (!shortSuggestion.equals(Utils.EMPTY_STRING)) {
+                    suggestionToReturn.shortSuggestionList.add(getShortSuggestionForCondition(condition, params));
+                }
+                if (!longSuggestion.equals(Utils.EMPTY_STRING)) {
+                    suggestionToReturn.longSuggestionList.add(getSuggestionForCondition(condition, params));
+                }
             }
         } else {
             suggestionToReturn.longSuggestionList = getNoConditionMessageList(params);
@@ -393,8 +399,8 @@ public class SuggestionCreator {
                         "webpage.";
                 break;
             case Condition.DNS_UNREACHABLE:
-                if (DataInterpreter.isNonFunctional(params.bandwidthGrade.getDownloadBandwidthMetric()) &&
-                        DataInterpreter.isNonFunctional(params.bandwidthGrade.getUploadBandwidthMetric())) {
+                if (DataInterpreter.isNonFunctionalOrUnknown(params.bandwidthGrade.getDownloadBandwidthMetric()) &&
+                        DataInterpreter.isNonFunctionalOrUnknown(params.bandwidthGrade.getUploadBandwidthMetric())) {
                     baseMessage = "We are unable to reach your DNS server, which means you can't access " +
                             "the Internet on your phone and other devices. This could be because the DNS " +
                             "server you have configured is down. ";
@@ -753,13 +759,11 @@ public class SuggestionCreator {
                         "webpage.";
                 break;
             case Condition.DNS_UNREACHABLE:
-                if (!baseMessage.equals(Utils.EMPTY_STRING)) {
-                    baseMessage += " However, we ";
-                } else {
-                    baseMessage = "We ";
+                if (DataInterpreter.isNonFunctionalOrUnknown(params.bandwidthGrade.getDownloadBandwidthMetric()) &&
+                        DataInterpreter.isNonFunctionalOrUnknown(params.bandwidthGrade.getUploadBandwidthMetric())) {
+                    baseMessage = "We are unable to reach your DNS server, which means you can't access " +
+                            "the Internet on your phone and other devices.";
                 }
-                baseMessage += "are unable to reach your DNS server, which means you can't access " +
-                        "the Internet on your phone and other devices.";
                 conditionalMessage = getAlternateDNSMessage(params);
                 break;
             case Condition.CABLE_MODEM_FAULT:

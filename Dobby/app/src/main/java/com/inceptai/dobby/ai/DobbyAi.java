@@ -77,6 +77,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         void showUserActionOptions(List<Integer> userResponseTypes);
         void showBandwidthViewCard(DataInterpreter.BandwidthGrade bandwidthGrade);
         void showNetworkInfoViewCard(DataInterpreter.WifiGrade wifiGrade, String isp, String ip);
+        void showDetailedSuggestions(SuggestionCreator.Suggestion suggestion);
     }
 
     public DobbyAi(DobbyThreadpool threadpool,
@@ -184,11 +185,12 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 break;
             case ACTION_TYPE_SHOW_LONG_SUGGESTION:
                 //Show the long suggestion here and send the event
-                if (lastSuggestion != null) {
-                    //TODO fix this to show list of suggestions nicely.
-                    showMessageToUser(lastSuggestion.getLongSuggestionListString());
+                if (responseCallback != null) {
+                    responseCallback.showDetailedSuggestions(lastSuggestion);
                 }
-                sendEvent(ApiAiClient.APIAI_LONG_SUGGESTION_SHOWN_EVENT);
+                if (lastSuggestion != null) {
+                    sendEvent(ApiAiClient.APIAI_LONG_SUGGESTION_SHOWN_EVENT);
+                }
                 break;
             case ACTION_TYPE_NONE:
                 break;
@@ -295,6 +297,12 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 responseList.add(UserResponse.ResponseType.YES);
                 responseList.add(UserResponse.ResponseType.NO);
                 break;
+        }
+        //Get detailed suggestions by pressing a button
+        if (lastSuggestion != null &&
+                lastActionShownToUser != ACTION_TYPE_DIAGNOSE_SLOW_INTERNET &&
+                lastActionShownToUser != ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS) {
+            responseList.add(UserResponse.ResponseType.SHOW_LAST_SUGGESTION_DETAILS);
         }
         return responseList;
     }
