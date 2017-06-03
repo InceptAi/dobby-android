@@ -36,6 +36,7 @@ import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withParent;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
+import static com.inceptai.dobby.testutils.TestUtils.withIndex;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
@@ -138,9 +139,11 @@ public class WifiExpertUITests {
         ViewInteraction frameLayout = onView(withId(R.id.net_cardview));
         frameLayout.check(matches(isDisplayed()));
 
-        ViewInteraction textView2 = onView(allOf(withId(R.id.dobbyTextTv), withText(containsString("You are"))));
+        //ViewInteraction textView2 = onView(withIndex(allOf(withId(R.id.dobbyTextTv), withText(containsString("connected and online via"))), 0));
+        ViewInteraction textView2 = onView(withIndex(withText(containsString("connected and online via")), 0));
+
         textView2.check(matches(withText(containsString("You are connected and online via wifi network:"))));
-        textView2.check(matches(isDisplayed()));
+        //textView2.check(matches(isDisplayed()));
 
         ViewInteraction button5 = onView(
                 allOf(withText("Yes"), childAtPosition(
