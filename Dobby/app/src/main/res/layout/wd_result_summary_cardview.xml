@@ -98,13 +98,14 @@
 
         <Button
             android:layout_width="100dp"
-            android:text="What does this mean ?"
+            android:text="@string/wd_suggest_more_string"
             style="@style/MyButton.Flat"
             app:layout_constraintLeft_toRightOf="@+id/wd_cv_download_bandwidth_ll"
             android:textColor="@android:color/holo_blue_dark"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             android:layout_height="wrap_content"
+            android:id="@+id/more_button"
             app:layout_constraintBottom_toTopOf="@+id/bottom_summary_tv" />
 
         <TextView

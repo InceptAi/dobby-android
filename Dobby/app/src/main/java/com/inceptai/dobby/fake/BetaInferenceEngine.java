@@ -20,6 +20,7 @@ public class BetaInferenceEngine {
     public static BetaInferenceEngine INSTANCE = new BetaInferenceEngine();
 
     private DataInterpreter.BandwidthGrade bandwidthGrade;
+    private DataInterpreter.PingGrade pingGrade;
 
     public static BetaInferenceEngine get() {
         return INSTANCE;

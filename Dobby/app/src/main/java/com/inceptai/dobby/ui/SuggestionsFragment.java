@@ -13,7 +13,10 @@ import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.ListView;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -23,6 +26,7 @@ import com.inceptai.dobby.ai.suggest.LocalSummary;
 import com.inceptai.dobby.utils.DobbyLog;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -34,11 +38,15 @@ public class SuggestionsFragment extends Fragment {
     private ScrollView scrollView;
     private CardView bandwidthCardview;
     private CardView overallSummaryCv;
+    private CardView suggestionsCv;
+    private ListView suggestionsLv;
 
     private TextView overallBwTv;
     private TextView uploadTv;
     private TextView downloadTv;
     private Toolbar toolbar;
+    private Button moreButton;
+
 
     private FrameLayout shareResultsFl;
     private FrameLayout contactExpertFl;
@@ -112,7 +120,7 @@ public class SuggestionsFragment extends Fragment {
         scrollView.addView(bandwidthCardview);
         fetchViewInstances(bandwidthCardview);
 
-        ArrayList<Pair<String, String>> stringList = localSummary.getStrings();
+        ArrayList<Pair<String, String>> stringList = new ArrayList<>();
         DobbyLog.i("StringList size = " + stringList.size());
         if (stringList.size() >= 1) {
             overallBwTv.setText(stringList.get(0).first);
@@ -130,25 +138,26 @@ public class SuggestionsFragment extends Fragment {
         scrollView.addView(overallSummaryCv);
         fetchOverallSummaryViews(overallSummaryCv);
 
-        localSummary.getOverall();
+        overallBwTv.setText(localSummary.getOverall());
+        uploadTv.setText(String.format("%2.1f", localSummary.getSummary().getUploadMbps()));
+        downloadTv.setText(String.format("%2.1f", localSummary.getSummary().getDownloadMbps()));
 
-        ArrayList<Pair<String, String>> stringList = localSummary.getStrings();
-        DobbyLog.i("StringList size = " + stringList.size());
-        if (stringList.size() >= 1) {
-            overallBwTv.setText(stringList.get(0).first);
-        }
-        if (stringList.size() >= 2) {
-            uploadTv.setText(stringList.get(1).first);
-        }
-        if (stringList.size() >= 3) {
-            downloadTv.setText(stringList.get(1).first);
-        }
+        suggestionsCv = (CardView) inflater.inflate(R.layout.wd_suggestions_cardview, null);
+        scrollView.addView(suggestionsCv);
+        suggestionsLv = (ListView) suggestionsCv.findViewById(R.id.wd_suggest_listview);
+    }
+
+    private void fillSuggestions(String title, List<String> list) {
+        ArrayAdapter<String> itemsAdapter =
+                new ArrayAdapter<String>(getContext(), R.layout.custom_simple_list_item, list);
+        suggestionsLv.setAdapter(itemsAdapter);
     }
 
     private void fetchOverallSummaryViews(View rootView) {
-        overallBwTv = (TextView) rootView.findViewById(R.id.overall_bw_tv);
+        overallBwTv = (TextView) rootView.findViewById(R.id.bottom_summary_tv);
         uploadTv = (TextView) rootView.findViewById(R.id.upload_bw_tv);
         downloadTv = (TextView) rootView.findViewById(R.id.download_bw_tv);
+        moreButton = (Button) rootView.findViewById(R.id.more_button);
     }
 
     private void contactExpertUi() {

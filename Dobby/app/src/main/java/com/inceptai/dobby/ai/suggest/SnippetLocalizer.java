@@ -20,11 +20,10 @@ import static com.inceptai.dobby.ai.suggest.Summary.Type.TYPE_DOWNLOAD_BW_UNKNOW
 import static com.inceptai.dobby.ai.suggest.Summary.Type.TYPE_OVERALL_BANDWIDTH_GOOD;
 import static com.inceptai.dobby.ai.suggest.Summary.Type.TYPE_OVERALL_BANDWIDTH_OK;
 import static com.inceptai.dobby.ai.suggest.Summary.Type.TYPE_OVERALL_BANDWIDTH_POOR;
-import static com.inceptai.dobby.ai.suggest.Summary.Type.TYPE_UPLOAD_BW_RATIO_GT_25PERCENT;
-import static com.inceptai.dobby.ai.suggest.Summary.Type.TYPE_UPLOAD_BW_RATIO_LT_10PERCENT;
-import static com.inceptai.dobby.ai.suggest.Summary.Type.TYPE_UPLOAD_BW_RATIO_LT_1PERCENT;
-import static com.inceptai.dobby.ai.suggest.Summary.Type.TYPE_UPLOAD_BW_RATIO_LT_25PERCENT;
-import static com.inceptai.dobby.ai.suggest.Summary.Type.TYPE_UPLOAD_BW_RATIO_VERY_POOR;
+import static com.inceptai.dobby.ai.suggest.Summary.Type.TYPE_UPLOAD_BW_AND_RATIO_OK;
+import static com.inceptai.dobby.ai.suggest.Summary.Type.TYPE_UPLOAD_BW_AND_RATIO_POOR;
+import static com.inceptai.dobby.ai.suggest.Summary.Type.TYPE_UPLOAD_BW_OK_RATIO_POOR;
+import static com.inceptai.dobby.ai.suggest.Summary.Type.TYPE_UPLOAD_BW_POOR;
 import static com.inceptai.dobby.ai.suggest.Summary.Type.TYPE_UPLOAD_BW_UNKNOWN;
 
 /**
@@ -39,7 +38,7 @@ public class SnippetLocalizer {
         this.context = context;
     }
 
-    private LocalSummary localize(Summary summary) {
+    public LocalSummary localize(Summary summary) {
         Resources resources = context.getResources();
         LocalSummary localSummary = new LocalSummary(summary);
         switch (summary.getOverallType()) {
@@ -53,13 +52,13 @@ public class SnippetLocalizer {
             case TYPE_OVERALL_BANDWIDTH_POOR:
                 localSummary.setOverall(resources.getString(R.string.suggest_bandwidth_overall_poor), resources.getString(R.string.suggest_bandwidth_overall_poor_more));
                 break;
-        }
-
-        switch (summary.getDownloadType()) {
             case TYPE_BW_UNKNOWN:
                 localSummary.setDownload(resources.getString(R.string.suggest_bw_unknown),
                         resources.getString(R.string.suggest_bw_unknown_more));
                 break;
+        }
+
+        switch (summary.getDownloadType()) {
             case TYPE_DOWNLOAD_BW_UNKNOWN:
                 localSummary.setDownload(resources.getString(R.string.suggest_download_bw_unknown),
                         resources.getString(R.string.suggest_download_bw_unknown_more));
@@ -109,20 +108,17 @@ public class SnippetLocalizer {
             case TYPE_UPLOAD_BW_UNKNOWN:
                 localSummary.setUpload(resources.getString(R.string.suggest_upload_bw_unknown), resources.getString(R.string.suggest_upload_bw_unknown_more));
                 break;
-            case TYPE_UPLOAD_BW_RATIO_VERY_POOR:
-                localSummary.setUpload(resources.getString(R.string.suggest_upload_ratio_very_poor), resources.getString(R.string.suggest_upload_ratio_very_poor_more));
+            case TYPE_UPLOAD_BW_AND_RATIO_OK:
+                localSummary.setUpload(resources.getString(R.string.suggest_upload_bw_and_ratio_ok), resources.getString(R.string.suggest_upload_bw_and_ratio_ok_more));
                 break;
-            case TYPE_UPLOAD_BW_RATIO_LT_1PERCENT:
-                localSummary.setUpload(resources.getString(R.string.suggest_upload_bw_unknown), resources.getString(R.string.suggest_upload_bw_unknown_more));
+            case TYPE_UPLOAD_BW_AND_RATIO_POOR:
+                localSummary.setUpload(resources.getString(R.string.suggest_upload_bw_and_ratio_poor), resources.getString(R.string.suggest_upload_bw_and_ratio_poor_more));
                 break;
-            case TYPE_UPLOAD_BW_RATIO_LT_10PERCENT:
-                localSummary.setUpload(resources.getString(R.string.suggest_upload_bw_unknown), resources.getString(R.string.suggest_upload_bw_unknown_more));
+            case TYPE_UPLOAD_BW_OK_RATIO_POOR:
+                localSummary.setUpload(resources.getString(R.string.suggest_upload_bw_ok_ratio_poor), resources.getString(R.string.suggest_upload_bw_ok_ratio_poor_more));
                 break;
-            case TYPE_UPLOAD_BW_RATIO_LT_25PERCENT:
-                localSummary.setUpload(resources.getString(R.string.suggest_upload_bw_unknown), resources.getString(R.string.suggest_upload_bw_unknown_more));
-                break;
-            case TYPE_UPLOAD_BW_RATIO_GT_25PERCENT:
-                localSummary.setUpload(resources.getString(R.string.suggest_upload_bw_unknown), resources.getString(R.string.suggest_upload_bw_unknown_more));
+            case TYPE_UPLOAD_BW_POOR:
+                localSummary.setUpload(resources.getString(R.string.suggest_upload_bw_poor), resources.getString(R.string.suggest_upload_bw_poor_more));
                 break;
         }
         return localSummary;

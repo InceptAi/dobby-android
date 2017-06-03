@@ -40,9 +40,6 @@
     <string name="suggest_download_bw_above20mbps">Tests show a download speed of %1$1.1f MBPS. You should have a excellent experience with apps and internet content.</string>
     <string name="suggest_download_bw_above20mbps_more">You are expected to see lightning fast internet browsing and HD video streaming without any delays, jitter or buffering. You should also be able to stream 4K definition video content.</string>
 
-    <string name="suggest_upload_ratio_very_poor">The upload bandwidth is too low in comparison to the download bandwidth.</string>
-    <string name="suggest_upload_ratio_very_poor_more">A very low upload bandwidth ratio when compared to the download bandwidth might indicate issues with the network or the internet provider. It could cause issues with using streaming apps, browsing or downloads.</string>
-
     <string name="suggest_bandwidth_overall_ok">Overall your wifi internet looks fine.</string>
     <string name="suggest_bandwidth_overall_ok_more">Your overall download and upload bandwidth speeds look reasonably good. This usually means that should not be any unexpected issues with your Internet. If you are still seeing problems, it is possible that they are intermittent. Running this test a few times might help.</string>
 
@@ -52,16 +49,17 @@
     <string name="suggest_bandwidth_overall_poor">Overall your wifi internet connectivity is poor.</string>
     <string name="suggest_bandwidth_overall_poor_more">Your overall download and upload bandwidth speeds are not good enough to for apps to use them. You will experience delays and high loading times. </string>
 
-    <string name="suggest_upload_ratio_lt1percent">The upload bandwidth is too low in comparison to the download bandwidth.</string>
-    <string name="suggest_upload_ratio_lt1percent_more">A very low upload bandwidth ratio when compared to the download bandwidth might indicate issues with the network or the internet provider. It could cause issues with using streaming apps, browsing or downloads.</string>
+    <string name="suggest_upload_bw_poor">Your upload bandwidth is too low.</string>
+    <string name="suggest_upload_bw_poor_more">A very low upload bandwidth is too low to support internet enabled applications. This could cause issues with using streaming apps, browsing or downloads.</string>
 
-    <string name="suggest_upload_ratio_lt10percent">The upload bandwidth is slightly on the lower side with respect to the download bandwidth.</string>
-    <string name="suggest_upload_ratio_lt10percent_more">The upload bandwidth is too low in comparison to the download bandwidth.</string>
+    <string name="suggest_upload_bw_ok_ratio_poor">The upload bandwidth is good but relatively low compared to your download bandwidth.</string>
+    <string name="suggest_upload_bw_ok_ratio_poor_more">The upload bandwidth should ideally have a 1:4 ratio to your download bandwidth for best performance. The ratio is a bit low, this might cause intermittent issues with some streaming or video applications.</string>
 
-    <string name="suggest_upload_ratio_lt25percent">The upload bandwidth is good relative to the download bandwidth.</string>
-    <string name="suggest_upload_ratio_lt25percent_more">The upload bandwidth is too low in comparison to the download bandwidth.</string>
+    <string name="suggest_upload_bw_and_ratio_poor">Your upload bandwidth is too low.</string>
+    <string name="suggest_upload_bw_and_ratio_poor_more">The upload bandwidth is too low. Also in comparison to the download bandwidth, the upload is relatively low. This can cause issues with streaming audio or video applicatoins especially upload based.</string>
 
-    <string name="suggest_upload_ratio_gt25percent">The upload bandwidth is good relative to the download bandwidth.</string>
-    <string name="suggest_upload_ratio_gt25percent_more">You should not have issues due to the upload bandwidth which </string>
+    <string name="suggest_upload_bw_and_ratio_ok">The upload bandwidth looks good.</string>
+    <string name="suggest_upload_bw_and_ratio_ok_more">You should not have issues due to the upload bandwidth which looks good relative to your download bandwidth numbers. </string>
+    <string name="wd_suggest_more_string">What does this mean ?</string>
 
 </resources>

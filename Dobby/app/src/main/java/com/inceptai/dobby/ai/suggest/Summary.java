@@ -24,11 +24,10 @@ import static com.inceptai.dobby.ai.suggest.Summary.Type.TYPE_NONE;
 import static com.inceptai.dobby.ai.suggest.Summary.Type.TYPE_OVERALL_BANDWIDTH_GOOD;
 import static com.inceptai.dobby.ai.suggest.Summary.Type.TYPE_OVERALL_BANDWIDTH_OK;
 import static com.inceptai.dobby.ai.suggest.Summary.Type.TYPE_OVERALL_BANDWIDTH_POOR;
-import static com.inceptai.dobby.ai.suggest.Summary.Type.TYPE_UPLOAD_BW_RATIO_GT_25PERCENT;
-import static com.inceptai.dobby.ai.suggest.Summary.Type.TYPE_UPLOAD_BW_RATIO_LT_10PERCENT;
-import static com.inceptai.dobby.ai.suggest.Summary.Type.TYPE_UPLOAD_BW_RATIO_LT_1PERCENT;
-import static com.inceptai.dobby.ai.suggest.Summary.Type.TYPE_UPLOAD_BW_RATIO_LT_25PERCENT;
-import static com.inceptai.dobby.ai.suggest.Summary.Type.TYPE_UPLOAD_BW_RATIO_VERY_POOR;
+import static com.inceptai.dobby.ai.suggest.Summary.Type.TYPE_UPLOAD_BW_AND_RATIO_OK;
+import static com.inceptai.dobby.ai.suggest.Summary.Type.TYPE_UPLOAD_BW_AND_RATIO_POOR;
+import static com.inceptai.dobby.ai.suggest.Summary.Type.TYPE_UPLOAD_BW_OK_RATIO_POOR;
+import static com.inceptai.dobby.ai.suggest.Summary.Type.TYPE_UPLOAD_BW_POOR;
 import static com.inceptai.dobby.ai.suggest.Summary.Type.TYPE_UPLOAD_BW_UNKNOWN;
 
 
@@ -38,8 +37,7 @@ public class Summary {
             TYPE_OVERALL_BANDWIDTH_GOOD, TYPE_OVERALL_BANDWIDTH_OK, TYPE_OVERALL_BANDWIDTH_POOR, TYPE_DOWNLOAD_BW_1MBPS, TYPE_DOWNLOAD_BW_LT_1MBPS,
             TYPE_DOWNLOAD_BW_LT500KBPS, TYPE_DOWNLOAD_BW_LT100KBPS, TYPE_DOWNLOAD_BW_LT40KBPS,
             TYPE_DOWNLOAD_BW_2MBPS, TYPE_DOWNLOAD_BW_4MBPS, TYPE_DOWNLOAD_BW_6TO8, TYPE_DOWNLOAD_BW_8TO20, TYPE_DOWNLOAD_BW_ABOVE20,
-            TYPE_UPLOAD_BW_RATIO_VERY_POOR, TYPE_UPLOAD_BW_RATIO_LT_1PERCENT, TYPE_UPLOAD_BW_RATIO_LT_10PERCENT,
-            TYPE_UPLOAD_BW_RATIO_LT_25PERCENT, TYPE_UPLOAD_BW_RATIO_GT_25PERCENT})
+    TYPE_UPLOAD_BW_AND_RATIO_OK, TYPE_UPLOAD_BW_AND_RATIO_POOR, TYPE_UPLOAD_BW_OK_RATIO_POOR, TYPE_UPLOAD_BW_POOR})
     @Retention(RetentionPolicy.SOURCE)
     public @interface Type {
         int TYPE_NONE = 0;
@@ -63,11 +61,10 @@ public class Summary {
         int TYPE_DOWNLOAD_BW_LT40KBPS = 1011;
 
         int TYPE_UPLOAD_BW_UNKNOWN = 1050;
-        int TYPE_UPLOAD_BW_RATIO_VERY_POOR = 1051;
-        int TYPE_UPLOAD_BW_RATIO_LT_1PERCENT = 1052;
-        int TYPE_UPLOAD_BW_RATIO_LT_10PERCENT = 1053;
-        int TYPE_UPLOAD_BW_RATIO_LT_25PERCENT = 1054;
-        int TYPE_UPLOAD_BW_RATIO_GT_25PERCENT = 1055;
+        int TYPE_UPLOAD_BW_AND_RATIO_POOR = 1051;
+        int TYPE_UPLOAD_BW_OK_RATIO_POOR = 1052;
+        int TYPE_UPLOAD_BW_AND_RATIO_OK = 1053;
+        int TYPE_UPLOAD_BW_POOR = 1054;
 
         int TYPE_OVERALL_BANDWIDTH_GOOD = 1100;
         int TYPE_OVERALL_BANDWIDTH_OK = 1101;
@@ -78,13 +75,16 @@ public class Summary {
     private static final String TAG_BANDWIDTH = "bandwidth";
     @Type
     private int overall;
+
     @Type
     private int download;
+
     @Type
     private int upload;
+
     private DataInterpreter.BandwidthGrade bandwidthGrade;
 
-    private Summary(@Type int overall, @Type int upload, @Type int download, DataInterpreter.BandwidthGrade bandwidthGrade) {
+    public Summary(@Type int overall, @Type int upload, @Type int download, DataInterpreter.BandwidthGrade bandwidthGrade) {
         this.overall = overall;
         this.upload = upload;
         this.download = download;
