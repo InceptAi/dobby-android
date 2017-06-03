@@ -167,9 +167,6 @@ dependencies {
     androidTestCompile 'com.android.support.test:runner:' + rootProject.runnerVersion;
     androidTestCompile 'com.android.support.test:rules:' + rootProject.rulesVersion;
     androidTestCompile 'com.squareup.spoon:spoon-client:1.6.4'
-    androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2.2', {
-        exclude group: 'com.android.support', module: 'support-annotations'
-    }
 }
 
 apply plugin: 'com.google.gms.google-services'
