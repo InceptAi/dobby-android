@@ -28,7 +28,12 @@ public class Action {
             ActionType.ACTION_TYPE_ASK_FOR_LONG_SUGGESTION,
             ActionType.ACTION_TYPE_SHOW_WIFI_ANALYSIS,
             ActionType.ACTION_TYPE_LIST_DOBBY_FUNCTIONS,
-            ActionType.ACTION_TYPE_ASK_FOR_BW_TESTS
+            ActionType.ACTION_TYPE_ASK_FOR_BW_TESTS,
+            ActionType.ACTION_TYPE_ASK_FOR_FEEDBACK,
+            ActionType.ACTION_TYPE_POSITIVE_FEEDBACK,
+            ActionType.ACTION_TYPE_NEGATIVE_FEEDBACK,
+            ActionType.ACTION_TYPE_NO_FEEDBACK,
+            ActionType.ACTION_TYPE_UNSTRUCTURED_FEEDBACK
     })
     @Retention(RetentionPolicy.SOURCE)
     public @interface ActionType {
@@ -47,6 +52,11 @@ public class Action {
         int ACTION_TYPE_SHOW_WIFI_ANALYSIS = 12;
         int ACTION_TYPE_LIST_DOBBY_FUNCTIONS = 13;
         int ACTION_TYPE_ASK_FOR_BW_TESTS = 14;
+        int ACTION_TYPE_ASK_FOR_FEEDBACK = 15;
+        int ACTION_TYPE_POSITIVE_FEEDBACK = 16;
+        int ACTION_TYPE_NEGATIVE_FEEDBACK = 17;
+        int ACTION_TYPE_NO_FEEDBACK = 18;
+        int ACTION_TYPE_UNSTRUCTURED_FEEDBACK = 19;
     }
 
     /* User response to be shown, null for no response. */

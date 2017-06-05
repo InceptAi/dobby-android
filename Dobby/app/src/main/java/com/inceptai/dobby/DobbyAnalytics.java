@@ -30,10 +30,13 @@ public class DobbyAnalytics {
     private static final String PARAM_SUGGESTION_TITLE = "suggestion_title";
     private static final String PARAM_GRADE_TEXT = "grade_text";
     private static final String PARAM_GRADE_JSON = "grade_json";
+    private static final String FEEDBACK_UNSTRUCTURED = "feedback_unstructured";
+    private static final String LAST_ACTION_BEFORE_FEEDBACK = "last_action";
 
     private static final String BANDWIDTH_GRADE_EVENT = "bandwidth_grade";
     private static final String WIFI_GRADE_EVENT = "wifi_grade";
     private static final String PING_GRADE_EVENT = "ping_grade";
+
 
     //Unique Wifi Expert events
     private static final String WIFI_EXPERT_FRAGMENT_ENTERED = "expert_opened";
@@ -63,6 +66,25 @@ public class DobbyAnalytics {
     private static final String ACTION_TYPE_DECLINE_DETAILED_SUGGESTIONS = "action_decline_details";
     private static final String ACTION_TYPE_WIFI_CARD_SHOWN = "action_wifi_card_shown";
     private static final String ACTION_TYPE_BANDWIDTH_CARD_SHOWN = "action_bw_card_shown";
+
+    //Feedback events
+    private static final String ACTION_TYPE_ASK_FOR_FEEDBACK_AFTER_LONG_SUGGESTION = "ask_feedback_long_sugg";
+    private static final String ACTION_TYPE_POSITIVE_FEEDBACK_AFTER_LONG_SUGGESTION = "positive_feedback_long_sugg";
+    private static final String ACTION_TYPE_NEGATIVE_FEEDBACK_AFTER_LONG_SUGGESTION = "negative_feedback_long_sugg";
+    private static final String ACTION_TYPE_NO_FEEDBACK_AFTER_LONG_SUGGESTION = "no_feedback_long_sugg";
+    private static final String ACTION_TYPE_UNSTRUCTURED_FEEDBACK_AFTER_LONG_SUGGESTION = "unstructured_feedback_long_sugg";
+
+    private static final String ACTION_TYPE_ASK_FOR_FEEDBACK_AFTER_SHORT_SUGGESTION = "ask_feedback_long_sugg";
+    private static final String ACTION_TYPE_POSITIVE_FEEDBACK_AFTER_SHORT_SUGGESTION = "positive_feedback_long_sugg";
+    private static final String ACTION_TYPE_NEGATIVE_FEEDBACK_AFTER_SHORT_SUGGESTION = "negative_feedback_long_sugg";
+    private static final String ACTION_TYPE_NO_FEEDBACK_AFTER_SHORT_SUGGESTION = "no_feedback_long_sugg";
+    private static final String ACTION_TYPE_UNSTRUCTURED_FEEDBACK_AFTER_SHORT_SUGGESTION = "unstructured_feedback_long_sugg";
+
+    private static final String ACTION_TYPE_ASK_FOR_FEEDBACK_AFTER_WIFI_CHECK = "ask_feedback_wifi_check";
+    private static final String ACTION_TYPE_POSITIVE_FEEDBACK_AFTER_WIFI_CHECK = "positive_feedback_wifi_check";
+    private static final String ACTION_TYPE_NEGATIVE_FEEDBACK_AFTER_WIFI_CHECK = "negative_feedback_wifi_check";
+    private static final String ACTION_TYPE_NO_FEEDBACK_AFTER_WIFI_CHECK = "no_feedback_wifi_check";
+    private static final String ACTION_TYPE_UNSTRUCTURED_FEEDBACK_AFTER_WIFI_CHECK = "unstructured_feedback_wifi_check";
 
 
     FirebaseAnalytics firebaseAnalytics;
@@ -283,4 +305,86 @@ public class DobbyAnalytics {
         Bundle bundle = new Bundle();
         firebaseAnalytics.logEvent(ACTION_TYPE_BANDWIDTH_CARD_SHOWN, bundle);
     }
+
+    //Long suggestion feedback
+    public void wifiExpertAskForFeedbackAfterLongSuggestion() {
+        Bundle bundle = new Bundle();
+        firebaseAnalytics.logEvent(ACTION_TYPE_ASK_FOR_FEEDBACK_AFTER_LONG_SUGGESTION, bundle);
+    }
+
+    public void wifiExpertPositiveFeedbackAfterLongSuggestion() {
+        Bundle bundle = new Bundle();
+        firebaseAnalytics.logEvent(ACTION_TYPE_POSITIVE_FEEDBACK_AFTER_LONG_SUGGESTION, bundle);
+    }
+
+    public void wifiExpertNegativeFeedbackAfterLongSuggestion() {
+        Bundle bundle = new Bundle();
+        firebaseAnalytics.logEvent(ACTION_TYPE_NEGATIVE_FEEDBACK_AFTER_LONG_SUGGESTION, bundle);
+    }
+
+    public void wifiExpertNoFeedbackAfterLongSuggestion() {
+        Bundle bundle = new Bundle();
+        firebaseAnalytics.logEvent(ACTION_TYPE_NO_FEEDBACK_AFTER_LONG_SUGGESTION, bundle);
+    }
+
+    public void wifiExpertUnstructuredFeedbackAfterLongSuggestion(String feedback) {
+        Bundle bundle = new Bundle();
+        bundle.putString(FEEDBACK_UNSTRUCTURED, feedback);
+        firebaseAnalytics.logEvent(ACTION_TYPE_UNSTRUCTURED_FEEDBACK_AFTER_LONG_SUGGESTION, bundle);
+    }
+
+    //Short suggestion feedback
+    public void wifiExpertAskForFeedbackAfterShortSuggestion() {
+        Bundle bundle = new Bundle();
+        firebaseAnalytics.logEvent(ACTION_TYPE_ASK_FOR_FEEDBACK_AFTER_SHORT_SUGGESTION, bundle);
+    }
+
+    public void wifiExpertPositiveFeedbackAfterShortSuggestion() {
+        Bundle bundle = new Bundle();
+        firebaseAnalytics.logEvent(ACTION_TYPE_POSITIVE_FEEDBACK_AFTER_SHORT_SUGGESTION, bundle);
+    }
+
+    public void wifiExpertNegativeFeedbackAfterShortSuggestion() {
+        Bundle bundle = new Bundle();
+        firebaseAnalytics.logEvent(ACTION_TYPE_NEGATIVE_FEEDBACK_AFTER_SHORT_SUGGESTION, bundle);
+    }
+
+    public void wifiExpertNoFeedbackAfterShortSuggestion() {
+        Bundle bundle = new Bundle();
+        firebaseAnalytics.logEvent(ACTION_TYPE_NO_FEEDBACK_AFTER_SHORT_SUGGESTION, bundle);
+    }
+
+    public void wifiExpertUnstructuredFeedbackAfterShortSuggestion(String feedback) {
+        Bundle bundle = new Bundle();
+        bundle.putString(FEEDBACK_UNSTRUCTURED, feedback);
+        firebaseAnalytics.logEvent(ACTION_TYPE_UNSTRUCTURED_FEEDBACK_AFTER_SHORT_SUGGESTION, bundle);
+    }
+
+    //Feedback after wifi check
+    public void wifiExpertAskForFeedbackAfterWifiCheck() {
+        Bundle bundle = new Bundle();
+        firebaseAnalytics.logEvent(ACTION_TYPE_ASK_FOR_FEEDBACK_AFTER_WIFI_CHECK, bundle);
+    }
+
+    public void wifiExpertPositiveFeedbackAfterWifiCheck() {
+        Bundle bundle = new Bundle();
+        firebaseAnalytics.logEvent(ACTION_TYPE_POSITIVE_FEEDBACK_AFTER_WIFI_CHECK, bundle);
+    }
+
+    public void wifiExpertNegativeFeedbackAfterWifiCheck() {
+        Bundle bundle = new Bundle();
+        firebaseAnalytics.logEvent(ACTION_TYPE_NEGATIVE_FEEDBACK_AFTER_WIFI_CHECK, bundle);
+    }
+
+    public void wifiExpertNoFeedbackAfterWifiCheck() {
+        Bundle bundle = new Bundle();
+        firebaseAnalytics.logEvent(ACTION_TYPE_NO_FEEDBACK_AFTER_WIFI_CHECK, bundle);
+    }
+
+    public void wifiExpertUnstructuredFeedbackAfterWifiCheck(String feedback) {
+        Bundle bundle = new Bundle();
+        bundle.putString(FEEDBACK_UNSTRUCTURED, feedback);
+        firebaseAnalytics.logEvent(ACTION_TYPE_UNSTRUCTURED_FEEDBACK_AFTER_WIFI_CHECK, bundle);
+    }
+
 }

@@ -44,6 +44,11 @@ public class ApiAiClient implements AIListener {
     public static final String APIAI_ACTION_WIFI_CHECK = "run-wifi-check-action";
     public static final String APIAI_ACTION_LIST_DOBBY_FUNCTIONS = "list-dobby-functions-action";
     public static final String APIAI_ACTION_ASK_FOR_BW_TESTS = "ask-to-run-bw-tests";
+    public static final String APIAI_ACTION_ASK_FOR_FEEDBACK = "ask-for-feedback-action";
+    public static final String APIAI_ACTION_POSITIVE_FEEDBACK = "user-says-app-helpful";
+    public static final String APIAI_ACTION_NEGATIVE_FEEDBACK = "user-says-app-not-helpful";
+    public static final String APIAI_ACTION_NO_FEEDBACK = "user-says-no-to-giving-feedback";
+    public static final String APIAI_ACTION_UNSTRUCTURED_FEEDBACK = "user-feedback-unstructured";
 
 
     private static final String CLIENT_ACCESS_TOKEN = "81dbd5289ee74637bf582fc3112b7dcb";
@@ -226,6 +231,21 @@ public class ApiAiClient implements AIListener {
                 break;
             case APIAI_ACTION_ASK_FOR_BW_TESTS:
                 actionInt = Action.ActionType.ACTION_TYPE_ASK_FOR_BW_TESTS;
+                break;
+            case APIAI_ACTION_ASK_FOR_FEEDBACK:
+                actionInt = Action.ActionType.ACTION_TYPE_ASK_FOR_FEEDBACK;
+                break;
+            case APIAI_ACTION_POSITIVE_FEEDBACK:
+                actionInt = Action.ActionType.ACTION_TYPE_POSITIVE_FEEDBACK;
+                break;
+            case APIAI_ACTION_NEGATIVE_FEEDBACK:
+                actionInt = Action.ActionType.ACTION_TYPE_NEGATIVE_FEEDBACK;
+                break;
+            case APIAI_ACTION_NO_FEEDBACK:
+                actionInt = Action.ActionType.ACTION_TYPE_NO_FEEDBACK;
+                break;
+            case APIAI_ACTION_UNSTRUCTURED_FEEDBACK:
+                actionInt = Action.ActionType.ACTION_TYPE_UNSTRUCTURED_FEEDBACK;
                 break;
         }
         listener.onResult(new Action(response, actionInt), result);
