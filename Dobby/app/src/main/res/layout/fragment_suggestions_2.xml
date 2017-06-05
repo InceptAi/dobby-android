@@ -15,7 +15,7 @@
         android:minHeight="?attr/actionBarSize"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:title="Results and Analysis"
+        android:title="Summary and Analysis"
         app:titleTextColor="@android:color/white"
         android:background="?attr/colorPrimary"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -23,54 +23,7 @@
         app:layout_constraintRight_toRightOf="parent">
     </android.support.v7.widget.Toolbar>
 
-    <!--
     <LinearLayout
-        android:layout_width="0dp"
-        android:orientation="vertical"
-        android:id="@+id/top_bar"
-        app:layout_constraintTop_toBottomOf="@id/suggestions_toolbar"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        android:layout_marginTop="10dp"
-        android:layout_height="wrap_content">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:orientation="horizontal"
-            android:layout_gravity="top"
-            android:layout_height="wrap_content">
-            <ImageView
-                android:id="@+id/upback_button"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:layout_margin="0dp"
-                android:src="@drawable/ic_action_upback" />
-
-            <ImageView
-                android:id="@+id/wifi_doc_icon"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:layout_marginLeft="10dp"
-                android:layout_marginStart="10dp"
-                android:src="@mipmap/wifi_doc_launcher" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:text="Results and Analysis"
-                android:textSize="18sp"
-                android:gravity="center_vertical"
-                android:layout_gravity="center_vertical"
-                android:fontFamily="sans-serif-condensed-thin"
-                android:layout_marginStart="10dp"
-                android:layout_marginLeft="10dp"
-                android:textColor="@color/orangeDark"
-                android:layout_height="wrap_content" />
-        </LinearLayout>
-    </LinearLayout>
-
-    -->
-
-    <ScrollView
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
@@ -84,8 +37,24 @@
         android:animateLayoutChanges="true"
         android:padding="5dp"
         android:layout_marginBottom="8dp"
+        android:orientation="vertical"
         app:layout_constraintBottom_toTopOf="@+id/bottom_bar">
-    </ScrollView>
+            <include
+                layout="@layout/wd_result_summary_cardview"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:id="@+id/wd_result_summary_inc_cv"
+                />
+            <android.support.v4.widget.Space
+                android:layout_width="match_parent"
+                android:layout_height="5dp" />
+            <include
+                layout="@layout/wd_suggestions_cardview"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:id="@+id/wd_suggestions_inc_cv"
+                />
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="0dp"

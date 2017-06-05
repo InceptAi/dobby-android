@@ -24,6 +24,7 @@ import android.widget.Toast;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.ai.suggest.LocalSummary;
 import com.inceptai.dobby.utils.DobbyLog;
+import com.inceptai.dobby.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +36,6 @@ public class SuggestionsFragment extends Fragment {
     public static final String TAG = "SuggestionsFragment";
     private static final String ARG_PARAM1 = "param1";
     private LocalSummary localSummary;
-    private ScrollView scrollView;
     private CardView bandwidthCardview;
     private CardView overallSummaryCv;
     private CardView suggestionsCv;
@@ -46,7 +46,7 @@ public class SuggestionsFragment extends Fragment {
     private TextView downloadTv;
     private Toolbar toolbar;
     private Button moreButton;
-
+    private TextView suggestionsTitleTv;
 
     private FrameLayout shareResultsFl;
     private FrameLayout contactExpertFl;
@@ -72,7 +72,6 @@ public class SuggestionsFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_suggestions_2, container, false);
-        scrollView = (ScrollView) view.findViewById(R.id.suggestions_scroll_view);
         toolbar = (Toolbar) view.findViewById(R.id.suggestions_toolbar);
 
         shareResultsFl = (FrameLayout) view.findViewById(R.id.share_results_fl);
@@ -92,7 +91,7 @@ public class SuggestionsFragment extends Fragment {
         });
 
         if (localSummary != null) {
-            fillSuggestions2(inflater);
+            fillSuggestions2(view);
         }
         return view;
     }
@@ -109,52 +108,45 @@ public class SuggestionsFragment extends Fragment {
         }
     }
 
-    private void fetchViewInstances(View cardView) {
-        overallBwTv = (TextView) cardView.findViewById(R.id.overall_bw_tv);
-        uploadTv = (TextView) cardView.findViewById(R.id.upload_bw_tv);
-        downloadTv = (TextView) cardView.findViewById(R.id.download_bw_tv);
-    }
-
-    private void fillSuggestions(LayoutInflater inflater) {
-        bandwidthCardview = (CardView) inflater.inflate(R.layout.bandwidth_suggestions_card, null);
-        scrollView.addView(bandwidthCardview);
-        fetchViewInstances(bandwidthCardview);
-
-        ArrayList<Pair<String, String>> stringList = new ArrayList<>();
-        DobbyLog.i("StringList size = " + stringList.size());
-        if (stringList.size() >= 1) {
-            overallBwTv.setText(stringList.get(0).first);
-        }
-        if (stringList.size() >= 2) {
-            uploadTv.setText(stringList.get(1).first);
-        }
-        if (stringList.size() >= 3) {
-            downloadTv.setText(stringList.get(1).first);
-        }
-    }
-
-    private void fillSuggestions2(LayoutInflater inflater) {
-        overallSummaryCv = (CardView) inflater.inflate(R.layout.wd_result_summary_cardview, null);
-        scrollView.addView(overallSummaryCv);
+    private void fillSuggestions2(View rootView) {
+        overallSummaryCv = (CardView) rootView.findViewById(R.id.wd_result_summary_inc_cv);
         fetchOverallSummaryViews(overallSummaryCv);
 
         overallBwTv.setText(localSummary.getOverall());
         uploadTv.setText(String.format("%2.1f", localSummary.getSummary().getUploadMbps()));
         downloadTv.setText(String.format("%2.1f", localSummary.getSummary().getDownloadMbps()));
 
-        suggestionsCv = (CardView) inflater.inflate(R.layout.wd_suggestions_cardview, null);
-        scrollView.addView(suggestionsCv);
+        suggestionsCv = (CardView) rootView.findViewById(R.id.wd_suggestions_inc_cv);
         suggestionsLv = (ListView) suggestionsCv.findViewById(R.id.wd_suggest_listview);
+        suggestionsTitleTv = (TextView) suggestionsCv.findViewById(R.id.wd_suggest_view_title_tv);
+
+        ArrayList<String> tempList = new ArrayList<>();
+        tempList.add("We performed speed tests, DNS pings and wifi tests on your network and did not see anything amiss.");
+        tempList.add("Since wifi network problems are sometimes transient, " +
+        "it might be good if you run this test a few times so we can catch an issue " +
+                "if it shows up. Hope this helps :)");
+        tempList.add("Your signal to your wireless router is weak (about "
+                +  "78/100) " +
+                ", this could lead to poor speeds and bad experience in streaming etc. " +
+                "\n a. If you are close to your router while doing this test (within 20ft), then your router is not " +
+                "providing enough signal. \n b. Make sure your router is not obstructed and if " +
+                "that doesn't help, you should try replacing the router. \n c. If you are " +
+                "actually far from your router during the test, then your router is not " +
+                "strong enough to cover the current testing area and you should look into " +
+                "a stronger router or a mesh Wifi solution which can provide better coverage.");
+        fillSuggestions("There a few things which can be causing problems for your network", tempList);
     }
 
     private void fillSuggestions(String title, List<String> list) {
         ArrayAdapter<String> itemsAdapter =
                 new ArrayAdapter<String>(getContext(), R.layout.custom_simple_list_item, list);
         suggestionsLv.setAdapter(itemsAdapter);
+        suggestionsTitleTv.setText(title);
+        suggestionsCv.requestLayout();
     }
 
     private void fetchOverallSummaryViews(View rootView) {
-        overallBwTv = (TextView) rootView.findViewById(R.id.bottom_summary_tv);
+        overallBwTv = (TextView) rootView.findViewById(R.id.top_summary_tv);
         uploadTv = (TextView) rootView.findViewById(R.id.upload_bw_tv);
         downloadTv = (TextView) rootView.findViewById(R.id.download_bw_tv);
         moreButton = (Button) rootView.findViewById(R.id.more_button);

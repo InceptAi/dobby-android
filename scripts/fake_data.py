@@ -28,8 +28,8 @@ class FakeConfig:
 
 def main():
     fake_config = FakeConfig();
-    fake_config.set_download(2.5)
-    fake_config.set_upload(1.2)
+    fake_config.set_download(2.5 * 1.0e6)
+    fake_config.set_upload(1.2 * 1.0e6)
     fake_config.set_show_suggestions()
     command = fake_config.get_adb_string()
     print(command)

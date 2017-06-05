@@ -3,6 +3,7 @@ package com.inceptai.dobby.ai.suggest;
 import android.support.annotation.IntDef;
 
 import com.inceptai.dobby.ai.DataInterpreter;
+import com.inceptai.dobby.utils.Utils;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -72,7 +73,6 @@ public class Summary {
         int TYPE_BW_MAX = 1500;
     }
 
-    private static final String TAG_BANDWIDTH = "bandwidth";
     @Type
     private int overall;
 
@@ -104,10 +104,15 @@ public class Summary {
     }
 
     public double getDownloadMbps() {
-        return bandwidthGrade.getDownloadBandwidth();
+        return Utils.toMbps(bandwidthGrade.getDownloadBandwidth());
     }
 
     public double getUploadMbps() {
-        return bandwidthGrade.getUploadBandwidth();
+        return Utils.toMbps(bandwidthGrade.getUploadBandwidth());
+    }
+
+    @Override
+    public String toString() {
+        return "Overall: " + overall + " upload: " + upload + " download: " + download;
     }
 }

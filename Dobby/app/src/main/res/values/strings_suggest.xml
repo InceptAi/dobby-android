@@ -60,6 +60,6 @@
 
     <string name="suggest_upload_bw_and_ratio_ok">The upload bandwidth looks good.</string>
     <string name="suggest_upload_bw_and_ratio_ok_more">You should not have issues due to the upload bandwidth which looks good relative to your download bandwidth numbers. </string>
-    <string name="wd_suggest_more_string">What does this mean ?</string>
+    <string name="wd_suggest_more_string">What do these mean ?</string>
 
 </resources>

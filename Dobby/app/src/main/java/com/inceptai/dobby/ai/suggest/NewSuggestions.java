@@ -37,6 +37,7 @@ public class NewSuggestions {
     public LocalSummary getSuggestions() {
 
         Summary overallSummary = overall(dataSummary.bandwidthGrade);
+        DobbyLog.w("New summary: " + overallSummary);
         return new SnippetLocalizer(context).localize(overallSummary);
     }
 
@@ -75,7 +76,7 @@ public class NewSuggestions {
             overall = Summary.Type.TYPE_OVERALL_BANDWIDTH_GOOD;
         }
 
-        return new Summary(overall, download, upload, grade);
+        return new Summary(overall, upload, download, grade);
     }
 
     @Summary.Type
@@ -141,6 +142,7 @@ public class NewSuggestions {
         double downloadBwMbps = Utils.toMbps(grade.getDownloadBandwidth());
         double ratio = uploadBwMbps / downloadBwMbps;
 
+        DobbyLog.e("uploadMbps: " + uploadBwMbps + " ratio:" + ratio);
         if (ratio < 0.095) {
             return (uploadBwMbps <= 0.5) ? Summary.Type.TYPE_UPLOAD_BW_AND_RATIO_POOR :
                     Summary.Type.TYPE_UPLOAD_BW_OK_RATIO_POOR;
