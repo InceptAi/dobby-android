@@ -748,6 +748,9 @@ public class Utils {
 
     public static boolean grepForString(String stringToGrep, List<String> stringList) {
         for (String stringToCheck: stringList) {
+            if (stringToCheck == null || stringToGrep == null) {
+                continue;
+            }
             if (stringToCheck.toLowerCase().contains(stringToGrep.toLowerCase()) || stringToGrep.toLowerCase().contains(stringToCheck.toLowerCase())) {
                 return true;
             }

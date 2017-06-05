@@ -18,6 +18,7 @@ import com.inceptai.dobby.speedtest.BandwidthResult;
 import com.inceptai.dobby.speedtest.BandwidthTestCodes;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
+import com.inceptai.dobby.DobbyAnalytics;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -68,6 +69,8 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     NetworkLayer networkLayer;
     @Inject
     DobbyEventBus eventBus;
+    @Inject
+    DobbyAnalytics dobbyAnalytics;
 
     public interface ResponseCallback {
         void showResponse(String text);
@@ -143,6 +146,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         switch (action.getAction()) {
             case ACTION_TYPE_BANDWIDTH_TEST:
                 DobbyLog.i("Starting ACTION BANDWIDTH TEST.");
+                dobbyAnalytics.wifiExpertRunningBandwidthTests();
                 //postBandwidthTestOperation();
                 postAllOperations();
                 if (CLEAR_STATS_EVERY_TIME_USER_ASKS_TO_RUN_TESTS && repeatBwWifiPingAction.getAndSet(true)) {
@@ -159,6 +163,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 } catch (Exception e) {
                     DobbyLog.i("Exception while cancelling:" + e);
                 }
+                dobbyAnalytics.wifiExpertCancelBandwidthTest();
                 break;
             case ACTION_TYPE_DIAGNOSE_SLOW_INTERNET:
                 Action newAction = inferenceEngine.addGoal(InferenceEngine.Goal.GOAL_DIAGNOSE_SLOW_INTERNET);
@@ -171,6 +176,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 }
                 DobbyLog.i("Going into postAllOperations()");
                 postAllOperations();
+                dobbyAnalytics.wifiExpertRunningBandwidthTests();
                 break;
             case ACTION_TYPE_SHOW_SHORT_SUGGESTION:
                 //Send event for showing short suggestion
@@ -180,6 +186,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                         responseCallback.showBandwidthViewCard(lastBandwidthGrade);
                     }
                     showMessageToUser(lastSuggestion.getTitle());
+                    dobbyAnalytics.wifiExpertShowShortSuggestion(lastSuggestion.getTitle());
                 }
                 sendEvent(ApiAiClient.APIAI_SHORT_SUGGESTION_SHOWN_EVENT);
                 break;
@@ -190,11 +197,13 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 }
                 if (lastSuggestion != null) {
                     sendEvent(ApiAiClient.APIAI_LONG_SUGGESTION_SHOWN_EVENT);
+                    dobbyAnalytics.wifiExpertShowLongSuggestion(lastSuggestion.getTitle());
                 }
                 break;
             case ACTION_TYPE_NONE:
                 break;
             case ACTION_TYPE_ASK_FOR_LONG_SUGGESTION:
+                dobbyAnalytics.wifiExpertAskForLongSuggestion();
                 break;
             case ACTION_TYPE_WIFI_CHECK:
                 if (responseCallback != null) {
@@ -203,10 +212,16 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 if (networkLayer.isWifiOnline()) {
                     sendEvent(ApiAiClient.APIAI_WIFI_ANALYSIS_SHOWN_EVENT);
                 }
+                dobbyAnalytics.wifiExpertWifiCheck();
                 break;
             case ACTION_TYPE_LIST_DOBBY_FUNCTIONS:
+                dobbyAnalytics.wifiExpertListDobbyFunctions();
                 break;
             case ACTION_TYPE_ASK_FOR_BW_TESTS:
+                dobbyAnalytics.wifiExpertAskForBwTestsAfterWifiCheck();
+                break;
+            case ACTION_TYPE_WELCOME:
+                dobbyAnalytics.wifiExpertWelcomeMessageShown();
                 break;
             default:
                 DobbyLog.i("Unknown Action");

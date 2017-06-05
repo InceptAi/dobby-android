@@ -62,6 +62,8 @@ public class MainActivity extends AppCompatActivity
     @Inject DobbyAi dobbyAi;
     @Inject NetworkLayer networkLayer;
     @Inject DobbyEventBus eventBus;
+    @Inject DobbyAnalytics dobbyAnalytics;
+
 
     private Handler handler;
     private ChatFragment chatFragment;
@@ -255,26 +257,14 @@ public class MainActivity extends AppCompatActivity
     private void showAboutAndPrivacyPolicy() {
         WifiDocDialogFragment fragment = WifiDocDialogFragment.forAboutAndPrivacyPolicy();
         fragment.show(getSupportFragmentManager(), "About");
-        //dobbyAnalytics.aboutShown();
+        dobbyAnalytics.aboutShown();
     }
 
     private void showFeedbackForm() {
         WifiDocDialogFragment fragment = WifiDocDialogFragment.forFeedback(R.layout.activity_main);
         fragment.show(getSupportFragmentManager(), "Feedback");
-        //dobbyAnalytics.feedbackFormShown();
+        dobbyAnalytics.feedbackFormShown();
     }
-
-    private void showDetailedSuggestionsAlert(SuggestionCreator.Suggestion suggestion) {
-        if (suggestion == null) {
-            DobbyLog.v("Attempting to show more suggestions when currentSuggestions are null.");
-        }
-        WifiDocDialogFragment fragment = WifiDocDialogFragment.forSuggestion(suggestion.getTitle(),
-                suggestion.getLongSuggestionList());
-        fragment.show(getSupportFragmentManager(), "Suggestions");
-        //dobbyAnalytics.moreSuggestionsShown(currentSuggestion.getTitle(),
-        //        new ArrayList<String>(currentSuggestion.getShortSuggestionList()));
-    }
-
 
     private Fragment getFragmentByTag(String tag) {
         FragmentManager fragmentManager = getSupportFragmentManager();
