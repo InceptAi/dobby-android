@@ -28,6 +28,8 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
     private SettableFuture<BandwidthResult> operationFuture;
     private String clientIsp = Utils.EMPTY_STRING;
     private String clientExternalIp = Utils.EMPTY_STRING;
+    private double clientLat = 0;
+    private double clientLon = 0;
     private BandwidthResult result;
 
     @BandwidthTestCodes.TestMode
@@ -84,6 +86,8 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
         if (config != null && config.clientConfig != null) {
             clientIsp = config.clientConfig.isp;
             clientExternalIp = config.clientConfig.ip;
+            clientLat = config.clientConfig.lat;
+            clientLon = config.clientConfig.lon;
         }
         for (NewBandwidthAnalyzer.ResultsCallback callback : resultsCallbacks) {
             callback.onConfigFetch(config);
@@ -116,7 +120,13 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
         DobbyLog.v("BandwidthObserver onTestFinished");
         if (inferenceEngine != null) {
             DobbyLog.v("BandwidthObserver: Notifying bw stats with testmode " + testMode + " stats: " + stats.toString());
-            DataInterpreter.BandwidthGrade bandwidthGrade = inferenceEngine.notifyBandwidthTestResult(testMode, stats.getOverallBandwidth(), clientIsp, clientExternalIp);
+            DataInterpreter.BandwidthGrade bandwidthGrade = inferenceEngine.notifyBandwidthTestResult(
+                    testMode,
+                    stats.getOverallBandwidth(),
+                    clientIsp,
+                    clientExternalIp,
+                    clientLat,
+                    clientLon);
             if (bandwidthGrade != null) {
                 DobbyLog.v("BandwidthObserver BANDWIDTH_GRADE_AVAILABLE " + bandwidthGrade.toString());
             }

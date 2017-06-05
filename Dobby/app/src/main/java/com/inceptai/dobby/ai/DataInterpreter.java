@@ -214,6 +214,8 @@ public class DataInterpreter {
         private double downloadMbps;
         String isp;
         String externalIP;
+        double lat;
+        double lon;
         @BandwidthTestCodes.ErrorCodes int errorCode = BandwidthTestCodes.ErrorCodes.ERROR_UNINITIAlIZED;
 
         public BandwidthGrade() {
@@ -245,7 +247,10 @@ public class DataInterpreter {
             builder.append("\n Upload Updated: " + downloadUpdatedAtMs);
             builder.append("\n isp : " + isp);
             builder.append("\n external IP: " + externalIP);
+            builder.append("\n lat: " + lat);
+            builder.append("\n lon: " + lon);
             builder.append("\n error code: " + errorCode);
+
             return builder.toString();
         }
 
@@ -671,6 +676,7 @@ public class DataInterpreter {
      */
     public static BandwidthGrade interpret(double downloadMbps, double uploadMbps,
                                            String isp, String externalClientIp,
+                                           double lat, double lon,
                                            int errorCode) {
         BandwidthGrade grade = new BandwidthGrade();
         @MetricType int downloadMetric = getGradeHigherIsBetter(downloadMbps, BW_DOWNLOAD_STEPS_MBPS, downloadMbps >= 0.0, downloadMbps == 0.0);
@@ -679,6 +685,8 @@ public class DataInterpreter {
         grade.updateDownloadInfo(downloadMbps, downloadMetric);
         grade.isp = isp;
         grade.externalIP = externalClientIp;
+        grade.lat = lat;
+        grade.lon = lon;
         grade.errorCode = errorCode;
         return grade;
     }
