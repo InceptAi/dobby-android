@@ -73,7 +73,7 @@ public class ExpertChatActivity extends AppCompatActivity {
         setContentView(R.layout.activity_expert_chat);
 
         userUuid = getIntent().getStringExtra(UUID_EXTRA);
-        childPath = CHAT_ROOM_CHILD_BASE_WIFI_TESTER + "/" + userUuid;
+        childPath = CHAT_ROOM_CHILD_BASE_WIFI_TESTER + "/release/" + userUuid;
         roomTitleTv = (TextView) findViewById(R.id.roomTitleTv);
         roomTitleTv.setText(childPath);
 

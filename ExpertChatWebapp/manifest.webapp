@@ -1,8 +1,8 @@
 {
   "version": "1.0.0",
-  "name": "Friendly Chat",
+  "name": "Expert Chat",
   "launch_path": "/index.html",
-  "description": "Chat with friends using Firebase 2.0",
+  "description": "Expert help for WifiTester and WifiExpert users",
   "developer": {
     "name": "Incept AI",
     "url": "https://inceptai.com"
@@ -15,8 +15,8 @@
   },
   "locales": {
     "en": {
-      "name": "Friendly Chat",
-      "description": "Chat with friends using Firebase 2.0"
+      "name": "Expert Chat",
+      "description": "Expert help for WifiTester and WifiExpert users"
     }
   }
 }

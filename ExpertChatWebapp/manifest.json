@@ -1,6 +1,6 @@
 {
-  "name": "Friendly Chat",
-  "short_name": "Friendly Chat",
+  "name": "Expert Chat",
+  "short_name": "Expert Chat",
   "start_url": "/index.html",
   "display": "standalone",
   "orientation": "portrait",

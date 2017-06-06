@@ -92,7 +92,7 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
             }
         });
 
-        expertChatService = ExpertChatService.newInstance(dobbyApplication.getUserUuid());
+        expertChatService = ExpertChatService.fetchInstance(dobbyApplication.getUserUuid());
         expertChatService.setCallback(this);
         if (isFirstChat()) {
             progressBar.setVisibility(View.GONE);
@@ -102,6 +102,17 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
     @Override
     public void onMessageAvailable(ExpertChat expertChat) {
         Message.obtain(handler, MSG_UPDATE_CHAT, expertChat).sendToTarget();
+        saveChatStarted();
+    }
+
+    @Override
+    public void onNoHistoryAvailable() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                progressBar.setVisibility(View.GONE);
+            }
+        });
     }
 
     @Override

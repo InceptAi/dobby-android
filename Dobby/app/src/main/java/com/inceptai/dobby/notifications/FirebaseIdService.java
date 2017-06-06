@@ -2,7 +2,9 @@ package com.inceptai.dobby.notifications;
 
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.FirebaseInstanceIdService;
+import com.inceptai.dobby.expert.ExpertChatService;
 import com.inceptai.dobby.utils.DobbyLog;
+import com.inceptai.dobby.utils.Utils;
 
 /**
  * Created by arunesh on 6/5/17.
@@ -28,6 +30,8 @@ public class FirebaseIdService extends FirebaseInstanceIdService {
      * @param token The new token.
      */
     private void sendRegistrationToServer(String token) {
-        // Add custom implementation, as needed.
+        ExpertChatService instance = ExpertChatService.fetchInstance(Utils.fetchUuid(getApplicationContext()));
+        instance.saveFcmToken(token);
+        DobbyLog.i("Saved FCM token: " + token);
     }
 }

@@ -52,12 +52,22 @@ public class Utils {
     public static final String ZERO_POINT_ZERO = "0.0";
     public static final String WIFIDOC_FLAVOR = "wifidoc";
     public static final String PREFERENCES_FILE = "wifi_tester_settings";
+    public static final String USER_UUID = "userUuid";
 
     private static final int READ_TIMEOUT_MS = 5000;
     private static final int CONNECTION_TIMEOUT_MS = 5000;
     private static Random random = new Random();
 
     private Utils() {
+    }
+
+    public static String fetchUuid(Context context) {
+        String uuid = Utils.readSharedSetting(context, USER_UUID, EMPTY_STRING);
+        if (EMPTY_STRING.equals(uuid)) {
+            uuid = UUID.randomUUID().toString();
+            Utils.saveSharedSetting(context, USER_UUID, uuid);
+        }
+        return uuid;
     }
 
     public static Random getRandom() {
