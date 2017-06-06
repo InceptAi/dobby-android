@@ -57,7 +57,15 @@ public class ApiAiClient implements AIListener {
     private AIService aiService;
     private AIDataService aiDataService;
     private DobbyThreadpool threadpool;
+    private boolean apiAiAvailable = true;
 
+    public boolean isApiAiAvailable() {
+        return apiAiAvailable;
+    }
+
+    public void setApiAiAvailable(boolean apiAiAvailable) {
+        this.apiAiAvailable = apiAiAvailable;
+    }
 
     public interface ResultListener {
         void onResult(Action action, Result result);
@@ -83,6 +91,7 @@ public class ApiAiClient implements AIListener {
 
     public void sendTextQuery(@Nullable final String query,
                               @Nullable final String event,
+                              @Action.ActionType final int lastAction,
                               final ResultListener listener) {
         Preconditions.checkState(query != null || event != null);
         threadpool.submit(new Runnable() {
@@ -100,8 +109,11 @@ public class ApiAiClient implements AIListener {
                     final AIResponse response = aiDataService.request(aiRequest);
                     DobbyLog.i(" Response:" + GsonFactory.getGson().toJson(response.toString()));
                     processResult(response.getResult(), listener);
+                    setApiAiAvailable(true);
                 } catch (AIServiceException exception ) {
                     DobbyLog.e("Api.ai Exception: " + exception);
+                    setApiAiAvailable(false);
+                    processTextQueryOffline(query, event, lastAction, listener);
                 }
             }
         });
@@ -248,7 +260,9 @@ public class ApiAiClient implements AIListener {
                 actionInt = Action.ActionType.ACTION_TYPE_UNSTRUCTURED_FEEDBACK;
                 break;
         }
-        listener.onResult(new Action(response, actionInt), result);
+        if (listener != null) {
+            listener.onResult(new Action(response, actionInt), result);
+        }
     }
 
     public void startListening() {

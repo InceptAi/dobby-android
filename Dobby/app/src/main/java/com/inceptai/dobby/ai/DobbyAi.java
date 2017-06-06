@@ -295,7 +295,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     public void sendQuery(String text) {
         if (useApiAi) {
             if (networkLayer.isWifiOnline()) {
-                apiAiClient.sendTextQuery(text, null, this);
+                apiAiClient.sendTextQuery(text, null, getLastAction(), this);
             } else {
                 apiAiClient.processTextQueryOffline(text, null, getLastAction(), this);
             }
@@ -307,7 +307,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     public void sendEvent(String text) {
         if (useApiAi) {
             if (networkLayer.isWifiOnline()) {
-                apiAiClient.sendTextQuery(null, text, this);
+                apiAiClient.sendTextQuery(null, text, getLastAction(), this);
             } else {
                 apiAiClient.processTextQueryOffline(null, text, getLastAction(), this);
             }
