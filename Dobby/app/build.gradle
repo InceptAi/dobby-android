@@ -49,13 +49,13 @@ android {
     productFlavors {
         wifidoc {
             applicationId  "com.inceptai.dobby.wifidoc"
-            versionCode 19
-            versionName "1.1.2-wifitester"
+            versionCode 20
+            versionName "1.2.0-wifitester"
         }
         dobby {
             applicationId "com.inceptai.wifiexpert"
-            versionCode 11
-            versionName "1.2.0-wifiexpert-beta"
+            versionCode 12
+            versionName "1.2.0-wifiexpert"
         }
     }
     buildTypes {
