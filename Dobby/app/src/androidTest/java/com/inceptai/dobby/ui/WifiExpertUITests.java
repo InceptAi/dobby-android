@@ -45,7 +45,7 @@ import static org.hamcrest.Matchers.not;
 @LargeTest
 public class WifiExpertUITests {
 
-    private static final boolean ENABLE_SCREENSHOTS = false;
+    private static final boolean ENABLE_SCREENSHOTS = true;
 
     //@ClassRule
     //public static DisableAnimationsRule disableAnimationsRule = new DisableAnimationsRule();
@@ -227,7 +227,7 @@ public class WifiExpertUITests {
         ViewInteraction frameLayout2 = onView(withId(R.id.bandwidth_results_cardview));
         frameLayout2.check(matches(isDisplayed()));
 
-        ViewInteraction textView3 = onView(allOf(withId(R.id.dobbyTextTv), withText(containsString("detail"))));
+        ViewInteraction textView3 = onView(allOf(withId(R.id.dobbyTextTv), withText(containsString("Showing detailed summary"))));
         textView3.check(matches(isDisplayed()));
 
         ViewInteraction button9 = onView(
