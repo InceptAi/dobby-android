@@ -30,6 +30,9 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
     private String clientExternalIp = Utils.EMPTY_STRING;
     private double clientLat = 0;
     private double clientLon = 0;
+    private String bestServerName = Utils.EMPTY_STRING;
+    private String bestServerCountry = Utils.EMPTY_STRING;
+    private double bestServerLatencyMs = 0;
     private BandwidthResult result;
 
     @BandwidthTestCodes.TestMode
@@ -110,6 +113,11 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
 
     @Override
     public synchronized void onBestServerSelected(ServerInformation.ServerDetails bestServer) {
+        if (bestServer != null) {
+            bestServerCountry = bestServer.country;
+            bestServerName = bestServer.name;
+            bestServerLatencyMs = bestServer.latencyMs;
+        }
         for (NewBandwidthAnalyzer.ResultsCallback callback : resultsCallbacks) {
             callback.onBestServerSelected(bestServer);
         }
@@ -126,7 +134,10 @@ public class BandwidthObserver implements NewBandwidthAnalyzer.ResultsCallback, 
                     clientIsp,
                     clientExternalIp,
                     clientLat,
-                    clientLon);
+                    clientLon,
+                    bestServerName,
+                    bestServerCountry,
+                    bestServerLatencyMs);
             if (bandwidthGrade != null) {
                 DobbyLog.v("BandwidthObserver BANDWIDTH_GRADE_AVAILABLE " + bandwidthGrade.toString());
             }

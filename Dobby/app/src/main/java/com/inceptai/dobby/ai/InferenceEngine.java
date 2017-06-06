@@ -286,7 +286,10 @@ public class InferenceEngine {
                                                                                  double bandwidth,
                                                                                  String clientIsp,
                                                                                  String clientExternalIp,
-                                                                                 double lat, double lon) {
+                                                                                 double lat, double lon,
+                                                                                 String bestServerName,
+                                                                                 String bestServerCountry,
+                                                                                 double bestServerLatency) {
         DataInterpreter.BandwidthGrade bandwidthGrade = new DataInterpreter.BandwidthGrade();
         lastBandwidthUpdateTimestampMs = 0;
 
@@ -304,6 +307,9 @@ public class InferenceEngine {
                     clientExternalIp,
                     lat,
                     lon,
+                    bestServerName,
+                    bestServerCountry,
+                    bestServerLatency,
                     BandwidthTestCodes.ErrorCodes.NO_ERROR);
             //Update the bandwidth grade, overwriting earlier info.
             metricsDb.updateBandwidthGrade(bandwidthGrade);
@@ -327,6 +333,8 @@ public class InferenceEngine {
                 bandwidth, bandwidth,
                 Utils.EMPTY_STRING, Utils.EMPTY_STRING,
                 0, 0,
+                Utils.EMPTY_STRING, Utils.EMPTY_STRING,
+                0.0,
                 errorCode);
         metricsDb.updateBandwidthGrade(bandwidthGrade);
         PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(bandwidthGrade);
