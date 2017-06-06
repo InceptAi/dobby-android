@@ -110,6 +110,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private FrameLayout leaderboardFl;
     private FrameLayout shareFl;
     private LinearLayout bottomButtonBarLl;
+    private FrameLayout expertChatFl;
 
     private CircularGauge downloadCircularGauge;
     private TextView downloadGaugeTv;
@@ -622,6 +623,14 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             @Override
             public void onClick(View v) {
                 shareResults();
+            }
+        });
+
+        expertChatFl = (FrameLayout) rootView.findViewById(R.id.contact_expert_fl);
+        expertChatFl.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(getContext(), ExpertChatActivity.class));
             }
         });
 

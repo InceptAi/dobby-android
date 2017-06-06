@@ -55,8 +55,7 @@ public class ExpertChatService implements ChildEventListener {
     public void disconnect() {
         firebaseDatabaseReference.removeEventListener(this);
     }
-
-
+    
     private void initialize() {
         firebaseDatabaseReference = FirebaseDatabase.getInstance().getReference().child(chatRoomChild);
         firebaseDatabaseReference.addChildEventListener(this);

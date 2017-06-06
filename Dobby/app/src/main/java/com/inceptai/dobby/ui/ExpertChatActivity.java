@@ -17,11 +17,14 @@ import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.expert.ExpertChat;
 import com.inceptai.dobby.expert.ExpertChatService;
+import com.inceptai.dobby.utils.Utils;
 
 import java.util.ArrayList;
 
 public class ExpertChatActivity extends AppCompatActivity implements ExpertChatService.ChatCallback, Handler.Callback {
     public static final String CHAT_MESSAGES_CHILD = "expert_chat_rooms";
+    private static final String PREF_FIRST_CHAT = "first_expert_chat";
+
     private static final int MSG_UPDATE_CHAT = 1001;
 
     private RecyclerView mMessageRecyclerView;
@@ -91,6 +94,9 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
 
         expertChatService = ExpertChatService.newInstance(dobbyApplication.getUserUuid());
         expertChatService.setCallback(this);
+        if (isFirstChat()) {
+            progressBar.setVisibility(View.GONE);
+        }
     }
 
     @Override
@@ -118,5 +124,15 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
     protected void onStop() {
         expertChatService.disconnect();
         super.onStop();
+    }
+
+    private void saveChatStarted() {
+        Utils.saveSharedSetting(this,
+                PREF_FIRST_CHAT, Utils.TRUE_STRING);
+    }
+
+    private boolean isFirstChat() {
+        return Boolean.valueOf(Utils.readSharedSetting(this,
+                PREF_FIRST_CHAT, Utils.FALSE_STRING));
     }
 }

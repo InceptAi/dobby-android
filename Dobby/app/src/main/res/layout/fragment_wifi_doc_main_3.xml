@@ -173,6 +173,7 @@
         app:cardCornerRadius="2dp"
         app:cardElevation="4dp"
         app:cardMaxElevation="5dp"
+        android:layout_marginTop="5dp"
         android:layout_marginEnd="2dp"
         android:layout_marginStart="2dp"
         android:layout_marginLeft="2dp"
@@ -382,7 +383,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="MORE"
-
+                    android:textSize="14sp"
                     android:textColor="@android:color/holo_blue_dark"
                     android:visibility="invisible" />
 
