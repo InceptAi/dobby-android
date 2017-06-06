@@ -409,9 +409,12 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         if (getBwTestState() == BW_SERVER_INFO_FETCHED) {
             // showStatusMessageAsync("Closest server in " + bestServer.name + " has a latency of " + String.format("%.2f", bestServer.latencyMs) + " ms.");
             String constructedMessage = getResources().getString(R.string.status_found_closest_server, bestServer.name, bestServer.latencyMs);
+
+            showStatusMessageAsync(constructedMessage);
+        }
+        if (bestServer.name != null) {
             testServerLocation = bestServer.name;
             testServerLatencyMs = Utils.doubleToString(bestServer.latencyMs);
-            showStatusMessageAsync(constructedMessage);
         }
         setBwTestState(BW_BEST_SERVER_DETERMINED);
         DobbyLog.v("WifiDoc: Best server");
@@ -562,6 +565,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             return;
         }
         ispNameTv.setText(suggestion.getIsp());
+        ispNameString = suggestion.getIsp();
+        routerIpString = suggestion.getExternalIp();
         routerIpTv.setText(suggestion.getExternalIp());
         if (suggestion == null) {
             DobbyLog.w("Null suggestion received from eventbus.");
@@ -1113,7 +1118,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
     private void shareResults() {
         if (uiState != UI_STATE_READY_WITH_RESULTS) {
-            Snackbar.make(getView(), "No speed tests results available for sharing yet !", Snackbar.LENGTH_SHORT).show();
+            Snackbar.make(getView(), "No results available for sharing !", Snackbar.LENGTH_SHORT).show();
             return;
         }
         String htmlText = HtmlReportGenerator.createHtmlFor(getContext(), testServerLocation, testServerLatencyMs,

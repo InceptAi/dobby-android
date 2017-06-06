@@ -17,17 +17,18 @@ import java.util.Date;
 
 public class HtmlReportGenerator {
 
-    private static final String HTML_REPORT_FALLBACK = "Wifi Tester Speedtest Results\n" +
-    "Dated: %s.\n\n" +
-    "Test configuration:\n" + "Test Duration: 10 seconds upload, 10 seconds download.\n" +
-    "  Test server location: %s \n" +
-    "  Latency to test server: %s ms.\n\n" + "Bandwidth Results:\n" +
-            " Router IP: %s, ISP: %s\n" +
-    "  Download: %s Mbps  Upload: %s Mbps\n\n" + "Wifi Statistics:\n" +
-    "  SSID: %s Signal: %s dbM\n\n" + "Ping Statistics:\n" +
-    "Router: %s ms    Google: %s ms\n" +
-    "Your DNS: %s ms  Alt DNS: %s \n\n" + "Contact: hello@obiai.tech for further support.\n" +
-    "Download Wifi Tester at the Google Play Store.\n";
+    private static final String HTML_BREAK = "<br/>";
+    private static final String HTML_REPORT_FALLBACK = "Wifi Tester Speedtest Results" + HTML_BREAK +
+    "Dated: %s." + HTML_BREAK + HTML_BREAK +
+    "Test configuration:" + HTML_BREAK + "Test Duration: 10 seconds upload, 10 seconds download." + HTML_BREAK + HTML_BREAK +
+    "  Test server location: %s " + HTML_BREAK +
+    "  Latency to test server: %s ms." + HTML_BREAK + HTML_BREAK + "Bandwidth Results:" + HTML_BREAK +
+            " Router IP: %s, ISP: %s" + HTML_BREAK +
+    "  Download: %s Mbps  Upload: %s Mbps" + HTML_BREAK + HTML_BREAK + "Wifi Statistics:" + HTML_BREAK +
+    "  SSID: %s Signal: %s dbM" + HTML_BREAK + HTML_BREAK + "Ping Statistics:" + HTML_BREAK +
+    "Router: %s ms    Google: %s ms" + HTML_BREAK +
+    "Your DNS: %s ms  Alt DNS: %s " + HTML_BREAK + "Contact: hello@obiai.tech for further support." + HTML_BREAK +
+    "Download Wifi Tester at the Google Play Store.";
 
     private HtmlReportGenerator(){}
 
