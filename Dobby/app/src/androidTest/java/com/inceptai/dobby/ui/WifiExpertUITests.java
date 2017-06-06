@@ -45,7 +45,7 @@ import static org.hamcrest.Matchers.not;
 @LargeTest
 public class WifiExpertUITests {
 
-    private static final boolean ENABLE_SCREENSHOTS = true;
+    private static final boolean ENABLE_SCREENSHOTS = false;
 
     //@ClassRule
     //public static DisableAnimationsRule disableAnimationsRule = new DisableAnimationsRule();
@@ -279,12 +279,64 @@ public class WifiExpertUITests {
                                 0),
                         isDisplayed()));
         textView2.check(matches(withText("No")));
-        checkSlowInternetCheckWifiAndRunSpeedTestButtons();
 
+        /*
         ViewInteraction textView = onView(
                 allOf(withId(R.id.dobbyTextTv), withText("Ok no worries. Let me know if you want to run tests at any time.")));
         textView.check(matches(isDisplayed()));
+        */
+        Utils.safeSleep(1000);
+
+        checkFeedbackState(false);
+        ViewInteraction posFeedback = onView(
+                allOf(withText("Yes"),
+                        withParent(allOf(withId(R.id.action_menu),
+                                withParent(withId(R.id.scrollview_buttons))))));
+        posFeedback.perform(scrollTo(), click());
+
+        Utils.safeSleep(1000);
         checkSlowInternetCheckWifiAndRunSpeedTestButtons();
+    }
+
+    private void checkFeedbackState(boolean checkDetailsButton) {
+        ViewInteraction textView = onView(
+                allOf(withId(R.id.dobbyTextTv), withText(containsString("helpful"))));
+        textView.check(matches(isDisplayed()));
+
+        ViewInteraction posFeedback = onView(
+                allOf(withText("Yes"), childAtPosition(
+                        allOf(ViewMatchers.withId(R.id.action_menu),
+                                childAtPosition(
+                                        withId(R.id.scrollview_buttons),
+                                        0)),
+                        0),
+                        isDisplayed()));
+        posFeedback.check(matches(isDisplayed()));
+
+
+        ViewInteraction negFeedback = onView(
+                allOf(withText("No"), childAtPosition(
+                        allOf(ViewMatchers.withId(R.id.action_menu),
+                                childAtPosition(
+                                        withId(R.id.scrollview_buttons),
+                                        0)),
+                        1),
+                        isDisplayed()));
+        negFeedback.check(matches(isDisplayed()));
+
+        ViewInteraction cancelFeedback = onView(
+                allOf(withText("Cancel"), childAtPosition(
+                        allOf(ViewMatchers.withId(R.id.action_menu),
+                                childAtPosition(
+                                        withId(R.id.scrollview_buttons),
+                                        0)),
+                        2),
+                        isDisplayed()));
+        cancelFeedback.check(matches(isDisplayed()));
+
+        if (checkDetailsButton) {
+            checkDetailsButton(3);
+        }
     }
 
     private void checkOneFullRun (boolean initialAppLaunch) {
@@ -332,6 +384,17 @@ public class WifiExpertUITests {
                 allOf(withId(R.id.more_suggestions_dismiss_button), withText("DISMISS"), isDisplayed()));
         appCompatButton.perform(click());
 
+        //check feedback state
+        checkFeedbackState(true);
+        //Dismiss the feedback
+        ViewInteraction posFeedback = onView(
+                allOf(withText("Yes"),
+                        withParent(allOf(withId(R.id.action_menu),
+                                withParent(withId(R.id.scrollview_buttons))))));
+        posFeedback.perform(scrollTo(), click());
+
+        //Check idle state + details button
+        Utils.safeSleep(2000);
         checkSlowInternetCheckWifiAndRunSpeedTestButtons();
         checkDetailsButton(3);
     }
