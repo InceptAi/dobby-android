@@ -51,7 +51,7 @@ import com.inceptai.dobby.speedtest.ServerInformation;
 import com.inceptai.dobby.speedtest.SpeedTestConfig;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
-import com.inceptai.dobby.wifi.DobbyAnalytics;
+import com.inceptai.dobby.DobbyAnalytics;
 
 import java.util.ArrayList;
 import java.util.LinkedList;

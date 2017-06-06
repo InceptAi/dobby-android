@@ -285,15 +285,12 @@ public class InferenceEngine {
     synchronized public DataInterpreter.BandwidthGrade notifyBandwidthTestResult(@BandwidthTestCodes.TestMode int testMode,
                                                                                  double bandwidth,
                                                                                  String clientIsp,
-                                                                                 String clientExternalIp) {
+                                                                                 String clientExternalIp,
+                                                                                 double lat, double lon,
+                                                                                 String bestServerName,
+                                                                                 String bestServerCountry,
+                                                                                 double bestServerLatency) {
         DataInterpreter.BandwidthGrade bandwidthGrade = new DataInterpreter.BandwidthGrade();
-        /*
-        if (bandwidth >= 0) {
-            //sendResponseOnlyAction(testModeToString(testMode) + " Overall Bandwidth = " + String.format("%.2f", bandwidth / 1000000) + " Mbps");
-        } else {
-            //sendResponseOnlyAction(testModeToString(testMode) + " Bandwidth error -- can't do bandwidth test.");
-        }
-        */
         lastBandwidthUpdateTimestampMs = 0;
 
         if (testMode == BandwidthTestCodes.TestMode.UPLOAD) {
@@ -303,8 +300,17 @@ public class InferenceEngine {
         }
 
         if (metricsDb.hasValidDownload() && metricsDb.hasValidUpload()) {
-            bandwidthGrade = DataInterpreter.interpret(metricsDb.getDownloadMbps(),
-                    metricsDb.getUploadMbps(), clientIsp, clientExternalIp, BandwidthTestCodes.ErrorCodes.NO_ERROR);
+            bandwidthGrade = DataInterpreter.interpret(
+                    metricsDb.getDownloadMbps(),
+                    metricsDb.getUploadMbps(),
+                    clientIsp,
+                    clientExternalIp,
+                    lat,
+                    lon,
+                    bestServerName,
+                    bestServerCountry,
+                    bestServerLatency,
+                    BandwidthTestCodes.ErrorCodes.NO_ERROR);
             //Update the bandwidth grade, overwriting earlier info.
             metricsDb.updateBandwidthGrade(bandwidthGrade);
             PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(bandwidthGrade);
@@ -323,8 +329,13 @@ public class InferenceEngine {
                                                                                 String errorMessage,
                                                                                 double bandwidth) {
         lastBandwidthUpdateTimestampMs = 0;
-        DataInterpreter.BandwidthGrade bandwidthGrade = DataInterpreter.interpret(bandwidth, bandwidth,
-                Utils.EMPTY_STRING, Utils.EMPTY_STRING, errorCode);
+        DataInterpreter.BandwidthGrade bandwidthGrade = DataInterpreter.interpret(
+                bandwidth, bandwidth,
+                Utils.EMPTY_STRING, Utils.EMPTY_STRING,
+                0, 0,
+                Utils.EMPTY_STRING, Utils.EMPTY_STRING,
+                0.0,
+                errorCode);
         metricsDb.updateBandwidthGrade(bandwidthGrade);
         PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(bandwidthGrade);
         currentConditions.mergeIn(conditions);

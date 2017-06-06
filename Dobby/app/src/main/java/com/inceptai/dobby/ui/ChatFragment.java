@@ -25,6 +25,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.inceptai.dobby.DobbyAnalytics;
+import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.ai.DataInterpreter;
 import com.inceptai.dobby.ai.RtDataSource;
@@ -39,10 +41,19 @@ import com.inceptai.dobby.speedtest.SpeedTestConfig;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 
+import javax.inject.Inject;
+
+import static com.inceptai.dobby.ai.UserResponse.ResponseType.CANCEL;
+import static com.inceptai.dobby.ai.UserResponse.ResponseType.LIST_ALL_FUNCTIONS;
+import static com.inceptai.dobby.ai.UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS;
+import static com.inceptai.dobby.ai.UserResponse.ResponseType.RUN_BW_TESTS;
+import static com.inceptai.dobby.ai.UserResponse.ResponseType.RUN_WIFI_TESTS;
+import static com.inceptai.dobby.ai.UserResponse.ResponseType.SHOW_LAST_SUGGESTION_DETAILS;
 import static com.inceptai.dobby.utils.Utils.ZERO_POINT_ZERO;
 import static com.inceptai.dobby.utils.Utils.nonLinearBwScale;
 
@@ -114,6 +125,9 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
 
     private boolean shownDetailsHint = false;
 
+    @Inject
+    DobbyAnalytics dobbyAnalytics;
+
     /**
      * Interface for parent activities to implement.
      */
@@ -152,6 +166,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        ((DobbyApplication) getActivity().getApplication()).getProdComponent().inject(this);
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             mParam1 = getArguments().getString(ARG_PARAM1);
@@ -171,11 +186,6 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         recyclerViewAdapter = new ChatRecyclerViewAdapter(this.getContext(), new LinkedList<ChatEntry>());
         chatRv.setAdapter(recyclerViewAdapter);
         chatRv.setLayoutManager(new LinearLayoutManager(this.getContext()));
-        /*
-        LinearLayoutManager linearLayoutManager = (LinearLayoutManager)chatRv.getLayoutManager();
-        linearLayoutManager.setReverseLayout(true);
-        linearLayoutManager.setStackFromEnd(true);
-        */
 
         handler = new Handler(this);
         bwGaugeLayout = (LinearLayout) fragmentView.findViewById(R.id.bw_gauge_ll);
@@ -234,6 +244,8 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
             mListener.onRecyclerViewReady();
         }
 
+        dobbyAnalytics.wifiExpertFragmentEntered();
+
         DobbyLog.v("CF: Finished with onCreateView");
         return fragmentView;
     }
@@ -269,10 +281,12 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     }
 
     public void addBandwidthResultsCardView(DataInterpreter.BandwidthGrade bandwidthGrade) {
+        dobbyAnalytics.wifiExpertBandwidthCardShown();
         Message.obtain(handler, MSG_SHOW_BANDWIDTH_RESULT_CARDVIEW, bandwidthGrade).sendToTarget();
     }
 
     public void addOverallNetworkResultsCardView(DataInterpreter.WifiGrade wifiGrade, String ispName, String externalIp) {
+        dobbyAnalytics.wifiExpertWifiCardShown();
         Message.obtain(handler, MSG_SHOW_OVERALL_NETWORK_STATUS, new OverallNetworkInfo(wifiGrade, ispName, externalIp)).sendToTarget();
     }
 
@@ -408,8 +422,8 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         WifiDocDialogFragment fragment = WifiDocDialogFragment.forSuggestion(suggestion.getTitle(),
                 suggestion.getLongSuggestionList());
         fragment.show(getActivity().getSupportFragmentManager(), "Suggestions");
-        //dobbyAnalytics.moreSuggestionsShown(currentSuggestion.getTitle(),
-        //        new ArrayList<String>(currentSuggestion.getShortSuggestionList()));
+        dobbyAnalytics.moreSuggestionsShown(suggestion.getTitle(),
+                new ArrayList<String>(suggestion.getShortSuggestionList()));
     }
 
     private void makeUiChanges(View rootView) {
@@ -469,6 +483,28 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         uiStateChange(UI_STATE_SHOW_BW_GAUGE);
     }
 
+    private void logUserResponseButtonClickedEvent(int userResponseType) {
+        switch (userResponseType) {
+            case CANCEL:
+                dobbyAnalytics.wifiExpertCancelBandwidthTestsClicked();
+                break;
+            case RUN_ALL_DIAGNOSTICS:
+                dobbyAnalytics.wifiExpertSlowInternetButtonClicked();
+                break;
+            case RUN_BW_TESTS:
+                dobbyAnalytics.wifiExpertRunTestButtonClicked();
+                break;
+            case RUN_WIFI_TESTS:
+                dobbyAnalytics.wifiExpertCheckWifiButtonClicked();
+                break;
+            case LIST_ALL_FUNCTIONS:
+                dobbyAnalytics.wifiExpertListDobbyFunctions();
+                break;
+            case SHOW_LAST_SUGGESTION_DETAILS:
+                dobbyAnalytics.wifiExpertMoreDetailsButtonClicked();
+                break;
+        }
+    }
 
     private void showUserActionButtons(List<Integer> userResponseTypes) {
         actionMenu.removeAllViewsInLayout();
@@ -495,6 +531,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
             button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    logUserResponseButtonClickedEvent(userResponseType);
                     processTextQuery(buttonText);
                 }
             });

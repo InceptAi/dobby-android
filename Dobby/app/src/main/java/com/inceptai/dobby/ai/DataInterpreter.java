@@ -212,8 +212,13 @@ public class DataInterpreter {
         private long uploadUpdatedAtMs;
         private double uploadMbps;
         private double downloadMbps;
-        String isp;
-        String externalIP;
+        String isp = Utils.EMPTY_STRING;;
+        String externalIP = Utils.EMPTY_STRING;;
+        String bestServerName = Utils.EMPTY_STRING;
+        String bestServerCountry = Utils.EMPTY_STRING;
+        double bestServerLatencyMs;
+        double lat;
+        double lon;
         @BandwidthTestCodes.ErrorCodes int errorCode = BandwidthTestCodes.ErrorCodes.ERROR_UNINITIAlIZED;
 
         public BandwidthGrade() {
@@ -245,7 +250,13 @@ public class DataInterpreter {
             builder.append("\n Upload Updated: " + downloadUpdatedAtMs);
             builder.append("\n isp : " + isp);
             builder.append("\n external IP: " + externalIP);
+            builder.append("\n lat: " + lat);
+            builder.append("\n lon: " + lon);
+            builder.append("\n bestServerName: " + bestServerName);
+            builder.append("\n bestServerCountry: " + bestServerCountry);
+            builder.append("\n bestServerLatencyMs: " + bestServerLatencyMs);
             builder.append("\n error code: " + errorCode);
+
             return builder.toString();
         }
 
@@ -671,6 +682,9 @@ public class DataInterpreter {
      */
     public static BandwidthGrade interpret(double downloadMbps, double uploadMbps,
                                            String isp, String externalClientIp,
+                                           double lat, double lon,
+                                           String bestServerName, String bestServerCountry,
+                                           double bestServerLatency,
                                            int errorCode) {
         BandwidthGrade grade = new BandwidthGrade();
         @MetricType int downloadMetric = getGradeHigherIsBetter(downloadMbps, BW_DOWNLOAD_STEPS_MBPS, downloadMbps >= 0.0, downloadMbps == 0.0);
@@ -679,6 +693,11 @@ public class DataInterpreter {
         grade.updateDownloadInfo(downloadMbps, downloadMetric);
         grade.isp = isp;
         grade.externalIP = externalClientIp;
+        grade.lat = lat;
+        grade.lon = lon;
+        grade.bestServerCountry = bestServerCountry;
+        grade.bestServerName = bestServerName;
+        grade.bestServerLatencyMs = bestServerLatency;
         grade.errorCode = errorCode;
         return grade;
     }

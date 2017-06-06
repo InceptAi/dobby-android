@@ -13,6 +13,7 @@ import static com.inceptai.dobby.ai.UserResponse.ResponseType.ASK_ABOUT_DOBBY;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.CANCEL;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.LIST_ALL_FUNCTIONS;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.NO;
+import static com.inceptai.dobby.ai.UserResponse.ResponseType.NO_COMMENTS;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.NO_RESPONSE;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.RUN_BW_TESTS;
@@ -36,7 +37,8 @@ public class UserResponse {
             LIST_ALL_FUNCTIONS,
             ASK_ABOUT_DOBBY,
             NO_RESPONSE,
-            SHOW_LAST_SUGGESTION_DETAILS
+            SHOW_LAST_SUGGESTION_DETAILS,
+            NO_COMMENTS
     })
     @Retention(RetentionPolicy.SOURCE)
     public @interface ResponseType {
@@ -50,6 +52,7 @@ public class UserResponse {
         int ASK_ABOUT_DOBBY = 7;
         int NO_RESPONSE = 8;
         int SHOW_LAST_SUGGESTION_DETAILS = 9;
+        int NO_COMMENTS = 10;
     }
 
     /* User response to be shown, null for no response. */
@@ -100,6 +103,8 @@ public class UserResponse {
                 return "About Wifi Expert";
             case SHOW_LAST_SUGGESTION_DETAILS:
                 return "Details";
+            case NO_COMMENTS:
+                return "Cancel";
             case NO_RESPONSE:
             default:
                 return Utils.EMPTY_STRING;

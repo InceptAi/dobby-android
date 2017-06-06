@@ -34,6 +34,7 @@ import static android.support.test.espresso.matcher.ViewMatchers.withParent;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static com.inceptai.dobby.DobbyApplication.TAG;
 import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 
@@ -59,8 +60,13 @@ public class CheckMainScreenWifiDocTest {
     private final String STATUS_RUNNING_TESTS_MESSAGE = "Running tests..";
     private final String STATUS_IDLE_MESSAGE = "Ready to run tests.";
     private final int CANCEL_WAIT_MS = 5000; // ~500 ms
+    private static final boolean ENABLE_SCREENSHOTS = true;
 
-
+    private void captureScreenshot(String label) {
+        if (ENABLE_SCREENSHOTS) {
+            Spoon.screenshot(getActivity(), label);
+        }
+    }
 
     /*
     private IdlingResource waitFor(long waitMs) {
@@ -191,20 +197,19 @@ public class CheckMainScreenWifiDocTest {
     public void bwTestDefaultTest() {
         Utils.safeSleep(10000);
         checkIdleUIState();
-        Spoon.screenshot(getActivity(), "initial_state");
+        captureScreenshot("initial_state");
         //Click the run tests button
         onView(withId(R.id.main_fab_button)).perform(click());
         SystemClock.sleep(BOTTOM_DRAWER_WAITING_TIME_MS);
         //Check that the status card view text changes
-        Spoon.screenshot(getActivity(), "running_state");
+        captureScreenshot("running_state");
 
-        //checkRunningUIState();
         // Now we wait
         SystemClock.sleep(BW_WAITING_TIME_MS);
-        Spoon.screenshot(getActivity(), "bw_finished_state");
+        captureScreenshot("bw_finished_state");
         checkBWTestFinishedState();
         SystemClock.sleep(SUGGESTION_WAITING_TIME_AFTER_BW_MS);
-        Spoon.screenshot(getActivity(), "suggestion_state");
+        captureScreenshot("suggestion_state");
         checkSuggestionsAvailableState();
         /* Normal test code... */
 
@@ -281,51 +286,48 @@ public class CheckMainScreenWifiDocTest {
     public void bwTestRunBackToBackTest() {
         Utils.safeSleep(10000);
 
-
-        Spoon.screenshot(getActivity(), "first_initial_state");
+        captureScreenshot("first_initial_state");
         checkIdleUIState();
         //Click the run tests button
         onView(withId(R.id.main_fab_button)).perform(click());
         SystemClock.sleep(BOTTOM_DRAWER_WAITING_TIME_MS);
         //Check that the status card view text changes
 
-        Spoon.screenshot(getActivity(), "first_running_state");
+        captureScreenshot("first_running_state");
         //checkRunningUIState();
 
         // Now we wait
         SystemClock.sleep(BW_WAITING_TIME_MS);
-
-        Spoon.screenshot(getActivity(), "bw_test_finished_state");
+        captureScreenshot("bw_test_finished_state");
         checkBWTestFinishedState();
 
         SystemClock.sleep(SUGGESTION_WAITING_TIME_AFTER_BW_MS);
 
-        Spoon.screenshot(getActivity(), "first_suggestion_available_state");
+        captureScreenshot("first_suggestion_available_state");
         checkSuggestionsAvailableState();
 
         //Second run -- first dismiss the suggestion
         onView(withId(R.id.bottomDialog_cancel)).perform(click());
         SystemClock.sleep(WAITING_BETWEEN_BW_TESTS_MS);
-
-        Spoon.screenshot(getActivity(), "ready_for_second_bw_test_state");
+        captureScreenshot("ready_for_second_bw_test_state");
 
         //Then start the test again
         onView(withId(R.id.main_fab_button)).perform(click());
         SystemClock.sleep(BOTTOM_DRAWER_WAITING_TIME_MS);
 
         //Check that the status card view text changes
-        Spoon.screenshot(getActivity(), "second_running_state");
+        captureScreenshot("second_running_state");
         //checkRunningUIState();
 
         // Now we wait
         SystemClock.sleep(BW_WAITING_TIME_MS);
 
-        Spoon.screenshot(getActivity(), "second_running_state");
+        captureScreenshot("second_finished_state");
         checkBWTestFinishedState();
 
         SystemClock.sleep(SUGGESTION_WAITING_TIME_AFTER_BW_MS);
 
-        Spoon.screenshot(getActivity(), "second_suggestion_available_state");
+        captureScreenshot("second_suggestion_available_state");
         checkSuggestionsAvailableState();
     }
 
