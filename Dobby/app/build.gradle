@@ -134,7 +134,6 @@ dependencies {
     // compile 'fr.bmartel:jspeedtest:1.25'
     compile 'fr.bmartel:http-endec:1.04'
     compile 'commons-net:commons-net:3.6'
-    compile 'uk.co.samuelwall:material-tap-target-prompt:1.1.4'
     compile 'com.google.firebase:firebase-config:10.0.1'
     compile 'org.parceler:parceler-api:1.1.6'
     annotationProcessor 'org.parceler:parceler:1.1.6'

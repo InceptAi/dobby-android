@@ -14,6 +14,7 @@ import android.widget.ImageView;
 
 import com.google.common.net.InetAddresses;
 import com.google.gson.Gson;
+import com.inceptai.dobby.ai.DataInterpreter;
 import com.inceptai.dobby.speedtest.BandwithTestCodes;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -45,6 +46,7 @@ import java.util.concurrent.TimeUnit;
 
 public class Utils {
     public static final String EMPTY_STRING = "";
+    public static final String UNKNOWN = "UNKNOWN";
     public static final String TRUE_STRING = "true";
     public static final String FALSE_STRING = "false";
     public static final String ZERO_POINT_ZERO = "0.0";
@@ -692,6 +694,14 @@ public class Utils {
 
     public static double toMbps(double bwBytes) {
         return bwBytes * 1.0e-6;
+    }
+
+    public static String toMbpsString(double bwBytes) {
+        return String.format("%2.1f", toMbps(bwBytes));
+    }
+
+    public static String doubleToString(double value) {
+        return String.format("%2.1f", value);
     }
 
     public static double toKbps(double bwBytes) {
