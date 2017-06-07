@@ -43,6 +43,7 @@ import com.inceptai.dobby.ai.DataInterpreter;
 import com.inceptai.dobby.ai.SuggestionCreator;
 import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
+import com.inceptai.dobby.heartbeat.HeartBeatManager;
 import com.inceptai.dobby.model.BandwidthStats;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.speedtest.BandwidthTestCodes;
@@ -172,6 +173,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     @Inject
     RemoteConfig remoteConfig;
 
+    @Inject
+    HeartBeatManager heartBeatManager;
+
     public WifiDocMainFragment() {
         // Required empty public constructor
     }
@@ -203,6 +207,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         handlerBacklog = new LinkedList<>();
         pauseHandler = false;
         remoteConfig.fetchAsync();
+        heartBeatManager.setDailyHeartBeat();
     }
 
     @Override

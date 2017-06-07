@@ -198,7 +198,7 @@ public class ApiAiClient implements AIListener {
                         "or \"why is my internet slow\" etc.",
                         Action.ActionType.ACTION_TYPE_WELCOME);
             } else if (event.equals(APIAI_SHORT_SUGGESTION_SHOWN_EVENT)) {
-                actionToReturn = new Action("Do you want more details on my analysis ?",
+                actionToReturn = new Action("Do you want more details on this analysis ?",
                         Action.ActionType.ACTION_TYPE_ASK_FOR_LONG_SUGGESTION);
             } else if (event.equals(APIAI_LONG_SUGGESTION_SHOWN_EVENT)) {
 

@@ -688,6 +688,18 @@ public class Utils {
         editor.apply();
     }
 
+    public static long readSharedSetting(Context ctx, String settingName, long defaultValue) {
+        SharedPreferences sharedPref = ctx.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE);
+        return sharedPref.getLong(settingName, defaultValue);
+    }
+
+    public static void saveSharedSetting(Context ctx, String settingName, long settingValue) {
+        SharedPreferences sharedPref = ctx.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putLong(settingName, settingValue);
+        editor.apply();
+    }
+
 
     public static String convertIntegerDoubleHashMapToJsonString(HashMap<Integer, Double> integerDoubleHashMap) {
         Gson gson = new Gson();
