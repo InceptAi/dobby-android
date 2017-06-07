@@ -9,6 +9,7 @@ import android.os.SystemClock;
 import com.inceptai.dobby.DobbyAnalytics;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.utils.DobbyLog;
+import com.inceptai.dobby.utils.Utils;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -19,15 +20,16 @@ import javax.inject.Singleton;
 
 @Singleton
 public class HeartBeatManager {
-    private static final int ALARM_RECEIVER_UNREGISTERED = 0;
-    private static final int ALARM_RECEIVER_REGISTERED = 1;
-    static final String USER_ID = "UID";
     static final String DAILY_HEARTBEAT_INTENT = "DAILY_HEARTBEAT_INTENT";
-    //private static final long DAILY_HEARTBEAT_INTERVAL_MS = AlarmManager.INTERVAL_DAY;
-    static final long DAILY_HEARTBEAT_INTERVAL_MS = 5000;
+    static final String LAST_HEARTBEAT_TIMESTAMP_MS = "LAST_HEART_BEAT_TS_MS";
+    private static final long DAILY_HEARTBEAT_INTERVAL_MS = AlarmManager.INTERVAL_DAY;
     private PendingIntent pendingIntent;
-    private int alaramReceiverState = ALARM_RECEIVER_UNREGISTERED;
+    //private static final int ALARM_RECEIVER_UNREGISTERED = 0;
+    //private static final int ALARM_RECEIVER_REGISTERED = 1;
+    //private int alaramReceiverState = ALARM_RECEIVER_UNREGISTERED;
     //private AlarmReceiver alarmReceiver;
+    //static final String USER_ID = "UID";
+
     private AlarmManager alarmMgr;
 
     @Inject
@@ -40,38 +42,51 @@ public class HeartBeatManager {
         this.dobbyApplication = dobbyApplication;
         this.dobbyAnalytics = dobbyAnalytics;
         Intent alarmIntent = new Intent(dobbyApplication.getApplicationContext(), AlarmReceiver.class);
-        alarmIntent.putExtra(USER_ID, dobbyApplication.getUserUuid());
         alarmIntent.setAction(DAILY_HEARTBEAT_INTENT);
         pendingIntent = PendingIntent.getBroadcast(dobbyApplication.getApplicationContext(), 0, alarmIntent, 0);
-        //alarmReceiver = new AlarmReceiver();
         //registerAlarmReceiver();
     }
 
 
     public void setDailyHeartBeat() {
-        setDailyHeartBeat(DAILY_HEARTBEAT_INTERVAL_MS);
+        setAlarm(dobbyApplication.getApplicationContext(), DAILY_HEARTBEAT_INTERVAL_MS);
     }
 
     void performHeartBeatTask() {
         //Send analytics event
         DobbyLog.v("Sending analytics event to firebase for user " + dobbyApplication.getUserUuid());
         dobbyAnalytics.wifiExpertDailyHeartBeat(dobbyApplication.getUserUuid(), 0, 0);
+        Utils.saveSharedSetting(dobbyApplication.getApplicationContext(), LAST_HEARTBEAT_TIMESTAMP_MS, System.currentTimeMillis());
     }
 
-    private void setDailyHeartBeat(long intervalMs) {
-        setAlarm(dobbyApplication.getApplicationContext(), intervalMs);
+    void setAlarm(Context context) {
+        setAlarm(context, DAILY_HEARTBEAT_INTERVAL_MS);
     }
-
 
     private void setAlarm(Context context, long intervalMs) {
-        DobbyLog.v("Setting alarm with interval ms " + intervalMs);
+        //Check the time since last alarm event
+        long intervalTillNextEventMs = 0;
+        long lastHeartBeatTimeStampMs = Utils.readSharedSetting(context, LAST_HEARTBEAT_TIMESTAMP_MS, 0);
+        if (lastHeartBeatTimeStampMs > 0) {
+            long gapSinceLastHeartBeatMs = System.currentTimeMillis() - lastHeartBeatTimeStampMs;
+            if (gapSinceLastHeartBeatMs < intervalMs) {
+                //We can't fire right now. Fire after some time as follows
+                intervalTillNextEventMs = intervalMs - gapSinceLastHeartBeatMs;
+            }
+        }
+        setAlarm(context, intervalMs, intervalTillNextEventMs); //Trigger one event right away
+    }
+
+    private void setAlarm(Context context, long intervalMs, long nextEventAfterMs) {
+        DobbyLog.v("Setting alarm with interval ms, next firing after  " + intervalMs + ", " + nextEventAfterMs);
         alarmMgr = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        //First cancel any pending alarms
+        cancelAlarm(context);
         Intent intent = new Intent(context, AlarmReceiver.class);
         intent.setAction(DAILY_HEARTBEAT_INTENT);
         pendingIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
-        //alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime(),
-        //        intervalMs, pendingIntent);
-        alarmMgr.setInexactRepeating(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime(),
+        alarmMgr.setInexactRepeating(AlarmManager.ELAPSED_REALTIME,
+                SystemClock.elapsedRealtime() + nextEventAfterMs,
                 intervalMs, pendingIntent);
 
         /*
@@ -87,11 +102,7 @@ public class HeartBeatManager {
 
 
 
-    void setAlarm(Context context) {
-        setAlarm(context, DAILY_HEARTBEAT_INTERVAL_MS);
-    }
-
-    void cancelAlarm(Context context) {
+    private void cancelAlarm(Context context) {
         if (alarmMgr != null) {
             alarmMgr.cancel(pendingIntent);
         }
