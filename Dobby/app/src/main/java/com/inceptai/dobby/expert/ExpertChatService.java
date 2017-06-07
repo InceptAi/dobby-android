@@ -4,6 +4,14 @@ package com.inceptai.dobby.expert;
  * Created by arunesh on 6/1/17.
  */
 
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
+import android.media.RingtoneManager;
+import android.net.Uri;
+import android.support.v7.app.NotificationCompat;
+
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -11,8 +19,12 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.inceptai.dobby.BuildConfig;
+import com.inceptai.dobby.R;
+import com.inceptai.dobby.ui.ExpertChatActivity;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
+
+import java.util.Map;
 
 /**
  * A "service" that connects to the expert chat system.
@@ -58,6 +70,29 @@ public class ExpertChatService implements ChildEventListener, ValueEventListener
 
     public void saveFcmToken(String token) {
         firebaseDatabaseReference.child(userTokenPath).setValue(token);
+    }
+
+    public void showNotification(Context context, String title, String body, Map<String, String> data) {
+        DobbyLog.i("Title: " + title);
+        DobbyLog.i(" Body: " + body);
+        DobbyLog.i(" Data: " + data);
+        Intent intent = new Intent(context, ExpertChatActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent,
+                PendingIntent.FLAG_ONE_SHOT);
+
+        Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        NotificationCompat.Builder notificationBuilder = (NotificationCompat.Builder) new NotificationCompat.Builder(context)
+                .setAutoCancel(true)   //Automatically delete the notification
+                .setSmallIcon(R.mipmap.ic_launcher) //Notification icon
+                .setContentIntent(pendingIntent)
+                .setContentTitle(title)
+                .setContentText(body)
+                .setSound(defaultSoundUri);
+
+        NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+
+        notificationManager.notify(0, notificationBuilder.build());
     }
 
     public void disconnect() {

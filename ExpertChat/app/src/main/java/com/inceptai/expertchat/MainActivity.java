@@ -1,122 +1,133 @@
 package com.inceptai.expertchat;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.support.annotation.IdRes;
-import android.support.annotation.LayoutRes;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
+import android.util.Log;
+import android.support.design.widget.NavigationView;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
-import android.widget.ProgressBar;
-import android.widget.TextView;
+import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
 
-import com.google.firebase.database.ChildEventListener;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
+import static com.inceptai.expertchat.Utils.EMPTY_STRING;
 
-import org.w3c.dom.Text;
+public class MainActivity extends AppCompatActivity
+        implements NavigationView.OnNavigationItemSelectedListener, UserSelectionFragment.OnUserSelected {
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class MainActivity extends AppCompatActivity implements ChildEventListener {
-
-    private ProgressBar progressBar;
-    private DatabaseReference mFirebaseDatabaseReference;
-    private ListView roomListView;
-    private RoomArrayAdapter arrayAdapter;
-
-    private static class RoomArrayAdapter extends ArrayAdapter<String> {
-
-        public RoomArrayAdapter(@NonNull Context context, @LayoutRes int resource, @IdRes int textViewResourceId, @NonNull List<String> initialList) {
-            super(context, resource, textViewResourceId, initialList);
-        }
-
-        @NonNull
-        @Override
-        public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-            String uuid = getItem(position);
-            if (convertView == null) {
-                convertView = LayoutInflater.from(getContext()).inflate(android.R.layout.simple_list_item_1, parent, false);
-                TextView tv = (TextView) convertView.findViewById(android.R.id.text1);
-                tv.setText(uuid);
-            }
-            return convertView;
-        }
-    }
+    private String selectedUserId = EMPTY_STRING;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        progressBar = (ProgressBar) findViewById(R.id.mainProgressBar);
-        roomListView = (ListView) findViewById(R.id.mainListView);
-        arrayAdapter = new RoomArrayAdapter(this, android.R.layout.simple_list_item_1, android.R.id.text1, new ArrayList<String>());
-        roomListView.setAdapter(arrayAdapter);
-        roomListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String userId = arrayAdapter.getItem(position);
-                Intent intent = new Intent(MainActivity.this, ExpertChatActivity.class);
-                intent.putExtra(ExpertChatActivity.UUID_EXTRA, userId);
-                startActivity(intent);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.setDrawerListener(toggle);
+        toggle.syncState();
+
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+    }
+
+    @Override
+    public void onBackPressed() {
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
+        }
+    }
+
+    private Fragment setupFragment(Class fragmentClass, String tag, Bundle args) {
+
+        // Insert the fragment by replacing any existing fragment
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        Fragment existingFragment = fragmentManager.findFragmentByTag(tag);
+
+        if (existingFragment == null) {
+            try {
+                existingFragment = (Fragment) fragmentClass.newInstance();
+            } catch (Exception e) {
+                Log.e(Utils.TAG, "Unable to create fragment: " + fragmentClass.getCanonicalName());
+                return null;
             }
-        });
-
+        }
+        if (args != null) {
+            existingFragment.setArguments(args);
+        }
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.replace(R.id.placeholder_fl,
+                existingFragment, tag);
+        //fragmentTransaction.addToBackStack(null);
+        fragmentTransaction.commit();
+        return existingFragment;
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        arrayAdapter.clear();
-        mFirebaseDatabaseReference = FirebaseDatabase.getInstance().getReference().child(ExpertChatActivity.CHAT_ROOM_CHILD_BASE_WIFI_TESTER);
-        mFirebaseDatabaseReference.addChildEventListener(this);
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
     }
 
     @Override
-    public void onChildAdded(final DataSnapshot dataSnapshot, String s) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                progressBar.setVisibility(View.GONE);
-                arrayAdapter.add(dataSnapshot.getKey());
-            }
-        });
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings) {
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    @SuppressWarnings("StatementWithEmptyBody")
+    @Override
+    public boolean onNavigationItemSelected(MenuItem item) {
+        // Handle navigation view item clicks here.
+        int id = item.getItemId();
+
+        if (id == R.id.nav_select_user) {
+            UserSelectionFragment fragment = (UserSelectionFragment) setupFragment(UserSelectionFragment.class,
+                    UserSelectionFragment.FRAGMENT_TAG, UserSelectionFragment.getArgumentBundle(selectedUserId));
+        } else if (id == R.id.nav_user_chat) {
+            showChatFragment(selectedUserId);
+        } else if (id == R.id.nav_settings) {
+
+        } else if (id == R.id.nav_stats) {
+
+        }
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+        return true;
+    }
+
+    private void showChatFragment(String userId) {
+        ChatFragment fragment = (ChatFragment) setupFragment(ChatFragment.class,
+                ChatFragment.FRAGMENT_TAG, ChatFragment.getArgumentBundle(userId));
     }
 
     @Override
-    public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
-    }
-
-    @Override
-    public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-    }
-
-    @Override
-    public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-    }
-
-    @Override
-    public void onCancelled(DatabaseError databaseError) {
-
-    }
-
-    @Override
-    protected void onStop() {
-        mFirebaseDatabaseReference.removeEventListener(this);
-        super.onStop();
+    public void onUserSelected(String userId) {
+        selectedUserId = userId;
+        Intent intent = new Intent(this, ExpertChatActivity.class);
+        intent.putExtra(ExpertChatActivity.UUID_EXTRA, userId);
+        startActivity(intent);
     }
 }

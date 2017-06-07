@@ -99,7 +99,6 @@ public class MainActivity extends AppCompatActivity
         handler = new Handler(this);
 
         setupChatFragment();
-        //requestPermissions();
     }
 
     private Fragment setupFragment(Class fragmentClass, String tag) {

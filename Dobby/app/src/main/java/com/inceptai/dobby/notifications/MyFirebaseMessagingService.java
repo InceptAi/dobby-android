@@ -2,7 +2,9 @@ package com.inceptai.dobby.notifications;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
+import com.inceptai.dobby.expert.ExpertChatService;
 import com.inceptai.dobby.utils.DobbyLog;
+import com.inceptai.dobby.utils.Utils;
 
 /**
  * Created by arunesh on 6/5/17.
@@ -17,5 +19,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         // message, here is where that should be initiated.
         DobbyLog.i("From: " + remoteMessage.getFrom());
         DobbyLog.i("Notification Message Body: " + remoteMessage.getNotification().getBody());
+        ExpertChatService instance = ExpertChatService.fetchInstance(Utils.fetchUuid(getApplicationContext()));
+        instance.showNotification(getApplicationContext(), remoteMessage.getNotification().getTitle(),
+                remoteMessage.getNotification().getBody(), remoteMessage.getData());
     }
 }

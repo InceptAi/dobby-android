@@ -11,6 +11,8 @@ public class Utils {
     public static final String PREFERENCES_FILE = "expert_chat_settings";
     public static final String PREF_EXPERT_AVATAR = "expertName";
     public static final String DEFAULT_EXPERT_AVATAR = "Jack";
+    public static final String TAG = "ExpertChat";
+    public static final String EMPTY_STRING = "";
 
     private Utils() {}
 
