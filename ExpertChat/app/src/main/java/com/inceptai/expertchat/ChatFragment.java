@@ -29,9 +29,12 @@ public class ChatFragment extends Fragment {
     public static final String FRAGMENT_TAG = "ChatFragment";
     public static final String CHAT_ROOM_CHILD_BASE_DOBBY = "dobby_chat_rooms";
     public static final String CHAT_ROOM_CHILD_BASE_WIFI_TESTER = "wifitester_chat_rooms";
+    public static final String CHAT_ROOM_SUFFIX = "_chat_rooms";
+
 
     private static final String USER_UUID = "userUuid";
     private static final String FLAVOR = "flavor";  // debug or release.
+    private static final String BUILD_TYPE = "buildType";
 
     public static final String ANONYMOUS = "anonymous";
     private static final String MESSAGE_SENT_EVENT = "message_sent";
@@ -49,6 +52,7 @@ public class ChatFragment extends Fragment {
     private EditText mMessageEditText;
     private String userUuid;
     private String flavor;
+    private String buildType;
     private String childPath;
     private TextView roomTitleTv;
 
@@ -71,10 +75,11 @@ public class ChatFragment extends Fragment {
         // Required empty public constructor
     }
 
-    public static Bundle getArgumentBundle(String userUuid, String flavor) {
+    public static Bundle getArgumentBundle(String userUuid, String flavor, String buildType) {
         Bundle args = new Bundle();
         args.putString(USER_UUID, userUuid);
         args.putString(FLAVOR, flavor);
+        args.putString(BUILD_TYPE , buildType);
         return args;
     }
 
@@ -84,6 +89,7 @@ public class ChatFragment extends Fragment {
         if (getArguments() != null) {
             userUuid = getArguments().getString(USER_UUID);
             flavor = getArguments().getString(FLAVOR);
+            buildType = getArguments().getString(BUILD_TYPE);
         }
     }
 
@@ -96,7 +102,7 @@ public class ChatFragment extends Fragment {
     }
 
     private void setup(View rootView) {
-        childPath = CHAT_ROOM_CHILD_BASE_WIFI_TESTER + "/" + flavor + "/" + userUuid;
+        childPath = flavor + CHAT_ROOM_SUFFIX + "/" + buildType + "/" + userUuid;
         Log.i(Utils.TAG, "ChildPath: " + childPath);
         roomTitleTv = (TextView) rootView.findViewById(R.id.roomTitleTv);
         roomTitleTv.setText(childPath);

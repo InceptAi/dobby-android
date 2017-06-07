@@ -28,9 +28,14 @@ import java.util.List;
 
 public class UserSelectionFragment extends Fragment implements ChildEventListener {
     public static String FRAGMENT_TAG = "UserSelectionFragment";
-    private static String SELECTED_USERID = "param1";
+    private static String SELECTED_USERID = "userUuid";
+    private static final String FLAVOR = "flavor";  // debug or release.
+    private static final String BUILD_TYPE = "buildType";
+
     private OnUserSelected mListener;
     private String selectedUserId;
+    private String flavor;
+    private String buildType;
 
     private ProgressBar progressBar;
     private DatabaseReference mFirebaseDatabaseReference;
@@ -69,10 +74,11 @@ public class UserSelectionFragment extends Fragment implements ChildEventListene
         // Required empty public constructor
     }
 
-    public static Bundle getArgumentBundle(String param) {
-        UserSelectionFragment fragment = new UserSelectionFragment();
+    public static Bundle getArgumentBundle(String userUuid, String flavor, String buildType) {
         Bundle args = new Bundle();
-        args.putString(SELECTED_USERID, param);
+        args.putString(SELECTED_USERID, userUuid);
+        args.putString(FLAVOR, flavor);
+        args.putString(BUILD_TYPE , buildType);
         return args;
     }
 
@@ -81,6 +87,8 @@ public class UserSelectionFragment extends Fragment implements ChildEventListene
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             selectedUserId = getArguments().getString(SELECTED_USERID);
+            flavor = getArguments().getString(FLAVOR);
+            buildType = getArguments().getString(BUILD_TYPE);
         }
     }
 

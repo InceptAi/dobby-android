@@ -2,6 +2,8 @@ package com.inceptai.expertchat;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -15,25 +17,64 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
 import static com.inceptai.expertchat.Utils.EMPTY_STRING;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, UserSelectionFragment.OnUserSelected {
+        implements NavigationView.OnNavigationItemSelectedListener, UserSelectionFragment.OnUserSelected, GoogleApiClient.OnConnectionFailedListener {
+    private static final String DEFAULT_FLAVOR = Utils.WIFIDOC_FLAVOR;
+    private static final String DEFAULT_BUILD_TYPE = Utils.BUILD_TYPE_RELEASE;
 
     private String selectedUserId = EMPTY_STRING;
-    private String selectedFlavor = EMPTY_STRING;
+    private String selectedFlavor = DEFAULT_FLAVOR;
+    private String selectedBuildType = DEFAULT_BUILD_TYPE;
+
+    private FirebaseAuth mFirebaseAuth;
+    private FirebaseUser mFirebaseUser;
+    private String mUsername;
+    private String mPhotoUrl;
+    private GoogleApiClient mGoogleApiClient;
+    private DrawerLayout drawerLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+
+        // Initialize Firebase Auth
+        mFirebaseAuth = FirebaseAuth.getInstance();
+        mFirebaseUser = mFirebaseAuth.getCurrentUser();
+
+        if (mFirebaseUser == null) {
+            // Not signed in, launch the Sign In activity
+            startActivity(new Intent(this, SignInActivity.class));
+            finish();
+            return;
+        } else {
+            mUsername = mFirebaseUser.getDisplayName();
+            if (mFirebaseUser.getPhotoUrl() != null) {
+                mPhotoUrl = mFirebaseUser.getPhotoUrl().toString();
+            }
+        }
+
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .enableAutoManage(this /* FragmentActivity */, this /* OnConnectionFailedListener */)
+                .addApi(Auth.GOOGLE_SIGN_IN_API)
+                .build();
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.setDrawerListener(toggle);
+                this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawerLayout.setDrawerListener(toggle);
         toggle.syncState();
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
@@ -43,8 +84,9 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
-        selectedFlavor = Utils.readSharedSetting(this, Utils.SELECTED_FLAVOR, EMPTY_STRING);
+        selectedFlavor = Utils.readSharedSetting(this, Utils.SELECTED_FLAVOR, DEFAULT_FLAVOR);
         selectedUserId = Utils.readSharedSetting(this, Utils.SELECTED_USER_UUID, EMPTY_STRING);
+        selectedBuildType = Utils.readSharedSetting(this, Utils.SELECTED_BUILD_TYPE, DEFAULT_BUILD_TYPE);
     }
 
     @Override
@@ -58,7 +100,6 @@ public class MainActivity extends AppCompatActivity
     }
 
     private Fragment setupFragment(Class fragmentClass, String tag, Bundle args) {
-
         // Insert the fragment by replacing any existing fragment
         FragmentManager fragmentManager = getSupportFragmentManager();
         Fragment existingFragment = fragmentManager.findFragmentByTag(tag);
@@ -100,7 +141,6 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.action_settings) {
             return true;
         }
-
         return super.onOptionsItemSelected(item);
     }
 
@@ -111,10 +151,9 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.nav_select_user) {
-            UserSelectionFragment fragment = (UserSelectionFragment) setupFragment(UserSelectionFragment.class,
-                    UserSelectionFragment.FRAGMENT_TAG, UserSelectionFragment.getArgumentBundle(selectedUserId));
+            showUserSelectionFragment(selectedUserId, selectedFlavor, selectedBuildType);
         } else if (id == R.id.nav_user_chat) {
-            showChatFragment(selectedUserId, selectedFlavor);
+            showChatFragment(selectedUserId, selectedFlavor, selectedBuildType);
         } else if (id == R.id.nav_settings) {
 
         } else if (id == R.id.nav_stats) {
@@ -126,9 +165,14 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    private void showChatFragment(String userId, String flavor) {
+    private void showChatFragment(String userId, String flavor, String buildType) {
         ChatFragment fragment = (ChatFragment) setupFragment(ChatFragment.class,
-                ChatFragment.FRAGMENT_TAG, ChatFragment.getArgumentBundle(userId, flavor));
+                ChatFragment.FRAGMENT_TAG, ChatFragment.getArgumentBundle(userId, flavor, buildType));
+    }
+
+    private void showUserSelectionFragment(String userId, String flavor, String buildType) {
+        UserSelectionFragment fragment = (UserSelectionFragment) setupFragment(UserSelectionFragment.class,
+                UserSelectionFragment.FRAGMENT_TAG, UserSelectionFragment.getArgumentBundle(userId, flavor, buildType));
     }
 
     @Override
@@ -145,6 +189,12 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onUserSelected(String userId) {
         selectedUserId = userId;
-        showChatFragment(userId, selectedFlavor);
+        showChatFragment(userId, selectedFlavor, selectedBuildType);
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        Log.d(Utils.TAG, "onConnectionFailed:" + connectionResult);
+        Snackbar.make(drawerLayout, "Unable to connect to Google Play services.", Snackbar.LENGTH_LONG).show();
     }
 }
