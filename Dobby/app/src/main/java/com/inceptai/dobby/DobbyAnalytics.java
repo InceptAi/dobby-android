@@ -32,6 +32,10 @@ public class DobbyAnalytics {
     private static final String PARAM_GRADE_JSON = "grade_json";
     private static final String FEEDBACK_UNSTRUCTURED = "feedback_unstructured";
     private static final String LAST_ACTION_BEFORE_FEEDBACK = "last_action";
+    private static final String PARAM_UID = "user_id";
+    private static final String PARAM_LATITUDE = "user_lat";
+    private static final String PARAM_LONGITUDE = "user_lon";
+
 
     private static final String BANDWIDTH_GRADE_EVENT = "bandwidth_grade";
     private static final String WIFI_GRADE_EVENT = "wifi_grade";
@@ -85,6 +89,9 @@ public class DobbyAnalytics {
     private static final String ACTION_TYPE_NEGATIVE_FEEDBACK_AFTER_WIFI_CHECK = "negative_feedback_wifi_check";
     private static final String ACTION_TYPE_NO_FEEDBACK_AFTER_WIFI_CHECK = "no_feedback_wifi_check";
     private static final String ACTION_TYPE_UNSTRUCTURED_FEEDBACK_AFTER_WIFI_CHECK = "unstructured_feedback_wifi_check";
+
+
+    private static final String DAILY_HEARTBEAT_EVENT = "daily_heartbeat_event";
 
 
     FirebaseAnalytics firebaseAnalytics;
@@ -385,6 +392,15 @@ public class DobbyAnalytics {
         Bundle bundle = new Bundle();
         bundle.putString(FEEDBACK_UNSTRUCTURED, feedback);
         firebaseAnalytics.logEvent(ACTION_TYPE_UNSTRUCTURED_FEEDBACK_AFTER_WIFI_CHECK, bundle);
+    }
+
+
+    public void wifiExpertDailyHeartBeat(String uid, double lat, double lon) {
+        Bundle bundle = new Bundle();
+        bundle.putString(PARAM_UID, uid);
+        bundle.putDouble(PARAM_LATITUDE, lat);
+        bundle.putDouble(PARAM_LONGITUDE, lon);
+        firebaseAnalytics.logEvent(DAILY_HEARTBEAT_EVENT, bundle);
     }
 
 }

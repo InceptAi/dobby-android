@@ -3,6 +3,8 @@ package com.inceptai.dobby.dagger;
 import com.inceptai.dobby.MainActivity;
 import com.inceptai.dobby.NetworkLayer;
 import com.inceptai.dobby.ai.DobbyAi;
+import com.inceptai.dobby.heartbeat.AlarmReceiver;
+import com.inceptai.dobby.heartbeat.DeviceBootReceiver;
 import com.inceptai.dobby.ui.ChatFragment;
 import com.inceptai.dobby.ui.DebugFragment;
 import com.inceptai.dobby.ui.FakeDataFragment;
@@ -40,4 +42,9 @@ public interface ProdComponent {
     void inject(WifiDocMainFragment wifiDocMainFragment);
 
     void inject(ObjectRegistry objectRegistry);
+
+    void inject(AlarmReceiver alarmReceiver);
+
+    void inject(DeviceBootReceiver deviceBootReceiver);
+
 }

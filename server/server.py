@@ -20,7 +20,7 @@ def generate_link_map(input_path):
 		for api in list_of_apis:
 			link_key = flavor + api
 			link_map[link_key] = os.path.join(flavor, api, 'index.html')
-    sorted_link_map = OrderedDict(sorted(link_map.items(), key=lambda t: t[0]))
+	sorted_link_map = OrderedDict(sorted(link_map.items(), key=lambda t: t[0]))
 	return sorted_link_map
 	
 

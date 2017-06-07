@@ -34,6 +34,7 @@ import com.inceptai.dobby.ai.DobbyAi;
 import com.inceptai.dobby.ai.RtDataSource;
 import com.inceptai.dobby.ai.SuggestionCreator;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
+import com.inceptai.dobby.heartbeat.HeartBeatManager;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.ui.ChatFragment;
 import com.inceptai.dobby.ui.DebugFragment;
@@ -63,6 +64,7 @@ public class MainActivity extends AppCompatActivity
     @Inject NetworkLayer networkLayer;
     @Inject DobbyEventBus eventBus;
     @Inject DobbyAnalytics dobbyAnalytics;
+    @Inject HeartBeatManager heartBeatManager;
 
 
     private Handler handler;
@@ -95,6 +97,9 @@ public class MainActivity extends AppCompatActivity
         handler = new Handler(this);
 
         setupChatFragment();
+        //heartBeatManager.cancelAlarm();
+        //heartBeatManager.registerAlarmReceiverWithContext(this);
+        heartBeatManager.setDailyHeartBeat();
         //requestPermissions();
     }
 
