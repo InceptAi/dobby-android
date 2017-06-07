@@ -16,6 +16,18 @@
         android:screenOrientation="portrait"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+
+        <receiver android:name="com.inceptai.dobby.heartbeat.AlarmReceiver" android:enabled="true">
+            <intent-filter>
+                <action android:name="DAILY_HEARTBEAT_INTENT"/>
+            </intent-filter>
+        </receiver>
+        <receiver android:name="com.inceptai.dobby.heartbeat.DeviceBootReceiver" android:enabled="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>

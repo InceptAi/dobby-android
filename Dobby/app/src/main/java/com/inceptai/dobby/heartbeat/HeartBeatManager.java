@@ -23,6 +23,7 @@ public class HeartBeatManager {
     static final String DAILY_HEARTBEAT_INTENT = "DAILY_HEARTBEAT_INTENT";
     static final String LAST_HEARTBEAT_TIMESTAMP_MS = "LAST_HEART_BEAT_TS_MS";
     private static final long DAILY_HEARTBEAT_INTERVAL_MS = AlarmManager.INTERVAL_DAY;
+
     private PendingIntent pendingIntent;
 
     private AlarmManager alarmMgr;
