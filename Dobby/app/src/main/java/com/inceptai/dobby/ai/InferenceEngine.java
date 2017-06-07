@@ -4,12 +4,14 @@ import android.support.annotation.IntDef;
 
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.connectivity.ConnectivityAnalyzer;
+import com.inceptai.dobby.database.FailureDatabaseWriter;
+import com.inceptai.dobby.database.FailureRecord;
 import com.inceptai.dobby.database.InferenceDatabaseWriter;
 import com.inceptai.dobby.database.InferenceRecord;
 import com.inceptai.dobby.model.DobbyWifiInfo;
 import com.inceptai.dobby.model.IPLayerInfo;
 import com.inceptai.dobby.model.PingStats;
-import com.inceptai.dobby.speedtest.BandwithTestCodes;
+import com.inceptai.dobby.speedtest.BandwidthTestCodes;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 import com.inceptai.dobby.wifi.WifiState;
@@ -20,7 +22,6 @@ import java.util.HashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-
 
 /**
  * Inference engine consumes actions from the NLU engine (ApiAi or local) and creates Actions.
@@ -60,6 +61,7 @@ public class InferenceEngine {
     private MetricsDb metricsDb;
     private PossibleConditions currentConditions = PossibleConditions.NOOP_CONDITION;
     private InferenceDatabaseWriter inferenceDatabaseWriter;
+    private FailureDatabaseWriter failureDatabaseWriter;
     private DobbyApplication dobbyApplication;
 
     @Mode
@@ -84,12 +86,14 @@ public class InferenceEngine {
     InferenceEngine(ScheduledExecutorService scheduledExecutorService,
                     ActionListener actionListener,
                     InferenceDatabaseWriter inferenceDatabaseWriter,
+                    FailureDatabaseWriter failureDatabaseWriter,
                     DobbyApplication dobbyApplication) {
         bandwidthTestState = STATE_BANDWIDTH_TEST_NONE;
         this.scheduledExecutorService = scheduledExecutorService;
         this.actionListener = actionListener;
         metricsDb = new MetricsDb();
         this.inferenceDatabaseWriter = inferenceDatabaseWriter;
+        this.failureDatabaseWriter = failureDatabaseWriter;
         this.dobbyApplication = dobbyApplication;
     }
 
@@ -107,23 +111,24 @@ public class InferenceEngine {
     }
 
 
-    private String testModeToString(@BandwithTestCodes.TestMode int testMode) {
+    private String testModeToString(@BandwidthTestCodes.TestMode int testMode) {
         String testModeString = "UNKNOWN";
-        if (testMode == BandwithTestCodes.TestMode.DOWNLOAD) {
+        if (testMode == BandwidthTestCodes.TestMode.DOWNLOAD) {
             testModeString = "DOWNLOAD";
-        } else if (testMode == BandwithTestCodes.TestMode.UPLOAD) {
+        } else if (testMode == BandwidthTestCodes.TestMode.UPLOAD) {
             testModeString = "UPLOAD";
         }
         return testModeString;
     }
 
-    public DataInterpreter.WifiGrade notifyWifiState(WifiState wifiState, @WifiState.WifiLinkMode int wifiLinkMode,
-                                                     @ConnectivityAnalyzer.WifiConnectivityMode int wifiConnectivityMode) {
+    synchronized public DataInterpreter.WifiGrade notifyWifiState(WifiState wifiState, @WifiState.WifiLinkMode int wifiLinkMode,
+                                                                  @ConnectivityAnalyzer.WifiConnectivityMode int wifiConnectivityMode) {
         DataInterpreter.WifiGrade wifiGrade = new DataInterpreter.WifiGrade();
         if (wifiState != null) {
             HashMap<Integer, WifiState.ChannelInfo> channelMap = wifiState.getChannelInfoMap();
             DobbyWifiInfo wifiInfo = wifiState.getLinkInfo();
             wifiGrade = DataInterpreter.interpret(channelMap, wifiInfo, wifiLinkMode, wifiConnectivityMode);
+            wifiGrade.errorCode = getWifiErrorCode(wifiConnectivityMode);
         }
         metricsDb.updateWifiGrade(wifiGrade);
         PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(wifiGrade);
@@ -135,10 +140,17 @@ public class InferenceEngine {
         return wifiGrade;
     }
 
-    public DataInterpreter.PingGrade notifyPingStats(HashMap<String, PingStats> pingStatsMap, IPLayerInfo ipLayerInfo) {
+    synchronized public DataInterpreter.PingGrade notifyPingStats(HashMap<String, PingStats> pingStatsMap, IPLayerInfo ipLayerInfo) {
         DataInterpreter.PingGrade pingGrade = new DataInterpreter.PingGrade();
         if (pingStatsMap != null && ipLayerInfo != null) {
             pingGrade = DataInterpreter.interpret(pingStatsMap, ipLayerInfo);
+            pingGrade.errorCode = BandwidthTestCodes.ErrorCodes.NO_ERROR;
+        } else if (ipLayerInfo == null || ipLayerInfo.gateway == null || ipLayerInfo.gateway.equals("0.0.0.0")) {
+            pingGrade.errorCode = BandwidthTestCodes.ErrorCodes.ERROR_DHCP_INFO_UNAVAILABLE;
+        } else if (pingStatsMap == null) {
+            pingGrade.errorCode = BandwidthTestCodes.ErrorCodes.ERROR_DHCP_INFO_UNAVAILABLE;
+        } else if (pingStatsMap.isEmpty()) {
+            pingGrade.errorCode = BandwidthTestCodes.ErrorCodes.ERROR_PERFORMING_PING;
         }
         metricsDb.updatePingGrade(pingGrade);
         PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(pingGrade);
@@ -150,10 +162,12 @@ public class InferenceEngine {
         return pingGrade;
     }
 
-    public DataInterpreter.HttpGrade notifyGatewayHttpStats(PingStats gatewayHttpStats) {
+    synchronized public DataInterpreter.HttpGrade notifyGatewayHttpStats(PingStats gatewayHttpStats) {
         DataInterpreter.HttpGrade httpGrade = new DataInterpreter.HttpGrade();
         if (gatewayHttpStats != null) {
             httpGrade = DataInterpreter.interpret(gatewayHttpStats);
+        } else {
+            httpGrade.errorCode = BandwidthTestCodes.ErrorCodes.ERROR_DHCP_INFO_UNAVAILABLE;
         }
         metricsDb.updateHttpGrade(httpGrade);
         PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(httpGrade);
@@ -165,12 +179,12 @@ public class InferenceEngine {
         return httpGrade;
     }
 
-
     public SuggestionCreator.Suggestion suggest() {
         HashMap<Integer, Double> conditionMapToUse = currentConditions.getTopConditionsMap(
                 MAX_SUGGESTIONS_TO_SHOW, MAX_GAP_IN_SUGGESTION_WEIGHT);
         return SuggestionCreator.get(conditionMapToUse, metricsDb.getParamsForSuggestions());
     }
+
 
     private void checkAndSendSuggestions() {
         if (metricsDb.hasValidUpload() && metricsDb.hasValidDownload() &&
@@ -178,20 +192,37 @@ public class InferenceEngine {
                 metricsDb.hasFreshWifiGrade() &&
                 metricsDb.hasFreshHttpGrade()) {
             SuggestionCreator.Suggestion suggestion = suggest();
-
             if (actionListener != null) {
                 DobbyLog.i("Sending suggestions to DobbyAi");
                 actionListener.suggestionsAvailable(suggestion);
             }
-            sendResponseOnlyAction(suggestion.toString());
-
             //Write the suggestion and inferencing parameters to DB
             InferenceRecord newInferenceRecord = createInferenceRecord(suggestion);
             inferenceDatabaseWriter.writeInferenceToDatabase(newInferenceRecord);
-
         }
     }
 
+    @BandwidthTestCodes.ErrorCodes
+    private int getWifiErrorCode(@ConnectivityAnalyzer.WifiConnectivityMode int wifiConnectivityMode) {
+        switch (wifiConnectivityMode) {
+            case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_ONLINE:
+                return BandwidthTestCodes.ErrorCodes.NO_ERROR;
+            case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL:
+                return BandwidthTestCodes.ErrorCodes.ERROR_WIFI_IN_CAPTIVE_PORTAL;
+            case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_OFFLINE:
+                return BandwidthTestCodes.ErrorCodes.ERROR_WIFI_IN_CAPTIVE_PORTAL;
+            case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_UNKNOWN:
+                return BandwidthTestCodes.ErrorCodes.ERROR_WIFI_CONNECTED_AND_UNKNOWN;
+            case ConnectivityAnalyzer.WifiConnectivityMode.ON_AND_DISCONNECTED:
+                return BandwidthTestCodes.ErrorCodes.ERROR_WIFI_ON_AND_DISCONNECTED;
+            case ConnectivityAnalyzer.WifiConnectivityMode.OFF:
+                return BandwidthTestCodes.ErrorCodes.ERROR_WIFI_OFF;
+            case ConnectivityAnalyzer.WifiConnectivityMode.UNKNOWN:
+                return BandwidthTestCodes.ErrorCodes.ERROR_WIFI_UNKNOWN_STATE;
+            default:
+                return BandwidthTestCodes.ErrorCodes.ERROR_UNKNOWN;
+        }
+    }
 
     private InferenceRecord createInferenceRecord(SuggestionCreator.Suggestion suggestion) {
         InferenceRecord inferenceRecord = new InferenceRecord();
@@ -218,16 +249,32 @@ public class InferenceEngine {
         return inferenceRecord;
     }
 
+    private FailureRecord createFailureRecord(@BandwidthTestCodes.TestMode int testMode,
+                                              @BandwidthTestCodes.ErrorCodes int errorCode,
+                                              String errorMessage) {
+        FailureRecord failureRecord = new FailureRecord();
+        failureRecord.uid = dobbyApplication.getUserUuid();
+        failureRecord.phoneInfo = dobbyApplication.getPhoneInfo();
+        failureRecord.appVersion = dobbyApplication.getAppVersion();
+        failureRecord.errorCode = errorCode;
+        failureRecord.testMode = testMode;
+        failureRecord.errorMessage = errorMessage;
+        //Assign the timestamp
+        failureRecord.timestamp = System.currentTimeMillis();
+        return failureRecord;
+    }
+
+
     // Bandwidth test notifications:
-    public void notifyBandwidthTestStart(@BandwithTestCodes.TestMode int testMode) {
-        if (testMode == BandwithTestCodes.TestMode.UPLOAD) {
+    public void notifyBandwidthTestStart(@BandwidthTestCodes.TestMode int testMode) {
+        if (testMode == BandwidthTestCodes.TestMode.UPLOAD) {
             metricsDb.clearUploadBandwidthGrade();
-        } else if (testMode == BandwithTestCodes.TestMode.DOWNLOAD) {
+        } else if (testMode == BandwidthTestCodes.TestMode.DOWNLOAD) {
             metricsDb.clearDownloadBandwidthGrade();
         }
     }
 
-    public void notifyBandwidthTestProgress(@BandwithTestCodes.TestMode int testMode, double bandwidth) {
+    public void notifyBandwidthTestProgress(@BandwidthTestCodes.TestMode int testMode, double bandwidth) {
         long currentTs = System.currentTimeMillis();
         if ((currentTs - lastBandwidthUpdateTimestampMs) > 500L) {
             // sendResponseOnlyAction(testModeToString(testMode) + " Current Bandwidth: " + String.format("%.2f", bandwidth / 1000000) + " Mbps");
@@ -235,27 +282,35 @@ public class InferenceEngine {
         }
     }
 
-    public DataInterpreter.BandwidthGrade notifyBandwidthTestResult(@BandwithTestCodes.TestMode int testMode,
-                                                                    double bandwidth,
-                                                                    String clientIsp,
-                                                                    String clientExternalIp) {
+    synchronized public DataInterpreter.BandwidthGrade notifyBandwidthTestResult(@BandwidthTestCodes.TestMode int testMode,
+                                                                                 double bandwidth,
+                                                                                 String clientIsp,
+                                                                                 String clientExternalIp,
+                                                                                 double lat, double lon,
+                                                                                 String bestServerName,
+                                                                                 String bestServerCountry,
+                                                                                 double bestServerLatency) {
         DataInterpreter.BandwidthGrade bandwidthGrade = new DataInterpreter.BandwidthGrade();
-        if (bandwidth >= 0) {
-            sendResponseOnlyAction(testModeToString(testMode) + " Overall Bandwidth = " + String.format("%.2f", bandwidth / 1000000) + " Mbps");
-        } else {
-            sendResponseOnlyAction(testModeToString(testMode) + " Bandwidth error -- can't do bandwidth test.");
-        }
         lastBandwidthUpdateTimestampMs = 0;
 
-        if (testMode == BandwithTestCodes.TestMode.UPLOAD) {
+        if (testMode == BandwidthTestCodes.TestMode.UPLOAD) {
             metricsDb.updateUploadBandwidthGrade(bandwidth * 1.0e-6, DataInterpreter.MetricType.UNKNOWN);
-        } else if (testMode == BandwithTestCodes.TestMode.DOWNLOAD) {
+        } else if (testMode == BandwidthTestCodes.TestMode.DOWNLOAD) {
             metricsDb.updateDownloadBandwidthGrade(bandwidth * 1.0e-6, DataInterpreter.MetricType.UNKNOWN);
         }
 
         if (metricsDb.hasValidDownload() && metricsDb.hasValidUpload()) {
-            bandwidthGrade = DataInterpreter.interpret(metricsDb.getDownloadMbps(),
-                    metricsDb.getUploadMbps(), clientIsp, clientExternalIp, BandwithTestCodes.ErrorCodes.NO_ERROR);
+            bandwidthGrade = DataInterpreter.interpret(
+                    metricsDb.getDownloadMbps(),
+                    metricsDb.getUploadMbps(),
+                    clientIsp,
+                    clientExternalIp,
+                    lat,
+                    lon,
+                    bestServerName,
+                    bestServerCountry,
+                    bestServerLatency,
+                    BandwidthTestCodes.ErrorCodes.NO_ERROR);
             //Update the bandwidth grade, overwriting earlier info.
             metricsDb.updateBandwidthGrade(bandwidthGrade);
             PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(bandwidthGrade);
@@ -269,11 +324,18 @@ public class InferenceEngine {
     }
 
 
-    public DataInterpreter.BandwidthGrade notifyBandwidthTestError(@BandwithTestCodes.ErrorCodes int errorCode,
-                                                                   double bandwidth) {
+    synchronized public DataInterpreter.BandwidthGrade notifyBandwidthTestError(@BandwidthTestCodes.TestMode int testMode,
+                                                                                @BandwidthTestCodes.ErrorCodes int errorCode,
+                                                                                String errorMessage,
+                                                                                double bandwidth) {
         lastBandwidthUpdateTimestampMs = 0;
-        DataInterpreter.BandwidthGrade bandwidthGrade = DataInterpreter.interpret(0.0, 0.0,
-                Utils.EMPTY_STRING, Utils.EMPTY_STRING, errorCode);
+        DataInterpreter.BandwidthGrade bandwidthGrade = DataInterpreter.interpret(
+                bandwidth, bandwidth,
+                Utils.EMPTY_STRING, Utils.EMPTY_STRING,
+                0, 0,
+                Utils.EMPTY_STRING, Utils.EMPTY_STRING,
+                0.0,
+                errorCode);
         metricsDb.updateBandwidthGrade(bandwidthGrade);
         PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(bandwidthGrade);
         currentConditions.mergeIn(conditions);
@@ -281,6 +343,8 @@ public class InferenceEngine {
         DobbyLog.i("InferenceEngine which gives conditions: " + conditions.toString());
         DobbyLog.i("InferenceEngine After merging: " + currentConditions.toString());
         checkAndSendSuggestions();
+        //Write failure to database
+        writeFailureToDatabase(testMode, errorCode, errorMessage);
         return bandwidthGrade;
     }
 
@@ -291,6 +355,14 @@ public class InferenceEngine {
             bandwidthCheckFuture = null;
         }
         previousAction = Action.ACTION_NONE;
+    }
+
+    private void writeFailureToDatabase(@BandwidthTestCodes.TestMode int testMode,
+                                        @BandwidthTestCodes.ErrorCodes int errorCode,
+                                        String errorMessage) {
+        //Write failure to database
+        FailureRecord newFailureRecord = createFailureRecord(testMode, errorCode, errorMessage);
+        failureDatabaseWriter.writeFailureToDatabase(newFailureRecord);
     }
 
     private void updateBandwidthState(int toState) {
@@ -313,7 +385,7 @@ public class InferenceEngine {
         // Timeouts etc.
     }
 
-    private void sendResponseOnlyAction(String response) {
+    private void sendResponseOnlyAction(String response, @Action.ActionType int action) {
         if (actionListener == null) {
             DobbyLog.w("Attempting to send action to non-existent listener");
             return;
@@ -321,6 +393,6 @@ public class InferenceEngine {
         if (response == null || response.isEmpty()) {
             response = CANNED_RESPONSE;
         }
-        actionListener.takeAction(new Action(response, Action.ActionType.ACTION_TYPE_NONE));
+        actionListener.takeAction(new Action(response, action));
     }
 }

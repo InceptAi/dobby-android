@@ -7,7 +7,8 @@ import com.inceptai.dobby.connectivity.ConnectivityAnalyzer;
 import com.inceptai.dobby.model.DobbyWifiInfo;
 import com.inceptai.dobby.model.IPLayerInfo;
 import com.inceptai.dobby.model.PingStats;
-import com.inceptai.dobby.speedtest.BandwithTestCodes;
+import com.inceptai.dobby.speedtest.BandwidthTestCodes;
+import com.inceptai.dobby.utils.Utils;
 import com.inceptai.dobby.wifi.WifiState;
 
 import java.lang.annotation.Retention;
@@ -211,10 +212,14 @@ public class DataInterpreter {
         private long uploadUpdatedAtMs;
         private double uploadMbps;
         private double downloadMbps;
-        String isp;
-        String externalIP;
-        @BandwithTestCodes.ErrorCodes
-        int errorCode = BandwithTestCodes.ErrorCodes.ERROR_UNKNOWN;
+        String isp = Utils.EMPTY_STRING;;
+        String externalIP = Utils.EMPTY_STRING;;
+        String bestServerName = Utils.EMPTY_STRING;
+        String bestServerCountry = Utils.EMPTY_STRING;
+        double bestServerLatencyMs;
+        double lat;
+        double lon;
+        @BandwidthTestCodes.ErrorCodes int errorCode = BandwidthTestCodes.ErrorCodes.ERROR_UNINITIAlIZED;
 
         public BandwidthGrade() {
             //Set timestamp here
@@ -245,7 +250,13 @@ public class DataInterpreter {
             builder.append("\n Upload Updated: " + downloadUpdatedAtMs);
             builder.append("\n isp : " + isp);
             builder.append("\n external IP: " + externalIP);
+            builder.append("\n lat: " + lat);
+            builder.append("\n lon: " + lon);
+            builder.append("\n bestServerName: " + bestServerName);
+            builder.append("\n bestServerCountry: " + bestServerCountry);
+            builder.append("\n bestServerLatencyMs: " + bestServerLatencyMs);
             builder.append("\n error code: " + errorCode);
+
             return builder.toString();
         }
 
@@ -272,11 +283,11 @@ public class DataInterpreter {
             return downloadUpdatedAtMs > 0 && isFresh(downloadUpdatedAtMs);
         }
 
-        double getUploadMbps() {
+        public double getUploadMbps() {
             return uploadMbps;
         }
 
-        double getDownloadMbps() {
+        public double getDownloadMbps() {
             return downloadMbps;
         }
 
@@ -339,8 +350,8 @@ public class DataInterpreter {
         double dnsServerLatencyMs;
         double externalServerLatencyMs;
         double alternativeDnsLatencyMs;
-
-        private long updatedAtMs;
+        long updatedAtMs;
+        @BandwidthTestCodes.ErrorCodes int errorCode = BandwidthTestCodes.ErrorCodes.ERROR_UNINITIAlIZED;
 
 
         public PingGrade() {}
@@ -430,6 +441,7 @@ public class DataInterpreter {
     public static class HttpGrade {
         @MetricType int httpDownloadLatencyMetric = MetricType.UNKNOWN;
         private long updatedAtMs;
+        @BandwidthTestCodes.ErrorCodes int errorCode = BandwidthTestCodes.ErrorCodes.ERROR_UNINITIAlIZED;
 
         public HttpGrade() {
         }
@@ -475,8 +487,9 @@ public class DataInterpreter {
         int primaryApChannelInterferingAps;
         int leastOccupiedChannelAps;
         int primaryApSignal;
-
         private long updatedAtMs;
+        @BandwidthTestCodes.ErrorCodes int errorCode = BandwidthTestCodes.ErrorCodes.ERROR_UNINITIAlIZED;
+
 
         public WifiGrade() {
             wifiChannelOccupancyMetric = new HashMap<>();
@@ -505,6 +518,69 @@ public class DataInterpreter {
             builder.append("\n primaryApChannelAps:" + primaryApChannelInterferingAps);
             builder.append("\n leastOccupiedChannelAps:" + leastOccupiedChannelAps);
             return builder.toString();
+        }
+
+        public boolean isWifiOff() {
+            return (wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.OFF);
+        }
+
+        public boolean isWifiDisconnected() {
+            return (wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.ON_AND_DISCONNECTED);
+        }
+
+        public String userReadableInterpretation() {
+            StringBuilder sb = new StringBuilder();
+            //Wifi is off
+            switch (wifiConnectivityMode) {
+                case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_ONLINE:
+                    sb.append("You are connected and online via wifi network: " + getPrimaryApSsid() + ".");
+                    sb.append(convertSignalToReadableMessage());
+                    break;
+                case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL:
+                    sb.append("You are behind a captive portal -- " +
+                            "basically the wifi you are connected to " +
+                            getPrimaryApSsid() + " is managed by someone who " +
+                            "restricts access unless you sign in. " +
+                            "You should launch a browser and it should take you to a login page");
+                    break;
+                case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_OFFLINE:
+                    sb.append("You are connected to wifi network: " + getPrimaryApSsid() + " but we can't reach Internet through this network. " +
+                            "This could be an issue with the router or your Internet provider. We can run full tests to see whats going on ?");
+                    break;
+                case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_UNKNOWN:
+                    sb.append("You are connected via wifi network: " + getPrimaryApSsid() + ".");
+                    sb.append(convertSignalToReadableMessage());
+                    break;
+                case ConnectivityAnalyzer.WifiConnectivityMode.ON_AND_DISCONNECTED:
+                    sb.append("You are currently not connected to any wifi network. If your phone is not connecting, try running full tests and we can diagnose why that could be ?");
+                    break;
+                case ConnectivityAnalyzer.WifiConnectivityMode.OFF:
+                    sb.append("Your wifi is currently switched off. Try turing it on from the settings and we can run some speed tests to see how much bandwidth you are getting.");
+                    break;
+            }
+            return sb.toString();
+        }
+
+        private String convertSignalToReadableMessage() {
+            if (DataInterpreter.isUnknown(getPrimaryApSignalMetric())) {
+                return Utils.EMPTY_STRING;
+            }
+            int signalPercent = Utils.convertSignalDbmToPercent(getPrimaryApSignal());
+            String message = Utils.EMPTY_STRING;
+            if (DataInterpreter.isPoorOrAbysmalOrNonFunctional(getPrimaryApSignalMetric())) {
+                message = "Your connection to your wifi is weak, at about " + signalPercent +
+                        "% strength (100% means very high signal, usually when you " +
+                        "are right next to wifi router).";
+            } else if (DataInterpreter.isAverage(getPrimaryApSignalMetric())) {
+                message = "You connection to your wifi is just ok, at about " + signalPercent +
+                        "% strength (100% means very high signal, usually when you " +
+                        "are right next to wifi router).";
+            } else if (DataInterpreter.isGoodOrExcellent(getPrimaryApSignalMetric())) {
+                message = "You connection to your wifi is really good, at about " + signalPercent +
+                        "% strength (100% means very high signal, usually when you " +
+                        "are right next to wifi router).";
+            }
+            return message;
         }
 
         public void clear() {
@@ -606,6 +682,9 @@ public class DataInterpreter {
      */
     public static BandwidthGrade interpret(double downloadMbps, double uploadMbps,
                                            String isp, String externalClientIp,
+                                           double lat, double lon,
+                                           String bestServerName, String bestServerCountry,
+                                           double bestServerLatency,
                                            int errorCode) {
         BandwidthGrade grade = new BandwidthGrade();
         @MetricType int downloadMetric = getGradeHigherIsBetter(downloadMbps, BW_DOWNLOAD_STEPS_MBPS, downloadMbps >= 0.0, downloadMbps == 0.0);
@@ -614,6 +693,11 @@ public class DataInterpreter {
         grade.updateDownloadInfo(downloadMbps, downloadMetric);
         grade.isp = isp;
         grade.externalIP = externalClientIp;
+        grade.lat = lat;
+        grade.lon = lon;
+        grade.bestServerCountry = bestServerCountry;
+        grade.bestServerName = bestServerName;
+        grade.bestServerLatencyMs = bestServerLatency;
         grade.errorCode = errorCode;
         return grade;
     }

@@ -3,7 +3,10 @@ package com.inceptai.dobby.utils;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
+import android.content.res.XmlResourceParser;
 import android.os.Build;
+import android.provider.Settings;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -56,6 +59,9 @@ public class Utils {
 
     private static final int READ_TIMEOUT_MS = 5000;
     private static final int CONNECTION_TIMEOUT_MS = 5000;
+    public static final String UNKNOWN_LATENCY_STRING = "--";
+    private static final int MAX_SSID_LENGTH = 30;
+
     private static Random random = new Random();
 
     private Utils() {
@@ -68,6 +74,18 @@ public class Utils {
             Utils.saveSharedSetting(context, USER_UUID, uuid);
         }
         return uuid;
+    }
+
+    public static String limitSsid(String ssid) {
+        if (ssid != null && !ssid.isEmpty()) {
+            if (ssid.length() > MAX_SSID_LENGTH) {
+                ssid = ssid.substring(0, MAX_SSID_LENGTH);
+                if (ssid.startsWith("\"") || ssid.startsWith("'")) {
+                    ssid = ssid + ssid.substring(0, 1);
+                }
+            }
+        }
+        return ssid;
     }
 
     public static Random getRandom() {
@@ -544,7 +562,7 @@ public class Utils {
     }
 
     public static int convertSignalDbmToPercent(int signalDbm) {
-        final double MAX_SIGNAL_DBM = -50.0;
+        final double MAX_SIGNAL_DBM = -30.0;
         final double MIN_SIGNAL_DBM = -110.0;
         double percent = (((double) signalDbm - MIN_SIGNAL_DBM) / (MAX_SIGNAL_DBM - MIN_SIGNAL_DBM)) * 100.0;
         if (percent > 100) {
@@ -702,6 +720,34 @@ public class Utils {
         return Math.round(px / (metrics.ydpi / DisplayMetrics.DENSITY_DEFAULT));
     }
 
+    /**
+     * This method converts dp unit to equivalent pixels, depending on device density.
+     *
+     * @param dp A value in dp (density independent pixels) unit. Which we need to convert into pixels
+     * @param context Context to get resources and device specific display metrics
+     * @return A float value to represent px equivalent to dp depending on device density
+     */
+    public static float convertDpToPixel(float dp, Context context){
+        Resources resources = context.getResources();
+        DisplayMetrics metrics = resources.getDisplayMetrics();
+        float px = dp * ((float)metrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT);
+        return px;
+    }
+
+    /**
+     * This method converts device specific pixels to density independent pixels.
+     *
+     * @param px A value in px (pixels) unit. Which we need to convert into db
+     * @param context Context to get resources and device specific display metrics
+     * @return A float value to represent dp equivalent to px value
+     */
+    public static float convertPixelsToDp(float px, Context context) {
+        Resources resources = context.getResources();
+        DisplayMetrics metrics = resources.getDisplayMetrics();
+        float dp = px / ((float) metrics.densityDpi / DisplayMetrics.DENSITY_DEFAULT);
+        return dp;
+    }
+
     public static double toMbps(double bwBytes) {
         return bwBytes * 1.0e-6;
     }
@@ -720,6 +766,18 @@ public class Utils {
 
     public static String generateUUID() {
         return UUID.randomUUID().toString();
+    }
+
+    public static boolean grepForString(String stringToGrep, List<String> stringList) {
+        for (String stringToCheck: stringList) {
+            if (stringToCheck == null || stringToGrep == null) {
+                continue;
+            }
+            if (stringToCheck.toLowerCase().contains(stringToGrep.toLowerCase()) || stringToGrep.toLowerCase().contains(stringToCheck.toLowerCase())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static double nonLinearBwScale(double input) {
@@ -748,8 +806,65 @@ public class Utils {
         return 12.5 * (input - 50.0) / 50.0 + 87.5;
     }
 
+    public static void safeSleep(int sleepTimeMs) {
+        try {
+            Thread.sleep(sleepTimeMs);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static boolean areSystemAnimationsEnabled(Context context) {
+        float duration = 1;
+        float transition = 1;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            duration = Settings.Global.getFloat(
+                    context.getContentResolver(),
+                    Settings.Global.ANIMATOR_DURATION_SCALE, 1);
+            transition = Settings.Global.getFloat(
+                    context.getContentResolver(),
+                    Settings.Global.TRANSITION_ANIMATION_SCALE, 1);
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+            duration = Settings.System.getFloat(
+                    context.getContentResolver(),
+                    Settings.System.ANIMATOR_DURATION_SCALE, 1);
+            transition = Settings.System.getFloat(
+                    context.getContentResolver(),
+                    Settings.System.TRANSITION_ANIMATION_SCALE, 1);
+        }
+        DobbyLog.v("Animation duration == " + duration + " and transition = " + transition);
+        return (duration != 0 && transition != 0);
+    }
+
+    public static void printXmlResourceParser(XmlResourceParser xmlResourceParser) {
+        try {
+            int eventType = xmlResourceParser.getEventType();
+            while (eventType != XmlPullParser.END_DOCUMENT) {
+                switch (eventType) {
+                    case XmlPullParser.START_DOCUMENT:
+                        DobbyLog.v("Start document");
+                        break;
+                    case XmlPullParser.START_TAG:
+                        DobbyLog.v("Start tag " + xmlResourceParser.getName());
+                        break;
+                    case XmlPullParser.END_TAG:
+                        DobbyLog.v("End tag " + xmlResourceParser.getName());
+                        break;
+                    case XmlPullParser.TEXT:
+                        DobbyLog.v("Text " + xmlResourceParser.getText());
+                        break;
+                    default:
+                        DobbyLog.e("Unexpected eventType = " + eventType);
+                }
+                eventType = xmlResourceParser.next();
+            }
+        } catch (XmlPullParserException|IOException e) {
+            DobbyLog.e("Error while parsing xml " + e);
+        }
+    }
+
     public static class BandwidthValue {
-        @BandwithTestCodes.TestMode
+        @BandwidthTestCodes.TestMode
         public int mode;
         public double value;
         public static BandwidthValue from(int mode, double value) {

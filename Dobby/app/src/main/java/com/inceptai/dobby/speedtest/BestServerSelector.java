@@ -22,6 +22,9 @@ public class BestServerSelector {
     private static final int MAX_LATENCY_TRY = 3;
     private static final int MAX_CLOSEST_SERVERS = 3; //taken from speedtest-cli
     public static final int MAX_STRING_LENGTH = 100;
+    private static final double LATENCY_TEST_DEFAULT_SERVER_LATENCY_MS = 2000;
+    private static final int LATENCY_TEST_READ_TIMEOUT_MS = 2000;
+    private static final int LATENCY_TEST_CONNECTION_TIMEOUT_MS = 2000;
 
     private SpeedTestConfig config;
     private ServerInformation info;
@@ -92,26 +95,28 @@ public class BestServerSelector {
     }
 
     public ServerInformation.ServerDetails getBestServerFromClosestServers(List<ServerInformation.ServerDetails> closeServerList) {
-        double bestLatencyMs = 60000;
+        double bestLatencyMs = LATENCY_TEST_DEFAULT_SERVER_LATENCY_MS;
         ServerInformation.ServerDetails bestServer = null;
         for (ServerInformation.ServerDetails detailInfo : closeServerList) {
             String latencyUrl = detailInfo.url + "/latencyMs.txt";
             //Get url/latencyMs.txt 3 time and average
-            double[] latencyMeasurementsMs = {60000, 60000, 60000};
+            double[] latencyMeasurementsMs = new double[MAX_LATENCY_TRY];
+            for (int i = 0; i < MAX_LATENCY_TRY; i++) {
+                latencyMeasurementsMs[i] = LATENCY_TEST_DEFAULT_SERVER_LATENCY_MS;
+            }
             for (int i = 0; i < MAX_LATENCY_TRY; i++) {
                 String dataFromUrl = null;
                 try {
                     long startTime = System.currentTimeMillis();
-                    dataFromUrl = Utils.getDataFromUrl(latencyUrl, MAX_STRING_LENGTH);
+                    dataFromUrl = Utils.getDataFromUrlWithTimeouts(latencyUrl, MAX_STRING_LENGTH,
+                            LATENCY_TEST_READ_TIMEOUT_MS, LATENCY_TEST_CONNECTION_TIMEOUT_MS);
                     if (dataFromUrl.equals("size=500")) {
                         latencyMeasurementsMs[i] = (System.currentTimeMillis() - startTime);
                     }
                 } catch (IOException e) {
                     String errorString = "Exception while performing latencyMs test: " + e;
-                    //if (this.resultsCallback != null) {
-                    //    this.resultsCallback.onBestServerSelectionError(errorString);
-                    //}
                     DobbyLog.v(errorString);
+                    break;
                 }
             }
             try {

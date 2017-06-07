@@ -1,33 +1,30 @@
 package com.inceptai.dobby.ui;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.os.Build;
 import android.os.SystemClock;
+import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.Espresso;
-import android.support.test.espresso.IdlingPolicies;
-import android.support.test.espresso.IdlingResource;
+import android.support.test.espresso.NoActivityResumedException;
 import android.support.test.espresso.action.ViewActions;
 import android.support.test.espresso.matcher.ViewMatchers;
 import android.support.test.filters.LargeTest;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
-import android.test.ActivityInstrumentationTestCase2;
-import android.view.WindowManager;
+import android.util.Log;
 
 import com.inceptai.dobby.R;
-import com.inceptai.dobby.testutils.ElapsedTimeIdlingResource;
 import com.inceptai.dobby.utils.Utils;
 import com.squareup.spoon.Spoon;
 
+import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.util.concurrent.TimeUnit;
-
-import static android.support.test.InstrumentationRegistry.getInstrumentation;
-import static android.support.test.InstrumentationRegistry.getTargetContext;
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
@@ -35,7 +32,9 @@ import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withParent;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
+import static com.inceptai.dobby.DobbyApplication.TAG;
 import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 
@@ -61,10 +60,15 @@ public class CheckMainScreenWifiDocTest {
     private final String STATUS_RUNNING_TESTS_MESSAGE = "Running tests..";
     private final String STATUS_IDLE_MESSAGE = "Ready to run tests.";
     private final int CANCEL_WAIT_MS = 5000; // ~500 ms
+    private static final boolean ENABLE_SCREENSHOTS = true;
 
+    private void captureScreenshot(String label) {
+        if (ENABLE_SCREENSHOTS) {
+            Spoon.screenshot(getActivity(), label);
+        }
+    }
 
-
-
+    /*
     private IdlingResource waitFor(long waitMs) {
         // Make sure Espresso does not time out
         IdlingPolicies.setMasterPolicyTimeout(waitMs * 4, TimeUnit.MILLISECONDS);
@@ -98,7 +102,26 @@ public class CheckMainScreenWifiDocTest {
                             + " android.permission.WRITE_EXTERNAL_STORAGE");
         }
     }
+    */
 
+    @After
+    public void tearDown() throws Exception {
+        Log.d(TAG, "TEARDOWN");
+
+        goBackN();
+
+        //super.tearDown();
+    }
+
+    private void goBackN() {
+        final int N = 10; // how many times to hit back button
+        try {
+            for (int i = 0; i < N; i++)
+                Espresso.pressBack();
+        } catch (NoActivityResumedException e) {
+            Log.e(TAG, "Closed all activities", e);
+        }
+    }
 
     /**
      * A JUnit {@link Rule @Rule} to launch your activity under test. This is a replacement
@@ -172,27 +195,31 @@ public class CheckMainScreenWifiDocTest {
 
     @Test
     public void bwTestDefaultTest() {
+        Utils.safeSleep(10000);
         checkIdleUIState();
-        Spoon.screenshot(getActivity(), "initial_state");
+        captureScreenshot("initial_state");
         //Click the run tests button
         onView(withId(R.id.main_fab_button)).perform(click());
         SystemClock.sleep(BOTTOM_DRAWER_WAITING_TIME_MS);
         //Check that the status card view text changes
-        Spoon.screenshot(getActivity(), "running_state");
-        checkRunningUIState();
+        captureScreenshot("running_state");
+
         // Now we wait
         SystemClock.sleep(BW_WAITING_TIME_MS);
-        Spoon.screenshot(getActivity(), "bw_finished_state");
+        captureScreenshot("bw_finished_state");
         checkBWTestFinishedState();
         SystemClock.sleep(SUGGESTION_WAITING_TIME_AFTER_BW_MS);
-        Spoon.screenshot(getActivity(), "suggestion_state");
+        captureScreenshot("suggestion_state");
         checkSuggestionsAvailableState();
         /* Normal test code... */
 
     }
 
+    /*
     @Test
     public void bwTestCancelTest() {
+        Utils.safeSleep(10000);
+
         Spoon.screenshot(getActivity(), "initial_state");
 
         checkIdleUIState();
@@ -214,6 +241,8 @@ public class CheckMainScreenWifiDocTest {
 
     @Test
     public void bwTestRerunAfterCancelTest() {
+        Utils.safeSleep(10000);
+
         Spoon.screenshot(getActivity(), "initial_state");
         checkIdleUIState();
 
@@ -251,57 +280,63 @@ public class CheckMainScreenWifiDocTest {
         Spoon.screenshot(getActivity(), "suggestions_available_state");
         checkSuggestionsAvailableState();
     }
-
+*/
 
     @Test
     public void bwTestRunBackToBackTest() {
-        Spoon.screenshot(getActivity(), "first_initial_state");
+        Utils.safeSleep(10000);
+
+        captureScreenshot("first_initial_state");
         checkIdleUIState();
         //Click the run tests button
         onView(withId(R.id.main_fab_button)).perform(click());
         SystemClock.sleep(BOTTOM_DRAWER_WAITING_TIME_MS);
         //Check that the status card view text changes
 
-        Spoon.screenshot(getActivity(), "first_running_state");
-        checkRunningUIState();
+        captureScreenshot("first_running_state");
+        //checkRunningUIState();
 
         // Now we wait
         SystemClock.sleep(BW_WAITING_TIME_MS);
-
-        Spoon.screenshot(getActivity(), "bw_test_finished_state");
+        captureScreenshot("bw_test_finished_state");
         checkBWTestFinishedState();
 
         SystemClock.sleep(SUGGESTION_WAITING_TIME_AFTER_BW_MS);
 
-        Spoon.screenshot(getActivity(), "first_suggestion_available_state");
+        captureScreenshot("first_suggestion_available_state");
         checkSuggestionsAvailableState();
 
         //Second run -- first dismiss the suggestion
         onView(withId(R.id.bottomDialog_cancel)).perform(click());
         SystemClock.sleep(WAITING_BETWEEN_BW_TESTS_MS);
-
-        Spoon.screenshot(getActivity(), "ready_for_second_bw_test_state");
+        captureScreenshot("ready_for_second_bw_test_state");
 
         //Then start the test again
         onView(withId(R.id.main_fab_button)).perform(click());
         SystemClock.sleep(BOTTOM_DRAWER_WAITING_TIME_MS);
 
         //Check that the status card view text changes
-        Spoon.screenshot(getActivity(), "second_running_state");
-        checkRunningUIState();
+        captureScreenshot("second_running_state");
+        //checkRunningUIState();
 
         // Now we wait
         SystemClock.sleep(BW_WAITING_TIME_MS);
 
-        Spoon.screenshot(getActivity(), "second_running_state");
+        captureScreenshot("second_finished_state");
         checkBWTestFinishedState();
 
         SystemClock.sleep(SUGGESTION_WAITING_TIME_AFTER_BW_MS);
 
-        Spoon.screenshot(getActivity(), "second_suggestion_available_state");
+        captureScreenshot("second_suggestion_available_state");
         checkSuggestionsAvailableState();
     }
 
-
+    @TargetApi(Build.VERSION_CODES.KITKAT)
+    @Test
+    public void animationScalesSetToZeroDuringTest() throws Exception {
+        Utils.safeSleep(10000);
+        boolean isSystemAnimationEnabled = Utils.areSystemAnimationsEnabled(InstrumentationRegistry.getTargetContext());
+        Assert.assertFalse(isSystemAnimationEnabled);
+    }
 
 }

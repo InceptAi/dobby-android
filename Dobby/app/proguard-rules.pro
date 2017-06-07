@@ -5,7 +5,7 @@
 # directive in build.gradle.
 #
 # For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+    #   http://developer.android.com/guide/developing/tools/proguard.html
 
 # Add any project specific keep options here:
 
@@ -23,4 +23,16 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
--keep com.inceptai.dobby.*
+#-keep public class com.inceptai.dobby.*
+#-keep class com.inceptai.** { *; }
+#-keep public class com.inceptai.** {
+#  public protected *;
+#}
+#-keep class com.inceptai.** { *; }
+#-keep class com.google.** { *; }
+#-keep class com.apache.logging.** { *; }
+#-keep class fr.bmartel.** { *; }
+#-keep class javax.** { *; }
+#-keep class ai.api.** { *; }
+#-keep class commons-io.** { *; }
+#-keep class java.** { *; }

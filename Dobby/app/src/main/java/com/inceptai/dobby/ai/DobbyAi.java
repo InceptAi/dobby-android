@@ -5,19 +5,24 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import com.inceptai.dobby.DobbyAnalytics;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.NetworkLayer;
+import com.inceptai.dobby.database.FailureDatabaseWriter;
 import com.inceptai.dobby.database.InferenceDatabaseWriter;
 import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.PingStats;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.speedtest.BandwidthResult;
-import com.inceptai.dobby.speedtest.BandwithTestCodes;
+import com.inceptai.dobby.speedtest.BandwidthTestCodes;
 import com.inceptai.dobby.utils.DobbyLog;
+import com.inceptai.dobby.utils.Utils;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
@@ -25,6 +30,25 @@ import javax.inject.Inject;
 import ai.api.model.Result;
 
 import static com.inceptai.dobby.DobbyApplication.TAG;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_ASK_FOR_BW_TESTS;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_ASK_FOR_FEEDBACK;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_ASK_FOR_LONG_SUGGESTION;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_BANDWIDTH_TEST;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_CANCEL_BANDWIDTH_TEST;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_DEFAULT_FALLBACK;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_DIAGNOSE_SLOW_INTERNET;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_LIST_DOBBY_FUNCTIONS;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_NEGATIVE_FEEDBACK;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_NONE;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_NO_FEEDBACK;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_POSITIVE_FEEDBACK;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_SHOW_LONG_SUGGESTION;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_SHOW_SHORT_SUGGESTION;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_UNKNOWN;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_UNSTRUCTURED_FEEDBACK;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_WELCOME;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_WIFI_CHECK;
 
 /**
  * This class is responsible for managing the user queries and showing the responses by working
@@ -43,30 +67,54 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     private InferenceEngine inferenceEngine;
     private boolean useApiAi = false; // We do not use ApiAi for the WifiDoc app.
     private AtomicBoolean repeatBwWifiPingAction;
+    private SuggestionCreator.Suggestion lastSuggestion;
+    private @Action.ActionType int lastAction;
+    private boolean longSuggestionShown = false;
+    private boolean wifiCheckDone = false;
+    private boolean shortSuggestionShown = false;
+
 
     @Inject
     NetworkLayer networkLayer;
     @Inject
     DobbyEventBus eventBus;
+    @Inject
+    DobbyAnalytics dobbyAnalytics;
 
     public interface ResponseCallback {
         void showResponse(String text);
         void showRtGraph(RtDataSource<Float, Integer> rtDataSource);
         void observeBandwidth(BandwidthObserver observer);
+        void cancelTests();
+        void showUserActionOptions(List<Integer> userResponseTypes);
+        void showBandwidthViewCard(DataInterpreter.BandwidthGrade bandwidthGrade);
+        void showNetworkInfoViewCard(DataInterpreter.WifiGrade wifiGrade, String isp, String ip);
+        void showDetailedSuggestions(SuggestionCreator.Suggestion suggestion);
     }
 
     public DobbyAi(DobbyThreadpool threadpool,
                    InferenceDatabaseWriter inferenceDatabaseWriter,
+                   FailureDatabaseWriter failureDatabaseWriter,
                    DobbyApplication dobbyApplication) {
         this.context = dobbyApplication.getApplicationContext();
         this.threadpool = threadpool;
         useApiAi = DobbyApplication.isDobbyFlavor();
         inferenceEngine = new InferenceEngine(threadpool.getScheduledExecutorService(),
-                this, inferenceDatabaseWriter, dobbyApplication);
+                this, inferenceDatabaseWriter, failureDatabaseWriter, dobbyApplication);
         if (useApiAi) {
             initApiAiClient();
         }
         repeatBwWifiPingAction = new AtomicBoolean(false);
+        lastAction = ACTION_TYPE_UNKNOWN;
+    }
+
+    @Action.ActionType
+    public int getLastAction() {
+        return lastAction;
+    }
+
+    public void setLastAction(int lastAction) {
+        this.lastAction = lastAction;
     }
 
     public void setResponseCallback(ResponseCallback responseCallback) {
@@ -74,7 +122,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     }
 
     @Override
-    public void onResult(final Action action, final Result result) {
+    public void onResult(final Action action, @Nullable final Result result) {
         // Thread switch (to release any Api.Ai threads).
         threadpool.submit(new Runnable() {
             @Override
@@ -82,10 +130,8 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 takeAction(action);
             }
         });
-
-
-        DobbyLog.i("Got response Action: " + result.toString());
-        if (result.toString().contains("test")) {
+        if (result != null) {
+            DobbyLog.i("Got response Action: " + result.toString());
         }
     }
 
@@ -100,50 +146,176 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
      */
     @Override
     public void takeAction(Action action) {
+        DobbyLog.v("In takeAction with action: " + action.getAction() + " and user resp: " + action.getUserResponse());
+        setLastAction(action.getAction());
+        showMessageToUser(action.getUserResponse());
         if (responseCallback != null) {
-            responseCallback.showResponse(action.getUserResponse());
+            responseCallback.showUserActionOptions(getPotentialUserResponses(lastAction));
         }
-
-        if (action.getAction() == Action.ActionType.ACTION_TYPE_BANDWIDTH_TEST) {
-            DobbyLog.i("Starting ACTION BANDWIDTH TEST.");
-            postBandwidthTestOperation();
-        }
-
-        if (action.getAction() == Action.ActionType.ACTION_TYPE_CANCEL_BANDWIDTH_TEST) {
-            DobbyLog.i("Starting ACTION CANCEL BANDWIDTH TEST.");
-            try {
-                cancelBandwidthTest();
-            } catch (Exception e) {
-                DobbyLog.i("Exception while cancelling:" + e);
-            }
-        }
-        if (action.getAction() == Action.ActionType.ACTION_TYPE_DIAGNOSE_SLOW_INTERNET) {
-            Action newAction = inferenceEngine.addGoal(InferenceEngine.Goal.GOAL_DIAGNOSE_SLOW_INTERNET);
-            takeAction(newAction);
-            return;
-        }
-        if (action.getAction() == Action.ActionType.ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS) {
-            if (CLEAR_STATS_EVERY_TIME_USER_ASKS_TO_RUN_TESTS && repeatBwWifiPingAction.getAndSet(true)) {
-                //Clear the ping/wifi cache to get fresh results.
-                clearCache();
-            }
-            DobbyLog.i("Going into postAllOperations()");
-            postAllOperations();
+        switch (action.getAction()) {
+            case ACTION_TYPE_BANDWIDTH_TEST:
+                DobbyLog.i("Starting ACTION BANDWIDTH TEST.");
+                dobbyAnalytics.wifiExpertRunningBandwidthTests();
+                //postBandwidthTestOperation();
+                postAllOperations();
+                if (CLEAR_STATS_EVERY_TIME_USER_ASKS_TO_RUN_TESTS && repeatBwWifiPingAction.getAndSet(true)) {
+                    //Clear the ping/wifi cache to get fresh results.
+                    clearCache();
+                }
+                //Action diagnoseAction = inferenceEngine.addGoal(InferenceEngine.Goal.GOAL_DIAGNOSE_SLOW_INTERNET);
+                //takeAction(diagnoseAction);
+                return;
+            case ACTION_TYPE_CANCEL_BANDWIDTH_TEST:
+                DobbyLog.i("Starting ACTION CANCEL BANDWIDTH TEST.");
+                try {
+                    cancelBandwidthTest();
+                } catch (Exception e) {
+                    DobbyLog.i("Exception while cancelling:" + e);
+                }
+                dobbyAnalytics.wifiExpertCancelBandwidthTest();
+                break;
+            case ACTION_TYPE_DIAGNOSE_SLOW_INTERNET:
+                Action newAction = inferenceEngine.addGoal(InferenceEngine.Goal.GOAL_DIAGNOSE_SLOW_INTERNET);
+                takeAction(newAction);
+                return;
+            case ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS:
+                if (CLEAR_STATS_EVERY_TIME_USER_ASKS_TO_RUN_TESTS && repeatBwWifiPingAction.getAndSet(true)) {
+                    //Clear the ping/wifi cache to get fresh results.
+                    clearCache();
+                }
+                DobbyLog.i("Going into postAllOperations()");
+                postAllOperations();
+                dobbyAnalytics.wifiExpertRunningBandwidthTests();
+                break;
+            case ACTION_TYPE_SHOW_SHORT_SUGGESTION:
+                //Send event for showing short suggestion
+                if (lastSuggestion != null) {
+                    shortSuggestionShown = true;
+                    if (responseCallback != null) {
+                        DataInterpreter.BandwidthGrade lastBandwidthGrade = lastSuggestion.suggestionCreatorParams.bandwidthGrade;
+                        responseCallback.showBandwidthViewCard(lastBandwidthGrade);
+                    }
+                    showMessageToUser(lastSuggestion.getTitle());
+                    dobbyAnalytics.wifiExpertShowShortSuggestion(lastSuggestion.getTitle());
+                }
+                sendEvent(ApiAiClient.APIAI_SHORT_SUGGESTION_SHOWN_EVENT);
+                break;
+            case ACTION_TYPE_SHOW_LONG_SUGGESTION:
+                //Show the long suggestion here and send the event
+                if (responseCallback != null) {
+                    responseCallback.showDetailedSuggestions(lastSuggestion);
+                }
+                if (lastSuggestion != null) {
+                    sendEvent(ApiAiClient.APIAI_LONG_SUGGESTION_SHOWN_EVENT);
+                    longSuggestionShown = true;
+                    dobbyAnalytics.wifiExpertShowLongSuggestion(lastSuggestion.getTitle());
+                }
+                break;
+            case ACTION_TYPE_NONE:
+                break;
+            case ACTION_TYPE_ASK_FOR_LONG_SUGGESTION:
+                dobbyAnalytics.wifiExpertAskForLongSuggestion();
+                break;
+            case ACTION_TYPE_WIFI_CHECK:
+                if (responseCallback != null) {
+                    responseCallback.showNetworkInfoViewCard(getCurrentWifiGrade(), getCurrentIsp(), getCurrentIp());
+                }
+                if (networkLayer.isWifiOnline()) {
+                    sendEvent(ApiAiClient.APIAI_WIFI_ANALYSIS_SHOWN_EVENT);
+                }
+                wifiCheckDone = true;
+                dobbyAnalytics.wifiExpertWifiCheck();
+                break;
+            case ACTION_TYPE_LIST_DOBBY_FUNCTIONS:
+                dobbyAnalytics.wifiExpertListDobbyFunctions();
+                break;
+            case ACTION_TYPE_ASK_FOR_BW_TESTS:
+                dobbyAnalytics.wifiExpertAskForBwTestsAfterWifiCheck();
+                break;
+            case ACTION_TYPE_WELCOME:
+                dobbyAnalytics.wifiExpertWelcomeMessageShown();
+                break;
+            case ACTION_TYPE_ASK_FOR_FEEDBACK:
+                if (lastSuggestion == null) {
+                    dobbyAnalytics.wifiExpertAskForFeedbackAfterWifiCheck();
+                }
+                break;
+            case ACTION_TYPE_POSITIVE_FEEDBACK:
+                if (longSuggestionShown) {
+                    dobbyAnalytics.wifiExpertPositiveFeedbackAfterLongSuggestion();
+                } else if (shortSuggestionShown) {
+                    dobbyAnalytics.wifiExpertPositiveFeedbackAfterShortSuggestion();
+                } else {
+                    dobbyAnalytics.wifiExpertPositiveFeedbackAfterWifiCheck();
+                }
+                break;
+            case ACTION_TYPE_NEGATIVE_FEEDBACK:
+                if (longSuggestionShown) {
+                    dobbyAnalytics.wifiExpertNegativeFeedbackAfterLongSuggestion();
+                } else if (shortSuggestionShown) {
+                    dobbyAnalytics.wifiExpertNegativeFeedbackAfterShortSuggestion();
+                } else {
+                    dobbyAnalytics.wifiExpertNegativeFeedbackAfterWifiCheck();
+                }
+                break;
+            case ACTION_TYPE_NO_FEEDBACK:
+                if (longSuggestionShown) {
+                    dobbyAnalytics.wifiExpertNoFeedbackAfterLongSuggestion();
+                } else if (shortSuggestionShown) {
+                    dobbyAnalytics.wifiExpertNoFeedbackAfterShortSuggestion();
+                } else {
+                    dobbyAnalytics.wifiExpertNoFeedbackAfterWifiCheck();
+                }
+                break;
+            case ACTION_TYPE_UNSTRUCTURED_FEEDBACK:
+                if (longSuggestionShown) {
+                    dobbyAnalytics.wifiExpertUnstructuredFeedbackAfterLongSuggestion(action.getUserResponse());
+                } else if (shortSuggestionShown) {
+                    dobbyAnalytics.wifiExpertUnstructuredFeedbackAfterShortSuggestion(action.getUserResponse());
+                } else {
+                    dobbyAnalytics.wifiExpertUnstructuredFeedbackAfterWifiCheck(action.getUserResponse());
+                }
+                break;
+            default:
+                DobbyLog.i("Unknown Action");
+                break;
         }
     }
 
     @Override
     public void suggestionsAvailable(SuggestionCreator.Suggestion suggestion) {
+        DobbyLog.v("Updating last suggestion to:" + suggestion.toString());
+        lastSuggestion = suggestion;
+        //Create a new action
+        Action shortSuggestionAction = new Action(Utils.EMPTY_STRING, ACTION_TYPE_SHOW_SHORT_SUGGESTION);
+        takeAction(shortSuggestionAction);
         eventBus.postEvent(DobbyEvent.EventType.SUGGESTIONS_AVAILABLE, suggestion);
     }
 
     public void sendQuery(String text) {
         if (useApiAi) {
-            apiAiClient.sendTextQuery(text, this);
+            if (networkLayer.isWifiOnline()) {
+                apiAiClient.sendTextQuery(text, null, getLastAction(), this);
+            } else {
+                apiAiClient.processTextQueryOffline(text, null, getLastAction(), this);
+            }
         } else {
             DobbyLog.w("Ignoring text query for Wifi doc version :" + text);
         }
     }
+
+    public void sendEvent(String text) {
+        if (useApiAi) {
+            if (networkLayer.isWifiOnline()) {
+                apiAiClient.sendTextQuery(null, text, getLastAction(), this);
+            } else {
+                apiAiClient.processTextQueryOffline(null, text, getLastAction(), this);
+            }
+        } else {
+            DobbyLog.w("Ignoring events for Wifi doc version :" + text);
+        }
+    }
+
 
     public void cleanup() {
         networkLayer.cleanup();
@@ -153,18 +325,98 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         }
     }
 
+
+    private List<Integer> getPotentialUserResponses(@Action.ActionType int lastActionShownToUser) {
+        ArrayList<Integer> responseList = new ArrayList<Integer>();
+        switch (lastActionShownToUser) {
+            case ACTION_TYPE_ASK_FOR_LONG_SUGGESTION:
+                responseList.add(UserResponse.ResponseType.YES);
+                responseList.add(UserResponse.ResponseType.NO);
+                break;
+            case ACTION_TYPE_BANDWIDTH_TEST:
+                responseList.add(UserResponse.ResponseType.CANCEL);
+                break;
+            case ACTION_TYPE_WIFI_CHECK:
+                responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
+                break;
+            case ACTION_TYPE_DIAGNOSE_SLOW_INTERNET:
+            case ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS:
+                responseList.add(UserResponse.ResponseType.CANCEL);
+                break;
+            case ACTION_TYPE_SHOW_SHORT_SUGGESTION:
+                break;
+            case ACTION_TYPE_LIST_DOBBY_FUNCTIONS:
+                responseList.add(UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS);
+                responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
+                responseList.add(UserResponse.ResponseType.RUN_WIFI_TESTS);
+                break;
+            case ACTION_TYPE_ASK_FOR_BW_TESTS:
+                responseList.add(UserResponse.ResponseType.YES);
+                responseList.add(UserResponse.ResponseType.NO);
+                break;
+            case ACTION_TYPE_NEGATIVE_FEEDBACK:
+            case ACTION_TYPE_ASK_FOR_FEEDBACK:
+                responseList.add(UserResponse.ResponseType.YES);
+                responseList.add(UserResponse.ResponseType.NO);
+                responseList.add(UserResponse.ResponseType.NO_COMMENTS);
+                break;
+            case ACTION_TYPE_WELCOME:
+            case ACTION_TYPE_NONE:
+            case ACTION_TYPE_UNKNOWN:
+            case ACTION_TYPE_DEFAULT_FALLBACK:
+            case ACTION_TYPE_SHOW_LONG_SUGGESTION:
+            case ACTION_TYPE_CANCEL_BANDWIDTH_TEST:
+            default:
+                responseList.add(UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS);
+                responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
+                responseList.add(UserResponse.ResponseType.RUN_WIFI_TESTS);
+                break;
+        }
+        //Get detailed suggestions by pressing a button
+        if (lastSuggestion != null &&
+                lastActionShownToUser != ACTION_TYPE_DIAGNOSE_SLOW_INTERNET &&
+                lastActionShownToUser != ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS) {
+            responseList.add(UserResponse.ResponseType.SHOW_LAST_SUGGESTION_DETAILS);
+        }
+        return responseList;
+    }
+
+    private void showMessageToUser(String messageToShow) {
+        if (responseCallback != null && messageToShow != null && ! messageToShow.equals(Utils.EMPTY_STRING)) {
+            DobbyLog.v("Showing to user message: " + messageToShow);
+            responseCallback.showResponse(messageToShow);
+        }
+    }
+
     private void clearCache() {
+        wifiCheckDone = false;
+        shortSuggestionShown = false;
+        longSuggestionShown = false;
+
         if (networkLayer != null) {
             networkLayer.clearStatsCache();
         }
         if (inferenceEngine != null) {
             inferenceEngine.clearConditionsAndMetrics();
         }
+        lastSuggestion = null;
     }
 
     private void postBandwidthTestOperation() {
         ComposableOperation operation = bandwidthOperation();
         operation.post();
+    }
+
+    private DataInterpreter.WifiGrade getCurrentWifiGrade() {
+        return networkLayer.getCurrentWifiGrade();
+    }
+
+    private String getCurrentIsp() {
+        return networkLayer.getCachedClientIspIfAvailable();
+    }
+
+    private String getCurrentIp() {
+        return networkLayer.getCachedExternalIpIfAvailable();
     }
 
     private void postAllOperations() {
@@ -317,8 +569,8 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
 
     private ListenableFuture<BandwidthResult> startBandwidthTest() {
         DobbyLog.i("Going to start bandwidth test.");
-        @BandwithTestCodes.TestMode
-        int testMode = BandwithTestCodes.TestMode.DOWNLOAD_AND_UPLOAD;
+        @BandwidthTestCodes.TestMode
+        int testMode = BandwidthTestCodes.TestMode.DOWNLOAD_AND_UPLOAD;
         BandwidthObserver observer = networkLayer.startBandwidthTest(testMode);
         if (observer == null) {
             Log.w(TAG, "Null observer returned from NL, abandoning bandwidth test.");
@@ -326,7 +578,9 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             threadpool.submit(new Runnable() {
                 @Override
                 public void run() {
-                    inferenceEngine.notifyBandwidthTestError(BandwithTestCodes.ErrorCodes.ERROR_WIFI_OFFLINE, -1.0);
+                    inferenceEngine.notifyBandwidthTestError(BandwidthTestCodes.TestMode.DOWNLOAD_AND_UPLOAD,
+                            BandwidthTestCodes.ErrorCodes.ERROR_WIFI_OFFLINE,
+                            "Wifi is offline, so cannot run bw tests", -1.0);
                 }
             });
             return null;
@@ -341,6 +595,10 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
 
     private void cancelBandwidthTest() throws Exception {
         networkLayer.cancelBandwidthTests();
+        lastSuggestion = null;
+        if (responseCallback != null) {
+            responseCallback.cancelTests();
+        }
     }
 
     private void initApiAiClient() {

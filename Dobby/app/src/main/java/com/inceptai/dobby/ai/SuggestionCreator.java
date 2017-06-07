@@ -52,8 +52,17 @@ public class SuggestionCreator {
             return shortSuggestionList;
         }
 
+        public String getLongSuggestionListString() {
+            return convertListToStringMessage(true);
+        }
+
+        public String getShortSuggestionListString() {
+            return convertListToStringMessage(false);
+        }
+
         private String convertListToStringMessage(boolean useLongSuggestions) {
             //Use short suggestion by default.
+            final String CONDITIONS_PREFIX = "Here are the details";
             List<String> suggestionList;
             StringBuilder sb = new StringBuilder();
             if (useLongSuggestions) {
@@ -62,12 +71,12 @@ public class SuggestionCreator {
                 suggestionList = shortSuggestionList;
             }
             if (suggestionList.size() == 0) {
-                sb.append(NO_CONDITION_MESSAGE);
+                sb.append(getNoConditionMessageList(suggestionCreatorParams));
             } else if (suggestionList.size() == 1) {
                 sb.append(suggestionList.get(0));
             } else {
                 //Multiple conditions
-                sb.append(MULTIPLE_CONDITIONS_PREFIX);
+                sb.append(CONDITIONS_PREFIX);
                 int index = 1;
                 for(String suggestion: suggestionList) {
                     sb.append("\n");
@@ -142,8 +151,14 @@ public class SuggestionCreator {
         if (conditionList.size() > 0) {
             for (int index = 0; index < conditionList.size(); index++) {
                 @Condition int condition = conditionList.get(index);
-                suggestionToReturn.longSuggestionList.add(getSuggestionForCondition(condition, params));
-                suggestionToReturn.shortSuggestionList.add(getShortSuggestionForCondition(condition, params));
+                String shortSuggestion = getShortSuggestionForCondition(condition, params);
+                String longSuggestion = getSuggestionForCondition(condition, params);
+                if (!shortSuggestion.equals(Utils.EMPTY_STRING)) {
+                    suggestionToReturn.shortSuggestionList.add(getShortSuggestionForCondition(condition, params));
+                }
+                if (!longSuggestion.equals(Utils.EMPTY_STRING)) {
+                    suggestionToReturn.longSuggestionList.add(getSuggestionForCondition(condition, params));
+                }
             }
         } else {
             suggestionToReturn.longSuggestionList = getNoConditionMessageList(params);
@@ -331,12 +346,7 @@ public class SuggestionCreator {
                 }
                 break;
             case Condition.ISP_INTERNET_DOWN:
-                if (!baseMessage.equals(Utils.EMPTY_STRING)) {
-                    baseMessage += " However, looks ";
-                } else {
-                    baseMessage = "Looks ";
-                }
-                baseMessage +=  "like your Internet service is down. " +
+                baseMessage =  "Looks like your Internet service is down. " +
                         "We are unable to reach external servers for any bandwidth testing.";
                 if (!params.bandwidthGrade.isp.equals(Utils.EMPTY_STRING)) {
                     conditionalMessage = "You should contact " + params.bandwidthGrade.isp + " to see if they know about any issues " +
@@ -344,12 +354,7 @@ public class SuggestionCreator {
                 }
                 break;
             case Condition.ISP_INTERNET_SLOW:
-                if (!baseMessage.equals(Utils.EMPTY_STRING)) {
-                    baseMessage += " However, looks ";
-                } else {
-                    baseMessage = "Looks ";
-                }
-                baseMessage += "like your Internet service could be slow at the moment. " +
+                baseMessage = "Looks like your Internet service could be slow at the moment. " +
                         "You are getting about " + String.format("%.2f", params.bandwidthGrade.getDownloadBandwidth()) + " Mbps download and " +
                         String.format("%.2f", params.bandwidthGrade.getUploadBandwidth()) + " Mbps upload. If these speeds seem low as per your " +
                         "contract, you should reach out to " + params.bandwidthGrade.isp + " and see why you are getting such low speeds. " +
@@ -389,30 +394,23 @@ public class SuggestionCreator {
                 }
                 break;
             case Condition.DNS_SLOW_TO_REACH:
-                if (!baseMessage.equals(Utils.EMPTY_STRING)) {
-                    baseMessage += " However, your ";
-                } else {
-                    baseMessage = "Your ";
-                }
-                baseMessage += "current DNS server has a high latency, " +
+                baseMessage = "Your current DNS server has a high latency, " +
                         "which can cause an initial lag during the load time of an app or a " +
                         "webpage.";
                 break;
             case Condition.DNS_UNREACHABLE:
-                if (!baseMessage.equals(Utils.EMPTY_STRING)) {
-                    baseMessage += " However, we ";
-                } else {
-                    baseMessage = "we ";
-                }
-                baseMessage += "are unable to reach your DNS server, which means you can't access " +
-                        "the Internet on your phone and other devices. This could be because the DNS " +
-                        "server you have configured is down. ";
-                if (isAlternateDNSBetter(params)) {
-                    conditionalMessage = "Our tests show that using other public DNSs than the one you " +
-                            "are currently configured for can speed up your load times. Try changing " +
-                            "your DNS server with " + params.pingGrade.getAlternativeDns() + " and re-run the test. " +
-                            "You can change your DNS settings just for your phone first and see if " +
-                            "that improves things.";
+                if (DataInterpreter.isNonFunctionalOrUnknown(params.bandwidthGrade.getDownloadBandwidthMetric()) &&
+                        DataInterpreter.isNonFunctionalOrUnknown(params.bandwidthGrade.getUploadBandwidthMetric())) {
+                    baseMessage = "We are unable to reach your DNS server, which means you can't access " +
+                            "the Internet on your phone and other devices. This could be because the DNS " +
+                            "server you have configured is down. ";
+                    if (isAlternateDNSBetter(params)) {
+                        conditionalMessage = "Our tests show that using other public DNSs than the one you " +
+                                "are currently configured for can speed up your load times. Try changing " +
+                                "your DNS server with " + params.pingGrade.getAlternativeDns() + " and re-run the test. " +
+                                "You can change your DNS settings just for your phone first and see if " +
+                                "that improves things.";
+                    }
                 }
                 break;
             case Condition.CABLE_MODEM_FAULT:
@@ -761,13 +759,11 @@ public class SuggestionCreator {
                         "webpage.";
                 break;
             case Condition.DNS_UNREACHABLE:
-                if (!baseMessage.equals(Utils.EMPTY_STRING)) {
-                    baseMessage += " However, we ";
-                } else {
-                    baseMessage = "We ";
+                if (DataInterpreter.isNonFunctionalOrUnknown(params.bandwidthGrade.getDownloadBandwidthMetric()) &&
+                        DataInterpreter.isNonFunctionalOrUnknown(params.bandwidthGrade.getUploadBandwidthMetric())) {
+                    baseMessage = "We are unable to reach your DNS server, which means you can't access " +
+                            "the Internet on your phone and other devices.";
                 }
-                baseMessage += "are unable to reach your DNS server, which means you can't access " +
-                        "the Internet on your phone and other devices.";
                 conditionalMessage = getAlternateDNSMessage(params);
                 break;
             case Condition.CABLE_MODEM_FAULT:

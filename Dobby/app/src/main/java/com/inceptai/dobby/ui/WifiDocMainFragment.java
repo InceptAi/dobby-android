@@ -45,14 +45,14 @@ import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.BandwidthStats;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
-import com.inceptai.dobby.speedtest.BandwithTestCodes;
+import com.inceptai.dobby.speedtest.BandwidthTestCodes;
 import com.inceptai.dobby.speedtest.NewBandwidthAnalyzer;
 import com.inceptai.dobby.speedtest.ServerInformation;
 import com.inceptai.dobby.speedtest.SpeedTestConfig;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.HtmlReportGenerator;
 import com.inceptai.dobby.utils.Utils;
-import com.inceptai.dobby.wifi.DobbyAnalytics;
+import com.inceptai.dobby.DobbyAnalytics;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -65,12 +65,12 @@ import static com.inceptai.dobby.ai.DataInterpreter.MetricType.AVERAGE;
 import static com.inceptai.dobby.ai.DataInterpreter.MetricType.EXCELLENT;
 import static com.inceptai.dobby.ai.DataInterpreter.MetricType.GOOD;
 import static com.inceptai.dobby.ai.DataInterpreter.MetricType.POOR;
+import static com.inceptai.dobby.utils.Utils.UNKNOWN_LATENCY_STRING;
 import static com.inceptai.dobby.utils.Utils.ZERO_POINT_ZERO;
 import static com.inceptai.dobby.utils.Utils.nonLinearBwScale;
 
 public class WifiDocMainFragment extends Fragment implements View.OnClickListener, NewBandwidthAnalyzer.ResultsCallback, Handler.Callback {
     public static final String TAG = "WifiDocMainFragment";
-    private static final String UNKNOWN_LATENCY_STRING = "--";
     private static final int PERMISSION_COARSE_LOCATION_REQUEST_CODE = 101;
     private static final String ARG_PARAM1 = "param1";
     private static final int MSG_UPDATED_CIRCULAR_GAUGE = 1001;
@@ -84,7 +84,6 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private static final int MSG_REQUEST_LAYOUT = 1009;
     private static final long SUGGESTION_FRESHNESS_TS_MS = 30000; // 30 seconds
     private static final int MAX_HANDLER_PAUSE_MS = 5000;
-    private static final int MAX_SSID_LENGTH = 30;
 
     private static final int UI_STATE_INIT_AND_READY = 101; // Ready to run tests. Initial state.
     private static final int UI_STATE_RUNNING_TESTS = 102; // Running tests.
@@ -422,9 +421,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     }
 
     @Override
-    public void onTestFinished(@BandwithTestCodes.TestMode int testMode, BandwidthStats stats) {
+    public void onTestFinished(@BandwidthTestCodes.TestMode int testMode, BandwidthStats stats) {
         Message.obtain(handler, MSG_UPDATED_CIRCULAR_GAUGE, Utils.BandwidthValue.from(testMode, (stats.getOverallBandwidth() / 1.0e6))).sendToTarget();
-        if (testMode == BandwithTestCodes.TestMode.UPLOAD) {
+        if (testMode == BandwidthTestCodes.TestMode.UPLOAD) {
             showStatusMessageAsync(R.string.status_finished_bw_tests);
             sendSwitchStateMessage(UI_STATE_READY_WITH_RESULTS);
             uploadBw = stats.getOverallBandwidth();
@@ -434,11 +433,11 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     }
 
     @Override
-    public void onTestProgress(@BandwithTestCodes.TestMode int testMode, double instantBandwidth) {
-        if (testMode == BandwithTestCodes.TestMode.DOWNLOAD && getBwTestState() != BW_DOWNLOAD_RUNNING) {
+    public void onTestProgress(@BandwidthTestCodes.TestMode int testMode, double instantBandwidth) {
+        if (testMode == BandwidthTestCodes.TestMode.DOWNLOAD && getBwTestState() != BW_DOWNLOAD_RUNNING) {
             setBwTestState(BW_DOWNLOAD_RUNNING);
             showStatusMessageAsync(R.string.status_running_download_tests);
-        } else if (testMode == BandwithTestCodes.TestMode.UPLOAD && getBwTestState() != BW_UPLOAD_RUNNING) {
+        } else if (testMode == BandwidthTestCodes.TestMode.UPLOAD && getBwTestState() != BW_UPLOAD_RUNNING) {
             setBwTestState(BW_UPLOAD_RUNNING);
             showStatusMessageAsync(R.string.status_running_upload_tests);
         }
@@ -446,7 +445,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     }
 
     @Override
-    public void onBandwidthTestError(@BandwithTestCodes.TestMode int testMode, @BandwithTestCodes.ErrorCodes int errorCode, @Nullable String errorMessage) {
+    public void onBandwidthTestError(@BandwidthTestCodes.TestMode int testMode,
+                                     @BandwidthTestCodes.ErrorCodes int errorCode,
+                                     @Nullable String errorMessage) {
         showStatusMessageAsync(R.string.status_error_bw_tests);
     }
 
@@ -503,12 +504,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         }
         String ssid = wifiGrade.getPrimaryApSsid();
         if (ssid != null && !ssid.isEmpty()) {
-            if (ssid.length() > MAX_SSID_LENGTH) {
-                ssid = ssid.substring(0, MAX_SSID_LENGTH);
-                if (ssid.startsWith("\"") || ssid.startsWith("'")) {
-                    ssid = ssid + ssid.substring(0, 1);
-                }
-            }
+            ssid = Utils.limitSsid(ssid);
             wifiSsidTv.setText(ssid);
         }
         setWifiResult(wifiSignalValueTv, String.valueOf(wifiGrade.getPrimaryApSignal()),
@@ -688,10 +684,10 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
     private void updateBandwidthGauge(Message msg) {
         Utils.BandwidthValue bandwidthValue = (Utils.BandwidthValue) msg.obj;
-        if (bandwidthValue.mode == BandwithTestCodes.TestMode.UPLOAD) {
+        if (bandwidthValue.mode == BandwidthTestCodes.TestMode.UPLOAD) {
             uploadCircularGauge.setValue((int) nonLinearBwScale(bandwidthValue.value));
             uploadGaugeTv.setText(String.format("%2.2f", bandwidthValue.value));
-        } else if (bandwidthValue.mode == BandwithTestCodes.TestMode.DOWNLOAD) {
+        } else if (bandwidthValue.mode == BandwidthTestCodes.TestMode.DOWNLOAD) {
             downloadCircularGauge.setValue((int) nonLinearBwScale(bandwidthValue.value));
             downloadGaugeTv.setText(String.format("%2.2f", bandwidthValue.value));
         }
@@ -1109,7 +1105,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     }
 
     private void showFeedbackForm() {
-        WifiDocDialogFragment fragment = WifiDocDialogFragment.forFeedback();
+        WifiDocDialogFragment fragment = WifiDocDialogFragment.forFeedback(R.id.wifi_doc_placeholder_fl);
         fragment.show(getActivity().getSupportFragmentManager(), "Feedback");
         dobbyAnalytics.feedbackFormShown();
     }

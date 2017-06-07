@@ -1,7 +1,10 @@
+#!/bin/bash
 if [ $# -ne 2 ]; then
     echo "Usage: $0 dobby-android_GIT_PATH emulator_id_list"
     exit
 fi
+
+source ~/.bash_profile
 
 PATH_TO_BASE_DIR=$1
 EMULATOR_LIST_FILE=$2
@@ -78,7 +81,7 @@ wait_for_emulator () {
 kill_emulators () {
 
 	#Killing the genymotion player
-	player_pids=`ps aux | grep player | tr -s " " | cut -d " " -f 2`
+	player_pids=`ps aux | grep player | grep -v "automate" | grep -v "spoon" | tr -s " " | cut -d " " -f 2`
 	if [ ! -z "$player_pids" ]; then
 		num_players=`echo $player_pids | wc -w`
 		for (( i=1; i<=$(( $num_players )); i++ ))
@@ -110,6 +113,7 @@ clean_slate () {
 }
 
 cd $PATH_TO_BASE_DIR
+git pull
 cd Dobby
 
 

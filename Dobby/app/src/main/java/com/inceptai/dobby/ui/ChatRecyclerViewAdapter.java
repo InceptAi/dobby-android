@@ -32,7 +32,16 @@ public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
     }
 
     public void addEntryAtBottom(ChatEntry entry) {
-        entryList.add(entry);
+        ChatEntry lastChatEntry = null;
+        if (entryList.size() > 1) {
+            lastChatEntry = entryList.get(entryList.size() - 1);
+        }
+        if (lastChatEntry != null && lastChatEntry.isTestStatusMessage()) {
+            entryList.remove(entryList.size() - 1);
+            entryList.add(entry);
+        } else {
+            entryList.add(entry);
+        }
         notifyItemChanged(entryList.size() - 1);
     }
 
@@ -49,6 +58,15 @@ public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
         } else if (viewType == ChatEntry.RT_GRAPH) {
             View v = inflater.inflate(R.layout.rt_graph, parent, false);
             viewHolder = new RtGraphViewHolder(v);
+        } else if (viewType == ChatEntry.BW_RESULTS_GAUGE_CARDVIEW) {
+            View v = inflater.inflate(R.layout.bandwidth_results_cardview, parent, false);
+            viewHolder = new BandwidthResultsCardViewHolder(v);
+        } else if (viewType == ChatEntry.PING_RESULTS_CARDVIEW) {
+            View v = inflater.inflate(R.layout.ping_results_cardview, parent, false);
+            viewHolder = new PingResultsViewHolder(v);
+        } else if (viewType == ChatEntry.OVERALL_NETWORK_CARDVIEW) {
+            View v = inflater.inflate(R.layout.overall_network_cardview, parent, false);
+            viewHolder = new OverallNetworkResultsViewHolder(v);
         } else {
             View v = inflater.inflate(android.R.layout.simple_list_item_1, parent, false);
             viewHolder = new RecyclerViewSimpleTextViewHolder(v);
@@ -74,6 +92,21 @@ public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
               configureRtGraphViewHolder(vh3, position);
               break;
 
+          case ChatEntry.BW_RESULTS_GAUGE_CARDVIEW:
+              BandwidthResultsCardViewHolder viewHolder = (BandwidthResultsCardViewHolder) holder;
+              configureBandwidthResultsViewHolder(viewHolder, position);
+              break;
+
+          case ChatEntry.PING_RESULTS_CARDVIEW:
+              PingResultsViewHolder pingResultsViewHolder = (PingResultsViewHolder) holder;
+              configurePingResultsViewHolder(context, pingResultsViewHolder, position);
+              break;
+
+          case ChatEntry.OVERALL_NETWORK_CARDVIEW:
+              OverallNetworkResultsViewHolder overallNetworkResultsViewHolder = (OverallNetworkResultsViewHolder) holder;
+              configureOverallNetworkResultsViewHolder(context, overallNetworkResultsViewHolder, position);
+              break;
+
           default:
               RecyclerViewSimpleTextViewHolder vh = (RecyclerViewSimpleTextViewHolder) holder;
               configureDefaultViewHolder(vh, position);
@@ -86,11 +119,25 @@ public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
     }
 
     private void configureDobbyViewHolder(DobbyChatViewHolder dobbyChatViewHolder, int position) {
+        ChatEntry entry = entryList.get(position);
         dobbyChatViewHolder.getDobbyChatTextView().setText(entryList.get(position).getText());
     }
 
     private void configureUserViewHolder(UserChatViewHolder userChatViewHolder, int position) {
         userChatViewHolder.getUserChatTv().setText(entryList.get(position).getText());
+    }
+
+    private void configureBandwidthResultsViewHolder(BandwidthResultsCardViewHolder viewHolder, int position) {
+        viewHolder.showResults(entryList.get(position).getUploadMbps(), entryList.get(position).getDownloadMbps());
+    }
+
+    private void configurePingResultsViewHolder(Context context, PingResultsViewHolder viewHolder, int position) {
+        viewHolder.setPingResults(context, entryList.get(position).getPingGrade());
+    }
+
+    private void configureOverallNetworkResultsViewHolder(Context context, OverallNetworkResultsViewHolder viewHolder, int position) {
+        ChatEntry entry = entryList.get(position);
+        viewHolder.setResults(context, entry.getWifiGrade(), entry.getIspName(), entry.getRouterIp());
     }
 
     private void configureRtGraphViewHolder(RtGraphViewHolder viewHolder, int position) {

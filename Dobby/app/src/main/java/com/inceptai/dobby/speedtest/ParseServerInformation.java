@@ -1,5 +1,7 @@
 package com.inceptai.dobby.speedtest;
 
+import android.content.Context;
+import android.content.res.XmlResourceParser;
 import android.support.annotation.Nullable;
 
 import com.inceptai.dobby.utils.DobbyLog;
@@ -22,6 +24,10 @@ public class ParseServerInformation {
     //Results callback
     private ResultsCallback resultsCallback;
 
+    //Default serverInformation if any
+    private ServerInformation serverInformation;
+    private Context context;
+
     /**
      * Callback interface for results. More methods to follow.
      */
@@ -37,13 +43,39 @@ public class ParseServerInformation {
         this.resultsCallback = resultsCallback;
     }
 
+    public ParseServerInformation(String urlString1, String urlString2,
+                                  int defaultXmlListId,
+                                  Context context,
+                                  @Nullable ResultsCallback resultsCallback) {
+        this.serverListUrl1 = urlString1;
+        this.serverListUrl2 = urlString2;
+        this.resultsCallback = resultsCallback;
+        this.context = context;
+        initializeServerInformation(defaultXmlListId);
+    }
+
     public ParseServerInformation(@Nullable ResultsCallback resultsCallback) {
         this.serverListUrl1 = defaultServerListUrl1;
         this.serverListUrl2 = defaultServerListUrl2;
         this.resultsCallback = resultsCallback;
     }
 
-    public ServerInformation getServerInfo() {
+    public ParseServerInformation(int defaultXmlListId,
+                                  Context context,
+                                  @Nullable ResultsCallback resultsCallback) {
+        this.serverListUrl1 = defaultServerListUrl1;
+        this.serverListUrl2 = defaultServerListUrl2;
+        this.resultsCallback = resultsCallback;
+        this.context = context;
+        initializeServerInformation(defaultXmlListId);
+    }
+
+    private void initializeServerInformation(int xmlFileId) {
+        XmlResourceParser xmlResourceParser = this.context.getResources().getXml(xmlFileId);
+        this.serverInformation = new ServerInformation(xmlResourceParser);
+    }
+
+    ServerInformation fetchServerInfo() {
         ServerInformation info = null;
         try {
             info = downloadAndParseServerInformation(defaultServerListUrl1);
@@ -64,9 +96,19 @@ public class ParseServerInformation {
         if (this.resultsCallback != null) {
             this.resultsCallback.onServerInformationFetch(info);
         }
+        if (info != null) {
+            this.serverInformation = info;
+        }
         return info;
     }
 
+    ServerInformation getServerInfo(boolean enableFetchIfNeeded) {
+        //No fetch, just return what we have
+        if (! enableFetchIfNeeded || serverInformation != null) {
+            return serverInformation;
+        }
+        return fetchServerInfo();
+    }
 
     public ServerInformation getServerInfoFromUrlString (String urlString) {
         ServerInformation info = null;

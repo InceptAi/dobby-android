@@ -21,7 +21,10 @@ import javax.inject.Singleton;
  */
 @Singleton
 public class FeedbackDatabaseWriter {
-    private static final String FEEDBACK_DB_ROOT = BuildConfig.FLAVOR + "/" + BuildConfig.BUILD_TYPE  + "/" + "feedbacks";
+    private static final String FEEDBACK_NODE_NAME = "feedbacks";
+    private static final String USERS_NODE_NAME = "users";
+    //private static final String FEEDBACK_DB_ROOT = BuildConfig.FLAVOR + "/" + BuildConfig.BUILD_TYPE  + "/" + FEEDBACK_NODE_NAME;
+    private static final String USERS_DB_ROOT = BuildConfig.FLAVOR + "/" + BuildConfig.BUILD_TYPE + "/" + USERS_NODE_NAME;
     private DatabaseReference mDatabase;
     private ExecutorService executorService;
 
@@ -32,15 +35,19 @@ public class FeedbackDatabaseWriter {
     }
 
     private void writeNewFeedback(FeedbackRecord feedbackRecord) {
-        // Create new inference record at /inferences/$inference-id
-        Map<String, Object> childUpdates = new HashMap<>();
-        //Update the inferencing
-        String feedbackKey = mDatabase.child(FEEDBACK_DB_ROOT).push().getKey();
-        DobbyLog.i("feedback key: " + feedbackKey);
-        Map<String, Object> feedbackValues = feedbackRecord.toMap();
-        childUpdates.put("/" + FEEDBACK_DB_ROOT + "/" + feedbackKey, feedbackValues);
-        mDatabase.child(FEEDBACK_DB_ROOT).child(feedbackKey).addValueEventListener(feedbackPostListener);
-        mDatabase.updateChildren(childUpdates);
+        String userKey;
+        if (feedbackRecord.uid != null) {
+            userKey = feedbackRecord.uid;
+        } else {
+            userKey = mDatabase.child(USERS_DB_ROOT).push().getKey();
+        }
+        String feedbackKey = mDatabase.child(USERS_NODE_NAME).child(userKey).child(FEEDBACK_NODE_NAME).push().getKey();
+        Map<String, Object> inferenceValues = feedbackRecord.toMap();
+        DobbyLog.i("Failure key: " + feedbackKey);
+        Map<String, Object> userUpdates = new HashMap<>();
+        userUpdates.put("/" + USERS_DB_ROOT + "/" + userKey + "/" + FEEDBACK_NODE_NAME + "/" + feedbackKey , inferenceValues);
+        mDatabase.child(USERS_DB_ROOT).child(userKey).child(FEEDBACK_NODE_NAME).child(feedbackKey).addValueEventListener(feedbackListener);
+        mDatabase.updateChildren(userUpdates);
     }
 
     public void writeFeedbackToDatabase(final FeedbackRecord feedbackRecord) {
@@ -52,7 +59,8 @@ public class FeedbackDatabaseWriter {
         });
     }
 
-    private ValueEventListener feedbackPostListener = new ValueEventListener() {
+
+    private ValueEventListener feedbackListener = new ValueEventListener() {
         @Override
         public void onDataChange(DataSnapshot dataSnapshot) {
             final DataSnapshot snapshot = dataSnapshot;

@@ -1,10 +1,8 @@
 import os
+from collections import OrderedDict
 from flask import Flask, send_from_directory, make_response, render_template
 from functools import update_wrapper
 app = Flask(__name__)
-
-#PATH_PREFIX='/home/vivek/Work/dobby-android/Dobby/app/build/spoon/wifidoc/debug/'
-PATH_PREFIX='/home/vivek/Work/dobby-android/server/spoon/'
 
 def nocache(f):
     def new_func(*args, **kwargs):
@@ -22,21 +20,22 @@ def generate_link_map(input_path):
 		for api in list_of_apis:
 			link_key = flavor + api
 			link_map[link_key] = os.path.join(flavor, api, 'index.html')
-	return link_map
+    sorted_link_map = OrderedDict(sorted(link_map.items(), key=lambda t: t[0]))
+	return sorted_link_map
 	
 
 @app.route('/')
 @nocache
 def index_file():
-	link_map = generate_link_map(PATH_PREFIX)
-	print ("Link map is {0}".format(link_map))
+	path_prefix = os.path.join(os.getcwd(), 'spoon')
+	link_map = generate_link_map(path_prefix)
+	#print ("Link map is {0}".format(link_map))
 	return render_template('main.html', link_map=link_map)
 
 @app.route('/<string:flavor>/<int:api>/<path:filename>')
 @nocache
 def serve_static(flavor, api, filename):
-	print ("Returning {0} from {1}".format(filename, PATH_PREFIX + filename))
-	input_dir_to_use = os.path.join(PATH_PREFIX, flavor, str(api))	
+	input_dir_to_use = os.path.join(os.getcwd(), 'spoon', flavor, str(api))	
 	return send_from_directory(input_dir_to_use, filename)
 
 

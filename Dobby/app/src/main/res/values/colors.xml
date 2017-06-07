@@ -31,7 +31,11 @@
     <color name="flat_pressed">#66999999</color>
     <color name="lessDarkGray2HalfOpaque">#A0A0A0A0</color>
 
+    <color name="basicWhite">#ffffff</color>
+
+
     <!-- blue colors for WifiExpert -->
+    <color name="lightBlue">#4da6ff</color>
     <color name="lightBlue00">#99d6ff</color>
     <color name="lighterBlue00">#e6f2ff</color>
     <color name="soberDarkBlue">#0066cc</color>

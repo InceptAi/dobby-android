@@ -44,14 +44,16 @@ before_install:
     - mkdir ../Keystore
     - cp dummy-keystore.properties ../Keystore/wifidoc-keystore.properties
     - cp dummy-keystore.jks ../Keystore/
+    - cp dummy-keystore.properties ../Keystore/wifiexpert-keystore.properties
     - cd Dobby; ./gradlew dependencies || true
 
-before_script:
-     - echo no | android create avd --force -n test -t android-19 --abi armeabi-v7a
-     - emulator -avd test -no-audio -no-window &
-     - ../scripts/wait-for-emulator.sh
-     - adb shell input keyevent 82 &
+#before_script:
+#     - echo no | android create avd --force -n test -t android-19 --abi armeabi-v7a
+#     - emulator -avd test -no-audio -no-window &
+#     - ../scripts/wait-for-emulator.sh
+#     - adb shell input keyevent 82 &
  
 script:
-   - ./gradlew clean build assembleDebug connectedWifiDocDebugAndroidTest
+#   - ./gradlew clean build assembleDebug connectedWifiDocDebugAndroidTest
+   - ./gradlew clean build assembleDebug
 

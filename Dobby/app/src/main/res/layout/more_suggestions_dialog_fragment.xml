@@ -10,20 +10,20 @@
         android:layout_height="wrap_content"
         android:gravity="bottom"
         android:orientation="horizontal">
-
+<!--
         <ImageView
             android:id="@+id/wifi_doc_icon"
             android:layout_width="28dp"
             android:layout_height="28dp"
             android:layout_margin="10dp"
             android:src="@mipmap/wifi_doc_launcher" />
-
+-->
         <TextView
             android:layout_width="match_parent"
-            android:text="Summary and suggestions"
+            android:text="Summary and suggestions (last test)"
             android:textSize="16sp"
-            android:gravity="center_vertical"
-            android:layout_gravity="center_vertical"
+            android:gravity="center"
+            android:layout_gravity="center"
             android:fontFamily="sans-serif-condensed-thin"
             android:textColor="@android:color/holo_blue_dark"
             android:layout_height="wrap_content" />

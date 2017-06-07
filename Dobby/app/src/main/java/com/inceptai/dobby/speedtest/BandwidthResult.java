@@ -10,7 +10,7 @@ public class BandwidthResult {
 
     private BandwidthStats uploadStats;
     private BandwidthStats downloadStats;
-    @BandwithTestCodes.TestMode
+    @BandwidthTestCodes.TestMode
     private int testMode;
 
     public BandwidthResult(int testMode) {
