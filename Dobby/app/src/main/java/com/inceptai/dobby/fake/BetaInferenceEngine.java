@@ -10,6 +10,8 @@ import com.inceptai.dobby.ai.DataInterpreter;
 import com.inceptai.dobby.ai.suggest.LocalSummary;
 import com.inceptai.dobby.ai.suggest.NewSuggestions;
 
+import static com.inceptai.dobby.utils.Utils.EMPTY_STRING;
+
 /**
  * This does real inferencing but using the new suggestions. We use this in a special test mode to
  * build the new suggestions.
@@ -30,7 +32,7 @@ public class BetaInferenceEngine {
     }
 
     public void setBandwidth(double upload, double download) {
-        bandwidthGrade = DataInterpreter.interpret(download, upload, FAKE_ISP, FAKE_EXTERNAL_IP, 0);
+        bandwidthGrade = DataInterpreter.interpret(download, upload, FAKE_ISP, FAKE_EXTERNAL_IP, 0.0, 0.0, EMPTY_STRING, EMPTY_STRING, 0.0, 0);
     }
 
     LocalSummary doInference(Context context) {

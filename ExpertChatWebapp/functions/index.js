@@ -11,7 +11,7 @@ const admin = require('firebase-admin');
 admin.initializeApp(functions.config().firebase);
 
 
-functions.database.ref('/notifications/messages/{pushId}')
+exports.sendNotification = functions.database.ref('/notifications/messages/{pushId}')
   .onWrite(event => {
 
     const message = event.data.current.val();

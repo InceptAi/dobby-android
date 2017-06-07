@@ -17,8 +17,7 @@ import android.widget.ImageView;
 
 import com.google.common.net.InetAddresses;
 import com.google.gson.Gson;
-import com.inceptai.dobby.ai.DataInterpreter;
-import com.inceptai.dobby.speedtest.BandwithTestCodes;
+import com.inceptai.dobby.speedtest.BandwidthTestCodes;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
