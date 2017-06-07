@@ -21,6 +21,7 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, UserSelectionFragment.OnUserSelected {
 
     private String selectedUserId = EMPTY_STRING;
+    private String selectedFlavor = EMPTY_STRING;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +38,13 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        selectedFlavor = Utils.readSharedSetting(this, Utils.SELECTED_FLAVOR, EMPTY_STRING);
+        selectedUserId = Utils.readSharedSetting(this, Utils.SELECTED_USER_UUID, EMPTY_STRING);
     }
 
     @Override
@@ -106,7 +114,7 @@ public class MainActivity extends AppCompatActivity
             UserSelectionFragment fragment = (UserSelectionFragment) setupFragment(UserSelectionFragment.class,
                     UserSelectionFragment.FRAGMENT_TAG, UserSelectionFragment.getArgumentBundle(selectedUserId));
         } else if (id == R.id.nav_user_chat) {
-            showChatFragment(selectedUserId);
+            showChatFragment(selectedUserId, selectedFlavor);
         } else if (id == R.id.nav_settings) {
 
         } else if (id == R.id.nav_stats) {
@@ -118,16 +126,25 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    private void showChatFragment(String userId) {
+    private void showChatFragment(String userId, String flavor) {
         ChatFragment fragment = (ChatFragment) setupFragment(ChatFragment.class,
-                ChatFragment.FRAGMENT_TAG, ChatFragment.getArgumentBundle(userId));
+                ChatFragment.FRAGMENT_TAG, ChatFragment.getArgumentBundle(userId, flavor));
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (!selectedFlavor.isEmpty()) {
+            Utils.saveSharedSetting(this, Utils.SELECTED_FLAVOR, selectedFlavor);
+        }
+        if (!selectedUserId.isEmpty()) {
+            Utils.saveSharedSetting(this, Utils.SELECTED_USER_UUID, selectedUserId);
+        }
     }
 
     @Override
     public void onUserSelected(String userId) {
         selectedUserId = userId;
-        Intent intent = new Intent(this, ExpertChatActivity.class);
-        intent.putExtra(ExpertChatActivity.UUID_EXTRA, userId);
-        startActivity(intent);
+        showChatFragment(userId, selectedFlavor);
     }
 }

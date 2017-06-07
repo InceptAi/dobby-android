@@ -24,7 +24,6 @@
             </intent-filter>
         </service>
 
-        <activity android:name=".ExpertChatActivity" />
         <activity
             android:name=".MainActivity"
             android:label="@string/title_activity_main"

@@ -13,6 +13,8 @@ public class Utils {
     public static final String DEFAULT_EXPERT_AVATAR = "Jack";
     public static final String TAG = "ExpertChat";
     public static final String EMPTY_STRING = "";
+    public static final String SELECTED_FLAVOR = "flavor";
+    public static final String SELECTED_USER_UUID = "userUuid";
 
     private Utils() {}
 

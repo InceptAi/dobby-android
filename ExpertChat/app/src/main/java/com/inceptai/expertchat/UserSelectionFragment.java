@@ -131,7 +131,7 @@ public class UserSelectionFragment extends Fragment implements ChildEventListene
     public void onResume() {
         super.onResume();
         arrayAdapter.clear();
-        mFirebaseDatabaseReference = FirebaseDatabase.getInstance().getReference().child(ExpertChatActivity.CHAT_ROOM_CHILD_BASE_WIFI_TESTER);
+        mFirebaseDatabaseReference = FirebaseDatabase.getInstance().getReference().child(ChatFragment.CHAT_ROOM_CHILD_BASE_WIFI_TESTER);
         mFirebaseDatabaseReference.addChildEventListener(this);
     }
 
