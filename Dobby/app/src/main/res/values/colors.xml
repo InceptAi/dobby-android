@@ -11,6 +11,7 @@
     <color name="orangeLighter">#ffe0cc</color>
 
     <color name="basicGreen">#33cc33</color>
+    <color name="soberMildGreen">#2eb82e</color>
     <color name="greenForCheckIcons">#1AB408</color>
     <color name="lightGreen1">#33ff33</color>
     <color name="whiteGreen">#e6ffe6</color>
@@ -37,4 +38,6 @@
     <color name="lightBlue">#4da6ff</color>
     <color name="lightBlue00">#99d6ff</color>
     <color name="lighterBlue00">#e6f2ff</color>
+    <color name="soberDarkBlue">#0066cc</color>
+    <color name="soberMildBlue">#008ae6</color>
 </resources>

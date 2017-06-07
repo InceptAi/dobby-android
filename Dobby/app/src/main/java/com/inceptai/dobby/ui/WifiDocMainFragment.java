@@ -7,6 +7,7 @@ import android.animation.ObjectAnimator;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
@@ -17,21 +18,20 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.UiThread;
 import android.support.constraint.ConstraintLayout;
-import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
-import android.support.v4.view.animation.FastOutSlowInInterpolator;
+import android.support.v4.app.ShareCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.CardView;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -50,6 +50,7 @@ import com.inceptai.dobby.speedtest.NewBandwidthAnalyzer;
 import com.inceptai.dobby.speedtest.ServerInformation;
 import com.inceptai.dobby.speedtest.SpeedTestConfig;
 import com.inceptai.dobby.utils.DobbyLog;
+import com.inceptai.dobby.utils.HtmlReportGenerator;
 import com.inceptai.dobby.utils.Utils;
 import com.inceptai.dobby.DobbyAnalytics;
 
@@ -58,9 +59,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import javax.inject.Inject;
-
-import uk.co.samuelwall.materialtaptargetprompt.BuildConfig;
-import uk.co.samuelwall.materialtaptargetprompt.MaterialTapTargetPrompt;
 
 import static com.inceptai.dobby.ai.DataInterpreter.MetricType.ABYSMAL;
 import static com.inceptai.dobby.ai.DataInterpreter.MetricType.AVERAGE;
@@ -104,8 +102,14 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
     private OnFragmentInteractionListener mListener;
 
-    private FloatingActionButton mainFab;
     private BottomDialog bottomDialog;
+    private FrameLayout runTestsFl;
+    private FrameLayout aboutFl;
+    private FrameLayout feedbackFl;
+    private FrameLayout leaderboardFl;
+    private FrameLayout shareFl;
+    private LinearLayout bottomButtonBarLl;
+    private FrameLayout expertChatFl;
 
     private CircularGauge downloadCircularGauge;
     private TextView downloadGaugeTv;
@@ -143,11 +147,6 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private TextView routerIpTv;
     private TextView ispNameTv;
 
-    private TextView suggestionsValueTv;
-
-    private LinearLayout aboutLayout;
-    private LinearLayout feedbackLayout;
-
     private String statusMessage;
     private String mParam1;
     private DobbyEventBus eventBus;
@@ -157,7 +156,15 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private boolean pauseHandler;
 
     private SuggestionCreator.Suggestion currentSuggestion;
-    MaterialTapTargetPrompt fabPrompt;
+
+    private String testServerLocation = Utils.UNKNOWN;
+    private String testServerLatencyMs = Utils.UNKNOWN;
+    private String ispNameString = Utils.UNKNOWN;
+    private String routerIpString = Utils.UNKNOWN;
+    private double downloadBw;
+    private double uploadBw;
+    private DataInterpreter.PingGrade pingGrade;
+    private DataInterpreter.WifiGrade wifiGrade;
 
     @Inject
     DobbyAnalytics dobbyAnalytics;
@@ -203,11 +210,10 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                              Bundle savedInstanceState) {
         handler = new Handler(this);
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_wifi_doc_main_2, container, false);
+        View view = inflater.inflate(R.layout.fragment_wifi_doc_main_3, container, false);
 
         fetchViewInstances(view);
         resetData();
-        showTapOnboarding(view);
         // requestPermissions();
         uiStateVisibilityChanges(view);
         dobbyAnalytics.wifiDocFragmentEntered();
@@ -234,40 +240,6 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         }
     }
 
-    private void showTapOnboarding(View rootView) {
-        fabPrompt = new MaterialTapTargetPrompt.Builder(getActivity())
-                .setTarget(rootView.findViewById(R.id.main_fab_button))
-                .setFocalToTextPadding(R.dimen.dp40)
-                .setPrimaryText(R.string.tap_anim_run_tests)
-                .setSecondaryText(R.string.tap_anim_run_tests_long_msg)
-                .setAnimationInterpolator(new FastOutSlowInInterpolator())
-                .setBackgroundColourFromRes(R.color.orangeMediumLight1)
-                .setOnHidePromptListener(new MaterialTapTargetPrompt.OnHidePromptListener()
-                {
-                    @Override
-                    public void onHidePrompt(MotionEvent event, boolean tappedTarget)
-                    {
-                        fabPrompt = null;
-                        //Do something such as storing a value so that this prompt is never shown again
-                    }
-
-                    @Override
-                    public void onHidePromptComplete()
-                    {
-                        // Run tests.
-                    }
-                })
-                .create();
-        if (!BuildConfig.DEBUG) {
-            fabPrompt.show();
-        }
-    }
-
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
-    }
 
     @Override
     public void onAttach(Context context) {
@@ -437,7 +409,12 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         if (getBwTestState() == BW_SERVER_INFO_FETCHED) {
             // showStatusMessageAsync("Closest server in " + bestServer.name + " has a latency of " + String.format("%.2f", bestServer.latencyMs) + " ms.");
             String constructedMessage = getResources().getString(R.string.status_found_closest_server, bestServer.name, bestServer.latencyMs);
+
             showStatusMessageAsync(constructedMessage);
+        }
+        if (bestServer.name != null) {
+            testServerLocation = bestServer.name;
+            testServerLatencyMs = Utils.doubleToString(bestServer.latencyMs);
         }
         setBwTestState(BW_BEST_SERVER_DETERMINED);
         DobbyLog.v("WifiDoc: Best server");
@@ -449,6 +426,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         if (testMode == BandwidthTestCodes.TestMode.UPLOAD) {
             showStatusMessageAsync(R.string.status_finished_bw_tests);
             sendSwitchStateMessage(UI_STATE_READY_WITH_RESULTS);
+            uploadBw = stats.getOverallBandwidth();
+        } else {
+            downloadBw = stats.getOverallBandwidth();
         }
     }
 
@@ -519,6 +499,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
     private void showWifiResults(DataInterpreter.WifiGrade wifiGrade) {
         if (wifiGrade != null) {
+            this.wifiGrade = wifiGrade;
             dobbyAnalytics.wifiGrade(wifiGrade);
         }
         String ssid = wifiGrade.getPrimaryApSsid();
@@ -541,6 +522,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             DobbyLog.e("Fragment not attached to any activity.");
             return;
         }
+        this.pingGrade = pingGrade;
+
         dobbyAnalytics.pingGrade(pingGrade);
         setPingResult(pingRouterValueTv, String.format("%02.1f", pingGrade.getRouterLatencyMs()),
                 pingRouterGradeIv, pingGrade.getRouterLatencyMetric());
@@ -579,6 +562,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             return;
         }
         ispNameTv.setText(suggestion.getIsp());
+        ispNameString = suggestion.getIsp();
+        routerIpString = suggestion.getExternalIp();
         routerIpTv.setText(suggestion.getExternalIp());
         if (suggestion == null) {
             DobbyLog.w("Null suggestion received from eventbus.");
@@ -609,8 +594,43 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     }
 
     private void fetchViewInstances(View rootView) {
-        mainFab = (FloatingActionButton) rootView.findViewById(R.id.main_fab_button);
-        mainFab.setOnClickListener(this);
+        runTestsFl = (FrameLayout) rootView.findViewById(R.id.bottom_run_tests_fl);
+        runTestsFl.setOnClickListener(this);
+
+        shareFl = (FrameLayout) rootView.findViewById(R.id.button_top_left_fl);
+        leaderboardFl = (FrameLayout) rootView.findViewById(R.id.button_top_right_fl);
+        aboutFl = (FrameLayout) rootView.findViewById(R.id.button_bottom_left_fl);
+        feedbackFl = (FrameLayout) rootView.findViewById(R.id.button_bottom_right_fl);
+        feedbackFl.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showFeedbackForm();
+            }
+        });
+
+        aboutFl.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showAboutAndPrivacyPolicy();
+            }
+        });
+
+        shareFl.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                shareResults();
+            }
+        });
+
+        expertChatFl = (FrameLayout) rootView.findViewById(R.id.contact_expert_fl);
+        expertChatFl.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(getContext(), ExpertChatActivity.class));
+            }
+        });
+
+        bottomButtonBarLl = (LinearLayout) rootView.findViewById(R.id.bottom_button_bar);
 
         yourNetworkCv = (CardView) rootView.findViewById(R.id.net_cardview);
         pingCv = (CardView) rootView.findViewById(R.id.ping_cardview);
@@ -660,24 +680,6 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         routerIpTv = (TextView) rootView.findViewById(R.id.router_ip_tv);
 
         statusTv = (TextView) rootView.findViewById(R.id.status_tv);
-
-        aboutLayout = (LinearLayout) rootView.findViewById(R.id.about_ll);
-        feedbackLayout = (LinearLayout) rootView.findViewById(R.id.feedback_ll);
-        aboutLayout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showAboutAndPrivacyPolicy();
-            }
-        });
-
-        feedbackLayout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showFeedbackForm();
-            }
-        });
-
-        // suggestionsValueTv = (TextView)rootView.findViewById(R.id.suggestion_value_tv);
     }
 
     private void updateBandwidthGauge(Message msg) {
@@ -842,7 +844,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     }
 
     private BottomDialog createBottomDialog() {
-        BottomDialog dialog = new BottomDialog(getContext(), getView());
+        BottomDialog dialog = new BottomDialog(getContext(), getView(), bottomButtonBarLl);
         dialog.show();
         return dialog;
     }
@@ -890,17 +892,15 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         private View rootView;
         private Context context;
         private ConstraintLayout rootLayout;
-        private FloatingActionButton fab;
-        private RelativeLayout bottomToolbar;
         private int mode = MODE_STATUS;
         private boolean isVisible = false;
         private double finalTargetY =-1.0;
+        private LinearLayout bottomButtonBar;
 
-        BottomDialog(final Context context, View parentView) {
+        BottomDialog(final Context context, View parentView, LinearLayout bottomButtonBar) {
             this.context = context;
             rootLayout = (ConstraintLayout) parentView.findViewById(R.id.root_constraint_layout);
-            bottomToolbar = (RelativeLayout) parentView.findViewById(R.id.bottom_toolbar_rl);
-            fab = (FloatingActionButton) parentView.findViewById(R.id.main_fab_button);
+            this.bottomButtonBar = bottomButtonBar;
             rootView = parentView.findViewById(R.id.bottom_dialog_inc);
             vIcon = (ImageView) rootView.findViewById(R.id.bottomDialog_icon);
             vTitle = (TextView) rootView.findViewById(R.id.bottomDialog_title);
@@ -944,8 +944,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             vNegative.setVisibility(View.VISIBLE);
             vNegative.setText(R.string.cancel_button);
             vNegative.setTag(TAG_CANCEL_BUTTON);
-            fab.setVisibility(View.INVISIBLE);
-            bottomToolbar.setVisibility(View.INVISIBLE);
+            bottomButtonBar.setVisibility(View.INVISIBLE);
             rootLayout.requestLayout();
             pauseHandler();
             isVisible = true;
@@ -1065,8 +1064,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
         void dismissAndShowCanonicalViews() {
             rootView.setVisibility(View.INVISIBLE);
-            fab.setVisibility(View.VISIBLE);
-            bottomToolbar.setVisibility(View.VISIBLE);
+            bottomButtonBar.setVisibility(View.VISIBLE);
             isVisible = false;
         }
 
@@ -1122,4 +1120,19 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         sendSwitchStateMessage(UI_STATE_INIT_AND_READY);
         resetData();
     }
- }
+
+    private void shareResults() {
+        if (uiState != UI_STATE_READY_WITH_RESULTS) {
+            Snackbar.make(getView(), "No results available for sharing !", Snackbar.LENGTH_SHORT).show();
+            return;
+        }
+        String htmlText = HtmlReportGenerator.createHtmlFor(getContext(), testServerLocation, testServerLatencyMs,
+                routerIpString, ispNameString, uploadBw, downloadBw,  pingGrade, wifiGrade);
+        Intent shareIntent = ShareCompat.IntentBuilder.from(getActivity())
+                .setType("text/html")
+                .setHtmlText(htmlText)
+                .setSubject("Speed test results by WifiTester.")
+                .getIntent();
+        startActivity(shareIntent);
+    }
+}

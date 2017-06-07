@@ -44,7 +44,9 @@
         <item name="windowNoTitle">true</item>
     </style>
 
-    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
+        <item name="windowNoTitle">false</item>
+    </style>
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
@@ -95,5 +97,11 @@
         <item name="android:layout_marginLeft">@dimen/btn_margin</item>
         <item name="android:layout_marginRight">@dimen/btn_margin</item>
     </style>
+
+    <style name="MyLargeImageButton.Base" parent="Base.TextAppearance.AppCompat.Button">
+        <item name="android:focusable">true</item>
+        <item name="android:clickable">true</item>
+    </style>
+
 
 </resources>
