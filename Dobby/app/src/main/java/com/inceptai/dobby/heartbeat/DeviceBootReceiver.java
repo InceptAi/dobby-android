@@ -3,7 +3,6 @@ package com.inceptai.dobby.heartbeat;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.widget.Toast;
 
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.utils.DobbyLog;
@@ -23,7 +22,7 @@ public class DeviceBootReceiver extends BroadcastReceiver {
         if (intent.getAction().equals("android.intent.action.BOOT_COMPLETED")) {
             heartBeatManager.setAlarm(context);
             DobbyLog.v("Setting the alarm from boot");
-            Toast.makeText(context, "Alarm Set", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(context, "Alarm Set", Toast.LENGTH_SHORT).show();
         }
     }
 }

@@ -24,11 +24,6 @@ public class HeartBeatManager {
     static final String LAST_HEARTBEAT_TIMESTAMP_MS = "LAST_HEART_BEAT_TS_MS";
     private static final long DAILY_HEARTBEAT_INTERVAL_MS = AlarmManager.INTERVAL_DAY;
     private PendingIntent pendingIntent;
-    //private static final int ALARM_RECEIVER_UNREGISTERED = 0;
-    //private static final int ALARM_RECEIVER_REGISTERED = 1;
-    //private int alaramReceiverState = ALARM_RECEIVER_UNREGISTERED;
-    //private AlarmReceiver alarmReceiver;
-    //static final String USER_ID = "UID";
 
     private AlarmManager alarmMgr;
 
