@@ -27,8 +27,6 @@ import com.google.firebase.database.FirebaseDatabase;
 
 public class ChatFragment extends Fragment {
     public static final String FRAGMENT_TAG = "ChatFragment";
-    public static final String CHAT_ROOM_CHILD_BASE_DOBBY = "dobby_chat_rooms";
-    public static final String CHAT_ROOM_CHILD_BASE_WIFI_TESTER = "wifitester_chat_rooms";
     public static final String CHAT_ROOM_SUFFIX = "_chat_rooms";
 
 

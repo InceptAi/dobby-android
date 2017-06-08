@@ -40,6 +40,7 @@ public class MainActivity extends AppCompatActivity
     private String mPhotoUrl;
     private GoogleApiClient mGoogleApiClient;
     private DrawerLayout drawerLayout;
+    private NavigationView  navigationView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,7 +77,7 @@ public class MainActivity extends AppCompatActivity
         drawerLayout.setDrawerListener(toggle);
         toggle.syncState();
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         if (mUsername != null) {
             Snackbar.make(drawerLayout, "Welcome " + mUsername, Snackbar.LENGTH_SHORT).show();
@@ -157,7 +158,7 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_user_chat) {
             showChatFragment(selectedUserId, selectedFlavor, selectedBuildType);
         } else if (id == R.id.nav_settings) {
-
+            showPreferenceFragment();
         } else if (id == R.id.nav_stats) {
 
         }
@@ -177,6 +178,10 @@ public class MainActivity extends AppCompatActivity
                 UserSelectionFragment.FRAGMENT_TAG, UserSelectionFragment.getArgumentBundle(userId, flavor, buildType));
     }
 
+    private void showPreferenceFragment() {
+        PreferenceFragment fragment = (PreferenceFragment) setupFragment(PreferenceFragment.class, PreferenceFragment.FRAGMENT_TAG, null);
+    }
+
     @Override
     protected void onPause() {
         super.onPause();
@@ -192,6 +197,7 @@ public class MainActivity extends AppCompatActivity
     public void onUserSelected(String userId) {
         selectedUserId = userId;
         showChatFragment(userId, selectedFlavor, selectedBuildType);
+        navigationView.setCheckedItem(R.id.nav_user_chat);
     }
 
     @Override

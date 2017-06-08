@@ -22,6 +22,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +37,7 @@ public class UserSelectionFragment extends Fragment implements ChildEventListene
     private String selectedUserId;
     private String flavor;
     private String buildType;
+    private String chatRoomBase;
 
     private ProgressBar progressBar;
     private DatabaseReference mFirebaseDatabaseReference;
@@ -89,6 +91,7 @@ public class UserSelectionFragment extends Fragment implements ChildEventListene
             selectedUserId = getArguments().getString(SELECTED_USERID);
             flavor = getArguments().getString(FLAVOR);
             buildType = getArguments().getString(BUILD_TYPE);
+            chatRoomBase = flavor + ChatFragment.CHAT_ROOM_SUFFIX + "/" + buildType + "/";
         }
     }
 
@@ -139,14 +142,31 @@ public class UserSelectionFragment extends Fragment implements ChildEventListene
     public void onResume() {
         super.onResume();
         arrayAdapter.clear();
-        mFirebaseDatabaseReference = FirebaseDatabase.getInstance().getReference().child(ChatFragment.CHAT_ROOM_CHILD_BASE_WIFI_TESTER);
+        mFirebaseDatabaseReference = FirebaseDatabase.getInstance().getReference().child(chatRoomBase);
         mFirebaseDatabaseReference.addChildEventListener(this);
+        mFirebaseDatabaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot == null) {
+                    noUserChatsFound();
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
 
     @Override
     public void onStop() {
         mFirebaseDatabaseReference.removeEventListener(this);
         super.onStop();
+    }
+
+    private void noUserChatsFound() {
+        progressBar.setVisibility(View.GONE);
     }
 
     public interface OnUserSelected {
