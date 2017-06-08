@@ -51,5 +51,5 @@ exports.sendNotification = functions.database.ref('/notifications/messages/{push
         .catch(function (error) {
             console.log("Error sending message:", error);
         });
-    }
+    });
 });
