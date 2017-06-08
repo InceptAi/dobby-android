@@ -96,7 +96,7 @@ public class ChatFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_expert_chat, container, true);
+        View rootView = inflater.inflate(R.layout.fragment_expert_chat, container, false);
         setup(rootView);
         return rootView;
     }

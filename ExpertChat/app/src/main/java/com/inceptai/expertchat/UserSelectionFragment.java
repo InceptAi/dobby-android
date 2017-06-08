@@ -96,7 +96,7 @@ public class UserSelectionFragment extends Fragment implements ChildEventListene
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        View rootView = inflater.inflate(R.layout.fragment_user_selection, container, true);
+        View rootView = inflater.inflate(R.layout.fragment_user_selection, container, false);
         progressBar = (ProgressBar) rootView.findViewById(R.id.mainProgressBar);
         roomListView = (ListView) rootView.findViewById(R.id.mainListView);
         arrayAdapter = new RoomArrayAdapter(getContext(), android.R.layout.simple_list_item_1, android.R.id.text1, new ArrayList<String>(), selectedUserId);
