@@ -100,6 +100,7 @@
     <string name="status_found_closest_server" formatted="false">Closest server in %1%s has a latency of %2$.2f ms.</string>
     <string name="expert_chat_title">Chat with an Expert</string>
     <string name="feedback_button_title">Feedback</string>
+    <string name="leaderboard_button_title">Leaderboard</string>
     <string name="about_button_title">About</string>
     <string name="wifi_expert_name">Wifi Expert</string>
     <string name="bandwidth_card_view_message">Here is how your current bandwidth looks like: </string>

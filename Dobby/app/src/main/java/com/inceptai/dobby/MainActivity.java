@@ -206,10 +206,12 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.about_wifi_expert) {
             showAboutAndPrivacyPolicy();
         } else if (id == R.id.feedback_wifi_expert) {
-            //showFeedbackForm();
-            Toast.makeText(this, "Leaderboard info...", Toast.LENGTH_SHORT).show();
+            showFeedbackForm();
+        } else if (id == R.id.leaderboard_wifi_expert) {
+            Toast.makeText(this, "Fetching Leaderboard info ...", Toast.LENGTH_SHORT).show();
             setupLeaderBoardFragment();
         }
+
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);

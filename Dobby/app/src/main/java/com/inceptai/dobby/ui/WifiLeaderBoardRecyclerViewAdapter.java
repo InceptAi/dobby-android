@@ -37,11 +37,9 @@ public class WifiLeaderBoardRecyclerViewAdapter extends RecyclerView.Adapter<Wif
     public void onBindViewHolder(final ViewHolder holder, int position) {
         DobbyLog.i("onBindViewHolder: " + position);
         holder.mItem = mValues.get(position);
-        //holder.mRankView.setText(String.valueOf(mValues.get(position).getRank()));
         holder.mRankView.setText(String.valueOf(position + 1));
         holder.mHandleView.setText(String.valueOf(mValues.get(position).getHandle()));
         holder.mSpeedView.setText(String.format("%.2f Mbps", mValues.get(position).getSpeed()));
-        //holder.mSpeedView.setText(String.valueOf(mValues.get(position).getSpeed()));
     }
 
     @Override
