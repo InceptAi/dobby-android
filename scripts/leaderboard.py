@@ -7,6 +7,8 @@ import json
 import urllib
 import xkcdpass.xkcd_password as xp
 import random
+import jsonpickle
+from collections import OrderedDict
 from optparse import OptionParser
 __author__ = """\n""".join(['Vivek Shrivastava (vivek@obiai.tech)'])
 
@@ -52,16 +54,15 @@ class InferenceRecord(object):
 
 class LeaderBoardInfo(object):
     def __init__(self, speed, handle, uid, inference_id):
-		self.speed = speed
-		self.handle = handle
-		self.uid = uid
-		self.inference_id = inference_id
-                #self.key = str(round(speed,2)) + "_" + handle
-                self.key = format_speed(speed) + "_" + handle
+        self.speed = speed
+        self.handle = handle
+        self.uid = uid
+        self.inference_id = inference_id
+        self.key = format_speed(speed) + "_" + handle
 
     def __str__(self):
-        return self.key
-        #return json.dumps(self.__dict__)
+        #return self.key
+        return json.dumps(self.__dict__)
 
     def __repr__(self):
         return self.__str__()
@@ -87,7 +88,7 @@ def generate_random_number(chance):
 
 def generate_random_username():
     words = xp.locate_wordfile()
-    mywords = xp.generate_wordlist(wordfile=words, min_length=5, max_length=8)
+    mywords = xp.generate_wordlist(wordfile=words, min_length=5, max_length=8, valid_chars='[a-z]')
     raw_password = xp.generate_xkcdpassword(mywords, numwords=1)
     capitalized_password = random_capitalisation(raw_password, 1/10.0)
     number_prefix = generate_random_number(5/10.0)
@@ -104,7 +105,8 @@ def generate_handle(user_id, random_handle=False):
 
 def format_speed(speed):
     #return str(round(speed,2)).rjust(6, '0')
-    return ("%0.2f" % speed).rjust(6, '0')
+    speed_to_return = ("%0.2f" % speed).rjust(6, '0')
+    return speed_to_return.replace('.',':')
     
 def get_float_value(json_dict, key):
     if not json_dict or not key:
@@ -145,7 +147,10 @@ def parse_inference(inference_json_dict, inference_key):
     if USER_ID_TO_HANDLE.get(inference_record.uid) is None:
         USER_ID_TO_HANDLE[inference_record.uid] = generate_handle(inference_record.uid, ENABLE_RANDOM_USERNAMES) 
     #leaderboard_info = LeaderBoardInfo(speed=bandwidth_grade.downloadMbps, handle=inference_record.uid, uid=inference_record.uid, inference_id=inference_key)
-    leaderboard_info = LeaderBoardInfo(speed=bandwidth_grade.downloadMbps, handle=USER_ID_TO_HANDLE.get(inference_record.uid), uid=inference_record.uid, inference_id=inference_key)
+    if bandwidth_grade.downloadMbps > 0:
+        leaderboard_info = LeaderBoardInfo(speed=bandwidth_grade.downloadMbps, handle=USER_ID_TO_HANDLE.get(inference_record.uid), uid=inference_record.uid, inference_id=inference_key)
+    else:
+        leaderboard_info = None
     return leaderboard_info
 		
 def merge_two_dicts(x, y):
@@ -167,7 +172,8 @@ def parse_json(json_data_dict):
         else:
             for inference_key, inference_value in value.iteritems():
                 linfo = parse_inference(inference_json_dict=inference_value, inference_key=inference_key)
-                leaderboard_dict[linfo.key] = linfo
+                if linfo is not None:
+                    leaderboard_dict[linfo.key] = linfo
     return leaderboard_dict	
 
     
@@ -176,25 +182,58 @@ def fetch_data(database_url):
     #url = "https://dobbybackend.firebaseio.com/dobby/release/users/ac0ad728-c80a-4daf-8125-3ae5545e3d7f.json?print=pretty"
     response = urllib.urlopen(database_url)
     data = json.loads(response.read())
-    print data
+    #print data
     return data
 
+def write_leaderboard(leaderboard_dict, leaderboard_url):
+    leaderboard_data = jsonpickle.encode(leaderboard_dict, unpicklable=False)
+    r = requests.put(leaderboard_url, data=leaderboard_data)
+    print r.status_code
+    
+def iterate_over_dobby_inferences():
+    leaderboard_dict = {}
+    prefixes_to_iterate = ["wifidoc", "dobby", "inferences"]
+    base_url = "https://dobbybackend.firebaseio.com"
+    for prefix in prefixes_to_iterate:
+        url_to_fetch = base_url + "/" + prefix + ".json"
+        print ("processing url {0}".format(url_to_fetch))
+        json_dict = fetch_data(url_to_fetch)
+        leaderboard_dict =  merge_two_dicts(leaderboard_dict, parse_json(json_dict))
+    return leaderboard_dict
+
+	
 def main():
     default_url = "https://dobbybackend.firebaseio.com/dobby/release/users/ac0ad728-c80a-4daf-8125-3ae5545e3d7f.json?print=pretty"
+    default_leaderboard_url = "https://dobbybackend.firebaseio.com/leaderboard.json?print=pretty"
     op = OptionParser()
     op.add_option("-v", "--verbose", action="store_true", help="verbose", default=False)
+    op.add_option("-w", "--writetobackend", action="store_true", dest="write_to_backend", help="use -w to write to backend", default=False)
+    op.add_option("-a", "--fetchalldata", action="store_true", dest="fetch_all_data", help="Fetch all data for leaderboard (ignores database url, default false)", default=False)
+    op.add_option("-r", "--randomusers", action="store_false", dest="random_users_names", help="Gen randome user names", default=True)
     op.add_option("-u", "--dataurl", dest="database_url", help="Database url to crawl", default=default_url)
-    op.add_option("-m", "--maxusers", dest="max_users", help="Max users to crawl", default="10")
-    op.add_option("-r", "--randomusers", dest="random_users_names", help="Gen randome user names", default=True)
+    op.add_option("-l", "--leaderboardurl", dest="leaderboard_url", help="Leader board url", default=default_leaderboard_url)
+    op.add_option("-m", "--maxusers", dest="max_users", help="Max users in leaderboard", default="100")
     (opts, args) = op.parse_args()
-    if not opts.database_url:   # if database_url is not given
-        op.error('Database url is not given')
-    json_dict = fetch_data(opts.database_url)
-    leaderboard_dict =  parse_json(json_dict)
-    #for key, value in leaderboard_dict.iteritems():
-    for key in sorted(leaderboard_dict):
-        print key, leaderboard_dict[key]
-    #print leaderboard_dict
+	
+    if opts.fetch_all_data:
+        leaderboard_dict = iterate_over_dobby_inferences()
+    else:
+    	json_dict = fetch_data(opts.database_url)
+    	leaderboard_dict =  parse_json(json_dict)
+
+    #sorted_leaderboard_dict = OrderedDict(sorted(leaderboard_dict.items(), key=lambda t: t[0], reverse=True))
+    print "Dumping leaderboard dict"
+    sorted_leaderboard_dict = {}
+    user_count = 0
+    for key in sorted(leaderboard_dict, reverse=True):
+        user_count = user_count + 1
+        print user_count, key, leaderboard_dict[key]
+        sorted_leaderboard_dict[key] = leaderboard_dict[key]
+        if (user_count >= int(opts.max_users)):
+            break
+
+    if opts.write_to_backend:	
+        write_leaderboard(sorted_leaderboard_dict, opts.leaderboard_url)
 
 if __name__ == '__main__':
     main()
