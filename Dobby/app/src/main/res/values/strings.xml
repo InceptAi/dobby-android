@@ -107,4 +107,5 @@
     <string name="detailed_suggestion_tip">You can see the detailed suggestion anytime by typing `show details` or `last details` &#8230;</string>
     <string name="detailed_suggestion_not_available">We don\'t have any suggestions to show yet. Type `run tests` or `check wifi` to run tests and get suggestions for fixing your Wifi.</string>
     <string name="detailed_suggestion_status_message">Showing detailed summary.</string>
+    <string name="wifi_leaderboard">Wifi Leaderboard</string>
 </resources>
