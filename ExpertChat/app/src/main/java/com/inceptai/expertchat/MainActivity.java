@@ -116,7 +116,7 @@ public class MainActivity extends AppCompatActivity
         selectedUserId = Utils.readSharedSetting(this, Utils.SELECTED_USER_UUID, EMPTY_STRING);
         selectedBuildType = Utils.readSharedSetting(this, Utils.SELECTED_BUILD_TYPE, DEFAULT_BUILD_TYPE);
         if (respondToNotification) {
-            showChatFragment(selectedUserId, selectedFlavor, selectedBuildType);
+            showChatFragment();
             navigationView.setCheckedItem(R.id.nav_user_chat);
         }
         showWelcome(mPhotoUrl, mUsername);
@@ -141,7 +141,7 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private Fragment setupFragment(Class fragmentClass, String tag, Bundle args) {
+    private Fragment setupFragment(Class fragmentClass, String tag) {
         // Insert the fragment by replacing any existing fragment
         FragmentManager fragmentManager = getSupportFragmentManager();
         Fragment existingFragment = fragmentManager.findFragmentByTag(tag);
@@ -153,9 +153,6 @@ public class MainActivity extends AppCompatActivity
                 Log.e(Utils.TAG, "Unable to create fragment: " + fragmentClass.getCanonicalName());
                 return null;
             }
-        }
-        if (args != null) {
-            existingFragment.setArguments(args);
         }
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.replace(R.id.placeholder_fl,
@@ -216,9 +213,9 @@ public class MainActivity extends AppCompatActivity
 
         clearFrameLayout();
         if (id == R.id.nav_select_user) {
-            showUserSelectionFragment(selectedUserId, selectedFlavor, selectedBuildType);
+            showUserSelectionFragment();
         } else if (id == R.id.nav_user_chat) {
-            showChatFragment(selectedUserId, selectedFlavor, selectedBuildType);
+            showChatFragment();
         } else if (id == R.id.nav_settings) {
             showPreferenceFragment();
         } else if (id == R.id.nav_stats) {
@@ -230,18 +227,16 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    private void showChatFragment(String userId, String flavor, String buildType) {
-        ChatFragment fragment = (ChatFragment) setupFragment(ChatFragment.class,
-                ChatFragment.FRAGMENT_TAG, ChatFragment.getArgumentBundle(userId, flavor, buildType));
+    private void showChatFragment() {
+        ChatFragment fragment = (ChatFragment) setupFragment(ChatFragment.class, ChatFragment.FRAGMENT_TAG);
     }
 
-    private void showUserSelectionFragment(String userId, String flavor, String buildType) {
-        UserSelectionFragment fragment = (UserSelectionFragment) setupFragment(UserSelectionFragment.class,
-                UserSelectionFragment.FRAGMENT_TAG, UserSelectionFragment.getArgumentBundle(userId, flavor, buildType));
+    private void showUserSelectionFragment() {
+        UserSelectionFragment fragment = (UserSelectionFragment) setupFragment(UserSelectionFragment.class, UserSelectionFragment.FRAGMENT_TAG);
     }
 
     private void showPreferenceFragment() {
-        PreferenceFragment fragment = (PreferenceFragment) setupFragment(PreferenceFragment.class, PreferenceFragment.FRAGMENT_TAG, null);
+        PreferenceFragment fragment = (PreferenceFragment) setupFragment(PreferenceFragment.class, PreferenceFragment.FRAGMENT_TAG);
     }
 
     @Override
@@ -258,7 +253,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onUserSelected(String userId) {
         selectedUserId = userId;
-        showChatFragment(userId, selectedFlavor, selectedBuildType);
+        showChatFragment();
         navigationView.setCheckedItem(R.id.nav_user_chat);
         Utils.saveSharedSetting(this, Utils.SELECTED_USER_UUID, selectedUserId);
     }

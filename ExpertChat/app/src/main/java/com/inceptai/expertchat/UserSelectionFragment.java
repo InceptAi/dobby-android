@@ -75,23 +75,10 @@ public class UserSelectionFragment extends Fragment implements ChildEventListene
         // Required empty public constructor
     }
 
-    public static Bundle getArgumentBundle(String userUuid, String flavor, String buildType) {
-        Bundle args = new Bundle();
-        args.putString(SELECTED_USERID, userUuid);
-        args.putString(FLAVOR, flavor);
-        args.putString(BUILD_TYPE , buildType);
-        return args;
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         expertChatService = ExpertChatService.fetchInstance(getContext().getApplicationContext());
-        if (getArguments() != null) {
-            selectedUserId = getArguments().getString(SELECTED_USERID);
-            flavor = getArguments().getString(FLAVOR);
-            buildType = getArguments().getString(BUILD_TYPE);
-        }
     }
 
     @Override

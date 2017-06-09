@@ -73,22 +73,9 @@ public class ChatFragment extends Fragment {
         // Required empty public constructor
     }
 
-    public static Bundle getArgumentBundle(String userUuid, String flavor, String buildType) {
-        Bundle args = new Bundle();
-        args.putString(USER_UUID, userUuid);
-        args.putString(FLAVOR, flavor);
-        args.putString(BUILD_TYPE , buildType);
-        return args;
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            selectedUserUuid = getArguments().getString(USER_UUID);
-            flavor = getArguments().getString(FLAVOR);
-            buildType = getArguments().getString(BUILD_TYPE);
-        }
         service = ExpertChatService.fetchInstance(getActivity().getApplicationContext());
     }
 
@@ -163,7 +150,8 @@ public class ChatFragment extends Fragment {
 
     private void reloadData() {
         childPath = service.getUserChildPath(selectedUserUuid);
-        Log.i(Utils.TAG, "ChildPath: " + childPath);
+        Log.i(Utils.TAG, "Selected UUID: " + selectedUserUuid);
+        Log.i(Utils.TAG, "ChildPath for retrieving chat messages: " + childPath);
 
         mFirebaseAdapter = new FirebaseRecyclerAdapter<ExpertChat, MessageViewHolder>(
                 ExpertChat.class,
@@ -212,10 +200,6 @@ public class ChatFragment extends Fragment {
             }
         });
 
-
         mMessageRecyclerView.setAdapter(mFirebaseAdapter);
-
-
-
     }
 }

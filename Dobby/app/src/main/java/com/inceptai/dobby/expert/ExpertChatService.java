@@ -68,7 +68,6 @@ public class ExpertChatService implements ChildEventListener, ValueEventListener
         expertList = new ArrayList<>();
         DobbyLog.i("Using chat room ID: " + chatRoomPath);
         isChatEmpty = true;
-        initialize();
     }
 
     public static ExpertChatService fetchInstance(String userUuid) {
@@ -113,7 +112,7 @@ public class ExpertChatService implements ChildEventListener, ValueEventListener
         getChatReference().removeEventListener((ChildEventListener) this);
     }
     
-    private void initialize() {
+    public void fetchChatMessages() {
         DatabaseReference chatReference = getChatReference();
         chatReference.addChildEventListener(this);
         chatReference.addListenerForSingleValueEvent(this);

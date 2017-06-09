@@ -5,10 +5,13 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.support.v7.app.NotificationCompat;
+import android.support.v7.widget.DrawableUtils;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -89,7 +92,7 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
     }
 
     public String getUserChildPath(String userUuid) {
-        return flavor + CHAT_ROOM_SUFFIX + "/" + buildType + "/" + userUuid;
+        return flavor + CHAT_ROOM_SUFFIX + "/" + buildType + "/" + userUuid + "/";
     }
 
     public String getChatRoomBase() {
@@ -162,12 +165,19 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
 
         Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         NotificationCompat.Builder notificationBuilder = (NotificationCompat.Builder) new NotificationCompat.Builder(context)
-                .setAutoCancel(true)   //Automatically delete the notification
-                .setSmallIcon(R.drawable.ic_person_24dp) //Notification icon
+                .setAutoCancel(true)   // Automatically delete the notification
+                .setSmallIcon(R.drawable.ic_person_notif) // Notification icon
                 .setContentIntent(pendingIntent)
                 .setContentTitle(title)
                 .setContentText(body)
                 .setSound(defaultSoundUri);
+
+        // Vibration
+        notificationBuilder.setVibrate(new long[] { 1000, 1000, 1000, 1000, 1000 });
+
+        // LED
+        notificationBuilder.setLights(Color.RED, 3000, 3000);
+
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.notify(0, notificationBuilder.build());
 
