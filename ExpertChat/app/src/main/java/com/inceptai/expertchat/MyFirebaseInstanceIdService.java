@@ -21,10 +21,9 @@ public class MyFirebaseInstanceIdService extends FirebaseInstanceIdService {
         String token = FirebaseInstanceId.getInstance().getToken();
         Log.d(TAG, "FCM Token: " + token);
 
-        String tokenChild = TOKEN_CHILD + Utils.getExpertAvatar(getApplicationContext());
-        FirebaseDatabase.getInstance().getReference().child(tokenChild).setValue(token);
-        Log.i(TAG, "Writing token to: " + tokenChild);
+        ExpertChatService service = ExpertChatService.fetchInstance(getApplicationContext());
 
+        service.persistFcmToken(token);
         // Once a token is generated, we subscribe to topic.
         // FirebaseMessaging.getInstance().subscribeToTopic(FRIENDLY_ENGAGE_TOPIC);
     }

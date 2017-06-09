@@ -24,6 +24,8 @@ import com.inceptai.dobby.ui.ExpertChatActivity;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -35,15 +37,23 @@ public class ExpertChatService implements ChildEventListener, ValueEventListener
     private static final String USER_ROOT = BuildConfig.FLAVOR + "/" + BuildConfig.BUILD_TYPE  + "/" + "users/";
     private static final String CHAT_ROOM_CHILD = BuildConfig.FLAVOR + "_chat_rooms/" + BuildConfig.BUILD_TYPE;
     private static final String FCM_KEY = "fcmToken";
+    private static final String ASSIGNED_EXPERT_KEY = "assignedExpert";
     private static final String NOTIFICATIONS_BASE = "/notifications/messages/";
     private static final String CHAT_NOTIFICATION_TITLE = "You have a new chat message.";
+    private static final String EXPERT_BASE = "/expert";
 
     private static ExpertChatService INSTANCE;
 
     private String userUuid;
     private String chatRoomPath;
     private String userTokenPath;
+    private String assignedExpertUsernamePath;
+    private String assignedExpertUsername;
     private ChatCallback chatCallback;
+    private List<String> expertList;
+
+    // TODO Use this field.
+    private boolean isChatEmpty;
 
     public interface ChatCallback {
         void onMessageAvailable(ExpertChat expertChat);
@@ -54,7 +64,10 @@ public class ExpertChatService implements ChildEventListener, ValueEventListener
         this.userUuid = userUuid;
         this.chatRoomPath =  CHAT_ROOM_CHILD + "/" + userUuid;
         this.userTokenPath = USER_ROOT + "/" + userUuid + "/" + FCM_KEY;
+        this.assignedExpertUsernamePath = USER_ROOT + "/" + userUuid + "/" + ASSIGNED_EXPERT_KEY;
+        expertList = new ArrayList<>();
         DobbyLog.i("Using chat room ID: " + chatRoomPath);
+        isChatEmpty = true;
         initialize();
     }
 
@@ -70,7 +83,6 @@ public class ExpertChatService implements ChildEventListener, ValueEventListener
     }
 
     public void saveFcmToken(String token) {
-        // TODO This is BROKEN.
         getFcmTokenReference().setValue(token);
     }
 
@@ -86,7 +98,7 @@ public class ExpertChatService implements ChildEventListener, ValueEventListener
         Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         NotificationCompat.Builder notificationBuilder = (NotificationCompat.Builder) new NotificationCompat.Builder(context)
                 .setAutoCancel(true)   //Automatically delete the notification
-                .setSmallIcon(R.mipmap.ic_launcher) //Notification icon
+                .setSmallIcon(R.mipmap.wifi_doc_launcher) //Notification icon
                 .setContentIntent(pendingIntent)
                 .setContentTitle(title)
                 .setContentText(body)
@@ -105,11 +117,16 @@ public class ExpertChatService implements ChildEventListener, ValueEventListener
         DatabaseReference chatReference = getChatReference();
         chatReference.addChildEventListener(this);
         chatReference.addListenerForSingleValueEvent(this);
+        readExpertList();
     }
 
     public void pushData(ExpertChat expertChat) {
         getChatReference().push().setValue(expertChat);
-        sendExpertNotification(getExpertId(), expertChat);
+        if (assignedExpertUsername == null || assignedExpertUsername.isEmpty()) {
+            sendExpertNotificationToAll(expertChat);
+        } else {
+            sendExpertNotification(assignedExpertUsername, expertChat);
+        }
     }
 
     public void sendExpertNotification(String toExpert, ExpertChat expertChat) {
@@ -122,18 +139,19 @@ public class ExpertChatService implements ChildEventListener, ValueEventListener
         getNotificationReference().push().setValue(chatNotification);
     }
 
+    public void sendExpertNotificationToAll(ExpertChat expertChat) {
+        for (String expertUsername : expertList) {
+            sendExpertNotification(expertUsername, expertChat);
+        }
+    }
+
     // TODO
     private String getFcmIdPathForExpert(String expert) {
-        return Utils.EMPTY_STRING;
+        return EXPERT_BASE + "/" + expert + "/" + FCM_KEY;
     }
 
     // TODO
     private String getFcmIdPathForUser(String userUuid) {
-        return Utils.EMPTY_STRING;
-    }
-
-    // TODO
-    private String getExpertId() {
         return Utils.EMPTY_STRING;
     }
 
@@ -149,12 +167,33 @@ public class ExpertChatService implements ChildEventListener, ValueEventListener
         return FirebaseDatabase.getInstance().getReference().child(userTokenPath);
     }
 
+    private void readExpertList() {
+        FirebaseDatabase.getInstance().getReference().child(EXPERT_BASE).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot dataSnapshot1 : dataSnapshot.getChildren()) {
+                    expertList.add(dataSnapshot1.getKey());
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+
     @Override
     public void onChildAdded(DataSnapshot dataSnapshot, String s) {
         if (chatCallback != null) {
-            ExpertChat expertChat = parse(dataSnapshot);
-            chatCallback.onMessageAvailable(expertChat);
-            DobbyLog.i("Got chat message: " + expertChat .getText());
+            isChatEmpty = false;
+            if (dataSnapshot.getKey().equals(ASSIGNED_EXPERT_KEY)) {
+                assignedExpertUsername = (String) dataSnapshot.getValue();
+            } else {
+                ExpertChat expertChat = parse(dataSnapshot);
+                chatCallback.onMessageAvailable(expertChat);
+                DobbyLog.i("Got chat message: " + expertChat.getText());
+            }
         }
     }
 
@@ -185,8 +224,10 @@ public class ExpertChatService implements ChildEventListener, ValueEventListener
 
     @Override
     public void onDataChange(DataSnapshot dataSnapshot) {
-        if (dataSnapshot == null && chatCallback != null) {
-            chatCallback.onNoHistoryAvailable();
+        if (dataSnapshot == null || dataSnapshot.getValue() == null) {
+            if (chatCallback != null) {
+                chatCallback.onNoHistoryAvailable();
+            }
         }
     }
 }

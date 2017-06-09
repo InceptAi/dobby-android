@@ -3,32 +3,40 @@ package com.inceptai.expertchat;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.util.Log;
-import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.squareup.picasso.Picasso;
 
 import static com.inceptai.expertchat.Utils.EMPTY_STRING;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, UserSelectionFragment.OnUserSelected, GoogleApiClient.OnConnectionFailedListener {
+
+    public static final String NOTIFICATION_USER_UUID = "notificationUserId";
+
     private static final String DEFAULT_FLAVOR = Utils.WIFIDOC_FLAVOR;
-    private static final String DEFAULT_BUILD_TYPE = Utils.BUILD_TYPE_RELEASE;
+    private static final String DEFAULT_BUILD_TYPE = Utils.BUILD_TYPE_DEBUG;
 
     private String selectedUserId = EMPTY_STRING;
     private String selectedFlavor = DEFAULT_FLAVOR;
@@ -41,6 +49,8 @@ public class MainActivity extends AppCompatActivity
     private GoogleApiClient mGoogleApiClient;
     private DrawerLayout drawerLayout;
     private NavigationView  navigationView;
+    private ExpertChatService service;
+    private boolean respondToNotification = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +71,8 @@ public class MainActivity extends AppCompatActivity
             if (mFirebaseUser.getPhotoUrl() != null) {
                 mPhotoUrl = mFirebaseUser.getPhotoUrl().toString();
             }
+            service = ExpertChatService.fetchInstance(getApplicationContext());
+            service.fetchAvatar(mFirebaseUser);
         }
 
         mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -82,6 +94,19 @@ public class MainActivity extends AppCompatActivity
         if (mUsername != null) {
             Snackbar.make(drawerLayout, "Welcome " + mUsername, Snackbar.LENGTH_SHORT).show();
         }
+
+        Bundle extras = getIntent().getExtras();
+        if (extras != null) {
+            String notifUuid = extras.getString(NOTIFICATION_USER_UUID, EMPTY_STRING);
+            if (notifUuid != null && !notifUuid.isEmpty()) {
+                /// We have a user id from a notification.
+                // TODO open chat for selected user ID.
+                Utils.saveSharedSetting(this, Utils.SELECTED_USER_UUID, notifUuid);
+                selectedUserId = notifUuid;
+                Snackbar.make(drawerLayout, "User ID: " + notifUuid, Snackbar.LENGTH_SHORT).show();
+                respondToNotification = true;
+            }
+        }
     }
 
     @Override
@@ -90,6 +115,11 @@ public class MainActivity extends AppCompatActivity
         selectedFlavor = Utils.readSharedSetting(this, Utils.SELECTED_FLAVOR, DEFAULT_FLAVOR);
         selectedUserId = Utils.readSharedSetting(this, Utils.SELECTED_USER_UUID, EMPTY_STRING);
         selectedBuildType = Utils.readSharedSetting(this, Utils.SELECTED_BUILD_TYPE, DEFAULT_BUILD_TYPE);
+        if (respondToNotification) {
+            showChatFragment(selectedUserId, selectedFlavor, selectedBuildType);
+            navigationView.setCheckedItem(R.id.nav_user_chat);
+        }
+        showWelcome(mPhotoUrl, mUsername);
     }
 
     @Override
@@ -124,6 +154,22 @@ public class MainActivity extends AppCompatActivity
         //fragmentTransaction.addToBackStack(null);
         fragmentTransaction.commit();
         return existingFragment;
+    }
+
+    private void showWelcome(String photoUrl, String name) {
+        FrameLayout frameLayout = (FrameLayout) findViewById(R.id.placeholder_fl);
+        View welcome = getLayoutInflater().inflate(R.layout.welcome, frameLayout, false);
+        frameLayout.addView(welcome);
+        ImageView iv = (ImageView) welcome.findViewById(R.id.profile_image);
+        TextView tv = (TextView) welcome.findViewById(R.id.profile_name);
+        if (name != null) tv.setText(name);
+        if (photoUrl != null) Picasso.with(this).load(photoUrl).into(iv);
+
+        TextView avatarTv = (TextView) welcome.findViewById(R.id.profile_avatar);
+        String avatar = service.getAvatar();
+        if (avatar != null) {
+            avatarTv.setText("Avatar: " + avatar);
+        }
     }
 
     @Override
@@ -198,6 +244,7 @@ public class MainActivity extends AppCompatActivity
         selectedUserId = userId;
         showChatFragment(userId, selectedFlavor, selectedBuildType);
         navigationView.setCheckedItem(R.id.nav_user_chat);
+        Utils.saveSharedSetting(this, Utils.SELECTED_USER_UUID, selectedUserId);
     }
 
     @Override

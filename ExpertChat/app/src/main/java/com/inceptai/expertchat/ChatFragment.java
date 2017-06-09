@@ -27,10 +27,8 @@ import com.google.firebase.database.FirebaseDatabase;
 
 public class ChatFragment extends Fragment {
     public static final String FRAGMENT_TAG = "ChatFragment";
-    public static final String CHAT_ROOM_SUFFIX = "_chat_rooms";
 
-
-    private static final String USER_UUID = "userUuid";
+    private static final String USER_UUID = "selectedUserUuid";
     private static final String FLAVOR = "flavor";  // debug or release.
     private static final String BUILD_TYPE = "buildType";
 
@@ -48,11 +46,13 @@ public class ChatFragment extends Fragment {
     private DatabaseReference mFirebaseDatabaseReference;
     private FirebaseAnalytics mFirebaseAnalytics;
     private EditText mMessageEditText;
-    private String userUuid;
+    private String selectedUserUuid;
     private String flavor;
     private String buildType;
     private String childPath;
     private TextView roomTitleTv;
+
+    private ExpertChatService service;
 
     public static class MessageViewHolder extends RecyclerView.ViewHolder {
         LinearLayout fromExpertLayout;
@@ -85,10 +85,11 @@ public class ChatFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            userUuid = getArguments().getString(USER_UUID);
+            selectedUserUuid = getArguments().getString(USER_UUID);
             flavor = getArguments().getString(FLAVOR);
             buildType = getArguments().getString(BUILD_TYPE);
         }
+        service = ExpertChatService.fetchInstance(getActivity().getApplicationContext());
     }
 
     @Override
@@ -99,9 +100,16 @@ public class ChatFragment extends Fragment {
         return rootView;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        flavor = service.getFlavor();
+        buildType = service.getBuildType();
+        selectedUserUuid = service.getSelectedUserId();
+        reloadData();
+    }
+
     private void setup(View rootView) {
-        childPath = flavor + CHAT_ROOM_SUFFIX + "/" + buildType + "/" + userUuid;
-        Log.i(Utils.TAG, "ChildPath: " + childPath);
         roomTitleTv = (TextView) rootView.findViewById(R.id.roomTitleTv);
         roomTitleTv.setText(childPath);
 
@@ -112,8 +120,51 @@ public class ChatFragment extends Fragment {
         mMessageRecyclerView = (RecyclerView) rootView.findViewById(R.id.messageRecyclerView);
         mLinearLayoutManager = new LinearLayoutManager(getContext());
         mLinearLayoutManager.setStackFromEnd(true);
+        mMessageRecyclerView.setLayoutManager(mLinearLayoutManager);
+        mMessageEditText = (EditText) rootView.findViewById(R.id.messageEditText);
 
+        mSendButton = (Button) rootView.findViewById(R.id.sendButton);
         mFirebaseDatabaseReference = FirebaseDatabase.getInstance().getReference();
+
+
+        // Initialize Firebase Measurement.
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(getContext());
+
+        mMessageEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                if (charSequence.toString().trim().length() > 0) {
+                    mSendButton.setEnabled(true);
+                } else {
+                    mSendButton.setEnabled(false);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+            }
+        });
+
+        mSendButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                ExpertChat expertChat = new ExpertChat(mMessageEditText.getText().toString(), ExpertChat.MSG_TYPE_EXPERT_TEXT);
+                mFirebaseDatabaseReference.child(childPath).push().setValue(expertChat);
+                mMessageEditText.setText("");
+                mFirebaseAnalytics.logEvent(MESSAGE_SENT_EVENT, null);
+                service.sendUserNotification(selectedUserUuid, expertChat);
+            }
+        });
+    }
+
+    private void reloadData() {
+        childPath = service.getUserChildPath(selectedUserUuid);
+        Log.i(Utils.TAG, "ChildPath: " + childPath);
+
         mFirebaseAdapter = new FirebaseRecyclerAdapter<ExpertChat, MessageViewHolder>(
                 ExpertChat.class,
                 R.layout.expert_chat_message_item,
@@ -161,41 +212,10 @@ public class ChatFragment extends Fragment {
             }
         });
 
-        mMessageRecyclerView.setLayoutManager(mLinearLayoutManager);
+
         mMessageRecyclerView.setAdapter(mFirebaseAdapter);
 
-        // Initialize Firebase Measurement.
-        mFirebaseAnalytics = FirebaseAnalytics.getInstance(getContext());
 
-        mMessageEditText = (EditText) rootView.findViewById(R.id.messageEditText);
-        mMessageEditText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-            }
 
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                if (charSequence.toString().trim().length() > 0) {
-                    mSendButton.setEnabled(true);
-                } else {
-                    mSendButton.setEnabled(false);
-                }
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-            }
-        });
-
-        mSendButton = (Button) rootView.findViewById(R.id.sendButton);
-        mSendButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                ExpertChat expertChat = new ExpertChat(mMessageEditText.getText().toString(), ExpertChat.MSG_TYPE_EXPERT_TEXT);
-                mFirebaseDatabaseReference.child(childPath).push().setValue(expertChat);
-                mMessageEditText.setText("");
-                mFirebaseAnalytics.logEvent(MESSAGE_SENT_EVENT, null);
-            }
-        });
     }
 }

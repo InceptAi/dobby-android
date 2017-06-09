@@ -38,12 +38,11 @@ public class UserSelectionFragment extends Fragment implements ChildEventListene
     private String flavor;
     private String buildType;
     private String chatRoomBase;
-
     private ProgressBar progressBar;
     private DatabaseReference mFirebaseDatabaseReference;
     private ListView roomListView;
     private RoomArrayAdapter arrayAdapter;
-
+    private ExpertChatService expertChatService;
 
     private static class RoomArrayAdapter extends ArrayAdapter<String> {
 
@@ -87,11 +86,11 @@ public class UserSelectionFragment extends Fragment implements ChildEventListene
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        expertChatService = ExpertChatService.fetchInstance(getContext().getApplicationContext());
         if (getArguments() != null) {
             selectedUserId = getArguments().getString(SELECTED_USERID);
             flavor = getArguments().getString(FLAVOR);
             buildType = getArguments().getString(BUILD_TYPE);
-            chatRoomBase = flavor + ChatFragment.CHAT_ROOM_SUFFIX + "/" + buildType + "/";
         }
     }
 
@@ -142,6 +141,11 @@ public class UserSelectionFragment extends Fragment implements ChildEventListene
     public void onResume() {
         super.onResume();
         arrayAdapter.clear();
+
+        chatRoomBase = expertChatService.getChatRoomBase();
+        flavor = expertChatService.getFlavor();
+        buildType = expertChatService.getBuildType();
+
         mFirebaseDatabaseReference = FirebaseDatabase.getInstance().getReference().child(chatRoomBase);
         mFirebaseDatabaseReference.addChildEventListener(this);
         mFirebaseDatabaseReference.addListenerForSingleValueEvent(new ValueEventListener() {

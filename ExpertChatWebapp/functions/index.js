@@ -41,6 +41,8 @@ exports.sendNotification = functions.database.ref('/notifications/messages/{push
             notification: {
                 title: message.title,
                 body: message.body,
+	        from: messge.from,
+	        to: message.to
             }
         };
 
