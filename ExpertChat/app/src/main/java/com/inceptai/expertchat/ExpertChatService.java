@@ -37,6 +37,7 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
     public static final String USERCHAT_NOTIFICATION_TITLE = "You have a new message from a Wifi Expert";
     private static final String NOTIFICATIONS_BASE = "/notifications/messages/";
     private static final String FCM_KEY = "fcmToken";
+    private static final String NOTIF_PUSHID_KEY = "pushId";
 
     private static final String DEFAULT_FLAVOR = Utils.WIFIDOC_FLAVOR;
     private static final String DEFAULT_BUILD_TYPE = Utils.BUILD_TYPE_RELEASE;
@@ -52,11 +53,18 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
     private String flavor;
     private String buildType;
     private String selectedUserId;
+    private boolean pendingFcmTokenSaveOperation = false;
+
+    public interface OnExpertDataFetched {
+        public void onExpertData(ExpertData expertData);
+    }
 
     private ExpertChatService(Context context) {
+        this.context = context;
         flavor = Utils.readSharedSetting(context, Utils.SELECTED_FLAVOR, DEFAULT_FLAVOR);
         selectedUserId = Utils.readSharedSetting(context, Utils.SELECTED_USER_UUID, EMPTY_STRING);
         buildType = Utils.readSharedSetting(context, Utils.SELECTED_BUILD_TYPE, DEFAULT_BUILD_TYPE);
+        expertFcmToken = Utils.readSharedSetting(context, Utils.PREF_FCM_TOKEN, EMPTY_STRING);
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
         sharedPref.registerOnSharedPreferenceChangeListener(this);
     }
@@ -69,9 +77,15 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
     }
 
     public void persistFcmToken(String expertFcmToken) {
-        String tokenChild = EXPERT_BASE + "/" + avatar + "/" + FCM_KEY;
-        FirebaseDatabase.getInstance().getReference().child(tokenChild).setValue(expertFcmToken);
-        Log.i(Utils.TAG, "Writing token to: " + tokenChild);
+        this.expertFcmToken = expertFcmToken;
+        if (avatar != null && !avatar.isEmpty()) {
+            String tokenChild = EXPERT_BASE + "/" + avatar + "/" + FCM_KEY;
+            FirebaseDatabase.getInstance().getReference().child(tokenChild).setValue(expertFcmToken);
+            Log.i(Utils.TAG, "Writing token to: " + tokenChild);
+        } else {
+            pendingFcmTokenSaveOperation = true;
+        }
+        Utils.saveSharedSetting(context, Utils.PREF_FCM_TOKEN, expertFcmToken);
     }
 
     public String getUserChildPath(String userUuid) {
@@ -92,12 +106,15 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
         expertData.name = firebaseUser.getDisplayName();
         expertData.avatar = avatar;
         expertData.fcmToken = expertFcmToken;
+        if (expertFcmToken != null && !expertFcmToken.isEmpty() && pendingFcmTokenSaveOperation) {
+            pendingFcmTokenSaveOperation = false;
+        }
         if (avatar != null && !avatar.isEmpty()) {
             FirebaseDatabase.getInstance().getReference().child(EXPERT_BASE + "/" + avatar).setValue(expertData);
         }
     }
 
-    public void fetchAvatar(final FirebaseUser firebaseUser) {
+    public void fetchAvatar(final FirebaseUser firebaseUser, final OnExpertDataFetched callback) {
         this.firebaseUser = firebaseUser;
         FirebaseDatabase.getInstance().getReference().child(EXPERT_BASE).addValueEventListener(new ValueEventListener() {
             @Override
@@ -106,6 +123,9 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
                     ExpertData expertData = dataSnapshot1.getValue(ExpertData.class);
                     if (expertData != null && expertData.email != null && expertData.email.equals(firebaseUser.getEmail())) {
                         loadExpertData(expertData);
+                        if (callback != null) {
+                            callback.onExpertData(expertData);
+                        }
                         break;
                     }
                 }
@@ -143,13 +163,18 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
         Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         NotificationCompat.Builder notificationBuilder = (NotificationCompat.Builder) new NotificationCompat.Builder(context)
                 .setAutoCancel(true)   //Automatically delete the notification
-                .setSmallIcon(R.mipmap.ic_launcher) //Notification icon
+                .setSmallIcon(R.drawable.ic_person_24dp) //Notification icon
                 .setContentIntent(pendingIntent)
                 .setContentTitle(title)
                 .setContentText(body)
                 .setSound(defaultSoundUri);
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.notify(0, notificationBuilder.build());
+
+        String pushId = data.get(NOTIF_PUSHID_KEY);
+        if (pushId != null && !pushId.isEmpty()) {
+            getNotificationReference().child(pushId).removeValue();
+        }
     }
 
     private DatabaseReference getNotificationReference() {
@@ -157,14 +182,25 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
     }
 
     private String getFcmIdPathForUser(String userUuid) {
-        String userRoot =   flavor + "/" + buildType + "/" + "users/";
-        String userTokenPath =  userRoot + "/" + userUuid + "/" + FCM_KEY;
+        String userRoot = flavor + "/" + buildType + "/" + "users/";
+        String userTokenPath = userRoot + "/" + userUuid + "/" + FCM_KEY;
         return userTokenPath;
+    }
+
+    private void checkPendingFcmSaveOperation() {
+        if (avatar != null && !avatar.isEmpty() && pendingFcmTokenSaveOperation) {
+            persistExpertData(firebaseUser);
+            pendingFcmTokenSaveOperation = false;
+        }
     }
 
     private void loadExpertData(ExpertData expertData) {
         Log.i(Utils.TAG, "Expert data loaded." + expertData.toString());
         avatar = expertData.avatar != null ? expertData.avatar : EMPTY_STRING;
+        if (avatar != null && !avatar.isEmpty()) {
+            Utils.saveSharedSetting(context, Utils.PREF_EXPERT_AVATAR, avatar);
+        }
+        checkPendingFcmSaveOperation();
         this.expertData = expertData;
     }
 

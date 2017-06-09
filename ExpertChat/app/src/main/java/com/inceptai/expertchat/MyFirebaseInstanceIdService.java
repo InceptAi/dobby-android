@@ -8,8 +8,7 @@ import com.google.firebase.iid.FirebaseInstanceIdService;
 
 public class MyFirebaseInstanceIdService extends FirebaseInstanceIdService {
 
-    private static final String TAG = "MyFirebaseIIDService";
-    private static final String TOKEN_CHILD = "/expert/";
+    private static final String TAG = "MyFirebaseIDService";
 
     /**
      * The Application's current Instance ID token is no longer valid and thus a new one must be requested.

@@ -31,7 +31,7 @@ import com.squareup.picasso.Picasso;
 import static com.inceptai.expertchat.Utils.EMPTY_STRING;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, UserSelectionFragment.OnUserSelected, GoogleApiClient.OnConnectionFailedListener {
+        implements NavigationView.OnNavigationItemSelectedListener, UserSelectionFragment.OnUserSelected, GoogleApiClient.OnConnectionFailedListener, ExpertChatService.OnExpertDataFetched {
 
     public static final String NOTIFICATION_USER_UUID = "notificationUserId";
 
@@ -72,7 +72,7 @@ public class MainActivity extends AppCompatActivity
                 mPhotoUrl = mFirebaseUser.getPhotoUrl().toString();
             }
             service = ExpertChatService.fetchInstance(getApplicationContext());
-            service.fetchAvatar(mFirebaseUser);
+            service.fetchAvatar(mFirebaseUser, this);
         }
 
         mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -132,6 +132,15 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    @Override
+    public void onExpertData(ExpertData expertData) {
+        TextView avatarTv = (TextView) findViewById(R.id.profile_avatar);
+        String avatar = expertData.getAvatar();
+        if (avatar != null) {
+            avatarTv.setText("Avatar: " + avatar);
+        }
+    }
+
     private Fragment setupFragment(Class fragmentClass, String tag, Bundle args) {
         // Insert the fragment by replacing any existing fragment
         FragmentManager fragmentManager = getSupportFragmentManager();
@@ -158,6 +167,7 @@ public class MainActivity extends AppCompatActivity
 
     private void showWelcome(String photoUrl, String name) {
         FrameLayout frameLayout = (FrameLayout) findViewById(R.id.placeholder_fl);
+        frameLayout.removeAllViews();
         View welcome = getLayoutInflater().inflate(R.layout.welcome, frameLayout, false);
         frameLayout.addView(welcome);
         ImageView iv = (ImageView) welcome.findViewById(R.id.profile_image);
@@ -170,6 +180,11 @@ public class MainActivity extends AppCompatActivity
         if (avatar != null) {
             avatarTv.setText("Avatar: " + avatar);
         }
+    }
+
+    private void clearFrameLayout() {
+        FrameLayout frameLayout = (FrameLayout) findViewById(R.id.placeholder_fl);
+        frameLayout.removeAllViews();
     }
 
     @Override
@@ -199,6 +214,7 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
+        clearFrameLayout();
         if (id == R.id.nav_select_user) {
             showUserSelectionFragment(selectedUserId, selectedFlavor, selectedBuildType);
         } else if (id == R.id.nav_user_chat) {

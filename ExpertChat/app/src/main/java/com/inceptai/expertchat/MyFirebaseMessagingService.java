@@ -17,6 +17,6 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         Log.d(TAG, "FCM Data Message: " + remoteMessage.getData());
         ExpertChatService service = ExpertChatService.fetchInstance(getApplicationContext());
         service.showNotification(getApplicationContext(), remoteMessage.getNotification().getTitle(),
-                remoteMessage.getNotification().getBody(), remoteMessage.getData()));
+                remoteMessage.getNotification().getBody(), remoteMessage.getData());
     }
 }

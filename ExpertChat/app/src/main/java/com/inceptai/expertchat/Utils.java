@@ -18,6 +18,7 @@ public class Utils {
     public static final String SELECTED_FLAVOR = "flavor";
     public static final String SELECTED_USER_UUID = "userUuid";
     public static final String SELECTED_BUILD_TYPE = "buildType";
+    public static final String PREF_FCM_TOKEN = "fcmToken";
 
     public static final String WIFIDOC_FLAVOR = "wifidoc";
     public static final String DOBBY_FLAVOR = "dobby";

@@ -29,7 +29,7 @@
 
     <string name="app_build_type">Build Type</string>
     <string name="pref_build_title">Select build type</string>
-    <string name="pref_build_default">release</string>
+    <string name="pref_build_default">debug</string>
     <string-array name="pref_build_entries">
         <item>Release build</item>
         <item>Debug build</item>
