@@ -3,11 +3,8 @@ package com.inceptai.dobby;
 import android.Manifest;
 import android.annotation.TargetApi;
 import android.content.ActivityNotFoundException;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.wifi.ScanResult;
 import android.os.Build;
@@ -37,7 +34,6 @@ import com.inceptai.dobby.ai.DobbyAi;
 import com.inceptai.dobby.ai.RtDataSource;
 import com.inceptai.dobby.ai.SuggestionCreator;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
-import com.inceptai.dobby.fake.FakeDataIntentReceiver;
 import com.inceptai.dobby.heartbeat.HeartBeatManager;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.ui.ChatFragment;
@@ -45,6 +41,7 @@ import com.inceptai.dobby.ui.DebugFragment;
 import com.inceptai.dobby.ui.FakeDataFragment;
 import com.inceptai.dobby.ui.WifiDocDialogFragment;
 import com.inceptai.dobby.ui.WifiFragment;
+import com.inceptai.dobby.ui.WifiLeaderBoardFragment;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 
@@ -73,6 +70,7 @@ public class MainActivity extends AppCompatActivity
 
     private Handler handler;
     private ChatFragment chatFragment;
+    private WifiLeaderBoardFragment wifiLeaderBoardFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,6 +99,7 @@ public class MainActivity extends AppCompatActivity
         handler = new Handler(this);
 
         setupChatFragment();
+        //setupLeaderBoardFragment();
         //heartBeatManager.cancelAlarm();
         //heartBeatManager.registerAlarmReceiverWithContext(this);
         heartBeatManager.setDailyHeartBeat();
@@ -134,6 +133,16 @@ public class MainActivity extends AppCompatActivity
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.replace(R.id.placeholder_fl,
                 chatFragment, ChatFragment.FRAGMENT_TAG);
+        //fragmentTransaction.addToBackStack(null);
+        fragmentTransaction.commit();
+    }
+
+    private void setupLeaderBoardFragment() {
+        wifiLeaderBoardFragment = new WifiLeaderBoardFragment();
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.replace(R.id.placeholder_fl,
+                wifiLeaderBoardFragment, WifiLeaderBoardFragment.FRAGMENT_TAG);
         //fragmentTransaction.addToBackStack(null);
         fragmentTransaction.commit();
     }
@@ -197,7 +206,9 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.about_wifi_expert) {
             showAboutAndPrivacyPolicy();
         } else if (id == R.id.feedback_wifi_expert) {
-            showFeedbackForm();
+            //showFeedbackForm();
+            Toast.makeText(this, "Leaderboard info...", Toast.LENGTH_SHORT).show();
+            setupLeaderBoardFragment();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
