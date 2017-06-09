@@ -10,6 +10,8 @@ import com.inceptai.dobby.R;
 import com.inceptai.dobby.leaderboard.LeaderBoardInfo;
 import com.inceptai.dobby.utils.DobbyLog;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -35,9 +37,11 @@ public class WifiLeaderBoardRecyclerViewAdapter extends RecyclerView.Adapter<Wif
     public void onBindViewHolder(final ViewHolder holder, int position) {
         DobbyLog.i("onBindViewHolder: " + position);
         holder.mItem = mValues.get(position);
-        holder.mRankView.setText(String.valueOf(mValues.get(position).getRank()));
-        holder.mHandleView.setText(String.valueOf(mValues.get(position).getUserHandle()));
-        holder.mSpeedView.setText(String.valueOf(mValues.get(position).getSpeed()));
+        //holder.mRankView.setText(String.valueOf(mValues.get(position).getRank()));
+        holder.mRankView.setText(String.valueOf(position + 1));
+        holder.mHandleView.setText(String.valueOf(mValues.get(position).getHandle()));
+        holder.mSpeedView.setText(String.format("%.2f Mbps", mValues.get(position).getSpeed()));
+        //holder.mSpeedView.setText(String.valueOf(mValues.get(position).getSpeed()));
     }
 
     @Override
@@ -67,16 +71,21 @@ public class WifiLeaderBoardRecyclerViewAdapter extends RecyclerView.Adapter<Wif
     }
 
 
-    public void refresh(List<LeaderBoardInfo> results) {
-        /*
-        Comparator<ScanResult> scanResultComparator = new Comparator<ScanResult>() {
+    public void refresh(final List<LeaderBoardInfo> results) {
+        Comparator<LeaderBoardInfo> leaderBoardInfoComparator = new Comparator<LeaderBoardInfo>() {
             @Override
-            public int compare(ScanResult o1, ScanResult o2) {
-                return o1.BSSID.compareTo(o2.BSSID);
+            public int compare(LeaderBoardInfo o1, LeaderBoardInfo o2) {
+                if (o2.getSpeed() - o1.getSpeed() > 0) {
+                    return 1;
+                } else if (o2.getSpeed() - o1.getSpeed() == 0) {
+                    return 0;
+                } else {
+                    return -1;
+                }
+                //return (int) (o2.getSpeed() - o1.getSpeed());
             }
         };
-        Collections.sort(results, scanResultComparator);
-        */
+        Collections.sort(results, leaderBoardInfoComparator);
         mValues = results;
         notifyDataSetChanged();
         DobbyLog.i("Notified data sets changed." + mValues.toString());

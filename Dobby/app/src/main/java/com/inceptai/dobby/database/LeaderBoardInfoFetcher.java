@@ -51,7 +51,7 @@ public class LeaderBoardInfoFetcher {
                 final List<LeaderBoardInfo> leaderBoardInfoList = new ArrayList<>();
                 for (DataSnapshot leaderBoardSnapShot : dataSnapshot.getChildren()) {
                     LeaderBoardInfo leaderBoardInfo = leaderBoardSnapShot.getValue(LeaderBoardInfo.class);
-                    DobbyLog.v("LeaderBoard info " + leaderBoardInfo.getUserHandle()); //log
+                    DobbyLog.v("LeaderBoard info " + leaderBoardInfo.getHandle()); //log
                     leaderBoardInfoList.add(leaderBoardInfo);
                     //System.out.println(dataSnapshot.getKey() + " was " + leaderBoardInfo.getSpeed() + " fast");
                 }

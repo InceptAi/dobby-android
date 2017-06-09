@@ -7,12 +7,12 @@ package com.inceptai.dobby.leaderboard;
 public class LeaderBoardInfo {
     private int rank;
     private double speed;
-    private String userHandle;
+    private String handle;
 
-    public LeaderBoardInfo(int rank, double speed, String userHandle) {
+    public LeaderBoardInfo(int rank, double speed, String handle) {
         this.rank = rank;
         this.speed = speed;
-        this.userHandle = userHandle;
+        this.handle = handle;
     }
 
     public LeaderBoardInfo() {}
@@ -33,12 +33,12 @@ public class LeaderBoardInfo {
         this.speed = speed;
     }
 
-    public String getUserHandle() {
-        return userHandle;
+    public String getHandle() {
+        return handle;
     }
 
-    public void setUserHandle(String userHandle) {
-        this.userHandle = userHandle;
+    public void setHandle(String handle) {
+        this.handle = handle;
     }
 
 }
