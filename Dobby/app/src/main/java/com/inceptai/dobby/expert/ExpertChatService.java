@@ -35,13 +35,14 @@ public class ExpertChatService implements ChildEventListener, ValueEventListener
     private static final String USER_ROOT = BuildConfig.FLAVOR + "/" + BuildConfig.BUILD_TYPE  + "/" + "users/";
     private static final String CHAT_ROOM_CHILD = BuildConfig.FLAVOR + "_chat_rooms/" + BuildConfig.BUILD_TYPE;
     private static final String FCM_KEY = "fcmToken";
+    private static final String NOTIFICATIONS_BASE = "/notifications/messages/";
+    private static final String CHAT_NOTIFICATION_TITLE = "You have a new chat message.";
 
     private static ExpertChatService INSTANCE;
 
     private String userUuid;
-    private String chatRoomChild;
+    private String chatRoomPath;
     private String userTokenPath;
-    private DatabaseReference firebaseDatabaseReference;
     private ChatCallback chatCallback;
 
     public interface ChatCallback {
@@ -51,9 +52,9 @@ public class ExpertChatService implements ChildEventListener, ValueEventListener
 
     private ExpertChatService(String userUuid) {
         this.userUuid = userUuid;
-        this.chatRoomChild =  CHAT_ROOM_CHILD + "/" + userUuid;
+        this.chatRoomPath =  CHAT_ROOM_CHILD + "/" + userUuid;
         this.userTokenPath = USER_ROOT + "/" + userUuid + "/" + FCM_KEY;
-        DobbyLog.i("Using chat room ID: " + chatRoomChild);
+        DobbyLog.i("Using chat room ID: " + chatRoomPath);
         initialize();
     }
 
@@ -69,7 +70,8 @@ public class ExpertChatService implements ChildEventListener, ValueEventListener
     }
 
     public void saveFcmToken(String token) {
-        firebaseDatabaseReference.child(userTokenPath).setValue(token);
+        // TODO This is BROKEN.
+        getFcmTokenReference().setValue(token);
     }
 
     public void showNotification(Context context, String title, String body, Map<String, String> data) {
@@ -96,17 +98,55 @@ public class ExpertChatService implements ChildEventListener, ValueEventListener
     }
 
     public void disconnect() {
-        firebaseDatabaseReference.removeEventListener((ChildEventListener) this);
+        getChatReference().removeEventListener((ChildEventListener) this);
     }
     
     private void initialize() {
-        firebaseDatabaseReference = FirebaseDatabase.getInstance().getReference().child(chatRoomChild);
-        firebaseDatabaseReference.addChildEventListener(this);
-        firebaseDatabaseReference.addListenerForSingleValueEvent(this);
+        DatabaseReference chatReference = getChatReference();
+        chatReference.addChildEventListener(this);
+        chatReference.addListenerForSingleValueEvent(this);
     }
 
     public void pushData(ExpertChat expertChat) {
-        firebaseDatabaseReference.push().setValue(expertChat);
+        getChatReference().push().setValue(expertChat);
+        sendExpertNotification(getExpertId(), expertChat);
+    }
+
+    public void sendExpertNotification(String toExpert, ExpertChat expertChat) {
+        ChatNotification chatNotification = new ChatNotification();
+        chatNotification.from = userUuid;
+        chatNotification.to = toExpert;
+        chatNotification.body = expertChat.getText();
+        chatNotification.title = CHAT_NOTIFICATION_TITLE;
+        chatNotification.fcmIdPath = getFcmIdPathForExpert(toExpert);
+        getNotificationReference().push().setValue(chatNotification);
+    }
+
+    // TODO
+    private String getFcmIdPathForExpert(String expert) {
+        return Utils.EMPTY_STRING;
+    }
+
+    // TODO
+    private String getFcmIdPathForUser(String userUuid) {
+        return Utils.EMPTY_STRING;
+    }
+
+    // TODO
+    private String getExpertId() {
+        return Utils.EMPTY_STRING;
+    }
+
+    private DatabaseReference getChatReference() {
+        return FirebaseDatabase.getInstance().getReference().child(chatRoomPath);
+    }
+
+    private DatabaseReference getNotificationReference() {
+        return FirebaseDatabase.getInstance().getReference().child(NOTIFICATIONS_BASE);
+    }
+
+    private DatabaseReference getFcmTokenReference() {
+        return FirebaseDatabase.getInstance().getReference().child(userTokenPath);
     }
 
     @Override
