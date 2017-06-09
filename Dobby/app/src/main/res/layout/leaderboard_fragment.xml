@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+android:id="@+id/wifi_linear_layout"
+android:orientation="vertical"
+android:fitsSystemWindows="true"
+android:layout_width="match_parent"
+android:layout_height="match_parent">
+
+<TextView
+    android:id="@+id/wifi_frag_title_tv"
+    android:text="@string/wifi_leaderboard"
+    android:layout_height="wrap_content"
+    android:layout_width="match_parent"
+    android:padding="10dp"
+    android:layout_gravity="top"
+    android:textAppearance="?attr/textAppearanceListItem" />
+
+<android.support.v7.widget.RecyclerView
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/wifi_leader_board"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginLeft="16dp"
+    android:layout_marginRight="16dp"
+    app:layoutManager="LinearLayoutManager"
+    tools:context="com.inceptai.dobby.ui.WifiLeaderBoard"
+    tools:listitem="@layout/leaderboard_single_entry" />
+</LinearLayout>
