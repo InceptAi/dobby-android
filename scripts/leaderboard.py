@@ -15,6 +15,7 @@ __author__ = """\n""".join(['Vivek Shrivastava (vivek@obiai.tech)'])
 ENABLE_RANDOM_USERNAMES = True
 GLOBAL_LEADERBOARD = {}
 USER_ID_TO_HANDLE = {}
+USER_ID_TO_FLAVOR = {}
 
 class BandwidthGrade(object):
     def __init__(self, **kwargs):
@@ -54,7 +55,8 @@ class InferenceRecord(object):
 
 class LeaderBoardInfo(object):
     def __init__(self, speed, handle, uid, inference_id, app_version):
-        self.speed = speed
+        if speed:
+            self.speed = float("%0.2f" % speed)
         self.handle = handle
         self.uid = uid
         self.inference_id = inference_id
@@ -69,9 +71,12 @@ class LeaderBoardInfo(object):
         return self.__str__()
 
 class Handle(object):
-    def __init__(self, key=None, uid=None, **kwargs):
+    def __init__(self, key=None, uid=None, leaderboard_key=None, speed=None, **kwargs):
         self.key = key
         self.uid = uid
+        self.leaderboard_key = leaderboard_key
+        if speed:
+            self.speed = float("%0.2f" % speed)
         self.__dict__.update(kwargs)
 
     def __str__(self):
@@ -180,16 +185,23 @@ def merge_two_dicts(x, y):
     z.update(y)
     return z
 
-def parse_json(json_data_dict):
+def store_user_flavor_mapping(user_dict, flavor):
+    if not isinstance(user_dict, dict):
+        return
+    for user_key in user_dict:
+        USER_ID_TO_FLAVOR[user_key] = flavor
+
+def parse_json(json_data_dict, flavor=None):
     leaderboard_dict = {}
     if not isinstance(json_data_dict, dict):
         return {}
     for key in json_data_dict:
         value = json_data_dict[key]
-        #print("key is {0}".format(key))
-        #print("The key and value are ({}) = ({})".format(key, value))
+        if key == "users":
+            store_user_flavor_mapping(value, flavor)
+        
         if key != "inferences":
-            leaderboard_dict = merge_two_dicts(leaderboard_dict, parse_json(value))
+            leaderboard_dict = merge_two_dicts(leaderboard_dict, parse_json(value, flavor))
         else:
             for inference_key, inference_value in value.iteritems():
                 linfo = parse_inference(inference_json_dict=inference_value, inference_key=inference_key)
@@ -206,20 +218,18 @@ def fetch_data(url_to_fetch):
         data = {}
     return data
 
-def write_leaderboard(leaderboard_dict, leaderboard_url):
-    leaderboard_data = jsonpickle.encode(leaderboard_dict, unpicklable=False)
-    r = requests.put(leaderboard_url, data=leaderboard_data)
-    print r.status_code
     
-def iterate_over_dobby_inferences():
+def iterate_over_dobby_inferences(build_type):
     leaderboard_dict = {}
-    prefixes_to_iterate = ["wifidoc/release/users", "dobby/release/users"]
+    flavors_to_iterate = ["wifidoc", "dobby"]
+    #flavors_to_iterate = ["dummy"]
     base_url = "https://dobbybackend.firebaseio.com"
-    for prefix in prefixes_to_iterate:
-        url_to_fetch = base_url + "/" + prefix + ".json"
+    for flavor in flavors_to_iterate:
+        #url_to_fetch = base_url + "/" + flavor + "/" + build_type + "/users.json"
+        url_to_fetch = base_url + "/" + flavor + "/" + build_type + ".json"
         print ("processing url {0}".format(url_to_fetch))
         json_dict = fetch_data(url_to_fetch)
-        leaderboard_dict =  merge_two_dicts(leaderboard_dict, parse_json(json_dict))
+        leaderboard_dict =  merge_two_dicts(leaderboard_dict, parse_json(json_dict, flavor))
     return leaderboard_dict
 
 def fetch_handle_info(handles_url):
@@ -232,34 +242,77 @@ def fetch_handle_info(handles_url):
         USER_ID_TO_HANDLE[handle.uid] = handle
     return handles_dict		
 
+def update_leaderboard_key_for_handles(leaderboard_dict):
+    for key, value in leaderboard_dict.iteritems():
+        uid = value.uid
+        handle = USER_ID_TO_HANDLE.get(value.uid)
+        if handle:
+            handle.leaderboard_key = key
+            handle.speed = value.speed
+            USER_ID_TO_HANDLE[value.uid] = handle
+
 def write_handles(handles_url):
     handles_dict_to_write = {}
     for key, value in USER_ID_TO_HANDLE.iteritems():
         handles_dict_to_write[value.key] = value
     handles_data = jsonpickle.encode(handles_dict_to_write, unpicklable=False)
-    print handles_data
+    #print handles_data
     r = requests.put(handles_url, data=handles_data)
     print r.status_code
-    print r.content
+    #print r.content
+
+def write_leaderboard(leaderboard_dict, leaderboard_url):
+    leaderboard_data = jsonpickle.encode(leaderboard_dict, unpicklable=False)
+    #print leaderboard_data
+    r = requests.put(leaderboard_url, data=leaderboard_data)
+    print r.status_code
+
+def write_user_to_handle_mapping(build_type):
+    user_to_handle_name_dict = {}
+    base_url = "https://dobbybackend.firebaseio.com"
+    #print "Printing user to handle"
+    for key, value in USER_ID_TO_HANDLE.iteritems():
+        user_flavor = USER_ID_TO_FLAVOR.get(key)
+        #print key, user_flavor, value
+        if user_flavor is None:
+            continue
+        user_url_to_put_handle = base_url + "/" + user_flavor + "/" + build_type + "/users/" + key + ".json"
+        user_to_handle_name_dict["handle"] = value.key
+        user_data = json.dumps(user_to_handle_name_dict)
+        print "Putting data for user:{0} at {1} value {2}".format(key, user_url_to_put_handle, value.key)
+        print user_data
+        r = requests.patch(user_url_to_put_handle, data=user_data)
+        print r.status_code
+
 
 def main():
     default_url = "https://dobbybackend.firebaseio.com/dobby/release/users/ac0ad728-c80a-4daf-8125-3ae5545e3d7f.json?print=pretty"
-    default_leaderboard_url = "https://dobbybackend.firebaseio.com/leaderboard.json?print=pretty"
-    default_handles_url = "https://dobbybackend.firebaseio.com/handles.json?print=pretty"
+    default_leaderboard_base_url = "https://dobbybackend.firebaseio.com/leaderboard"
+    default_handles_base_url = "https://dobbybackend.firebaseio.com/handles"
     op = OptionParser()
     op.add_option("-v", "--verbose", action="store_true", help="verbose", default=False)
     op.add_option("-w", "--writetobackend", action="store_true", dest="write_to_backend", help="use -w to write to backend", default=False)
+    op.add_option("-p", "--userelease", action="store_true", dest="use_release", help="Use Release app data", default=False)
     op.add_option("-a", "--fetchalldata", action="store_true", dest="fetch_all_data", help="Fetch all data for leaderboard (ignores database url, default false)", default=False)
     op.add_option("-r", "--randomusers", action="store_false", dest="random_users_names", help="Gen randome user names", default=True)
     op.add_option("-u", "--dataurl", dest="database_url", help="Database url to crawl", default=default_url)
-    op.add_option("-l", "--leaderboardurl", dest="leaderboard_url", help="Leader board url", default=default_leaderboard_url)
+    op.add_option("-l", "--leaderboardurl", dest="base_leaderboard_url", help="Leader board url", default=default_leaderboard_base_url)
     op.add_option("-m", "--maxusers", dest="max_users", help="Max users in leaderboard", default="100")
     (opts, args) = op.parse_args()
 
-    fetch_handle_info(default_handles_url)
+
+    if opts.use_release:
+        build_type = "release"
+    else:
+        build_type = "debug"
 	
+    handles_url = default_handles_base_url + "/" + build_type + ".json"
+    leaderboard_url = opts.base_leaderboard_url + "/" + build_type + ".json"
+
+    fetch_handle_info(handles_url)
+
     if opts.fetch_all_data:
-        leaderboard_dict = iterate_over_dobby_inferences()
+        leaderboard_dict = iterate_over_dobby_inferences(build_type)
     else:
     	json_dict = fetch_data(opts.database_url)
     	leaderboard_dict =  parse_json(json_dict)
@@ -267,17 +320,30 @@ def main():
     #sorted_leaderboard_dict = OrderedDict(sorted(leaderboard_dict.items(), key=lambda t: t[0], reverse=True))
     print "Dumping leaderboard dict"
     sorted_leaderboard_dict = {}
+    handles_already_present_dict = {}
     user_count = 0
+    
+    #Prune leaderboard so only the highest speed remains
+    
     for key in sorted(leaderboard_dict, reverse=True):
-        user_count = user_count + 1
         print user_count, key, leaderboard_dict[key]
-        sorted_leaderboard_dict[key] = leaderboard_dict[key]
-        if (user_count >= int(opts.max_users)):
-            break
+        leaderboard_info = leaderboard_dict[key]
+        handle_present = handles_already_present_dict.get(leaderboard_info.handle)
+        if handle_present:
+            continue
+        else:
+            handles_already_present_dict[leaderboard_info.handle] = leaderboard_info.key
+            sorted_leaderboard_dict[key] = leaderboard_info
+            user_count = user_count + 1
+            if (user_count >= int(opts.max_users)):
+                break
+
+    update_leaderboard_key_for_handles(sorted_leaderboard_dict)
 
     if opts.write_to_backend:	
-        write_leaderboard(sorted_leaderboard_dict, opts.leaderboard_url)
-        write_handles(default_handles_url)
+        write_leaderboard(sorted_leaderboard_dict, leaderboard_url)
+        write_handles(handles_url)
+        write_user_to_handle_mapping(build_type)
 
 if __name__ == '__main__':
     main()
