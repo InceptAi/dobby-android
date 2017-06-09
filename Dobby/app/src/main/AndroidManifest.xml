@@ -7,6 +7,8 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Permission to start Alarm on device reboot -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
     <application
         android:name=".DobbyApplication"
@@ -14,6 +16,19 @@
         android:screenOrientation="portrait"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity android:name=".ui.ExpertChatActivity"></activity>
+
+        <receiver android:name="com.inceptai.dobby.heartbeat.AlarmReceiver" android:enabled="true">
+            <intent-filter>
+                <action android:name="DAILY_HEARTBEAT_INTENT"/>
+            </intent-filter>
+        </receiver>
+        <receiver android:name="com.inceptai.dobby.heartbeat.DeviceBootReceiver" android:enabled="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>

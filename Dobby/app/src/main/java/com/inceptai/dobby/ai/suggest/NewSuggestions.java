@@ -1,8 +1,12 @@
+
 package com.inceptai.dobby.ai.suggest;
 
+import android.content.Context;
 import android.support.annotation.Nullable;
+import android.support.constraint.solver.SolverVariable;
 
 import com.inceptai.dobby.ai.DataInterpreter;
+import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 
 public class NewSuggestions {
@@ -22,100 +26,128 @@ public class NewSuggestions {
         }
     }
 
-    private static Snippet bandwidth(DataInterpreter.BandwidthGrade grade) {
-        if (grade.getUploadBandwidthMetric() == DataInterpreter.MetricType.UNKNOWN &&
-                grade.getDownloadBandwidthMetric() == DataInterpreter.MetricType.UNKNOWN) {
-            return Snippet.ofType(Snippet.Type.TYPE_BW_UNKNOWN);
-        }
-        Snippet download = download(grade);
-        Snippet upload = upload(grade);
-        return Snippet.ofType(Snippet.Type.TYPE_OVERALL_BANDWIDTH_OK, download, upload);
+    private DataSummary dataSummary;
+    private Context context;
+
+    public NewSuggestions(DataSummary dataSummary, Context context) {
+        this.dataSummary = dataSummary;
+        this.context = context;
     }
 
-    // Can return a SNIPPET. The Snippet class can have a more text and a basic text.
-    // Browsing, streaming (video/audio) and file downloads. Twitter, facebook etc, 100KBs.
-    // SnippetType class that
-    private static Snippet download(DataInterpreter.BandwidthGrade grade) {
+    public LocalSummary getSuggestions() {
+
+        Summary overallSummary = overall(dataSummary.bandwidthGrade);
+        DobbyLog.w("New summary: " + overallSummary);
+        return new SnippetLocalizer(context).localize(overallSummary);
+    }
+
+    private static Summary overall(DataInterpreter.BandwidthGrade grade) {
+        if (grade.getUploadBandwidthMetric() == DataInterpreter.MetricType.UNKNOWN &&
+                grade.getDownloadBandwidthMetric() == DataInterpreter.MetricType.UNKNOWN) {
+            DobbyLog.i("Returning snippet of UNKNOWN type.");
+            return new Summary(Summary.Type.TYPE_BW_UNKNOWN, Summary.Type.TYPE_UPLOAD_BW_UNKNOWN,
+                    Summary.Type.TYPE_DOWNLOAD_BW_UNKNOWN, grade);
+        }
+        @Summary.Type
+        int download = download(grade);
+
+        @Summary.Type
+        int upload = upload(grade);
+
+        @Summary.Type
+        int overall = Summary.Type.TYPE_BW_UNKNOWN;
+
+        if ((upload == Summary.Type.TYPE_UPLOAD_BW_POOR || upload == Summary.Type.TYPE_UPLOAD_BW_AND_RATIO_POOR) &&
+                (download == Summary.Type.TYPE_DOWNLOAD_BW_LT40KBPS ||
+                download == Summary.Type.TYPE_DOWNLOAD_BW_LT100KBPS ||
+                download == Summary.Type.TYPE_DOWNLOAD_BW_LT500KBPS)) {
+
+            overall = Summary.Type.TYPE_OVERALL_BANDWIDTH_POOR;
+        } else if ((upload == Summary.Type.TYPE_UPLOAD_BW_OK_RATIO_POOR) &&
+                (download == Summary.Type.TYPE_DOWNLOAD_BW_LT_1MBPS ||
+                        download == Summary.Type.TYPE_DOWNLOAD_BW_1MBPS ||
+                        download == Summary.Type.TYPE_DOWNLOAD_BW_2MBPS)) {
+            overall = Summary.Type.TYPE_OVERALL_BANDWIDTH_OK;
+        } else if ((upload == Summary.Type.TYPE_UPLOAD_BW_AND_RATIO_OK) &&
+                (download == Summary.Type.TYPE_DOWNLOAD_BW_4MBPS ||
+                download == Summary.Type.TYPE_DOWNLOAD_BW_6TO8 ||
+                download == Summary.Type.TYPE_DOWNLOAD_BW_8TO20 ||
+                download == Summary.Type.TYPE_DOWNLOAD_BW_ABOVE20)) {
+            overall = Summary.Type.TYPE_OVERALL_BANDWIDTH_GOOD;
+        }
+
+        return new Summary(overall, upload, download, grade);
+    }
+
+    @Summary.Type
+    private static int download(DataInterpreter.BandwidthGrade grade) {
 
         if (grade.getDownloadBandwidthMetric() == DataInterpreter.MetricType.UNKNOWN) {
-            return Snippet.ofType(Snippet.Type.TYPE_DOWNLOAD_BW_UNKNOWN);
+            return Summary.Type.TYPE_DOWNLOAD_BW_UNKNOWN;
         }
 
         double bwMbps = Utils.toMbps(grade.getDownloadBandwidth());
         double bwKbps = Utils.toKbps(grade.getDownloadBandwidth());
 
         if (bwKbps < 40.00) {
-            return Snippet.ofType(Snippet.Type.TYPE_DOWNLOAD_BW_LT40KBPS, bwKbps);
+            return Summary.Type.TYPE_DOWNLOAD_BW_LT40KBPS;
         }
 
         if (bwKbps < 100.0) {
-            Snippet.ofType(Snippet.Type.TYPE_DOWNLOAD_BW_LT100KBPS, bwKbps);
+            return Summary.Type.TYPE_DOWNLOAD_BW_LT100KBPS;
         }
 
         if (bwKbps < 500.0) {
-            Snippet.ofType(Snippet.Type.TYPE_DOWNLOAD_BW_LT500KBPS, bwKbps);
+            return Summary.Type.TYPE_DOWNLOAD_BW_LT500KBPS;
         }
 
         if (bwMbps < 0.95) {
-            return Snippet.ofType(Snippet.Type.TYPE_DOWNLOAD_BW_LT_1MBPS, bwMbps);
-        }
-
-        if (bwMbps < 0.95) {
-            return Snippet.ofType(Snippet.Type.TYPE_DOWNLOAD_BW_LT_1MBPS, bwMbps);
+            return Summary.Type.TYPE_DOWNLOAD_BW_LT_1MBPS;
         }
 
         if (bwMbps < 1.8) {
-            return Snippet.ofType(Snippet.Type.TYPE_DOWNLOAD_BW_1MBPS, bwMbps);
+            return Summary.Type.TYPE_DOWNLOAD_BW_1MBPS;
         }
 
         if (bwMbps < 2.6) {
-            return Snippet.ofType(Snippet.Type.TYPE_DOWNLOAD_BW_2MBPS, bwMbps);
+            return Summary.Type.TYPE_DOWNLOAD_BW_2MBPS;
         }
 
         if (bwMbps < 5.0) {
-            return Snippet.ofType(Snippet.Type.TYPE_DOWNLOAD_BW_4MBPS, bwMbps);
+            return Summary.Type.TYPE_DOWNLOAD_BW_4MBPS;
         }
 
         if (bwMbps < 8.5) {
-            return Snippet.ofType(Snippet.Type.TYPE_DOWNLOAD_BW_6TO8, bwMbps);
+            return Summary.Type.TYPE_DOWNLOAD_BW_6TO8;
         }
 
         if (bwMbps < 22.0) {
-            return Snippet.ofType(Snippet.Type.TYPE_DOWNLOAD_BW_8TO20, bwMbps);
+            return Summary.Type.TYPE_DOWNLOAD_BW_8TO20;
         }
 
         if (bwMbps > 22.0) {
-            return Snippet.ofType(Snippet.Type.TYPE_DOWNLOAD_BW_ABOVE20, bwMbps);
+            return Summary.Type.TYPE_DOWNLOAD_BW_ABOVE20;
         }
-        return Snippet.ofType(Snippet.Type.TYPE_DOWNLOAD_BW_UNKNOWN);
+        return Summary.Type.TYPE_DOWNLOAD_BW_UNKNOWN;
     }
 
-    private static Snippet upload(DataInterpreter.BandwidthGrade grade) {
+    @Summary.Type
+    private static int upload(DataInterpreter.BandwidthGrade grade) {
 
         if (grade.getUploadBandwidthMetric() == DataInterpreter.MetricType.UNKNOWN) {
-            return Snippet.ofType(Snippet.Type.TYPE_UPLOAD_BW_UNKNOWN);
+            return Summary.Type.TYPE_UPLOAD_BW_UNKNOWN;
         }
 
         double uploadBwMbps = Utils.toMbps(grade.getUploadBandwidthMetric());
         double downloadBwMbps = Utils.toMbps(grade.getDownloadBandwidth());
         double ratio = uploadBwMbps / downloadBwMbps;
 
-        if (ratio < 0.005) {
-            return Snippet.ofType(Snippet.Type.TYPE_UPLOAD_BW_RATIO_VERY_POOR, uploadBwMbps);
-        }
-
-        if (ratio < 0.001) {
-            return Snippet.ofType(Snippet.Type.TYPE_UPLOAD_BW_RATIO_LT_1PERCENT, uploadBwMbps);
-        }
+        DobbyLog.e("uploadMbps: " + uploadBwMbps + " ratio:" + ratio);
         if (ratio < 0.095) {
-            return Snippet.ofType(Snippet.Type.TYPE_UPLOAD_BW_RATIO_LT_10PERCENT, uploadBwMbps);
+            return (uploadBwMbps <= 0.5) ? Summary.Type.TYPE_UPLOAD_BW_AND_RATIO_POOR :
+                    Summary.Type.TYPE_UPLOAD_BW_OK_RATIO_POOR;
         }
-        if (ratio < 0.25) {
-            return Snippet.ofType(Snippet.Type.TYPE_UPLOAD_BW_RATIO_LT_25PERCENT, uploadBwMbps);
 
-        } else if (ratio > 0.24) {
-            return Snippet.ofType(Snippet.Type.TYPE_UPLOAD_BW_RATIO_GT_25PERCENT, uploadBwMbps);
-        }
-        return Snippet.ofType(Snippet.Type.TYPE_UPLOAD_BW_UNKNOWN);
+        return (uploadBwMbps <= 0.5) ? Summary.Type.TYPE_UPLOAD_BW_POOR : Summary.Type.TYPE_UPLOAD_BW_AND_RATIO_OK;
     }
 }

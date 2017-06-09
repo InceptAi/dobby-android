@@ -195,7 +195,6 @@ public class FakeDataFragment extends Fragment implements View.OnClickListener, 
         spinner.setSelection(selection, true);
     }
 
-
     /**
      * Populates from 0 .. max - 1
      * @param spinner

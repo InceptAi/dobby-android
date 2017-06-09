@@ -18,4 +18,6 @@
     <dimen name="btn_padding">16dp</dimen>
     <dimen name="btn_normal_padding">8dp</dimen>
     <dimen name="btn_normal_margin">4dp</dimen>
+    <dimen name="app_bar_height">180dp</dimen>
+    <dimen name="bottom_button_grid_width">70dp</dimen>
 </resources>

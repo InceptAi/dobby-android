@@ -1,0 +1,20 @@
+Wifi Tester Speedtest Results
+Dated: June 2, 2017 3:54 PM.
+Test configuration:
+
+  Test Duration: 10 seconds upload, 10 seconds download.
+  Test server used: 192.168.2.30, location: San Francisco, CA
+  Latency to test server: 10 ms.
+
+Bandwidth Results:
+  Download: 34.1 Mbps  Upload: 12.5 Mbps
+
+ Wifi Statistics:
+  SSID: "Big Apple" Signal: -79 dbM
+
+Ping Statistics:
+  Router: 12 ms	   Google: 45 ms
+  Your DNS: 34 ms  Alt DNS: 
+ 
+Contact: hello@obiai.tech for further support.
+Download Wifi Tester at the Google Play Store.

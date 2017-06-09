@@ -3,8 +3,11 @@ package com.inceptai.dobby;
 import android.Manifest;
 import android.annotation.TargetApi;
 import android.content.ActivityNotFoundException;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.wifi.ScanResult;
 import android.os.Build;
@@ -34,6 +37,8 @@ import com.inceptai.dobby.ai.DobbyAi;
 import com.inceptai.dobby.ai.RtDataSource;
 import com.inceptai.dobby.ai.SuggestionCreator;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
+import com.inceptai.dobby.fake.FakeDataIntentReceiver;
+import com.inceptai.dobby.heartbeat.HeartBeatManager;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.ui.ChatFragment;
 import com.inceptai.dobby.ui.DebugFragment;
@@ -63,6 +68,7 @@ public class MainActivity extends AppCompatActivity
     @Inject NetworkLayer networkLayer;
     @Inject DobbyEventBus eventBus;
     @Inject DobbyAnalytics dobbyAnalytics;
+    @Inject HeartBeatManager heartBeatManager;
 
 
     private Handler handler;
@@ -95,6 +101,9 @@ public class MainActivity extends AppCompatActivity
         handler = new Handler(this);
 
         setupChatFragment();
+        //heartBeatManager.cancelAlarm();
+        //heartBeatManager.registerAlarmReceiverWithContext(this);
+        heartBeatManager.setDailyHeartBeat();
         //requestPermissions();
     }
 
@@ -303,6 +312,16 @@ public class MainActivity extends AppCompatActivity
                 return;
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
     }
 
     @Override

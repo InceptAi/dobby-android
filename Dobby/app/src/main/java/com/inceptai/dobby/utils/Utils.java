@@ -48,18 +48,31 @@ import java.util.concurrent.TimeUnit;
 
 public class Utils {
     public static final String EMPTY_STRING = "";
+    public static final String UNKNOWN = "UNKNOWN";
     public static final String TRUE_STRING = "true";
     public static final String FALSE_STRING = "false";
+    public static final String ZERO_POINT_ZERO = "0.0";
+    public static final String WIFIDOC_FLAVOR = "wifidoc";
+    public static final String PREFERENCES_FILE = "wifi_tester_settings";
+    public static final String USER_UUID = "userUuid";
+
     private static final int READ_TIMEOUT_MS = 5000;
     private static final int CONNECTION_TIMEOUT_MS = 5000;
-    public static final String ZERO_POINT_ZERO = "0.0";
     public static final String UNKNOWN_LATENCY_STRING = "--";
     private static final int MAX_SSID_LENGTH = 30;
+
     private static Random random = new Random();
 
-    public static final String PREFERENCES_FILE = "wifi_tester_settings";
-
     private Utils() {
+    }
+
+    public static String fetchUuid(Context context) {
+        String uuid = Utils.readSharedSetting(context, USER_UUID, EMPTY_STRING);
+        if (EMPTY_STRING.equals(uuid)) {
+            uuid = UUID.randomUUID().toString();
+            Utils.saveSharedSetting(context, USER_UUID, uuid);
+        }
+        return uuid;
     }
 
     public static String limitSsid(String ssid) {
@@ -675,6 +688,18 @@ public class Utils {
         editor.apply();
     }
 
+    public static long readSharedSetting(Context ctx, String settingName, long defaultValue) {
+        SharedPreferences sharedPref = ctx.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE);
+        return sharedPref.getLong(settingName, defaultValue);
+    }
+
+    public static void saveSharedSetting(Context ctx, String settingName, long settingValue) {
+        SharedPreferences sharedPref = ctx.getSharedPreferences(PREFERENCES_FILE, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putLong(settingName, settingValue);
+        editor.apply();
+    }
+
 
     public static String convertIntegerDoubleHashMapToJsonString(HashMap<Integer, Double> integerDoubleHashMap) {
         Gson gson = new Gson();
@@ -736,6 +761,14 @@ public class Utils {
 
     public static double toMbps(double bwBytes) {
         return bwBytes * 1.0e-6;
+    }
+
+    public static String toMbpsString(double bwBytes) {
+        return String.format("%2.1f", toMbps(bwBytes));
+    }
+
+    public static String doubleToString(double value) {
+        return String.format("%2.1f", value);
     }
 
     public static double toKbps(double bwBytes) {

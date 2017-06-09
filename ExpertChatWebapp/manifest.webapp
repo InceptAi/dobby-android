@@ -1,0 +1,22 @@
+{
+  "version": "1.0.0",
+  "name": "Expert Chat",
+  "launch_path": "/index.html",
+  "description": "Expert help for WifiTester and WifiExpert users",
+  "developer": {
+    "name": "Incept AI",
+    "url": "https://inceptai.com"
+  },
+  "installs_allowed_from": [
+    "*"
+  ],
+  "default_locale": "en",
+  "permissions": {
+  },
+  "locales": {
+    "en": {
+      "name": "Expert Chat",
+      "description": "Expert help for WifiTester and WifiExpert users"
+    }
+  }
+}

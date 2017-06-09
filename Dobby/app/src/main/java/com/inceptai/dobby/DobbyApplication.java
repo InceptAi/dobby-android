@@ -24,7 +24,7 @@ public class DobbyApplication extends Application {
     public static final String TAG = "Dobby";
     public static final String DOBBY_FLAVOR = "dobby";
     public static final String WIFIDOC_FLAVOR = "wifidoc";
-    public static final String USER_UUID = "userUuid";
+
     public static final AtomicBoolean USE_FAKES = new AtomicBoolean(false);
     private final AtomicReference<String> userUuid = new AtomicReference<>();
 
@@ -42,11 +42,7 @@ public class DobbyApplication extends Application {
     }
 
     private synchronized void fetchUuid() {
-        String uuid = Utils.readSharedSetting(this, USER_UUID, EMPTY_STRING);
-        if (EMPTY_STRING.equals(uuid)) {
-            uuid = UUID.randomUUID().toString();
-            Utils.saveSharedSetting(this, USER_UUID, uuid);
-        }
+        String uuid = Utils.fetchUuid(this);
         userUuid.set(uuid);
     }
 
