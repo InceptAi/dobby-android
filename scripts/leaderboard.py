@@ -53,15 +53,28 @@ class InferenceRecord(object):
 '''
 
 class LeaderBoardInfo(object):
-    def __init__(self, speed, handle, uid, inference_id):
+    def __init__(self, speed, handle, uid, inference_id, app_version):
         self.speed = speed
         self.handle = handle
         self.uid = uid
         self.inference_id = inference_id
+        self.app_version = app_version
         self.key = format_speed(speed) + "_" + handle
 
     def __str__(self):
         #return self.key
+        return json.dumps(self.__dict__)
+
+    def __repr__(self):
+        return self.__str__()
+
+class Handle(object):
+    def __init__(self, key=None, uid=None, **kwargs):
+        self.key = key
+        self.uid = uid
+        self.__dict__.update(kwargs)
+
+    def __str__(self):
         return json.dumps(self.__dict__)
 
     def __repr__(self):
@@ -98,13 +111,12 @@ def generate_random_username():
 
 def generate_handle(user_id, random_handle=False):
     if not random_handle:
-        handle = user_id
+        handle = Handle(key=user_id, uid=user_id)
     else:
-        handle = generate_random_username()
+        handle = Handle(key=generate_random_username(), uid=user_id)
     return handle
 
 def format_speed(speed):
-    #return str(round(speed,2)).rjust(6, '0')
     speed_to_return = ("%0.2f" % speed).rjust(6, '0')
     return speed_to_return.replace('.',':')
     
@@ -140,17 +152,26 @@ def read_json_from_file(file_name):
     else:
         return json_to_return
 
+def parse_handle(handle_json_dict, handle_key):
+    handle = Handle(**handle_json_dict)
+    handle.key = handle_key
+    return handle
+
 def parse_inference(inference_json_dict, inference_key):
     inference_record = InferenceRecord(**inference_json_dict)
     bandwidth_grade_dict = json.loads(inference_record.bandwidthGradeJson)
     bandwidth_grade = BandwidthGrade(**bandwidth_grade_dict)
-    if USER_ID_TO_HANDLE.get(inference_record.uid) is None:
-        USER_ID_TO_HANDLE[inference_record.uid] = generate_handle(inference_record.uid, ENABLE_RANDOM_USERNAMES) 
-    #leaderboard_info = LeaderBoardInfo(speed=bandwidth_grade.downloadMbps, handle=inference_record.uid, uid=inference_record.uid, inference_id=inference_key)
+    handle_to_use = USER_ID_TO_HANDLE.get(inference_record.uid)
+
+    if handle_to_use is None:
+        handle_to_use = generate_handle(inference_record.uid, ENABLE_RANDOM_USERNAMES) 
+        USER_ID_TO_HANDLE[inference_record.uid] = handle_to_use 
+
     if bandwidth_grade.downloadMbps > 0:
-        leaderboard_info = LeaderBoardInfo(speed=bandwidth_grade.downloadMbps, handle=USER_ID_TO_HANDLE.get(inference_record.uid), uid=inference_record.uid, inference_id=inference_key)
+        leaderboard_info = LeaderBoardInfo(speed=bandwidth_grade.downloadMbps, handle=handle_to_use.key, uid=inference_record.uid, inference_id=inference_key, app_version=inference_record.appVersion)
     else:
         leaderboard_info = None
+
     return leaderboard_info
 		
 def merge_two_dicts(x, y):
@@ -178,11 +199,11 @@ def parse_json(json_data_dict):
 
     
 
-def fetch_data(database_url):
-    #url = "https://dobbybackend.firebaseio.com/dobby/release/users/ac0ad728-c80a-4daf-8125-3ae5545e3d7f.json?print=pretty"
-    response = urllib.urlopen(database_url)
+def fetch_data(url_to_fetch):
+    response = urllib.urlopen(url_to_fetch)
     data = json.loads(response.read())
-    #print data
+    if data is None:
+        data = {}
     return data
 
 def write_leaderboard(leaderboard_dict, leaderboard_url):
@@ -192,7 +213,7 @@ def write_leaderboard(leaderboard_dict, leaderboard_url):
     
 def iterate_over_dobby_inferences():
     leaderboard_dict = {}
-    prefixes_to_iterate = ["wifidoc", "dobby", "inferences"]
+    prefixes_to_iterate = ["wifidoc/release/users", "dobby/release/users"]
     base_url = "https://dobbybackend.firebaseio.com"
     for prefix in prefixes_to_iterate:
         url_to_fetch = base_url + "/" + prefix + ".json"
@@ -201,10 +222,30 @@ def iterate_over_dobby_inferences():
         leaderboard_dict =  merge_two_dicts(leaderboard_dict, parse_json(json_dict))
     return leaderboard_dict
 
-	
+def fetch_handle_info(handles_url):
+    handles_dict = {}
+    handles_json_dict = fetch_data(handles_url)
+    for key, value in handles_json_dict.iteritems():
+        handle = parse_handle(handle_json_dict=value, handle_key=key)
+        handles_dict[handle.key] = handle
+        #Update global dict
+        USER_ID_TO_HANDLE[handle.uid] = handle
+    return handles_dict		
+
+def write_handles(handles_url):
+    handles_dict_to_write = {}
+    for key, value in USER_ID_TO_HANDLE.iteritems():
+        handles_dict_to_write[value.key] = value
+    handles_data = jsonpickle.encode(handles_dict_to_write, unpicklable=False)
+    print handles_data
+    r = requests.put(handles_url, data=handles_data)
+    print r.status_code
+    print r.content
+
 def main():
     default_url = "https://dobbybackend.firebaseio.com/dobby/release/users/ac0ad728-c80a-4daf-8125-3ae5545e3d7f.json?print=pretty"
     default_leaderboard_url = "https://dobbybackend.firebaseio.com/leaderboard.json?print=pretty"
+    default_handles_url = "https://dobbybackend.firebaseio.com/handles.json?print=pretty"
     op = OptionParser()
     op.add_option("-v", "--verbose", action="store_true", help="verbose", default=False)
     op.add_option("-w", "--writetobackend", action="store_true", dest="write_to_backend", help="use -w to write to backend", default=False)
@@ -214,6 +255,8 @@ def main():
     op.add_option("-l", "--leaderboardurl", dest="leaderboard_url", help="Leader board url", default=default_leaderboard_url)
     op.add_option("-m", "--maxusers", dest="max_users", help="Max users in leaderboard", default="100")
     (opts, args) = op.parse_args()
+
+    fetch_handle_info(default_handles_url)
 	
     if opts.fetch_all_data:
         leaderboard_dict = iterate_over_dobby_inferences()
@@ -234,6 +277,7 @@ def main():
 
     if opts.write_to_backend:	
         write_leaderboard(sorted_leaderboard_dict, opts.leaderboard_url)
+        write_handles(default_handles_url)
 
 if __name__ == '__main__':
     main()
