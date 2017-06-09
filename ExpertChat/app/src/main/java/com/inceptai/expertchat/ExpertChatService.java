@@ -159,7 +159,7 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
         Log.i(Utils.TAG, " From User UUID: " + fromUuid);
         Intent intent = new Intent(context, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        intent.getExtras().putString(MainActivity.NOTIFICATION_USER_UUID, fromUuid);
+        intent.putExtra(MainActivity.NOTIFICATION_USER_UUID, fromUuid);
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent,
                 PendingIntent.FLAG_ONE_SHOT);
 

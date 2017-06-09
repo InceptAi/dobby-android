@@ -28,6 +28,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static android.support.v4.app.NotificationCompat.VISIBILITY_PUBLIC;
+
 /**
  * A "service" that connects to the expert chat system.
  * This is NOT an Android service.
@@ -101,6 +103,7 @@ public class ExpertChatService implements ChildEventListener, ValueEventListener
                 .setContentIntent(pendingIntent)
                 .setContentTitle(title)
                 .setContentText(body)
+                .setVisibility(VISIBILITY_PUBLIC)
                 .setSound(defaultSoundUri);
 
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
