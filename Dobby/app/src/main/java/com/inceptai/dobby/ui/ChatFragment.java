@@ -140,6 +140,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         void onUserQuery(String text);
         void onMicPressed();
         void onRecyclerViewReady();
+        void onFragmentDetached();
     }
 
     public ChatFragment() {
@@ -181,11 +182,10 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         // Inflate the layout for this fragment
         View fragmentView = inflater.inflate(R.layout.fragment_chat, container, false);
         setupTextToSpeech();
-
         chatRv = (RecyclerView) fragmentView.findViewById(R.id.chatRv);
-        recyclerViewAdapter = new ChatRecyclerViewAdapter(this.getContext(), new LinkedList<ChatEntry>());
+        recyclerViewAdapter = new ChatRecyclerViewAdapter(getContext(), new LinkedList<ChatEntry>());
         chatRv.setAdapter(recyclerViewAdapter);
-        chatRv.setLayoutManager(new LinearLayoutManager(this.getContext()));
+        chatRv.setLayoutManager(new LinearLayoutManager(getContext()));
 
         handler = new Handler(this);
         bwGaugeLayout = (LinearLayout) fragmentView.findViewById(R.id.bw_gauge_ll);
@@ -271,6 +271,9 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     @Override
     public void onDetach() {
         super.onDetach();
+        if (mListener != null) {
+            mListener.onFragmentDetached();
+        }
         mListener = null;
     }
 
@@ -510,10 +513,11 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         actionMenu.removeAllViewsInLayout();
         for (final int userResponseType: userResponseTypes) {
             final String buttonText = UserResponse.getStringForResponseType(userResponseType);
-            if (buttonText == null || buttonText.equals(Utils.EMPTY_STRING)) {
+            //Returning if context is null
+            if (buttonText == null || buttonText.equals(Utils.EMPTY_STRING) || getContext() == null) {
                 continue;
             }
-            Button button = new Button(this.getContext(), null, android.R.attr.buttonStyleSmall);
+            Button button = new Button(getContext(), null, android.R.attr.buttonStyleSmall);
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
             params.setMargins(10, 0, 10, 10);

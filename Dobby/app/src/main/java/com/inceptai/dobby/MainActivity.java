@@ -3,11 +3,8 @@ package com.inceptai.dobby;
 import android.Manifest;
 import android.annotation.TargetApi;
 import android.content.ActivityNotFoundException;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.wifi.ScanResult;
 import android.os.Build;
@@ -37,7 +34,6 @@ import com.inceptai.dobby.ai.DobbyAi;
 import com.inceptai.dobby.ai.RtDataSource;
 import com.inceptai.dobby.ai.SuggestionCreator;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
-import com.inceptai.dobby.fake.FakeDataIntentReceiver;
 import com.inceptai.dobby.heartbeat.HeartBeatManager;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.ui.ChatFragment;
@@ -73,6 +69,7 @@ public class MainActivity extends AppCompatActivity
 
     private Handler handler;
     private ChatFragment chatFragment;
+    private boolean isFragmentActive = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -134,6 +131,7 @@ public class MainActivity extends AppCompatActivity
         //fragmentTransaction.addToBackStack(null);
         fragmentTransaction.commit();
     }
+
 
     @Override
     public void onBackPressed() {
@@ -207,30 +205,39 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void showResponse(String text) {
         DobbyLog.v("In showResponse of MainActivity: text: " + text);
-        chatFragment.showResponse(text);
+        if (isFragmentActive) {
+            chatFragment.showResponse(text);
+        }
     }
 
     @Override
     public void showBandwidthViewCard(DataInterpreter.BandwidthGrade bandwidthGrade) {
-        chatFragment.addBandwidthResultsCardView(bandwidthGrade);
+        if (isFragmentActive) {
+            chatFragment.addBandwidthResultsCardView(bandwidthGrade);
+        }
     }
 
     @Override
     public void showNetworkInfoViewCard(DataInterpreter.WifiGrade wifiGrade, String isp, String ip) {
-        chatFragment.addOverallNetworkResultsCardView(wifiGrade, isp, ip);
+        if (isFragmentActive) {
+            chatFragment.addOverallNetworkResultsCardView(wifiGrade, isp, ip);
+        }
     }
 
     @Override
     public void showUserActionOptions(List<Integer> userResponseTypes) {
         DobbyLog.v("In showUserActionOptions of MainActivity: responseTypes: " + userResponseTypes);
-        chatFragment.showUserActionOptions(userResponseTypes);
+        if (isFragmentActive) {
+            chatFragment.showUserActionOptions(userResponseTypes);
+        }
     }
 
     @Override
     public void showDetailedSuggestions(SuggestionCreator.Suggestion suggestion) {
         DobbyLog.v("In showDetailedSuggestions of MainActivity");
-        //showDetailedSuggestionsAlert(suggestion);
-        chatFragment.showDetailedSuggestionsView(suggestion);
+        if (isFragmentActive) {
+            chatFragment.showDetailedSuggestionsView(suggestion);
+        }
     }
 
     // From DobbyAi.ResponseCallback interface.
@@ -241,7 +248,9 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void cancelTests() {
-        chatFragment.cancelTests();
+        if (isFragmentActive) {
+            chatFragment.cancelTests();
+        }
     }
 
     @Override
@@ -329,7 +338,9 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void observeBandwidth(BandwidthObserver observer) {
-        chatFragment.observeBandwidthNonUi(observer);
+        if (isFragmentActive) {
+            chatFragment.observeBandwidthNonUi(observer);
+        }
     }
 
     @Override
@@ -340,9 +351,15 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onRecyclerViewReady() {
         //Get the welcome message
+        isFragmentActive = true;
         if (dobbyAi != null) {
             dobbyAi.sendEvent(ApiAiClient.APIAI_WELCOME_EVENT);
         }
+    }
+
+    @Override
+    public void onFragmentDetached() {
+        isFragmentActive = false;
     }
 
     @Override
@@ -351,7 +368,9 @@ public class MainActivity extends AppCompatActivity
             if (resultCode == RESULT_OK && null != data) {
                 ArrayList<String> res = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
                 String inSpeech = res.get(0);
-                chatFragment.addSpokenText(inSpeech);
+                if (isFragmentActive) {
+                    chatFragment.addSpokenText(inSpeech);
+                }
                 onUserQuery(inSpeech);
             }
         } else {

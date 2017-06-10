@@ -323,6 +323,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         if (useApiAi) {
             apiAiClient.cleanup();
         }
+        responseCallback = null;
     }
 
 
