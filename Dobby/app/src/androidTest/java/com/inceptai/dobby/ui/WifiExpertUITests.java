@@ -58,6 +58,7 @@ public class WifiExpertUITests {
     public void tearDown() throws Exception {
         Log.d(TAG, "TEARDOWN");
         getActivity().finish();
+        Utils.safeSleep(1000);
         //goBackN();
 
         //super.tearDown();
