@@ -623,6 +623,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         shareFl.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                dobbyAnalytics.shareResultsEvent();
                 shareResults();
             }
         });
@@ -631,6 +632,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         expertChatFl.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                dobbyAnalytics.contactExpertEvent();
                 startActivity(new Intent(getContext(), ExpertChatActivity.class));
             }
         });

@@ -52,6 +52,19 @@ public class DobbyAnalytics {
     private static final String WIFI_EXPERT_ACCEPT_RUNNING_FULL_BANDWIDTH_TESTS_CLICKED = "expert_accept_tests";
     private static final String WIFI_EXPERT_CANCEL_BANDWIDTH_TEST_BUTTON_CLICKED = "expert_cancel_tests";
 
+    /*
+    Contact expert click event.
+    Share results event.
+    Notification shown for expert chat event.
+    Notification consumed.
+     */
+    //Expert button events
+    private static final String CONTACT_EXPERT_BUTTON_CLICKED = "contact_expert_event";
+    private static final String SHARE_RESULT_BUTTON_CLICKED = "share_result_event";
+    private static final String EXPERT_CHAT_NOTIFICATION_SHOWN = "chat_notification_shown";
+    private static final String EXPERT_CHAT_NOTIFICATION_CONSUMED = "chat_notification_consumed";
+
+
 
     //Actions triggered
     private static final String ACTION_TYPE_BANDWIDTH_TEST_TAKEN = "action_bw_test";
@@ -401,6 +414,27 @@ public class DobbyAnalytics {
         bundle.putDouble(PARAM_LATITUDE, lat);
         bundle.putDouble(PARAM_LONGITUDE, lon);
         firebaseAnalytics.logEvent(DAILY_HEARTBEAT_EVENT, bundle);
+    }
+
+    //Expert button events
+    public void contactExpertEvent() {
+        Bundle bundle = new Bundle();
+        firebaseAnalytics.logEvent(CONTACT_EXPERT_BUTTON_CLICKED, bundle);
+    }
+
+    public void shareResultsEvent() {
+        Bundle bundle = new Bundle();
+        firebaseAnalytics.logEvent(SHARE_RESULT_BUTTON_CLICKED, bundle);
+    }
+
+    public void expertChatNotificationShown() {
+        Bundle bundle = new Bundle();
+        firebaseAnalytics.logEvent(EXPERT_CHAT_NOTIFICATION_SHOWN, bundle);
+    }
+
+    public void expertChatNotificationConsumed() {
+        Bundle bundle = new Bundle();
+        firebaseAnalytics.logEvent(EXPERT_CHAT_NOTIFICATION_CONSUMED, bundle);
     }
 
 }
