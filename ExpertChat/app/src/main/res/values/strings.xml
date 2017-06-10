@@ -1,3 +1,46 @@
 <resources>
     <string name="app_name">ExpertChat</string>
+    <string name="title_activity_main">ExpertChat</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_settings">Settings</string>
+
+    <string name="sign_in">Sign In</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="expert_chat_preferences">Expert Chat Preferences</string>
+
+    <string name="app_flavor">App Flavor</string>
+    <string name="pref_flavor_title">Select app flavor</string>
+    <string name="pref_flavor_default">wifidoc</string>
+    <string-array name="pref_flavor_entries">
+        <item>Wifi Tester app</item>
+        <item>Wifi Expert app</item>
+    </string-array>
+
+    <string-array name="pref_flavor_entry_values">
+        <item>wifidoc</item>
+        <item>dobby</item>
+    </string-array>
+
+    <string name="app_build_type">Build Type</string>
+    <string name="pref_build_title">Select build type</string>
+    <string name="pref_build_default">debug</string>
+    <string-array name="pref_build_entries">
+        <item>Release build</item>
+        <item>Debug build</item>
+    </string-array>
+
+    <string-array name="pref_build_entry_values">
+        <item>release</item>
+        <item>debug</item>
+    </string-array>
+
+    <string name="expert_name_title">Your Avatar Name</string>
+    <string name="expert_name_summary">Choose an avatar for the chat sessions.</string>
+    <string name="expert_name_dialog_title">Choose a Name for your Avatar.</string>
 </resources>

@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "1094026000636-2e80ag865ng0lsqcbubugehchuuu7rq2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.inceptai.dobby.wifidoc",
+            "certificate_hash": "1aea81419ea52fa7610d721ca391f690a72efb9b"
+          }
+        },
+        {
           "client_id": "1094026000636-unj7l6mu12f204plf02kp9up8ltf7421.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
@@ -70,6 +78,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "1094026000636-2d203sorrkrtqfb85ai12glubprcmddg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.inceptai.wifiexpert",
+            "certificate_hash": "36fe5ecc376fae269b2a1e4e1ad7cf3bfe173bff"
+          }
+        },
+        {
           "client_id": "1094026000636-0k5tg5pdqgi78icqiumqsutf3o2mt5i6.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
@@ -116,6 +132,14 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "1094026000636-0e1oqaan247l1dlrcclsgbnktc97rj3g.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.inceptai.dobby.wifidoc.debug",
+            "certificate_hash": "5817fc8f1d4ecabecc7b6c4e5cf625170e939266"
+          }
+        },
         {
           "client_id": "1094026000636-3qmr636n7asdv1sbcut0usn9dmru1rhb.apps.googleusercontent.com",
           "client_type": 1,
@@ -164,6 +188,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "1094026000636-apurh3aonma3k5hbkshmmpobnhivki55.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.inceptai.wifiexpert.debug",
+            "certificate_hash": "5817fc8f1d4ecabecc7b6c4e5cf625170e939266"
+          }
+        },
+        {
           "client_id": "1094026000636-6uebeohc7f8vtj2te47bu6mu2vpqtu8n.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
@@ -210,6 +242,14 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "1094026000636-4aeicmrvh4qhrii20ip270tc50i1nchm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.inceptai.expertchat",
+            "certificate_hash": "94f6c260efb7835371cc1a61476405f92b71ce6f"
+          }
+        },
         {
           "client_id": "1094026000636-1995o024k1fikc5fkba8aes6pfmb2729.apps.googleusercontent.com",
           "client_type": 1,

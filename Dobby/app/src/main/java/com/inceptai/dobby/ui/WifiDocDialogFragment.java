@@ -33,6 +33,7 @@ public class WifiDocDialogFragment extends DialogFragment {
     public static final int DIALOG_SHOW_SUGGESTIONS = 1001;
     public static final int DIALOG_SHOW_FEEDBACK_FORM = 1002;
     public static final int DIALOG_SHOW_ABOUT_AND_PRIVACY_POLICY = 1003;
+    public static final int DIALOG_EXPERT_ONBOARDING = 1004;
 
     public static final String DIALOG_PAYLOAD = "payload";
     public static final String DIALOG_SUGGESTION_TILTE = "suggestionTitle";
@@ -67,6 +68,8 @@ public class WifiDocDialogFragment extends DialogFragment {
                 return createPrivacyPolicyDialog(bundle);
             case DIALOG_SHOW_FEEDBACK_FORM:
                 return createFeedbackFormDialogNoToast(bundle);
+            case DIALOG_EXPERT_ONBOARDING:
+                return createExpertOnboardingDialog(bundle);
         }
         return new AlertDialog.Builder(getActivity()).create();
     }
@@ -85,8 +88,14 @@ public class WifiDocDialogFragment extends DialogFragment {
         WifiDocDialogFragment fragment = new WifiDocDialogFragment();
         Bundle bundle = new Bundle();
         bundle.putInt(DIALOG_TYPE, DIALOG_SHOW_ABOUT_AND_PRIVACY_POLICY);
-        //bundle.putString(APP_NAME, appName);
-        //bundle.putString(APP_ICON, appIcon);
+        fragment.setArguments(bundle);
+        return fragment;
+    }
+
+    public static WifiDocDialogFragment forExpertOnBoarding() {
+        WifiDocDialogFragment fragment = new WifiDocDialogFragment();
+        Bundle bundle = new Bundle();
+        bundle.putInt(DIALOG_TYPE, DIALOG_EXPERT_ONBOARDING);
         fragment.setArguments(bundle);
         return fragment;
     }
@@ -120,25 +129,20 @@ public class WifiDocDialogFragment extends DialogFragment {
         return builder.create();
     }
 
-//    private Dialog createPrivacyPolicyDialog(Bundle bundle) {
-//        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-//        LayoutInflater inflater = getActivity().getLayoutInflater();
-//        rootView = inflater.inflate(R.layout.privacy_policy_dialog_fragment, null);
-//        ListView listView = (ListView) rootView.findViewById(R.id.privacy_policy_listview);
-//        ArrayAdapter<String> itemsAdapter =
-//                new ArrayAdapter<String>(getContext(), R.layout.custom_simple_list_item,
-//                        new ArrayList<String>(Arrays.asList(PRIVACY_POLICY_LIST)));
-//        listView.setAdapter(itemsAdapter);
-//        Button dismissButton = (Button) rootView.findViewById(R.id.privacy_policy_dismiss_button);
-//        dismissButton.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                dismiss();
-//            }
-//        });
-//        builder.setView(rootView);
-//        return builder.create();
-//    }
+    private Dialog createExpertOnboardingDialog(Bundle bundle) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        LayoutInflater inflater = getActivity().getLayoutInflater();
+        rootView = inflater.inflate(R.layout.expert_onboarding_dialog_fragment, null);
+        FrameLayout continueFl = (FrameLayout) rootView.findViewById(R.id.bottom_continue_fl);
+        continueFl.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dismiss();
+            }
+        });
+        builder.setView(rootView);
+        return builder.create();
+    }
 
     @NonNull
     private Dialog createPrivacyPolicyDialog(Bundle bundle) {

@@ -20,6 +20,11 @@ exports.sendNotification = functions.database.ref('/notifications/messages/{push
         return;
     }
     console.log('message ' + message);
+    console.log('message.from: ' + message.from);
+    console.log('message.to: ' + message.to);
+    console.log('message.title: ' + message.title);
+    console.log('message.body: ' + message.body);
+    console.log('message.fcmIdPath: ' + message.fcmIdPath);
 
     const senderUid = message.from;
     const receiverUid = message.to;
@@ -32,15 +37,19 @@ exports.sendNotification = functions.database.ref('/notifications/messages/{push
         return Promise.all(promises);
     }
 
-    const getInstanceIdPromise = admin.database().ref(`${fcmIdPath}/fcmToken`).once('value');
+    const getInstanceIdPromise = admin.database().ref(`${fcmIdPath}`).once('value');
     return Promise.all([getInstanceIdPromise]).then(results => {
         const instanceId = results[0].val();
+	console.log('Got fcm id: ' + instanceId);
         console.log('notifying ' + receiverUid + ' about ' + message.body + ' from ' + senderUid);
 
         const payload = {
             notification: {
                 title: message.title,
                 body: message.body,
+	        from: message.from,
+	        to: message.to,
+	        pushId: puishId
             }
         };
 
@@ -51,5 +60,5 @@ exports.sendNotification = functions.database.ref('/notifications/messages/{push
         .catch(function (error) {
             console.log("Error sending message:", error);
         });
-    }
+    });
 });
