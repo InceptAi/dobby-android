@@ -1,122 +1,266 @@
 package com.inceptai.expertchat;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.support.annotation.IdRes;
-import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
-import android.view.LayoutInflater;
+import android.support.v7.widget.Toolbar;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
-import android.widget.ProgressBar;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.google.firebase.database.ChildEventListener;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.squareup.picasso.Picasso;
 
-import org.w3c.dom.Text;
+import static com.inceptai.expertchat.Utils.EMPTY_STRING;
 
-import java.util.ArrayList;
-import java.util.List;
+public class MainActivity extends AppCompatActivity
+        implements NavigationView.OnNavigationItemSelectedListener, UserSelectionFragment.OnUserSelected, GoogleApiClient.OnConnectionFailedListener, ExpertChatService.OnExpertDataFetched {
 
-public class MainActivity extends AppCompatActivity implements ChildEventListener {
+    public static final String NOTIFICATION_USER_UUID = "notificationUserId";
 
-    private ProgressBar progressBar;
-    private DatabaseReference mFirebaseDatabaseReference;
-    private ListView roomListView;
-    private RoomArrayAdapter arrayAdapter;
+    private static final String DEFAULT_FLAVOR = Utils.WIFIDOC_FLAVOR;
+    private static final String DEFAULT_BUILD_TYPE = Utils.BUILD_TYPE_DEBUG;
 
-    private static class RoomArrayAdapter extends ArrayAdapter<String> {
+    private String selectedUserId = EMPTY_STRING;
+    private String selectedFlavor = DEFAULT_FLAVOR;
+    private String selectedBuildType = DEFAULT_BUILD_TYPE;
 
-        public RoomArrayAdapter(@NonNull Context context, @LayoutRes int resource, @IdRes int textViewResourceId, @NonNull List<String> initialList) {
-            super(context, resource, textViewResourceId, initialList);
-        }
-
-        @NonNull
-        @Override
-        public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-            String uuid = getItem(position);
-            if (convertView == null) {
-                convertView = LayoutInflater.from(getContext()).inflate(android.R.layout.simple_list_item_1, parent, false);
-                TextView tv = (TextView) convertView.findViewById(android.R.id.text1);
-                tv.setText(uuid);
-            }
-            return convertView;
-        }
-    }
+    private FirebaseAuth mFirebaseAuth;
+    private FirebaseUser mFirebaseUser;
+    private String mUsername;
+    private String mPhotoUrl;
+    private GoogleApiClient mGoogleApiClient;
+    private DrawerLayout drawerLayout;
+    private NavigationView  navigationView;
+    private ExpertChatService service;
+    private boolean respondToNotification = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        progressBar = (ProgressBar) findViewById(R.id.mainProgressBar);
-        roomListView = (ListView) findViewById(R.id.mainListView);
-        arrayAdapter = new RoomArrayAdapter(this, android.R.layout.simple_list_item_1, android.R.id.text1, new ArrayList<String>());
-        roomListView.setAdapter(arrayAdapter);
-        roomListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String userId = arrayAdapter.getItem(position);
-                Intent intent = new Intent(MainActivity.this, ExpertChatActivity.class);
-                intent.putExtra(ExpertChatActivity.UUID_EXTRA, userId);
-                startActivity(intent);
-            }
-        });
 
+        // Initialize Firebase Auth
+        mFirebaseAuth = FirebaseAuth.getInstance();
+        mFirebaseUser = mFirebaseAuth.getCurrentUser();
+
+        if (mFirebaseUser == null) {
+            // Not signed in, launch the Sign In activity
+            startActivity(new Intent(this, SignInActivity.class));
+            finish();
+            return;
+        } else {
+            mUsername = mFirebaseUser.getDisplayName();
+            if (mFirebaseUser.getPhotoUrl() != null) {
+                mPhotoUrl = mFirebaseUser.getPhotoUrl().toString();
+            }
+            service = ExpertChatService.fetchInstance(getApplicationContext());
+            service.fetchAvatar(mFirebaseUser, this);
+        }
+
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .enableAutoManage(this /* FragmentActivity */, this /* OnConnectionFailedListener */)
+                .addApi(Auth.GOOGLE_SIGN_IN_API)
+                .build();
+
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawerLayout.setDrawerListener(toggle);
+        toggle.syncState();
+
+        navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+        if (mUsername != null) {
+            Snackbar.make(drawerLayout, "Welcome " + mUsername, Snackbar.LENGTH_SHORT).show();
+        }
+
+        Bundle extras = getIntent().getExtras();
+        if (extras != null) {
+            String notifUuid = extras.getString(NOTIFICATION_USER_UUID, EMPTY_STRING);
+            if (notifUuid != null && !notifUuid.isEmpty()) {
+                /// We have a user id from a notification.
+                // TODO open chat for selected user ID.
+                Utils.saveSharedSetting(this, Utils.SELECTED_USER_UUID, notifUuid);
+                selectedUserId = notifUuid;
+                Snackbar.make(drawerLayout, "User ID: " + notifUuid, Snackbar.LENGTH_SHORT).show();
+                respondToNotification = true;
+            }
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        arrayAdapter.clear();
-        mFirebaseDatabaseReference = FirebaseDatabase.getInstance().getReference().child(ExpertChatActivity.CHAT_ROOM_CHILD_BASE_WIFI_TESTER);
-        mFirebaseDatabaseReference.addChildEventListener(this);
+        selectedFlavor = Utils.readSharedSetting(this, Utils.SELECTED_FLAVOR, DEFAULT_FLAVOR);
+        selectedUserId = Utils.readSharedSetting(this, Utils.SELECTED_USER_UUID, EMPTY_STRING);
+        selectedBuildType = Utils.readSharedSetting(this, Utils.SELECTED_BUILD_TYPE, DEFAULT_BUILD_TYPE);
+        if (respondToNotification) {
+            showChatFragment();
+            navigationView.setCheckedItem(R.id.nav_user_chat);
+        }
+        showWelcome(mPhotoUrl, mUsername);
     }
 
     @Override
-    public void onChildAdded(final DataSnapshot dataSnapshot, String s) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                progressBar.setVisibility(View.GONE);
-                arrayAdapter.add(dataSnapshot.getKey());
+    public void onBackPressed() {
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
+        }
+    }
+
+    @Override
+    public void onExpertData(ExpertData expertData) {
+        TextView avatarTv = (TextView) findViewById(R.id.profile_avatar);
+        String avatar = expertData.getAvatar();
+        if (avatar != null) {
+            avatarTv.setText("Avatar: " + avatar);
+        }
+    }
+
+    private Fragment setupFragment(Class fragmentClass, String tag) {
+        // Insert the fragment by replacing any existing fragment
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        Fragment existingFragment = fragmentManager.findFragmentByTag(tag);
+
+        if (existingFragment == null) {
+            try {
+                existingFragment = (Fragment) fragmentClass.newInstance();
+            } catch (Exception e) {
+                Log.e(Utils.TAG, "Unable to create fragment: " + fragmentClass.getCanonicalName());
+                return null;
             }
-        });
+        }
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.replace(R.id.placeholder_fl,
+                existingFragment, tag);
+        //fragmentTransaction.addToBackStack(null);
+        fragmentTransaction.commit();
+        return existingFragment;
+    }
+
+    private void showWelcome(String photoUrl, String name) {
+        FrameLayout frameLayout = (FrameLayout) findViewById(R.id.placeholder_fl);
+        frameLayout.removeAllViews();
+        View welcome = getLayoutInflater().inflate(R.layout.welcome, frameLayout, false);
+        frameLayout.addView(welcome);
+        ImageView iv = (ImageView) welcome.findViewById(R.id.profile_image);
+        TextView tv = (TextView) welcome.findViewById(R.id.profile_name);
+        if (name != null) tv.setText(name);
+        if (photoUrl != null) Picasso.with(this).load(photoUrl).into(iv);
+
+        TextView avatarTv = (TextView) welcome.findViewById(R.id.profile_avatar);
+        String avatar = service.getAvatar();
+        if (avatar != null) {
+            avatarTv.setText("Avatar: " + avatar);
+        }
+    }
+
+    private void clearFrameLayout() {
+        FrameLayout frameLayout = (FrameLayout) findViewById(R.id.placeholder_fl);
+        frameLayout.removeAllViews();
     }
 
     @Override
-    public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
     }
 
     @Override
-    public void onChildRemoved(DataSnapshot dataSnapshot) {
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
 
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings) {
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @SuppressWarnings("StatementWithEmptyBody")
+    @Override
+    public boolean onNavigationItemSelected(MenuItem item) {
+        // Handle navigation view item clicks here.
+        int id = item.getItemId();
+
+        clearFrameLayout();
+        if (id == R.id.nav_select_user) {
+            showUserSelectionFragment();
+        } else if (id == R.id.nav_user_chat) {
+            showChatFragment();
+        } else if (id == R.id.nav_settings) {
+            showPreferenceFragment();
+        } else if (id == R.id.nav_stats) {
+
+        }
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+        return true;
+    }
+
+    private void showChatFragment() {
+        ChatFragment fragment = (ChatFragment) setupFragment(ChatFragment.class, ChatFragment.FRAGMENT_TAG);
+    }
+
+    private void showUserSelectionFragment() {
+        UserSelectionFragment fragment = (UserSelectionFragment) setupFragment(UserSelectionFragment.class, UserSelectionFragment.FRAGMENT_TAG);
+    }
+
+    private void showPreferenceFragment() {
+        PreferenceFragment fragment = (PreferenceFragment) setupFragment(PreferenceFragment.class, PreferenceFragment.FRAGMENT_TAG);
     }
 
     @Override
-    public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
+    protected void onPause() {
+        super.onPause();
+        if (!selectedFlavor.isEmpty()) {
+            Utils.saveSharedSetting(this, Utils.SELECTED_FLAVOR, selectedFlavor);
+        }
+        if (!selectedUserId.isEmpty()) {
+            Utils.saveSharedSetting(this, Utils.SELECTED_USER_UUID, selectedUserId);
+        }
     }
 
     @Override
-    public void onCancelled(DatabaseError databaseError) {
-
+    public void onUserSelected(String userId) {
+        selectedUserId = userId;
+        showChatFragment();
+        navigationView.setCheckedItem(R.id.nav_user_chat);
+        Utils.saveSharedSetting(this, Utils.SELECTED_USER_UUID, selectedUserId);
     }
 
     @Override
-    protected void onStop() {
-        mFirebaseDatabaseReference.removeEventListener(this);
-        super.onStop();
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        Log.d(Utils.TAG, "onConnectionFailed:" + connectionResult);
+        Snackbar.make(drawerLayout, "Unable to connect to Google Play services.", Snackbar.LENGTH_LONG).show();
     }
 }

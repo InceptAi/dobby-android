@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:title="@string/expert_chat_preferences">
+
+    <ListPreference
+        android:key="flavor"
+        android:title="@string/app_flavor"
+        android:dialogTitle="@string/pref_flavor_title"
+        android:entries="@array/pref_flavor_entries"
+        android:entryValues="@array/pref_flavor_entry_values"
+        android:defaultValue="@string/pref_flavor_default" />
+
+    <ListPreference
+        android:key="buildType"
+        android:title="@string/app_build_type"
+        android:dialogTitle="@string/pref_build_title"
+        android:entries="@array/pref_build_entries"
+        android:entryValues="@array/pref_build_entry_values"
+        android:defaultValue="@string/pref_build_default" />
+
+    <EditTextPreference
+        android:key="expertName"
+        android:title="@string/expert_name_title"
+        android:summary="@string/expert_name_summary"
+        android:dialogTitle="@string/expert_name_dialog_title" />
+
+</PreferenceScreen>

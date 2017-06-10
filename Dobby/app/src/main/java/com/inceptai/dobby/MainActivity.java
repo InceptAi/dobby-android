@@ -101,10 +101,7 @@ public class MainActivity extends AppCompatActivity
         handler = new Handler(this);
 
         setupChatFragment();
-        //heartBeatManager.cancelAlarm();
-        //heartBeatManager.registerAlarmReceiverWithContext(this);
         heartBeatManager.setDailyHeartBeat();
-        //requestPermissions();
     }
 
     private Fragment setupFragment(Class fragmentClass, String tag) {

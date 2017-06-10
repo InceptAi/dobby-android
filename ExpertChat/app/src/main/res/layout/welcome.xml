@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_gravity="center_vertical"
+    android:gravity="center_vertical"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_height="match_parent">
+
+    <de.hdodenhof.circleimageview.CircleImageView
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/profile_image"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:src="@mipmap/ic_chat_avatar"
+        app:civ_border_width="2dp"
+        android:layout_gravity="center_horizontal|center_vertical"
+        app:civ_border_color="#FF000000"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:textSize="24sp"
+        android:fontFamily="sans-serif-condensed-thin"
+        android:textColor="@android:color/holo_blue_dark"
+        android:layout_gravity="center_horizontal|center_vertical"
+        android:gravity="center_horizontal"
+        android:padding="20dp"
+        android:text="Name"
+        android:id="@+id/profile_name"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:textSize="24sp"
+        android:fontFamily="sans-serif-condensed-thin"
+        android:textColor="@android:color/holo_blue_dark"
+        android:layout_gravity="center_horizontal|center_vertical"
+        android:gravity="center_horizontal"
+        android:padding="20dp"
+        android:text="Avatar"
+        android:id="@+id/profile_avatar"
+        android:layout_height="wrap_content" />
+
+</LinearLayout>

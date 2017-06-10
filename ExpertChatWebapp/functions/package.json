@@ -1,6 +1,6 @@
 {
-  "name": "functions",
-  "description": "Cloud Functions for Firebase",
+  "name": "notif_funcion",
+  "description": "Cloud Functions for Firebase Notifications",
   "dependencies": {
     "firebase-admin": "~4.2.1",
     "firebase-functions": "^0.5.7"

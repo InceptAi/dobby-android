@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_gravity="top"
+    android:background="@drawable/vertical_orange_reverse_gradient"
+    android:layout_width="wrap_content" android:layout_height="match_parent">
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="200dp"
+        android:id="@+id/mobile_phone_iv"
+        android:scaleType="centerCrop"
+        android:layout_alignParentTop="true"
+        android:background="@drawable/mobile_phone1"
+        android:alpha="0.5" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:orientation="horizontal"
+        android:layout_below="@id/mobile_phone_iv"
+        android:id="@+id/core_text_ll"
+        android:gravity="center"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:layout_gravity="top"
+            android:src="@mipmap/wifi_doc_launcher"/>
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_marginLeft="20dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginRight="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_gravity="bottom"
+            android:orientation="vertical"
+            android:layout_height="wrap_content">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-condensed-thin"
+                android:text="Wifi Expert Chat"
+                android:textSize="25sp"
+                android:layout_gravity="bottom"
+                android:layout_marginTop="10dp"
+                android:textColor="@android:color/white" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-condensed-thin"
+                android:text="Our team of experts can help resolve your wifi or internet issues."
+                android:textSize="14sp"
+                android:layout_gravity="bottom"
+                android:layout_marginTop="15dp"
+                android:textColor="@android:color/white" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-condensed-thin"
+                android:text="They can help with issues on a smartphone or a home/office wifi network."
+                android:textSize="14sp"
+                android:layout_gravity="bottom"
+                android:layout_marginTop="15dp"
+                android:textColor="@android:color/white" />
+            <TextView
+                android:layout_width="match_parent"
+                android:text="This service is free for a limited time. We appreciate any feedback you might have."
+                android:fontFamily="sans-serif-condensed-thin"
+                android:textSize="14sp"
+                android:layout_gravity="bottom"
+                android:layout_marginTop="15dp"
+                android:textColor="@android:color/white"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+    </LinearLayout>
+    <FrameLayout
+        android:id="@+id/bottom_continue_fl"
+        style="@style/MyLargeImageButton.Base"
+        android:layout_width="match_parent"
+        android:layout_height="30dp"
+        android:layout_gravity="bottom"
+        android:layout_margin="2dp"
+        android:layout_alignParentBottom="true"
+        android:layout_below="@+id/core_text_ll"
+        android:clickable="true"
+        android:focusable="true">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_horizontal|center_vertical"
+            android:text="CONTINUE"
+            android:textColor="@android:color/white"
+            android:textSize="18sp" />
+    </FrameLayout>
+</RelativeLayout>

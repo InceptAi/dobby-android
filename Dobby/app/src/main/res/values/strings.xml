@@ -66,9 +66,11 @@
     <string name="onboarding_one_desc1">How good is your wifi connectivity ?</string>
     <string name="onboarding_one_desc2">This app can run some tests on your phone to find out. It can also suggest remedies for issues found.</string>
     <string name="onboarding_two_desc1">Wifi Tester can run a speed test to show your upload and download speeds.</string>
-    <string name="onboarding_two_desc2">It can also see if your DNS servers or your routers are slow.</string>
+    <string name="onboarding_two_desc2">It can also see if your DNS servers or your routers are slow. You can chat with a Wifi Expert to help resolve your problems !</string>
     <string name="onboarding_three_desc1">Wifi Tester can perform Wifi scans to see if your wifi environment is congested.</string>
     <string name="onboarding_three_desc2">It will also figure out if there is a problem with your Wifi router signal.</string>
+    <string name="onboarding_three_expert_desc1">You can chat with a Wifi / Network Expert to help resolve your problems for FREE.</string>
+    <string name="onboarding_three_expert_desc2">Share test results with our team of experts who can help find solutions to issues on your phone or in a home/office wifi network.</string>
     <string name="slow_internet_q">Slow Internet ?</string>
     <string name="bad_wifi_signal">Bad Wifi signal ?</string>
     <string name="wifi_quality">Wifi Link</string>
@@ -108,4 +110,5 @@
     <string name="detailed_suggestion_not_available">We don\'t have any suggestions to show yet. Type `run tests` or `check wifi` to run tests and get suggestions for fixing your Wifi.</string>
     <string name="detailed_suggestion_status_message">Showing detailed summary.</string>
     <string name="wifi_leaderboard">Wifi Leaderboard</string>
+    <string name="talk_to_an_expert_title">Talk to an Expert !</string>
 </resources>
