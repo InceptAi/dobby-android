@@ -12,11 +12,9 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
         // Handle data payload of FCM messages.
-        Log.d(TAG, "FCM Message Id: " + remoteMessage.getMessageId());
-        Log.d(TAG, "FCM Notification Message: " + remoteMessage.getNotification());
-        Log.d(TAG, "FCM Data Message: " + remoteMessage.getData());
+        Log.e(TAG, "FCM Message Id: " + remoteMessage.getMessageId());
+        Log.e(TAG, "FCM Data Message: " + remoteMessage.getData());
         ExpertChatService service = ExpertChatService.fetchInstance(getApplicationContext());
-        service.showNotification(getApplicationContext(), remoteMessage.getNotification().getTitle(),
-                remoteMessage.getNotification().getBody(), remoteMessage.getData());
+        service.showNotification(getApplicationContext(), remoteMessage.getData());
     }
 }

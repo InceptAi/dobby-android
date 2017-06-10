@@ -66,6 +66,22 @@ public class Utils {
     private Utils() {
     }
 
+    public static String timeSecondsToString(long totalSecs) {
+        int hours = (int) totalSecs / 3600;
+        int minutes = (int) (totalSecs % 3600) / 60;
+        int seconds = (int) totalSecs % 60;
+
+        if (hours > 0) {
+            return String.format("%02d hours and %02d minutes", hours, minutes);
+        }
+
+        if (minutes > 0) {
+            return String.format("%02d minutes", minutes);
+        }
+
+        return String.format("%02d seconds", seconds);
+    }
+
     public static String fetchUuid(Context context) {
         String uuid = Utils.readSharedSetting(context, USER_UUID, EMPTY_STRING);
         if (EMPTY_STRING.equals(uuid)) {

@@ -110,4 +110,5 @@
     <string name="detailed_suggestion_not_available">We don\'t have any suggestions to show yet. Type `run tests` or `check wifi` to run tests and get suggestions for fixing your Wifi.</string>
     <string name="detailed_suggestion_status_message">Showing detailed summary.</string>
     <string name="talk_to_an_expert_title">Talk to an Expert !</string>
+    <string name="expected_response_time_for_expert">Current response time for Expert:</string>
 </resources>
