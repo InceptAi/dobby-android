@@ -270,8 +270,10 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
 
     @Override
     public void onDetach() {
+        DobbyLog.v("In onDetach");
         super.onDetach();
         if (mListener != null) {
+            DobbyLog.v("Sending onFragmentDetached callback to listener");
             mListener.onFragmentDetached();
         }
         mListener = null;

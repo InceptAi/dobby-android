@@ -351,6 +351,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onRecyclerViewReady() {
         //Get the welcome message
+        DobbyLog.v("MainActivity:onRecyclerViewReady Setting isFragmentActive to true");
         isFragmentActive = true;
         if (dobbyAi != null) {
             dobbyAi.sendEvent(ApiAiClient.APIAI_WELCOME_EVENT);
@@ -359,6 +360,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onFragmentDetached() {
+        DobbyLog.v("MainActivity:onFragmentDetached Setting isFragmentActive to false");
         isFragmentActive = false;
     }
 
