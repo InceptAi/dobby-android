@@ -41,6 +41,8 @@ import com.inceptai.dobby.speedtest.SpeedTestConfig;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 
+import java.io.FileDescriptor;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -276,7 +278,45 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
             DobbyLog.v("Sending onFragmentDetached callback to listener");
             mListener.onFragmentDetached();
         }
+        //Cleanup text2speech
+        textToSpeech.stop();
+        textToSpeech = null;
         mListener = null;
+    }
+
+    @Override
+    public void onStart() {
+        DobbyLog.v("CF: In onStart");
+        super.onStart();
+    }
+
+    @Override
+    public void onStop() {
+        DobbyLog.v("CF: In onStop");
+        super.onStop();
+    }
+
+    @Override
+    public void dump(String prefix, FileDescriptor fd, PrintWriter writer, String[] args) {
+        super.dump(prefix, fd, writer, args);
+    }
+
+    @Override
+    public void onResume() {
+        DobbyLog.v("CF: In onResume");
+        super.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        DobbyLog.v("CF: In onPause");
+        super.onPause();
+    }
+
+    @Override
+    public void onDestroy() {
+        DobbyLog.v("CF: In onDestroy");
+        super.onDestroy();
     }
 
     public void addUserChat(String text) {
