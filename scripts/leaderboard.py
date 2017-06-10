@@ -19,6 +19,7 @@ USER_ID_TO_FLAVOR = {}
 
 class BandwidthGrade(object):
     def __init__(self, **kwargs):
+        self.bestServerCountry = ""
         self.__dict__.update(kwargs)
 '''
         private @MetricType int uploadBandwidthMetric = MetricType.UNKNOWN;
@@ -53,14 +54,26 @@ class InferenceRecord(object):
     public String conditionsUsedForInference;
 '''
 
+class PhoneInfo(object):
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
+'''    
+    public String manufacturer;
+    public String model;
+'''
+    
 class LeaderBoardInfo(object):
-    def __init__(self, speed, handle, uid, inference_id, app_version):
+    def __init__(self, speed, handle, uid, inference_id, app_version, country, device_model, device_manufacturer, isp):
         if speed:
             self.speed = float("%0.2f" % speed)
         self.handle = handle
         self.uid = uid
         self.inference_id = inference_id
         self.app_version = app_version
+        self.country = country
+        self.dmake = device_model
+        self.dmaker = device_manufacturer
+        self.isp = isp
         self.key = format_speed(speed) + "_" + handle
 
     def __str__(self):
@@ -166,14 +179,23 @@ def parse_inference(inference_json_dict, inference_key):
     inference_record = InferenceRecord(**inference_json_dict)
     bandwidth_grade_dict = json.loads(inference_record.bandwidthGradeJson)
     bandwidth_grade = BandwidthGrade(**bandwidth_grade_dict)
+    phone_info_dict = json.loads(inference_record.phoneInfo)
+    phone_info = PhoneInfo(**phone_info_dict)
     handle_to_use = USER_ID_TO_HANDLE.get(inference_record.uid)
-
     if handle_to_use is None:
         handle_to_use = generate_handle(inference_record.uid, ENABLE_RANDOM_USERNAMES) 
         USER_ID_TO_HANDLE[inference_record.uid] = handle_to_use 
 
     if bandwidth_grade.downloadMbps > 0:
-        leaderboard_info = LeaderBoardInfo(speed=bandwidth_grade.downloadMbps, handle=handle_to_use.key, uid=inference_record.uid, inference_id=inference_key, app_version=inference_record.appVersion)
+        leaderboard_info = LeaderBoardInfo(speed=bandwidth_grade.downloadMbps, 
+            handle=handle_to_use.key, 
+            uid=inference_record.uid, 
+            inference_id=inference_key, 
+            app_version=inference_record.appVersion,
+            country=bandwidth_grade.bestServerCountry,
+            device_manufacturer=phone_info.manufacturer,
+            device_model=phone_info.model,
+            isp=bandwidth_grade.isp)
     else:
         leaderboard_info = None
 
@@ -219,13 +241,14 @@ def fetch_data(url_to_fetch):
     return data
 
     
-def iterate_over_dobby_inferences(build_type):
+def iterate_over_dobby_inferences(build_type, use_dummy=False):
     leaderboard_dict = {}
-    flavors_to_iterate = ["wifidoc", "dobby"]
-    #flavors_to_iterate = ["dummy"]
+    if use_dummy:
+        flavors_to_iterate = ["dummy"]
+    else:
+        flavors_to_iterate = ["wifidoc", "dobby"]
     base_url = "https://dobbybackend.firebaseio.com"
     for flavor in flavors_to_iterate:
-        #url_to_fetch = base_url + "/" + flavor + "/" + build_type + "/users.json"
         url_to_fetch = base_url + "/" + flavor + "/" + build_type + ".json"
         print ("processing url {0}".format(url_to_fetch))
         json_dict = fetch_data(url_to_fetch)
@@ -277,7 +300,8 @@ def write_user_to_handle_mapping(build_type):
         if user_flavor is None:
             continue
         user_url_to_put_handle = base_url + "/" + user_flavor + "/" + build_type + "/users/" + key + ".json"
-        user_to_handle_name_dict["handle"] = value.key
+        #user_to_handle_name_dict["handle"] = value.key
+        user_to_handle_name_dict["handle"] = ""
         user_data = json.dumps(user_to_handle_name_dict)
         print "Putting data for user:{0} at {1} value {2}".format(key, user_url_to_put_handle, value.key)
         print user_data
@@ -293,13 +317,13 @@ def main():
     op.add_option("-v", "--verbose", action="store_true", help="verbose", default=False)
     op.add_option("-w", "--writetobackend", action="store_true", dest="write_to_backend", help="use -w to write to backend", default=False)
     op.add_option("-p", "--userelease", action="store_true", dest="use_release", help="Use Release app data", default=False)
+    op.add_option("-d", "--usedummy", action="store_true", dest="use_dummy", help="Use Dummy data", default=False)
     op.add_option("-a", "--fetchalldata", action="store_true", dest="fetch_all_data", help="Fetch all data for leaderboard (ignores database url, default false)", default=False)
     op.add_option("-r", "--randomusers", action="store_false", dest="random_users_names", help="Gen randome user names", default=True)
     op.add_option("-u", "--dataurl", dest="database_url", help="Database url to crawl", default=default_url)
     op.add_option("-l", "--leaderboardurl", dest="base_leaderboard_url", help="Leader board url", default=default_leaderboard_base_url)
     op.add_option("-m", "--maxusers", dest="max_users", help="Max users in leaderboard", default="100")
     (opts, args) = op.parse_args()
-
 
     if opts.use_release:
         build_type = "release"
@@ -312,7 +336,7 @@ def main():
     fetch_handle_info(handles_url)
 
     if opts.fetch_all_data:
-        leaderboard_dict = iterate_over_dobby_inferences(build_type)
+        leaderboard_dict = iterate_over_dobby_inferences(build_type, opts.use_dummy)
     else:
     	json_dict = fetch_data(opts.database_url)
     	leaderboard_dict =  parse_json(json_dict)
