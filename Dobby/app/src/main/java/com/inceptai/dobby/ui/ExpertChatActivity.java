@@ -97,6 +97,8 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
         expertChatService.fetchChatMessages();
         if (isFirstChat()) {
             progressBar.setVisibility(View.GONE);
+            WifiDocDialogFragment fragment = WifiDocDialogFragment.forExpertOnBoarding();
+            fragment.show(getSupportFragmentManager(), "Wifi Expert Chat");
         }
     }
 
@@ -140,11 +142,11 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
 
     private void saveChatStarted() {
         Utils.saveSharedSetting(this,
-                PREF_FIRST_CHAT, Utils.TRUE_STRING);
+                PREF_FIRST_CHAT, Utils.FALSE_STRING);
     }
 
     private boolean isFirstChat() {
         return Boolean.valueOf(Utils.readSharedSetting(this,
-                PREF_FIRST_CHAT, Utils.FALSE_STRING));
+                PREF_FIRST_CHAT, Utils.TRUE_STRING));
     }
 }

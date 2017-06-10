@@ -8,8 +8,10 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.BitmapFactory;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.support.v4.app.TaskStackBuilder;
 import android.support.v7.app.NotificationCompat;
 
 import com.google.firebase.database.ChildEventListener;
@@ -93,14 +95,22 @@ public class ExpertChatService implements ChildEventListener, ValueEventListener
         DobbyLog.i(" Data: " + data);
         Intent intent = new Intent(context, ExpertChatActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent,
-                PendingIntent.FLAG_ONE_SHOT);
+
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
+        // Adds the back stack
+        stackBuilder.addParentStack(ExpertChatActivity.class);
+        // Adds the Intent to the top of the stack
+        stackBuilder.addNextIntent(intent);
+        // Gets a PendingIntent containing the entire back stack
+        PendingIntent resultPendingIntent =
+                stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
 
         Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         NotificationCompat.Builder notificationBuilder = (NotificationCompat.Builder) new NotificationCompat.Builder(context)
                 .setAutoCancel(true)   //Automatically delete the notification
                 .setSmallIcon(R.mipmap.wifi_doc_launcher) //Notification icon
-                .setContentIntent(pendingIntent)
+                .setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.mipmap.wifi_doc_launcher))
+                .setContentIntent(resultPendingIntent)
                 .setContentTitle(title)
                 .setContentText(body)
                 .setVisibility(VISIBILITY_PUBLIC)
