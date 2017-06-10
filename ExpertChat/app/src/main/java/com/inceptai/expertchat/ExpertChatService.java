@@ -45,6 +45,9 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
     private static final String DEFAULT_FLAVOR = Utils.WIFIDOC_FLAVOR;
     private static final String DEFAULT_BUILD_TYPE = Utils.BUILD_TYPE_RELEASE;
 
+    private static final long ETA_OFFLINE = 24L * 60L * 60L;  // 24 hours.
+    private static final long ETA_ONLINE = 2L * 60L; // 2 minutes or less.
+    private static final long ETA_PRESENT = 20L * 60L; // 20 minutes or less.
 
     private static ExpertChatService INSTANCE;
 
@@ -59,7 +62,7 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
     private boolean pendingFcmTokenSaveOperation = false;
 
     public interface OnExpertDataFetched {
-        public void onExpertData(ExpertData expertData);
+        void onExpertData(ExpertData expertData);
     }
 
     private ExpertChatService(Context context) {

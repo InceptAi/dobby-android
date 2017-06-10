@@ -10,6 +10,7 @@ public class ExpertData {
     String email;
     String name;
     String fcmToken;
+    long etaSeconds;
 
     public ExpertData() {}
 
@@ -27,6 +28,10 @@ public class ExpertData {
 
     public String getFcmToken() {
         return fcmToken;
+    }
+
+    public long getEtaSeconds() {
+        return etaSeconds;
     }
 
     @Override
