@@ -58,14 +58,14 @@ public class WifiExpertUITests {
     public void tearDown() throws Exception {
         Log.d(TAG, "TEARDOWN");
         getActivity().finish();
-        Utils.safeSleep(1000);
-        //goBackN();
+        goBackN();
+        Utils.safeSleep(20000);
 
         //super.tearDown();
     }
 
     private void goBackN() {
-        final int N = 10; // how many times to hit back button
+        final int N = 2; // how many times to hit back button
         try {
             for (int i = 0; i < N; i++)
                 Espresso.pressBack();
