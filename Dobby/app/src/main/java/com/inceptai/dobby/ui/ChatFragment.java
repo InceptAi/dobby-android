@@ -279,8 +279,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
             mListener.onFragmentDetached();
         }
         //Cleanup text2speech
-        textToSpeech.stop();
-        textToSpeech = null;
+        textToSpeech.shutdown();
         mListener = null;
     }
 
