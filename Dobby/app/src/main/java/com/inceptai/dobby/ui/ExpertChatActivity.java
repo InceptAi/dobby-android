@@ -3,6 +3,7 @@ package com.inceptai.dobby.ui;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -12,6 +13,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.R;
@@ -19,19 +21,27 @@ import com.inceptai.dobby.expert.ExpertChat;
 import com.inceptai.dobby.expert.ExpertChatService;
 import com.inceptai.dobby.utils.Utils;
 
+import org.w3c.dom.Text;
+
 import java.util.ArrayList;
+
+import static com.inceptai.dobby.utils.Utils.EMPTY_STRING;
 
 public class ExpertChatActivity extends AppCompatActivity implements ExpertChatService.ChatCallback, Handler.Callback {
     public static final String CHAT_MESSAGES_CHILD = "expert_chat_rooms";
     private static final String PREF_FIRST_CHAT = "first_expert_chat";
 
+    public static final String INTENT_NOTIF_SOURCE = "IntentNotifSource";
+
     private static final int MSG_UPDATE_CHAT = 1001;
+    private static final int MSG_UPDATE_ETA = 1002;
 
     private RecyclerView mMessageRecyclerView;
     private LinearLayoutManager mLinearLayoutManager;
     private ProgressBar progressBar;
     private EditText mMessageEditText;
     private Button mSendButton;
+    private TextView etaTextView;
 
     private ExpertChatService expertChatService;
     private WifiDocExpertChatRecyclerViewAdapter recyclerViewAdapter;
@@ -59,6 +69,8 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
 
         mMessageRecyclerView.setLayoutManager(mLinearLayoutManager);
         mMessageRecyclerView.setAdapter(recyclerViewAdapter);
+        etaTextView = (TextView) findViewById(R.id.eta_tv);
+        etaTextView.setVisibility(View.INVISIBLE);
 
         mMessageEditText = (EditText) findViewById(R.id.messageEditText);
         mMessageEditText.addTextChangedListener(new TextWatcher() {
@@ -119,13 +131,39 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
     }
 
     @Override
+    public void onEtaUpdated(long newEtaSeconds, boolean isPresent) {
+        String message = getResources().getString(R.string.expected_response_time_for_expert);
+        if (!isPresent) {
+            message += " Less than 12 hours.";
+        } else {
+            message += " Less than " + Utils.timeSecondsToString(newEtaSeconds);
+        }
+        Message.obtain(handler, MSG_UPDATE_ETA, message).sendToTarget();
+    }
+
+    @Override
+    public void onEtaAvailable(long newEtaSeconds, boolean isPresent) {
+        if (etaTextView != null && etaTextView.getVisibility() == View.INVISIBLE) {
+            onEtaUpdated(newEtaSeconds, isPresent);
+        }
+    }
+
+    @Override
     public boolean handleMessage(Message msg) {
         switch (msg.what) {
             case MSG_UPDATE_CHAT:
                 addChatEntry((ExpertChat) msg.obj);
                 return true;
+            case MSG_UPDATE_ETA:
+                showEta((String) msg.obj);
+                return true;
         }
         return false;
+    }
+
+    private void showEta(String message) {
+        etaTextView.setText(message);
+        etaTextView.setVisibility(View.VISIBLE);
     }
 
     private void addChatEntry(ExpertChat expertChat) {

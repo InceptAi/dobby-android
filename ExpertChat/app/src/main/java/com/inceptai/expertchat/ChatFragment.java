@@ -25,6 +25,8 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import static com.inceptai.expertchat.Utils.EMPTY_STRING;
+
 public class ChatFragment extends Fragment {
     public static final String FRAGMENT_TAG = "ChatFragment";
 
@@ -51,6 +53,7 @@ public class ChatFragment extends Fragment {
     private String buildType;
     private String childPath;
     private TextView roomTitleTv;
+    private String assignedExpert = EMPTY_STRING;
 
     private ExpertChatService service;
 
@@ -93,6 +96,7 @@ public class ChatFragment extends Fragment {
         flavor = service.getFlavor();
         buildType = service.getBuildType();
         selectedUserUuid = service.getSelectedUserId();
+        service.setAssignedExpert();
         reloadData();
     }
 
@@ -149,7 +153,7 @@ public class ChatFragment extends Fragment {
     }
 
     private void reloadData() {
-        childPath = service.getUserChildPath(selectedUserUuid);
+        childPath = service.getPathForUserChat(selectedUserUuid);
         Log.i(Utils.TAG, "Selected UUID: " + selectedUserUuid);
         Log.i(Utils.TAG, "ChildPath for retrieving chat messages: " + childPath);
 

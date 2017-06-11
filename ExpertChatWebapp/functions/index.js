@@ -40,16 +40,16 @@ exports.sendNotification = functions.database.ref('/notifications/messages/{push
     const getInstanceIdPromise = admin.database().ref(`${fcmIdPath}`).once('value');
     return Promise.all([getInstanceIdPromise]).then(results => {
         const instanceId = results[0].val();
-	console.log('Got fcm id: ' + instanceId);
+	    console.log('Got fcm id: ' + instanceId);
         console.log('notifying ' + receiverUid + ' about ' + message.body + ' from ' + senderUid);
 
         const payload = {
-            notification: {
-                title: message.title,
-                body: message.body,
-	        from: message.from,
-	        to: message.to,
-	        pushId: puishId
+            data: {
+                titleText: message.title,
+                bodyText: message.body,
+                source: message.from,
+                destination: message.to,
+                messagePushId: event.params.pushId 
             }
         };
 

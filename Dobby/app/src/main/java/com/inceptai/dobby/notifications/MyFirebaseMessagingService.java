@@ -18,9 +18,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         // Also if you intend on generating your own notifications as a result of a received FCM
         // message, here is where that should be initiated.
         DobbyLog.i("From: " + remoteMessage.getFrom());
-        DobbyLog.i("Notification Message Body: " + remoteMessage.getNotification().getBody());
         ExpertChatService instance = ExpertChatService.fetchInstance(Utils.fetchUuid(getApplicationContext()));
-        instance.showNotification(getApplicationContext(), remoteMessage.getNotification().getTitle(),
-                remoteMessage.getNotification().getBody(), remoteMessage.getData());
+        instance.showNotification(getApplicationContext(), remoteMessage.getData());
     }
 }

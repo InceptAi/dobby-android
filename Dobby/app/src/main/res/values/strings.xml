@@ -111,4 +111,5 @@
     <string name="detailed_suggestion_status_message">Showing detailed summary.</string>
     <string name="wifi_leaderboard">Wifi Leaderboard</string>
     <string name="talk_to_an_expert_title">Talk to an Expert !</string>
+    <string name="expected_response_time_for_expert">Expert response time:</string>
 </resources>
