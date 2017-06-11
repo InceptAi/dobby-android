@@ -631,7 +631,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         expertChatFl.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(getContext(), ExpertChatActivity.class));
+                showExpertChat();
             }
         });
 
@@ -880,7 +880,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     final class BottomDialog implements Button.OnClickListener{
         private static final String TAG_CANCEL_BUTTON = "neg";
         private static final String TAG_DISMISS_BUTTON = "dismiss";
-        private static final String TAG_POSITIVE_BUTTON = "pos";
+        private static final String TAG_CONTACT_EXPERT_BUTTON = "pos";
         private static final float Y_GUTTER_DP = 7;
 
         private static final int MODE_STATUS = 1001;
@@ -893,7 +893,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         private TextView vTitle;
         private TextView vContent;
         private Button vNegative;
-        private Button vPositive;
+        private Button vContactExpert;
         private View rootView;
         private Context context;
         private ConstraintLayout rootLayout;
@@ -912,10 +912,10 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             vContent = (TextView) rootView.findViewById(R.id.bottomDialog_content);
             vNegative = (Button) rootView.findViewById(R.id.bottomDialog_cancel);
             vNegative.setTag(TAG_CANCEL_BUTTON);
-            vPositive = (Button) rootView.findViewById(R.id.bottomDialog_ok);
-            vPositive.setTag(TAG_POSITIVE_BUTTON);
+            vContactExpert = (Button) rootView.findViewById(R.id.bottomDialog_contact_expert);
+            vContactExpert.setTag(TAG_CONTACT_EXPERT_BUTTON);
             vNegative.setOnClickListener(this);
-            vPositive.setOnClickListener(this);
+            vContactExpert.setOnClickListener(this);
         }
 
         void show() {
@@ -945,7 +945,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             rootView.setVisibility(View.VISIBLE);
             vIcon.setVisibility(View.VISIBLE);
             vTitle.setVisibility(View.VISIBLE);
-            vPositive.setVisibility(View.GONE);
+            vContactExpert.setVisibility(View.GONE);
             vNegative.setVisibility(View.VISIBLE);
             vNegative.setText(R.string.cancel_button);
             vNegative.setTag(TAG_CANCEL_BUTTON);
@@ -1021,14 +1021,14 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             vNegative.setText(R.string.dismiss_button);
             vNegative.setTag(TAG_DISMISS_BUTTON);
             vNegative.setVisibility(View.VISIBLE);
-            vPositive.setVisibility(View.VISIBLE);
+            vContactExpert.setVisibility(View.VISIBLE);
         }
 
         void showOnlyDismissButton() {
             mode = MODE_STATUS_DISMISS;
             vNegative.setText(R.string.dismiss_button);
             vNegative.setVisibility(View.VISIBLE);
-            vPositive.setVisibility(View.INVISIBLE);
+            vContactExpert.setVisibility(View.INVISIBLE);
         }
 
         void dismiss() {
@@ -1079,8 +1079,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
         @Override
         public void onClick(View v) {
-            if (TAG_POSITIVE_BUTTON.equals(v.getTag())) {
-                showMoreSuggestions();
+            if (TAG_CONTACT_EXPERT_BUTTON.equals(v.getTag())) {
+                showExpertChat();
             } else if (TAG_CANCEL_BUTTON.equals(v.getTag())) {
                 if (mode == MODE_STATUS) {
                     cancelTests();
@@ -1101,6 +1101,10 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         fragment.show(getActivity().getSupportFragmentManager(), "Suggestions");
         dobbyAnalytics.moreSuggestionsShown(currentSuggestion.getTitle(),
                 new ArrayList<String>(currentSuggestion.getShortSuggestionList()));
+    }
+
+    private void showExpertChat() {
+        startActivity(new Intent(getContext(), ExpertChatActivity.class));
     }
 
     private void showAboutAndPrivacyPolicy() {

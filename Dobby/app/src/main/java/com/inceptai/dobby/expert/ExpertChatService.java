@@ -68,6 +68,7 @@ public class ExpertChatService implements ChildEventListener, ValueEventListener
         void onMessageAvailable(ExpertChat expertChat);
         void onNoHistoryAvailable();
         void onEtaUpdated(long newEtaSeconds, boolean isPresent);
+        void onEtaAvailable(long newEtaSeconds, boolean isPresent);
     }
 
     private ExpertChatService(String userUuid) {
@@ -249,6 +250,10 @@ public class ExpertChatService implements ChildEventListener, ValueEventListener
             currentEtaSeconds = bestEtaSeconds;
             if (chatCallback != null) {
                 chatCallback.onEtaUpdated(currentEtaSeconds, currentEtaSeconds != ETA_OFFLINE);
+            }
+        } else {
+            if (chatCallback != null) {
+                chatCallback.onEtaAvailable(currentEtaSeconds, currentEtaSeconds != ETA_OFFLINE);
             }
         }
     }

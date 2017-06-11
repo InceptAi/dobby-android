@@ -142,6 +142,13 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
     }
 
     @Override
+    public void onEtaAvailable(long newEtaSeconds, boolean isPresent) {
+        if (etaTextView != null && etaTextView.getVisibility() == View.INVISIBLE) {
+            onEtaUpdated(newEtaSeconds, isPresent);
+        }
+    }
+
+    @Override
     public boolean handleMessage(Message msg) {
         switch (msg.what) {
             case MSG_UPDATE_CHAT:
