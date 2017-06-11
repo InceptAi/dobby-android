@@ -598,7 +598,7 @@
             -->
 
             <include
-                layout="@layout/bottom_button_grid"
+                layout="@layout/bottom_button_grid_no_leaderboard"
                 android:layout_height="match_parent"
                 android:layout_width="0dp"
                 android:layout_weight="0.7"

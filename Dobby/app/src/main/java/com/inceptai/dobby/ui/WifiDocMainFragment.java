@@ -108,7 +108,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private FrameLayout aboutFl;
     private FrameLayout feedbackFl;
     private FrameLayout leaderboardFl;
-    private FrameLayout shareFl;
+    private LinearLayout shareFl;
     private LinearLayout bottomButtonBarLl;
     private FrameLayout expertChatFl;
 
@@ -602,8 +602,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         runTestsFl = (FrameLayout) rootView.findViewById(R.id.bottom_run_tests_fl);
         runTestsFl.setOnClickListener(this);
 
-        shareFl = (FrameLayout) rootView.findViewById(R.id.button_top_left_fl);
-        leaderboardFl = (FrameLayout) rootView.findViewById(R.id.button_top_right_fl);
+        shareFl = (LinearLayout) rootView.findViewById(R.id.button_top_left_fl);
+       // leaderboardFl = (FrameLayout) rootView.findViewById(R.id.button_top_right_fl);
         aboutFl = (FrameLayout) rootView.findViewById(R.id.button_bottom_left_fl);
         feedbackFl = (FrameLayout) rootView.findViewById(R.id.button_bottom_right_fl);
         feedbackFl.setOnClickListener(new View.OnClickListener() {
