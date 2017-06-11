@@ -62,6 +62,7 @@ public class DobbyAnalytics {
     //Expert button events
     private static final String CONTACT_EXPERT_BUTTON_CLICKED = "contact_expert_event";
     private static final String SHARE_RESULT_BUTTON_CLICKED = "share_result_event";
+    private static final String EXPERT_FEEDBACK_BUTTON_CLICKED = "feedback_button_clicked";
     private static final String EXPERT_CHAT_NOTIFICATION_SHOWN = "chat_notification_shown";
     private static final String EXPERT_CHAT_NOTIFICATION_CONSUMED = "chat_notification_consumed";
     private static final String USER_SENT_MESSAGE_TO_EXPERT = "user_sent_msg_to_expert";
@@ -493,6 +494,11 @@ public class DobbyAnalytics {
     public void onBoardingShown() {
         Bundle bundle = new Bundle();
         firebaseAnalytics.logEvent(ONBOARDING_SHOWN, bundle);
+    }
+
+    public void feedbackButtonClicked() {
+        Bundle bundle = new Bundle();
+        firebaseAnalytics.logEvent(EXPERT_FEEDBACK_BUTTON_CLICKED, bundle);
     }
 
 }

@@ -610,6 +610,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             @Override
             public void onClick(View v) {
                 showSimpleFeedbackForm();
+                dobbyAnalytics.feedbackButtonClicked();
+                //dobbyAnalytics.feedbackFormShown();
             }
         });
 
