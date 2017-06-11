@@ -18,9 +18,12 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 
-import com.google.common.primitives.Booleans;
+import com.inceptai.dobby.DobbyAnalytics;
+import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.utils.Utils;
+
+import javax.inject.Inject;
 
 public class WifiDocOnboardingActivity extends AppCompatActivity {
 
@@ -46,8 +49,12 @@ public class WifiDocOnboardingActivity extends AppCompatActivity {
     private ImageView[] indicators;
     private int page = 0;  // To track page.
 
+    @Inject
+    DobbyAnalytics dobbyAnalytics;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ((DobbyApplication) getApplication()).getProdComponent().inject(this);
         super.onCreate(savedInstanceState);
         if (isOnboardingDone()) {
             finishAndStartWifiDoc();
@@ -98,6 +105,7 @@ public class WifiDocOnboardingActivity extends AppCompatActivity {
             public void onClick(View v) {
                 saveOnboardingDone();
                 finishAndStartWifiDoc();
+                dobbyAnalytics.onBoardingSkipClicked();
             }
         });
 
@@ -106,6 +114,7 @@ public class WifiDocOnboardingActivity extends AppCompatActivity {
             public void onClick(View v) {
                 saveOnboardingDone();
                 finishAndStartWifiDoc();
+                dobbyAnalytics.onBoardingFinishClicked();
             }
         });
 
@@ -116,8 +125,10 @@ public class WifiDocOnboardingActivity extends AppCompatActivity {
                     page ++;
                     mViewPager.setCurrentItem(page, true);
                 }
+                dobbyAnalytics.onBoardingNextClicked();
             }
         });
+        dobbyAnalytics.onBoardingShown();
     }
 
     void updateIndicators(int position) {

@@ -69,6 +69,12 @@ public class DobbyAnalytics {
     private static final String FIRST_USER_MESSAGE_TO_EXPERT = "first_user_message_to_expert";
     private static final String EXPERT_CHAT_ACTIVITY_ENTERED_FIRST_TIME = "expert_chat_first_time";
     private static final String SHOW_ETA_TO_USER = "show_eta_to_user";
+    private static final String ONBOARDING_FINISH_CLICKED = "onboarding_finish_click";
+    private static final String ONBOARDING_SKIP_CLICKED = "onboarding_skip_click";
+    private static final String EXPERT_CHAT_CONTINUE_BUTTON_CLICKED = "first_time_chat_continue";
+    private static final String ONBOARDING_NEXT_CLICKED = "onboarding_next_click";
+    private static final String ONBOARDING_SHOWN = "onboarding_shown";
+
 
 
 
@@ -463,4 +469,30 @@ public class DobbyAnalytics {
         Bundle bundle = new Bundle();
         firebaseAnalytics.logEvent(USER_RECVD_MESSAGE_FROM_EXPERT, bundle);
     }
+
+    public void onBoardingFinishClicked() {
+        Bundle bundle = new Bundle();
+        firebaseAnalytics.logEvent(ONBOARDING_FINISH_CLICKED, bundle);
+    }
+
+    public void onBoardingSkipClicked() {
+        Bundle bundle = new Bundle();
+        firebaseAnalytics.logEvent(ONBOARDING_SKIP_CLICKED, bundle);
+    }
+
+    public void firstTimeExpertChatContinueClicked() {
+        Bundle bundle = new Bundle();
+        firebaseAnalytics.logEvent(EXPERT_CHAT_CONTINUE_BUTTON_CLICKED, bundle);
+    }
+
+    public void onBoardingNextClicked() {
+        Bundle bundle = new Bundle();
+        firebaseAnalytics.logEvent(ONBOARDING_NEXT_CLICKED, bundle);
+    }
+
+    public void onBoardingShown() {
+        Bundle bundle = new Bundle();
+        firebaseAnalytics.logEvent(ONBOARDING_SHOWN, bundle);
+    }
+
 }
