@@ -134,9 +134,9 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
     public void onEtaUpdated(long newEtaSeconds, boolean isPresent) {
         String message = getResources().getString(R.string.expected_response_time_for_expert);
         if (!isPresent) {
-            message += "Less than 12 hours.";
+            message += " Less than 12 hours.";
         } else {
-            message += "Less than " + Utils.timeSecondsToString(newEtaSeconds);
+            message += " Less than " + Utils.timeSecondsToString(newEtaSeconds);
         }
         Message.obtain(handler, MSG_UPDATE_ETA, message).sendToTarget();
     }

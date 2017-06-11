@@ -609,7 +609,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         feedbackFl.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showFeedbackForm();
+                showSimpleFeedbackForm();
             }
         });
 
@@ -1111,6 +1111,13 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
     private void showFeedbackForm() {
         WifiDocDialogFragment fragment = WifiDocDialogFragment.forFeedback(R.id.wifi_doc_placeholder_fl);
+        fragment.show(getActivity().getSupportFragmentManager(), "Feedback");
+        dobbyAnalytics.feedbackFormShown();
+    }
+
+    private void showSimpleFeedbackForm() {
+        String userUuid = ((DobbyApplication)getActivity().getApplicationContext()).getUserUuid();
+        WifiDocDialogFragment fragment = WifiDocDialogFragment.forSimpleFeedback(userUuid);
         fragment.show(getActivity().getSupportFragmentManager(), "Feedback");
         dobbyAnalytics.feedbackFormShown();
     }
