@@ -262,7 +262,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     @Override
     public void onDetach() {
         super.onDetach();
-        eventBus.unregisterListener(this);
+        //eventBus.unregisterListener(this);
         if (bandwidthObserver != null) {
             bandwidthObserver.unregisterCallback(this);
         }
