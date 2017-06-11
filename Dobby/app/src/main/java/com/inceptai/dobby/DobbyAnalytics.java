@@ -64,7 +64,8 @@ public class DobbyAnalytics {
     private static final String SHARE_RESULT_BUTTON_CLICKED = "share_result_event";
     private static final String EXPERT_CHAT_NOTIFICATION_SHOWN = "chat_notification_shown";
     private static final String EXPERT_CHAT_NOTIFICATION_CONSUMED = "chat_notification_consumed";
-    private static final String USER_SENT_MESSAGE_TO_EXPERT = "chat_notification_shown";
+    private static final String USER_SENT_MESSAGE_TO_EXPERT = "user_sent_msg_to_expert";
+    private static final String USER_RECVD_MESSAGE_FROM_EXPERT = "user_got_msg_from_expert";
     private static final String FIRST_USER_MESSAGE_TO_EXPERT = "first_user_message_to_expert";
     private static final String EXPERT_CHAT_ACTIVITY_ENTERED_FIRST_TIME = "expert_chat_first_time";
     private static final String SHOW_ETA_TO_USER = "show_eta_to_user";
@@ -456,5 +457,10 @@ public class DobbyAnalytics {
     public void chatActivityEnteredFirstTime() {
         Bundle bundle = new Bundle();
         firebaseAnalytics.logEvent(EXPERT_CHAT_ACTIVITY_ENTERED_FIRST_TIME, bundle);
+    }
+
+    public void receivedMessageFromExpert() {
+        Bundle bundle = new Bundle();
+        firebaseAnalytics.logEvent(USER_RECVD_MESSAGE_FROM_EXPERT, bundle);
     }
 }

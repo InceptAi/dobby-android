@@ -174,7 +174,11 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
         recyclerViewAdapter.addChatEntry(expertChat);
         mMessageRecyclerView.smoothScrollToPosition(recyclerViewAdapter.getItemCount());
         progressBar.setVisibility(View.GONE);
-        dobbyAnalytics.sentMessageToExpert();
+        if (expertChat.getMessageType() == ExpertChat.MSG_TYPE_USER_TEXT) {
+            dobbyAnalytics.sentMessageToExpert();
+        } else {
+            dobbyAnalytics.receivedMessageFromExpert();
+        }
     }
 
     @Override
