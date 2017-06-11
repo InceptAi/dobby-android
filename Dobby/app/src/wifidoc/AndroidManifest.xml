@@ -36,6 +36,7 @@
         </activity>
         <activity android:name=".ui.ExpertChatActivity"
             android:launchMode="singleTop"
+            android:screenOrientation="portrait"
             android:parentActivityName=".ui.WifiDocActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
