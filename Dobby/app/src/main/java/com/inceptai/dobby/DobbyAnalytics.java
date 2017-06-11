@@ -35,6 +35,7 @@ public class DobbyAnalytics {
     private static final String PARAM_UID = "user_id";
     private static final String PARAM_LATITUDE = "user_lat";
     private static final String PARAM_LONGITUDE = "user_lon";
+    private static final String PARAM_ETA = "expert_chat_eta";
 
 
     private static final String BANDWIDTH_GRADE_EVENT = "bandwidth_grade";
@@ -63,6 +64,10 @@ public class DobbyAnalytics {
     private static final String SHARE_RESULT_BUTTON_CLICKED = "share_result_event";
     private static final String EXPERT_CHAT_NOTIFICATION_SHOWN = "chat_notification_shown";
     private static final String EXPERT_CHAT_NOTIFICATION_CONSUMED = "chat_notification_consumed";
+    private static final String USER_SENT_MESSAGE_TO_EXPERT = "chat_notification_shown";
+    private static final String FIRST_USER_MESSAGE_TO_EXPERT = "first_user_message_to_expert";
+    private static final String EXPERT_CHAT_ACTIVITY_ENTERED_FIRST_TIME = "expert_chat_first_time";
+    private static final String SHOW_ETA_TO_USER = "show_eta_to_user";
 
 
 
@@ -437,4 +442,19 @@ public class DobbyAnalytics {
         firebaseAnalytics.logEvent(EXPERT_CHAT_NOTIFICATION_CONSUMED, bundle);
     }
 
+    public void sentMessageToExpert() {
+        Bundle bundle = new Bundle();
+        firebaseAnalytics.logEvent(USER_SENT_MESSAGE_TO_EXPERT, bundle);
+    }
+
+    public void showETAToUser(String text) {
+        Bundle bundle = new Bundle();
+        bundle.putString(PARAM_ETA, text);
+        firebaseAnalytics.logEvent(SHOW_ETA_TO_USER, bundle);
+    }
+
+    public void chatActivityEnteredFirstTime() {
+        Bundle bundle = new Bundle();
+        firebaseAnalytics.logEvent(EXPERT_CHAT_ACTIVITY_ENTERED_FIRST_TIME, bundle);
+    }
 }

@@ -3,7 +3,6 @@ package com.inceptai.dobby.ui;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -15,17 +14,16 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.inceptai.dobby.DobbyAnalytics;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.expert.ExpertChat;
 import com.inceptai.dobby.expert.ExpertChatService;
 import com.inceptai.dobby.utils.Utils;
 
-import org.w3c.dom.Text;
-
 import java.util.ArrayList;
 
-import static com.inceptai.dobby.utils.Utils.EMPTY_STRING;
+import javax.inject.Inject;
 
 public class ExpertChatActivity extends AppCompatActivity implements ExpertChatService.ChatCallback, Handler.Callback {
     public static final String CHAT_MESSAGES_CHILD = "expert_chat_rooms";
@@ -49,8 +47,12 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
 
     private Handler handler;
 
+    @Inject
+    DobbyAnalytics dobbyAnalytics;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ((DobbyApplication) getApplication()).getProdComponent().inject(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_expert_chat);
 
@@ -111,6 +113,7 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
             progressBar.setVisibility(View.GONE);
             WifiDocDialogFragment fragment = WifiDocDialogFragment.forExpertOnBoarding();
             fragment.show(getSupportFragmentManager(), "Wifi Expert Chat");
+            dobbyAnalytics.chatActivityEnteredFirstTime();
         }
     }
 
@@ -164,12 +167,14 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
     private void showEta(String message) {
         etaTextView.setText(message);
         etaTextView.setVisibility(View.VISIBLE);
+        dobbyAnalytics.showETAToUser(message);
     }
 
     private void addChatEntry(ExpertChat expertChat) {
         recyclerViewAdapter.addChatEntry(expertChat);
         mMessageRecyclerView.smoothScrollToPosition(recyclerViewAdapter.getItemCount());
         progressBar.setVisibility(View.GONE);
+        dobbyAnalytics.sentMessageToExpert();
     }
 
     @Override
