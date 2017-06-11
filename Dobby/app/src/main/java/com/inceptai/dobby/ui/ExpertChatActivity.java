@@ -1,5 +1,6 @@
 package com.inceptai.dobby.ui;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -107,13 +108,40 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
         });
 
         expertChatService = ExpertChatService.fetchInstance(dobbyApplication.getUserUuid());
-        expertChatService.setCallback(this);
-        expertChatService.fetchChatMessages();
+        fetchChatMessages();
         if (isFirstChat()) {
             progressBar.setVisibility(View.GONE);
             WifiDocDialogFragment fragment = WifiDocDialogFragment.forExpertOnBoarding();
             fragment.show(getSupportFragmentManager(), "Wifi Expert Chat");
             dobbyAnalytics.chatActivityEnteredFirstTime();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        fetchChatMessages();
+        processIntent(getIntent());
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+    }
+
+    private void processIntent(Intent intent) {
+        String notifSource = intent.getStringExtra(ExpertChatActivity.INTENT_NOTIF_SOURCE);
+        if (notifSource != null) {
+            dobbyAnalytics.expertChatNotificationConsumed();
+        }
+    }
+
+    private void fetchChatMessages() {
+        expertChatService.setCallback(this);
+        if (!expertChatService.isListenerConnected()) {
+            recyclerViewAdapter.clear();
+            expertChatService.fetchChatMessages();
         }
     }
 
@@ -184,6 +212,7 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
     @Override
     protected void onStop() {
         expertChatService.disconnect();
+        expertChatService.unregisterChatCallback();
         super.onStop();
     }
 

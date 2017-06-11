@@ -3,8 +3,10 @@ package com.inceptai.dobby.dagger;
 import com.inceptai.dobby.MainActivity;
 import com.inceptai.dobby.NetworkLayer;
 import com.inceptai.dobby.ai.DobbyAi;
+import com.inceptai.dobby.expert.ExpertChatService;
 import com.inceptai.dobby.heartbeat.AlarmReceiver;
 import com.inceptai.dobby.heartbeat.DeviceBootReceiver;
+import com.inceptai.dobby.notifications.MyFirebaseMessagingService;
 import com.inceptai.dobby.ui.ChatFragment;
 import com.inceptai.dobby.ui.DebugFragment;
 import com.inceptai.dobby.ui.ExpertChatActivity;
@@ -52,4 +54,6 @@ public interface ProdComponent {
     void inject(ExpertChatActivity expertChatActivity);
 
     void inject(WifiDocOnboardingActivity wifiDocOnboardingActivity);
+
+    void inject(MyFirebaseMessagingService expertChatService);
 }
