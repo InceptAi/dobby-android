@@ -1,5 +1,6 @@
 package com.inceptai.dobby.ui;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -120,6 +121,20 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
     protected void onResume() {
         super.onResume();
         fetchChatMessages();
+        processIntent(getIntent());
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+    }
+
+    private void processIntent(Intent intent) {
+        String notifSource = intent.getStringExtra(ExpertChatActivity.INTENT_NOTIF_SOURCE);
+        if (notifSource != null) {
+            dobbyAnalytics.expertChatNotificationConsumed();
+        }
     }
 
     private void fetchChatMessages() {
