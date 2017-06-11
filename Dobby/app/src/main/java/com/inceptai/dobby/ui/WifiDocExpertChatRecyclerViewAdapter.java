@@ -48,6 +48,11 @@ public class WifiDocExpertChatRecyclerViewAdapter extends Adapter<RecyclerView.V
         notifyItemChanged(expertChatList.size() - 1);
     }
 
+    public void clear() {
+        expertChatList.clear();
+        notifyDataSetChanged();
+    }
+
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(context);

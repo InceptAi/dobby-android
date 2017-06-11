@@ -60,6 +60,7 @@ public class ExpertChatService implements ChildEventListener, ValueEventListener
     private ChatCallback chatCallback;
     private List<ExpertData> expertList;
     private long currentEtaSeconds;
+    private boolean listenerConnected = false; // whether firebase listerners are registered.
 
     // TODO Use this field.
     private boolean isChatEmpty;
@@ -105,6 +106,10 @@ public class ExpertChatService implements ChildEventListener, ValueEventListener
 
     public void setCallback(ChatCallback callback) {
         this.chatCallback = callback;
+    }
+
+    public void unregisterChatCallback() {
+        this.chatCallback = null;
     }
 
     public void saveFcmToken(String token) {
@@ -154,14 +159,21 @@ public class ExpertChatService implements ChildEventListener, ValueEventListener
 
     public void disconnect() {
         getChatReference().removeEventListener((ChildEventListener) this);
+        getChatReference().removeEventListener((ValueEventListener) this);
+        listenerConnected = false;
     }
-    
+
+    public boolean isListenerConnected() {
+        return listenerConnected;
+    }
+
     public void fetchChatMessages() {
         DatabaseReference chatReference = getChatReference();
         chatReference.addChildEventListener(this);
-        chatReference.addListenerForSingleValueEvent(this);
+        chatReference.addValueEventListener(this);
         readExpertList();
         addAssignedExpertNameListener();
+        listenerConnected = true;
     }
 
     public void pushData(ExpertChat expertChat) {
