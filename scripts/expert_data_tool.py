@@ -233,6 +233,21 @@ def get_inferences(uid, build_type, flavor):
         inference_list.append(inference)
     return inference_list
 
+def get_inferences_partial_uid(partial_uid, build_type, flavor):
+    inference_list = []
+    base_url = "https://dobbybackend.firebaseio.com"
+    url_to_fetch = base_url + "/" + flavor + "/" + build_type + "/users.json"
+    print ("processing url {0}".format(url_to_fetch))
+    all_user_data = fetch_data(url_to_fetch)
+    for user_id, user_values in all_user_data.iteritems():
+        if partial_uid in user_id:
+            inference_data_for_user = user_values.get("inferences", {})
+            for inference_key, inference_value in inference_data_for_user.iteritems():
+                inference = parse_inference(inference_json_dict=inference_value, inference_key=inference_key)
+                inference_list.append(inference)
+    return inference_list
+
+
 def print_pretty_timestamp(timestamp):
     timestamp = timestamp / 1000
     print datetime.datetime.utcfromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
@@ -294,14 +309,19 @@ def main():
         flavor = opts.app_flavor
     
     max_inferences = int(opts.max_inferences)
-        	
-    inference_list = get_inferences(uid=opts.user_id, 
-        build_type=build_type,
-        flavor=flavor)
+    
+    if (len(opts.user_id) == 36):   	
+        inference_list = get_inferences(uid=opts.user_id, 
+            build_type=build_type,
+            flavor=flavor)
+        print "full"
+    else:
+        inference_list = get_inferences_partial_uid(partial_uid=opts.user_id, 
+            build_type=build_type,
+            flavor=flavor)
+        print "partial"
 
     pretty_print_inference_list(inference_list, max_inferences)
     
 if __name__ == '__main__':
     main()
-
-
