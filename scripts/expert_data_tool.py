@@ -5,12 +5,17 @@ import os
 import requests
 import json
 import urllib
-import xkcdpass.xkcd_password as xp
 import random
-import jsonpickle
 import datetime
-from collections import OrderedDict
 from optparse import OptionParser
+if sys.version_info[0] == 3:
+    from urllib.request import urlopen
+else:
+    # Not Python 3 - today, it is most likely to be Python 2
+    # But note that this might need an update when Python 4
+    # might be around one day
+    from urllib import urlopen
+
 __author__ = """\n""".join(['Vivek Shrivastava (vivek@obiai.tech)'])
 
 ENABLE_RANDOM_USERNAMES = True
@@ -99,46 +104,6 @@ class Handle(object):
     def __repr__(self):
         return self.__str__()
 
-def random_capitalisation(s, chance):
-    new_str = []
-    for i, c in enumerate(s):
-        new_str.append(c.upper() if random.random() < chance else c)
-    return "".join(new_str)
-
-def capitalize_first_letter(s):
-    new_str = []
-    s = s.split(" ")
-    for i, c in enumerate(s):
-        new_str.append(c.capitalize())
-    return "".join(new_str)
-
-def generate_random_number(chance):
-    if random.random() < chance:
-        return random.randint(1, 1000)
-    else:
-        return 0
-
-def generate_random_username():
-    words = xp.locate_wordfile()
-    mywords = xp.generate_wordlist(wordfile=words, min_length=5, max_length=8, valid_chars='[a-z]')
-    raw_password = xp.generate_xkcdpassword(mywords, numwords=1)
-    capitalized_password = random_capitalisation(raw_password, 1/10.0)
-    number_prefix = generate_random_number(5/10.0)
-    if number_prefix > 0:
-        capitalized_password = capitalized_password + str(number_prefix)
-    return capitalized_password
-
-def generate_handle(user_id, random_handle=False):
-    if not random_handle:
-        handle = Handle(key=user_id, uid=user_id)
-    else:
-        handle = Handle(key=generate_random_username(), uid=user_id)
-    return handle
-
-def format_speed(speed):
-    speed_to_return = ("%0.2f" % speed).rjust(6, '0')
-    return speed_to_return.replace('.',':')
-    
 def get_float_value(json_dict, key):
     if not json_dict or not key:
         return None
@@ -215,7 +180,7 @@ def merge_two_dicts(x, y):
     return z
 
 def fetch_data(url_to_fetch):
-    response = urllib.urlopen(url_to_fetch)
+    response = urlopen(url_to_fetch)
     data = json.loads(response.read())
     if data is None:
         data = {}
@@ -228,7 +193,7 @@ def get_inferences(uid, build_type, flavor):
     url_to_fetch = base_url + "/" + flavor + "/" + build_type + "/users/" + "/" + uid + "/inferences.json"
     print ("processing url {0}".format(url_to_fetch))
     inference_data_for_user = fetch_data(url_to_fetch)
-    for inference_key, inference_value in inference_data_for_user.iteritems():
+    for inference_key, inference_value in inference_data_for_user.items():
         inference = parse_inference(inference_json_dict=inference_value, inference_key=inference_key)
         inference_list.append(inference)
     return inference_list
@@ -239,10 +204,10 @@ def get_inferences_partial_uid(partial_uid, build_type, flavor):
     url_to_fetch = base_url + "/" + flavor + "/" + build_type + "/users.json"
     print ("processing url {0}".format(url_to_fetch))
     all_user_data = fetch_data(url_to_fetch)
-    for user_id, user_values in all_user_data.iteritems():
+    for user_id, user_values in all_user_data.items():
         if partial_uid in user_id:
             inference_data_for_user = user_values.get("inferences", {})
-            for inference_key, inference_value in inference_data_for_user.iteritems():
+            for inference_key, inference_value in inference_data_for_user.items():
                 inference = parse_inference(inference_json_dict=inference_value, inference_key=inference_key)
                 inference_list.append(inference)
     return inference_list
@@ -250,7 +215,7 @@ def get_inferences_partial_uid(partial_uid, build_type, flavor):
 
 def print_pretty_timestamp(timestamp):
     timestamp = timestamp / 1000
-    print datetime.datetime.utcfromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+    print (datetime.datetime.utcfromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S'))
 
 
 def pretty_print_inference_list(inference_list, max_inferences):
@@ -262,24 +227,24 @@ def pretty_print_inference_list(inference_list, max_inferences):
             break
 
         count = count + 1
-        print "======================================================="
-        print "INFERENCE {0}\n".format(count)
-        for attr, value in inference.__dict__.iteritems():
-            print "-----------------------------------------------"
-            print "KEY:", attr
+        print ("=======================================================")
+        print ("INFERENCE {0}\n".format(count))
+        for attr, value in inference.__dict__.items():
+            print ("-----------------------------------------------")
+            print ("KEY:", attr)
             try:
                 data_dict = json.loads(value)
-                print json.dumps(data_dict, sort_keys=True, indent=4, separators=(',',': '))
+                print (json.dumps(data_dict, sort_keys=True, indent=4, separators=(',',': ')))
             except:
                 if isinstance(value, list):
                     for value_in_list in value:
-                        print value_in_list
+                        print (value_in_list)
                 else:
                     if (attr == "timestamp"):
                         print_pretty_timestamp(value)
                     else:
-                        print value
-        print "======================================================="
+                        print (value)
+        print ("=======================================================")
 
 def main():
     default_url = "https://dobbybackend.firebaseio.com/dobby/release/users/ac0ad728-c80a-4daf-8125-3ae5545e3d7f.json?print=pretty"
@@ -314,12 +279,10 @@ def main():
         inference_list = get_inferences(uid=opts.user_id, 
             build_type=build_type,
             flavor=flavor)
-        print "full"
     else:
         inference_list = get_inferences_partial_uid(partial_uid=opts.user_id, 
             build_type=build_type,
             flavor=flavor)
-        print "partial"
 
     pretty_print_inference_list(inference_list, max_inferences)
     
