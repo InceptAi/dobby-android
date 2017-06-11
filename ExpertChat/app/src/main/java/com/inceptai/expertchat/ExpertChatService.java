@@ -6,12 +6,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.support.v7.app.NotificationCompat;
-import android.support.v7.widget.DrawableUtils;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -22,7 +20,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import java.util.ArrayList;
 import java.util.Map;
 
 import static com.inceptai.expertchat.Utils.EMPTY_STRING;
@@ -33,7 +30,7 @@ import static com.inceptai.expertchat.Utils.EMPTY_STRING;
 
 public class ExpertChatService implements SharedPreferences.OnSharedPreferenceChangeListener {
 
-    private static final String ASSIGNED_EXPERT_KEY = "assignedExpert";
+    public static final String ASSIGNED_EXPERT_KEY = "assignedExpert";
     private static final String SELF_NOTIFICATION_TITLE = "You have a new chat message.";
     private static final String EXPERT_BASE = "/expert";
     public static final String CHAT_ROOM_SUFFIX = "_chat_rooms";
@@ -41,9 +38,10 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
     private static final String NOTIFICATIONS_BASE = "/notifications/messages/";
     private static final String FCM_KEY = "fcmToken";
     private static final String NOTIF_PUSHID_KEY = "pushId";
+    private static final String USERS_BASE = "users";
 
     private static final String DEFAULT_FLAVOR = Utils.WIFIDOC_FLAVOR;
-    private static final String DEFAULT_BUILD_TYPE = Utils.BUILD_TYPE_RELEASE;
+    private static final String DEFAULT_BUILD_TYPE = Utils.BUILD_TYPE_DEBUG;
 
     private static final long ETA_OFFLINE = 24L * 60L * 60L;  // 24 hours.
     private static final long ETA_ONLINE = 2L * 60L; // 2 minutes or less.
@@ -60,6 +58,8 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
     private String buildType;
     private String selectedUserId;
     private boolean pendingFcmTokenSaveOperation = false;
+    private long expertEtaSeconds = ETA_PRESENT;
+    private OnExpertDataFetched expertDataFetchedCallback;
 
     public interface OnExpertDataFetched {
         void onExpertData(ExpertData expertData);
@@ -71,6 +71,7 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
         selectedUserId = Utils.readSharedSetting(context, Utils.SELECTED_USER_UUID, EMPTY_STRING);
         buildType = Utils.readSharedSetting(context, Utils.SELECTED_BUILD_TYPE, DEFAULT_BUILD_TYPE);
         expertFcmToken = Utils.readSharedSetting(context, Utils.PREF_FCM_TOKEN, EMPTY_STRING);
+        loadExpertOnlineFlag();
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
         sharedPref.registerOnSharedPreferenceChangeListener(this);
     }
@@ -94,8 +95,20 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
         Utils.saveSharedSetting(context, Utils.PREF_FCM_TOKEN, expertFcmToken);
     }
 
-    public String getUserChildPath(String userUuid) {
+    public void setExpertDataFetchedCallback(OnExpertDataFetched expertDataFetchedCallback) {
+        this.expertDataFetchedCallback = expertDataFetchedCallback;
+    }
+
+    public void clearExpertDataFetchedCallback() {
+        this.expertDataFetchedCallback = null;
+    }
+
+    public String getPathForUserChat(String userUuid) {
         return flavor + CHAT_ROOM_SUFFIX + "/" + buildType + "/" + userUuid + "/";
+    }
+
+    public String getPathForUserProfile(String userUuid) {
+        return flavor + "/" + buildType + "/" + USERS_BASE + "/" + userUuid + "/";
     }
 
     public String getChatRoomBase() {
@@ -112,6 +125,7 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
         expertData.name = firebaseUser.getDisplayName();
         expertData.avatar = avatar;
         expertData.fcmToken = expertFcmToken;
+        expertData.etaSeconds = expertEtaSeconds;
         if (expertFcmToken != null && !expertFcmToken.isEmpty() && pendingFcmTokenSaveOperation) {
             pendingFcmTokenSaveOperation = false;
         }
@@ -120,8 +134,9 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
         }
     }
 
-    public void fetchAvatar(final FirebaseUser firebaseUser, final OnExpertDataFetched callback) {
+    public void fetchAvatar(final FirebaseUser firebaseUser, OnExpertDataFetched callback) {
         this.firebaseUser = firebaseUser;
+        this.expertDataFetchedCallback = callback;
         FirebaseDatabase.getInstance().getReference().child(EXPERT_BASE).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -129,8 +144,8 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
                     ExpertData expertData = dataSnapshot1.getValue(ExpertData.class);
                     if (expertData != null && expertData.email != null && expertData.email.equals(firebaseUser.getEmail())) {
                         loadExpertData(expertData);
-                        if (callback != null) {
-                            callback.onExpertData(expertData);
+                        if (expertDataFetchedCallback != null) {
+                            expertDataFetchedCallback.onExpertData(expertData);
                         }
                         break;
                     }
@@ -154,8 +169,20 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
         getNotificationReference().push().setValue(chatNotification);
     }
 
-    public void showNotification(Context context, String title, String body, Map<String, String> data) {
-        String fromUuid = data.get("from");
+    public void setAssignedExpert() {
+        if (avatar != null && !avatar.isEmpty()) {
+            FirebaseDatabase.getInstance().getReference().child(getPathForUserProfile(selectedUserId) + ASSIGNED_EXPERT_KEY).setValue(avatar);
+        }
+    }
+
+    public void setSelectedUserId(String userUuid) {
+        this.selectedUserId = userUuid;
+    }
+
+    public void showNotification(Context context, Map<String, String> data) {
+        String fromUuid = data.get("source");
+        String title = data.get("titleText");
+        String body = data.get("bodyText");
         Log.i(Utils.TAG, "Title: " + title);
         Log.i(Utils.TAG, " Body: " + body);
         Log.i(Utils.TAG, " Data: " + data);
@@ -163,8 +190,11 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
         Intent intent = new Intent(context, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         intent.putExtra(MainActivity.NOTIFICATION_USER_UUID, fromUuid);
-        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent,
-                PendingIntent.FLAG_ONE_SHOT);
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        for (String key : data.keySet()) {
+            Log.i(Utils.TAG, "Key: " + key + ", value: " + data.get(key));
+        }
 
         Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         NotificationCompat.Builder notificationBuilder = (NotificationCompat.Builder) new NotificationCompat.Builder(context)
@@ -217,6 +247,25 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
         this.expertData = expertData;
     }
 
+    public void goOnline() {
+        long oldEtaSeconds = expertEtaSeconds;
+        expertEtaSeconds = ETA_ONLINE;
+        if (oldEtaSeconds != expertEtaSeconds) {
+            persistExpertData(firebaseUser);
+        }
+    }
+
+    public boolean isExpertOffline() {
+        return expertEtaSeconds == ETA_OFFLINE;
+    }
+
+    public void notOnline() {
+        if (expertEtaSeconds == ETA_ONLINE) {
+            expertEtaSeconds = ETA_PRESENT;
+            persistExpertData(firebaseUser);
+        }
+    }
+
     public String getAvatar() {
         return avatar;
     }
@@ -241,6 +290,24 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
         return selectedUserId;
     }
 
+    public void saveToSettings() {
+        if (!flavor.isEmpty()) {
+            Utils.saveSharedSetting(context, Utils.SELECTED_FLAVOR, flavor);
+        }
+
+        if (!selectedUserId.isEmpty()) {
+            Utils.saveSharedSetting(context, Utils.SELECTED_USER_UUID, selectedUserId);
+        }
+
+        if (!buildType.isEmpty()) {
+            Utils.saveSharedSetting(context, Utils.SELECTED_BUILD_TYPE, buildType);
+        }
+
+        if (avatar != null && !avatar.isEmpty()) {
+            Utils.saveSharedSetting(context, Utils.PREF_EXPERT_AVATAR, avatar);
+        }
+    }
+
     public void cleanup() {
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
         sharedPref.unregisterOnSharedPreferenceChangeListener(this);
@@ -248,9 +315,10 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        boolean persistData = false;
         if (key.equals(Utils.PREF_EXPERT_AVATAR)) {
             avatar = sharedPreferences.getString(Utils.PREF_EXPERT_AVATAR, avatar);
-            persistExpertData(firebaseUser);
+            persistData = true;
             Toast.makeText(context, "Persisting user data for " + avatar, Toast.LENGTH_SHORT).show();
             // avatar change
         } else if (key.equals(Utils.SELECTED_BUILD_TYPE)) {
@@ -259,6 +327,22 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
         } else if (key.equals(Utils.SELECTED_FLAVOR)) {
             // flavor change.
             flavor = sharedPreferences.getString(Utils.SELECTED_FLAVOR, flavor);
+        } else if (key.equals(Utils.PREF_EXPERT_ONLINE)) {
+            loadExpertOnlineFlag();
+            persistData = true;
+        }
+        if (persistData) {
+            persistExpertData(firebaseUser);
+        }
+    }
+
+    private void loadExpertOnlineFlag() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+        boolean isOnline = sharedPreferences.getBoolean(Utils.PREF_EXPERT_ONLINE, true);
+        if (isOnline) {
+            expertEtaSeconds = ETA_PRESENT;
+        } else {
+            expertEtaSeconds = ETA_OFFLINE;
         }
     }
 }

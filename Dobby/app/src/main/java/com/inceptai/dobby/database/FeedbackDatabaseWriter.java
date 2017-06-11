@@ -9,9 +9,11 @@ import com.inceptai.dobby.BuildConfig;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.utils.DobbyLog;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.RunnableFuture;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -50,6 +52,13 @@ public class FeedbackDatabaseWriter {
         mDatabase.updateChildren(userUpdates);
     }
 
+    private void writeSimpleFeedback(String userUuid, boolean whetherLiked) {
+        String feedbackRoot = BuildConfig.FLAVOR + "/" + BuildConfig.BUILD_TYPE + "/" + "new_feedback/";
+        feedbackRoot += whetherLiked ? "yes" : "no";
+        Date date = new Date();
+        mDatabase.child(feedbackRoot).child(userUuid).setValue(date.toString());
+    }
+
     public void writeFeedbackToDatabase(final FeedbackRecord feedbackRecord) {
         executorService.submit(new Runnable() {
             @Override
@@ -59,6 +68,14 @@ public class FeedbackDatabaseWriter {
         });
     }
 
+    public void writeSimpleFeedbackAsync(final String userUuid, final boolean whetherLiked) {
+        executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+                writeSimpleFeedback(userUuid, whetherLiked);
+            }
+        });
+    }
 
     private ValueEventListener feedbackListener = new ValueEventListener() {
         @Override

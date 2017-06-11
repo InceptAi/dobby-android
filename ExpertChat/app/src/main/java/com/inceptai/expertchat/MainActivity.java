@@ -94,32 +94,47 @@ public class MainActivity extends AppCompatActivity
         if (mUsername != null) {
             Snackbar.make(drawerLayout, "Welcome " + mUsername, Snackbar.LENGTH_SHORT).show();
         }
+        checkForNotificationStart(getIntent());
+    }
 
-        Bundle extras = getIntent().getExtras();
-        if (extras != null) {
-            String notifUuid = extras.getString(NOTIFICATION_USER_UUID, EMPTY_STRING);
-            if (notifUuid != null && !notifUuid.isEmpty()) {
-                /// We have a user id from a notification.
-                // TODO open chat for selected user ID.
-                Utils.saveSharedSetting(this, Utils.SELECTED_USER_UUID, notifUuid);
-                selectedUserId = notifUuid;
-                Snackbar.make(drawerLayout, "User ID: " + notifUuid, Snackbar.LENGTH_SHORT).show();
-                respondToNotification = true;
-            }
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        this.setIntent(intent);
+        checkForNotificationStart(intent);
+    }
+
+    private void checkForNotificationStart(Intent intent) {
+        String notifUuid = intent.getStringExtra(NOTIFICATION_USER_UUID);
+        if (notifUuid != null && !notifUuid.isEmpty()) {
+            /// We have a user id from a notification.
+            // TODO open chat for selected user ID.
+            Utils.saveSharedSetting(this, Utils.SELECTED_USER_UUID, notifUuid);
+            selectedUserId = notifUuid;
+            Snackbar.make(drawerLayout, "User ID: " + notifUuid, Snackbar.LENGTH_SHORT).show();
+            respondToNotification = true;
+            service.setSelectedUserId(selectedUserId);
         }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        service.setExpertDataFetchedCallback(this);
         selectedFlavor = Utils.readSharedSetting(this, Utils.SELECTED_FLAVOR, DEFAULT_FLAVOR);
         selectedUserId = Utils.readSharedSetting(this, Utils.SELECTED_USER_UUID, EMPTY_STRING);
         selectedBuildType = Utils.readSharedSetting(this, Utils.SELECTED_BUILD_TYPE, DEFAULT_BUILD_TYPE);
         if (respondToNotification) {
             showChatFragment();
             navigationView.setCheckedItem(R.id.nav_user_chat);
+            return;
         }
         showWelcome(mPhotoUrl, mUsername);
+        if (service.isExpertOffline()) {
+            Snackbar.make(drawerLayout, "YOU ARE OFFLINE.", Snackbar.LENGTH_LONG).show();
+        } else {
+            service.goOnline();
+        }
     }
 
     @Override
@@ -136,7 +151,9 @@ public class MainActivity extends AppCompatActivity
     public void onExpertData(ExpertData expertData) {
         TextView avatarTv = (TextView) findViewById(R.id.profile_avatar);
         String avatar = expertData.getAvatar();
-        if (avatar != null) {
+        // HACK: We need to check for avatarTv not being null since this can get invoked when the
+        // Activity is backgrounded.
+        if (avatar != null && avatarTv != null) {
             avatarTv.setText("Avatar: " + avatar);
         }
     }
@@ -242,12 +259,11 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onPause() {
         super.onPause();
-        if (!selectedFlavor.isEmpty()) {
-            Utils.saveSharedSetting(this, Utils.SELECTED_FLAVOR, selectedFlavor);
+        if (!service.isExpertOffline()) {
+            service.notOnline();
         }
-        if (!selectedUserId.isEmpty()) {
-            Utils.saveSharedSetting(this, Utils.SELECTED_USER_UUID, selectedUserId);
-        }
+        service.saveToSettings();
+        service.clearExpertDataFetchedCallback();
     }
 
     @Override

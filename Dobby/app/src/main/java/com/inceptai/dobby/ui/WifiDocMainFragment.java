@@ -108,7 +108,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private FrameLayout aboutFl;
     private FrameLayout feedbackFl;
     private FrameLayout leaderboardFl;
-    private FrameLayout shareFl;
+    private LinearLayout shareFl;
     private LinearLayout bottomButtonBarLl;
     private FrameLayout expertChatFl;
 
@@ -602,14 +602,14 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         runTestsFl = (FrameLayout) rootView.findViewById(R.id.bottom_run_tests_fl);
         runTestsFl.setOnClickListener(this);
 
-        shareFl = (FrameLayout) rootView.findViewById(R.id.button_top_left_fl);
-        leaderboardFl = (FrameLayout) rootView.findViewById(R.id.button_top_right_fl);
+        shareFl = (LinearLayout) rootView.findViewById(R.id.button_top_left_fl);
+       // leaderboardFl = (FrameLayout) rootView.findViewById(R.id.button_top_right_fl);
         aboutFl = (FrameLayout) rootView.findViewById(R.id.button_bottom_left_fl);
         feedbackFl = (FrameLayout) rootView.findViewById(R.id.button_bottom_right_fl);
         feedbackFl.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showFeedbackForm();
+                showSimpleFeedbackForm();
             }
         });
 
@@ -633,7 +633,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             @Override
             public void onClick(View v) {
                 dobbyAnalytics.contactExpertEvent();
-                startActivity(new Intent(getContext(), ExpertChatActivity.class));
+                showExpertChat();
             }
         });
 
@@ -882,7 +882,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     final class BottomDialog implements Button.OnClickListener{
         private static final String TAG_CANCEL_BUTTON = "neg";
         private static final String TAG_DISMISS_BUTTON = "dismiss";
-        private static final String TAG_POSITIVE_BUTTON = "pos";
+        private static final String TAG_CONTACT_EXPERT_BUTTON = "pos";
         private static final float Y_GUTTER_DP = 7;
 
         private static final int MODE_STATUS = 1001;
@@ -895,7 +895,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         private TextView vTitle;
         private TextView vContent;
         private Button vNegative;
-        private Button vPositive;
+        private Button vContactExpert;
         private View rootView;
         private Context context;
         private ConstraintLayout rootLayout;
@@ -914,10 +914,10 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             vContent = (TextView) rootView.findViewById(R.id.bottomDialog_content);
             vNegative = (Button) rootView.findViewById(R.id.bottomDialog_cancel);
             vNegative.setTag(TAG_CANCEL_BUTTON);
-            vPositive = (Button) rootView.findViewById(R.id.bottomDialog_ok);
-            vPositive.setTag(TAG_POSITIVE_BUTTON);
+            vContactExpert = (Button) rootView.findViewById(R.id.bottomDialog_contact_expert);
+            vContactExpert.setTag(TAG_CONTACT_EXPERT_BUTTON);
             vNegative.setOnClickListener(this);
-            vPositive.setOnClickListener(this);
+            vContactExpert.setOnClickListener(this);
         }
 
         void show() {
@@ -947,7 +947,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             rootView.setVisibility(View.VISIBLE);
             vIcon.setVisibility(View.VISIBLE);
             vTitle.setVisibility(View.VISIBLE);
-            vPositive.setVisibility(View.GONE);
+            vContactExpert.setVisibility(View.GONE);
             vNegative.setVisibility(View.VISIBLE);
             vNegative.setText(R.string.cancel_button);
             vNegative.setTag(TAG_CANCEL_BUTTON);
@@ -1023,14 +1023,14 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             vNegative.setText(R.string.dismiss_button);
             vNegative.setTag(TAG_DISMISS_BUTTON);
             vNegative.setVisibility(View.VISIBLE);
-            vPositive.setVisibility(View.VISIBLE);
+            vContactExpert.setVisibility(View.VISIBLE);
         }
 
         void showOnlyDismissButton() {
             mode = MODE_STATUS_DISMISS;
             vNegative.setText(R.string.dismiss_button);
             vNegative.setVisibility(View.VISIBLE);
-            vPositive.setVisibility(View.INVISIBLE);
+            vContactExpert.setVisibility(View.INVISIBLE);
         }
 
         void dismiss() {
@@ -1081,8 +1081,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
         @Override
         public void onClick(View v) {
-            if (TAG_POSITIVE_BUTTON.equals(v.getTag())) {
-                showMoreSuggestions();
+            if (TAG_CONTACT_EXPERT_BUTTON.equals(v.getTag())) {
+                showExpertChat();
             } else if (TAG_CANCEL_BUTTON.equals(v.getTag())) {
                 if (mode == MODE_STATUS) {
                     cancelTests();
@@ -1105,6 +1105,10 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                 new ArrayList<String>(currentSuggestion.getShortSuggestionList()));
     }
 
+    private void showExpertChat() {
+        startActivity(new Intent(getContext(), ExpertChatActivity.class));
+    }
+
     private void showAboutAndPrivacyPolicy() {
         WifiDocDialogFragment fragment = WifiDocDialogFragment.forAboutAndPrivacyPolicy();
         fragment.show(getActivity().getSupportFragmentManager(), "About");
@@ -1113,6 +1117,13 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
     private void showFeedbackForm() {
         WifiDocDialogFragment fragment = WifiDocDialogFragment.forFeedback(R.id.wifi_doc_placeholder_fl);
+        fragment.show(getActivity().getSupportFragmentManager(), "Feedback");
+        dobbyAnalytics.feedbackFormShown();
+    }
+
+    private void showSimpleFeedbackForm() {
+        String userUuid = ((DobbyApplication)getActivity().getApplicationContext()).getUserUuid();
+        WifiDocDialogFragment fragment = WifiDocDialogFragment.forSimpleFeedback(userUuid);
         fragment.show(getActivity().getSupportFragmentManager(), "Feedback");
         dobbyAnalytics.feedbackFormShown();
     }

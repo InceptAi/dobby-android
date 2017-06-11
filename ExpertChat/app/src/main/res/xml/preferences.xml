@@ -24,4 +24,10 @@
         android:summary="@string/expert_name_summary"
         android:dialogTitle="@string/expert_name_dialog_title" />
 
+    <CheckBoxPreference
+        android:key="isExpertOnline"
+        android:title="Expert is online"
+        android:summary="Whether the expert is online or not."
+        android:defaultValue="true"/>
+
 </PreferenceScreen>

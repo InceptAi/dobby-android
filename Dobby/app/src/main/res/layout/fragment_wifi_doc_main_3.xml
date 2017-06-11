@@ -378,11 +378,11 @@
                     android:visibility="invisible" />
 
                 <Button
-                    android:id="@+id/bottomDialog_ok"
+                    android:id="@+id/bottomDialog_contact_expert"
                     style="@style/MyButton.Flat"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="MORE"
+                    android:text="CONTACT EXPERT"
                     android:textSize="14sp"
                     android:textColor="@android:color/holo_blue_dark"
                     android:visibility="invisible" />
@@ -598,7 +598,7 @@
             -->
 
             <include
-                layout="@layout/bottom_button_grid"
+                layout="@layout/bottom_button_grid_no_leaderboard"
                 android:layout_height="match_parent"
                 android:layout_width="0dp"
                 android:layout_weight="0.7"

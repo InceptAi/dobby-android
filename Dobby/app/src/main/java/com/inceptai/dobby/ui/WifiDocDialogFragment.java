@@ -14,6 +14,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RadioGroup;
 import android.widget.TextView;
@@ -34,10 +35,12 @@ public class WifiDocDialogFragment extends DialogFragment {
     public static final int DIALOG_SHOW_FEEDBACK_FORM = 1002;
     public static final int DIALOG_SHOW_ABOUT_AND_PRIVACY_POLICY = 1003;
     public static final int DIALOG_EXPERT_ONBOARDING = 1004;
+    public static final int DIALOG_SHOW_SIMPLE_FEEDBACK = 1005;
 
     public static final String DIALOG_PAYLOAD = "payload";
     public static final String DIALOG_SUGGESTION_TILTE = "suggestionTitle";
     public static final String DIALOG_SUGGESTION_LIST = "suggestionList";
+    public static final String USER_UUID = "userUuid";
     public static final String DIALOG_TYPE = "type";
     public static final String APP_NAME = "appName";
     public static final String APP_ICON = "appIcon";
@@ -70,6 +73,8 @@ public class WifiDocDialogFragment extends DialogFragment {
                 return createFeedbackFormDialogNoToast(bundle);
             case DIALOG_EXPERT_ONBOARDING:
                 return createExpertOnboardingDialog(bundle);
+            case DIALOG_SHOW_SIMPLE_FEEDBACK:
+                return createSimpleFeedbackForm(bundle);
         }
         return new AlertDialog.Builder(getActivity()).create();
     }
@@ -109,6 +114,15 @@ public class WifiDocDialogFragment extends DialogFragment {
         return fragment;
     }
 
+    public static WifiDocDialogFragment forSimpleFeedback(String userUuid) {
+        WifiDocDialogFragment fragment = new WifiDocDialogFragment();
+        Bundle bundle = new Bundle();
+        bundle.putInt(DIALOG_TYPE, DIALOG_SHOW_SIMPLE_FEEDBACK);
+        bundle.putString(USER_UUID, userUuid);
+        fragment.setArguments(bundle);
+        return fragment;
+    }
+
     private Dialog createSuggestionsDialog(Bundle bundle) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = getActivity().getLayoutInflater();
@@ -137,6 +151,40 @@ public class WifiDocDialogFragment extends DialogFragment {
         continueFl.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                dismiss();
+            }
+        });
+        builder.setView(rootView);
+        return builder.create();
+    }
+
+    private Dialog createSimpleFeedbackForm(Bundle bundle) {
+        final String userUuid = bundle.getString(USER_UUID);
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        LayoutInflater inflater = getActivity().getLayoutInflater();
+        rootView = inflater.inflate(R.layout.simple_feedback_dialog_fragment, null);
+        ImageView yesIv = (ImageView) rootView.findViewById(R.id.yes_feedback_iv);
+        ImageView noIv = (ImageView) rootView.findViewById(R.id.no_feedback_iv);
+        yesIv.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                feedbackDatabaseWriter.writeSimpleFeedbackAsync(userUuid, true);
+                View rootView = getActivity().findViewById(android.R.id.content);
+                if (rootView != null) {
+                    Snackbar.make(rootView, "Thanks for your feedback !", Snackbar.LENGTH_SHORT).show();
+                }
+                dismiss();
+            }
+        });
+
+        noIv.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                feedbackDatabaseWriter.writeSimpleFeedbackAsync(userUuid, false);
+                View rootView = getActivity().findViewById(android.R.id.content);
+                if (rootView != null) {
+                    Snackbar.make(rootView, "Thanks for your feedback !", Snackbar.LENGTH_SHORT).show();
+                }
                 dismiss();
             }
         });

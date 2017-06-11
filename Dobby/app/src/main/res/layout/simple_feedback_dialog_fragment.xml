@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:paddingTop="20dp"
+        android:layout_width="wrap_content"
+        android:src="@mipmap/wifi_doc_launcher"
+        android:layout_gravity="center_horizontal"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:paddingTop="20dp"
+        android:text="What did you think ?"
+        android:textSize="28sp"
+        android:fontFamily="sans-serif-condensed-thin"
+        android:layout_gravity="center_horizontal"
+        android:layout_height="wrap_content" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:orientation="horizontal"
+        android:paddingTop="20dp"
+        android:layout_gravity="center_horizontal"
+        android:gravity="center_horizontal"
+        android:paddingBottom="20dp"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:layout_width="128dp"
+            android:id="@+id/yes_feedback_iv"
+            android:src="@drawable/ic_mood_smile_24dp"
+            android:alpha="0.66"
+            android:clickable="true"
+            android:layout_height="128dp" />
+
+        <android.support.v4.widget.Space
+            android:layout_width="30dp"
+            android:layout_height="match_parent" />
+
+        <ImageView
+            android:layout_width="128dp"
+            android:id="@+id/no_feedback_iv"
+            android:src="@drawable/ic_mood_bad_24dp"
+            android:alpha="0.66"
+            android:clickable="true"
+            android:layout_height="128dp" />
+    </LinearLayout>
+
+</LinearLayout>

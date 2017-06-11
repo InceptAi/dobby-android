@@ -17,6 +17,8 @@
     <color name="whiteGreen">#e6ffe6</color>
     <color name="Green0">#00cc00</color>
     <color name="darkGreen">#008000</color>
+    <color name="soberGreen">#006600</color>
+    <color name="soberPurple">#80002a</color>
     <color name="basicRed">#ff0000</color>
     <color name="basicYellow">#e6e600</color>
     <color name="basicYellowTrans">#00e6e600</color>
