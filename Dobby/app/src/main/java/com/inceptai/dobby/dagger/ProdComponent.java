@@ -7,6 +7,7 @@ import com.inceptai.dobby.heartbeat.AlarmReceiver;
 import com.inceptai.dobby.heartbeat.DeviceBootReceiver;
 import com.inceptai.dobby.ui.ChatFragment;
 import com.inceptai.dobby.ui.DebugFragment;
+import com.inceptai.dobby.ui.ExpertChatActivity;
 import com.inceptai.dobby.ui.FakeDataFragment;
 import com.inceptai.dobby.ui.WifiDocActivity;
 import com.inceptai.dobby.ui.WifiDocDialogFragment;
@@ -46,5 +47,7 @@ public interface ProdComponent {
     void inject(AlarmReceiver alarmReceiver);
 
     void inject(DeviceBootReceiver deviceBootReceiver);
+
+    void inject(ExpertChatActivity expertChatActivity);
 
 }
