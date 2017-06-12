@@ -50,6 +50,7 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
 
     @Inject
     DobbyAnalytics dobbyAnalytics;
+    private boolean isFirstRun = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -110,6 +111,7 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
         expertChatService = ExpertChatService.fetchInstance(dobbyApplication.getUserUuid());
         fetchChatMessages();
         if (isFirstChat()) {
+            isFirstRun = true;
             progressBar.setVisibility(View.GONE);
             WifiDocDialogFragment fragment = WifiDocDialogFragment.forExpertOnBoarding();
             fragment.show(getSupportFragmentManager(), "Wifi Expert Chat");
@@ -122,6 +124,14 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
         super.onResume();
         fetchChatMessages();
         processIntent(getIntent());
+        if (isFirstRun) {
+            addGeneralMessage("Welcome to Expert Chat !");
+            addGeneralMessage("Say hello to start the conversation.");
+        } else {
+            addGeneralMessage("Welcome back !");
+        }
+
+        addGeneralMessage(getEtaString(expertChatService.getCurrentEtaSeconds(), true));
     }
 
     @Override
@@ -170,6 +180,23 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
             message += " Less than " + Utils.timeSecondsToString(newEtaSeconds);
         }
         Message.obtain(handler, MSG_UPDATE_ETA, message).sendToTarget();
+    }
+
+    private String getEtaString(long newEtaSeconds, boolean isPresent) {
+        String message = getResources().getString(R.string.expected_response_time_for_expert);
+        if (!isPresent) {
+            message += " Less than 12 hours.";
+        } else {
+            message += " Less than " + Utils.timeSecondsToString(newEtaSeconds);
+        }
+        return message;
+    }
+
+    private void addGeneralMessage(String generalMessage) {
+        ExpertChat expertChat = new ExpertChat();
+        expertChat.setMessageType(ExpertChat.MSG_TYPE_GENERAL_MESSAGE);
+        expertChat.setText(generalMessage);
+        Message.obtain(handler, MSG_UPDATE_CHAT, expertChat).sendToTarget();
     }
 
     @Override

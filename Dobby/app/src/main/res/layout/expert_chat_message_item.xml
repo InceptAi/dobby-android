@@ -5,6 +5,19 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical">
 
+    <TextView
+        android:id="@+id/general_message_tv"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:fontFamily="sans-serif-condensed-thin"
+        android:gravity="center_horizontal"
+        tools:text="General message"
+        android:padding="5dp"
+        android:textSize="16sp"
+        android:visibility="gone"
+        android:textColor="@color/soberDarkBlue" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"

@@ -10,6 +10,10 @@ public class ExpertChat {
     private static final String EMPTY_STRING = "";
     public static final int MSG_TYPE_EXPERT_TEXT = 1001;
     public static final int MSG_TYPE_USER_TEXT = 1002;
+
+    // General messages include ETA and welcome messages.
+
+    public static final int MSG_TYPE_GENERAL_MESSAGE = 1003;
     public static final int MSG_TYPE_UNKNOWN = 1;
 
 
