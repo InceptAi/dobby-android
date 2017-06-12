@@ -358,7 +358,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onFirstTimeCreated() {
         if (dobbyAi != null) {
-            dobbyAi.sendEvent(ApiAiClient.APIAI_WELCOME_EVENT);
+            dobbyAi.sendWelcomeEvent();
         }
     }
 

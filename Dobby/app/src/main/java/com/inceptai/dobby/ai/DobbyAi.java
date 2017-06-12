@@ -316,6 +316,13 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         }
     }
 
+    public void sendWelcomeEvent() {
+        if (useApiAi) {
+            apiAiClient.processTextQueryOffline(null, ApiAiClient.APIAI_WELCOME_EVENT, getLastAction(), this);
+        } else {
+            DobbyLog.w("Ignoring events for Wifi doc version :" + ApiAiClient.APIAI_WELCOME_EVENT);
+        }
+    }
 
     public void cleanup() {
         networkLayer.cleanup();
