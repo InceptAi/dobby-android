@@ -11,6 +11,7 @@ public class ExpertData {
     String name;
     String fcmToken;
     long etaSeconds;
+    String selectedUuid;
 
     public ExpertData() {}
 
@@ -32,6 +33,10 @@ public class ExpertData {
 
     public long getEtaSeconds() {
         return etaSeconds;
+    }
+
+    public String getSelectedUuid() {
+        return selectedUuid;
     }
 
     @Override

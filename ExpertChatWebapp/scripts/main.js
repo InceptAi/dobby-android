@@ -38,6 +38,32 @@ function ExpertChat() {
   this.initFirebase();
 }
 
+ExpertChat.prototype.loadExpertList = function(userName) {
+  this.expertListRef = this.database.ref('/expert/');
+  this.expertList = [];
+  this.expertListRef.once('value').then(snapshot => {
+      for (var key in snapshot.val()) {
+          console.log("Expert: " + key);
+          this.getExpert(key, userName);
+      }
+  });
+}
+
+ExpertChat.prototype.getExpert = function(avatarName, userName) {
+    var tempRef = this.database.ref('/expert/' + avatarName + '/');
+    tempRef.once('value').then(expert => {
+        if (expert.val().name == userName) {
+            console.log("Found expert:" + expert.val().name);
+            console.log("Load chat for userUuid:" + expert.val().selectedUuid);
+            this.loadMessages(expert.val().selectedUuid);
+            this.selectedUuid = selectedUuid;
+        }
+        console.log("gotExpert.name:" + expert.val().name);
+        console.log("gotExpert.avatar:" + expert.val().avatar);
+        console.log("looking for userName:" + userName);
+    });
+}
+
 // Sets up shortcuts to Firebase features and initiate firebase auth.
 ExpertChat.prototype.initFirebase = function() {
   // Shortcuts to Firebase SDK features.
@@ -49,9 +75,9 @@ ExpertChat.prototype.initFirebase = function() {
 };
 
 // Loads chat messages history and listens for upcoming ones.
-ExpertChat.prototype.loadMessages = function() {
+ExpertChat.prototype.loadMessages = function(userUuid) {
   // Reference to the /messages/ database path.
-  this.messagesRef = this.database.ref('expert_chat_messages');
+  this.messagesRef = this.database.ref('/wifidoc_chat_rooms/debug/' + userUuid +'/');
   // Make sure we remove all previous listeners.
   this.messagesRef.off();
 
@@ -73,6 +99,7 @@ ExpertChat.prototype.saveMessage = function(e) {
     // Add a new message entry to the Firebase Database.
     this.messagesRef.push({
       name: currentUser.displayName,
+      messageType: 1001,
       text: this.messageInput.value,
       photoUrl: currentUser.photoURL || '/images/profile_placeholder.png'
     }).then(function() {
@@ -174,8 +201,7 @@ ExpertChat.prototype.onAuthStateChanged = function(user) {
     // Hide sign-in button.
     this.signInButton.setAttribute('hidden', 'true');
 
-    // We load currently existing chant messages.
-    this.loadMessages();
+    this.loadExpertList(userName);
 
     // We save the Firebase Messaging Device token and enable notifications.
     this.saveMessagingDeviceToken();
