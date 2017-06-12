@@ -17,6 +17,8 @@ function ExpertChat() {
   this.signInButton = document.getElementById('sign-in');
   this.signOutButton = document.getElementById('sign-out');
   this.signInSnackbar = document.getElementById('must-signin-snackbar');
+  this.welcomeTitle = document.getElementById('welcome-text-title');
+  this.supportingTextbar = document.getElementById('supporting-text-div');
 
   // Saves message on form submit.
   this.messageForm.addEventListener('submit', this.saveMessage.bind(this));
@@ -56,7 +58,9 @@ ExpertChat.prototype.getExpert = function(avatarName, userName) {
             console.log("Found expert:" + expert.val().name);
             console.log("Load chat for userUuid:" + expert.val().selectedUuid);
             this.loadMessages(expert.val().selectedUuid);
-            this.selectedUuid = selectedUuid;
+            this.selectedUuid = expert.val().selectedUuid;
+            this.welcomeTitle.textContent = "Welcome " + expert.val().avatar;
+            this.supportingTextbar.textContent = "You are chatting with USER: " + this.selectedUuid;
         }
         console.log("gotExpert.name:" + expert.val().name);
         console.log("gotExpert.avatar:" + expert.val().avatar);
