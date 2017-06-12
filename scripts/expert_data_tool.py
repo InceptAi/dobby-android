@@ -252,9 +252,9 @@ def main():
     default_handles_base_url = "https://dobbybackend.firebaseio.com/handles"
     op = OptionParser()
     op.add_option("-v", "--verbose", action="store_true", help="verbose", default=False)
-    op.add_option("-p", "--userelease", action="store_true", dest="use_release", help="Use Release app data", default=False)
-    op.add_option("-d", "--usedummy", action="store_true", dest="use_dummy", help="Use Dummy data", default=False)
-    op.add_option("-m", "--maxinferences", dest="max_inferences", help="Max inferences", default="2")
+    op.add_option("-d", "--usedebug", action="store_true", dest="use_debug", help="Use Debug app data", default=False)
+    op.add_option("-z", "--usedummy", action="store_true", dest="use_dummy", help="Use Dummy data", default=False)
+    op.add_option("-m", "--maxinferences", dest="max_inferences", help="Max inferences", default="1")
     op.add_option("-f", "--flavor", dest="app_flavor", help="App flavor (default:wifidoc)", default="wifidoc")
     op.add_option("-u", "--uid", dest="user_id", help="User ID", default=None)
     (opts, args) = op.parse_args()
@@ -263,10 +263,10 @@ def main():
         op.print_help()
         op.error("User id is required")
 
-    if opts.use_release:
-        build_type = "release"
-    else:
+    if opts.use_debug:
         build_type = "debug"
+    else:
+        build_type = "release"
 
     if opts.use_dummy:
         flavor = "dummy"
