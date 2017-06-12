@@ -126,6 +126,7 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
         expertData.avatar = avatar;
         expertData.fcmToken = expertFcmToken;
         expertData.etaSeconds = expertEtaSeconds;
+        expertData.selectedUuid = selectedUserId;
         if (expertFcmToken != null && !expertFcmToken.isEmpty() && pendingFcmTokenSaveOperation) {
             pendingFcmTokenSaveOperation = false;
         }
@@ -177,6 +178,7 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
 
     public void setSelectedUserId(String userUuid) {
         this.selectedUserId = userUuid;
+        persistExpertData(firebaseUser);
     }
 
     public void showNotification(Context context, Map<String, String> data) {
