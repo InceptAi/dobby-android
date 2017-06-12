@@ -134,6 +134,7 @@ notify_failure () {
 	else
 		BODY="Gradle build failed: See the results $RESULT_URL for UI test results."
 	fi
+    BODY="${BODY}. $FAILURE_STRING"
 	ATTACHMENT="/tmp/gradle.log"
 	emails_to_send=`generate_space_separated_emails $EMAILS_TO_NOTIFY`
 	echo "Running echo ${BODY}| mail -s \"Gradle Build Failed for $current_build_flavor\" -A ${ATTACHMENT} $emails_to_send"
@@ -233,7 +234,7 @@ run_emulator_tests () {
 	current_build_flavor=$1
     echo "List of emulators:"
     cat $EMULATOR_LIST_FILE
-    should_report_failure=0
+    SHOULD_REPORT_FAILURE=0
 
 
 	if [ ! -z $OUTPUT_DIR_TO_SERVE_FILES ]; then
@@ -296,7 +297,8 @@ run_emulator_tests () {
 			echo "./gradlew $UNIT_TEST_TASK --stacktrace >>  /tmp/gradle.log"
 			./gradlew $UNIT_TEST_TASK --stacktrace >>  /tmp/gradle.log
         	if [ $? -gt 0 ]; then
-            	should_report_failure=1
+            	SHOULD_REPORT_FAILURE=1
+                FAILURE_STRING="$FAILURE_STRING. Unit tests failed"
         	fi
 		fi
 		
@@ -306,7 +308,8 @@ run_emulator_tests () {
 			echo "./gradlew $CONNECTED_TEST_TASK -Pandroid.testInstrumentationRunnerArguments.class=com.inceptai.dobby.BandwidthAnalyzerTest --stacktrace >>  /tmp/gradle.log"
 			./gradlew $CONNECTED_TEST_TASK -Pandroid.testInstrumentationRunnerArguments.class=com.inceptai.dobby.BandwidthAnalyzerTest --stacktrace >>  /tmp/gradle.log
     	    if [ $? -gt 0 ]; then
-        	    should_report_failure=1
+                FAILURE_STRING="$FAILURE_STRING. Bandwidth Analyzer test failed for $api_level"
+        	    SHOULD_REPORT_FAILURE=1
         	fi
 		fi
 		
@@ -321,13 +324,15 @@ run_emulator_tests () {
 				TEST_CLASS="com.inceptai.dobby.ui.CheckMainScreenWifiDocTest"
 			else
 				echo "UNSUPPORTED BUILD FLAVOR FOR TESTS, FAILING" >> /tmp/gradle.log
-            	should_report_failure=1
+                FAILURE_STRING="$FAILURE_STRING. Unsupported app flavor"
+            	SHOULD_REPORT_FAILURE=1
 				return
 			fi
 			echo "./gradlew $SPOON_TASK -PspoonClassName=$TEST_CLASS --stacktrace >>  /tmp/gradle.log"
 			./gradlew $SPOON_TASK -PspoonClassName=$TEST_CLASS --stacktrace >>  /tmp/gradle.log
         	if [ $? -gt 0 ]; then
-            	should_report_failure=1
+                FAILURE_STRING="$FAILURE_STRING. Espresso tests failed for ${api_level}."
+            	SHOULD_REPORT_FAILURE=1
         	fi
 		fi
 
@@ -366,6 +371,7 @@ build_test_targets () {
     echo "Starting gradle build" > /tmp/gradle.log
     ./gradlew clean build assembleDebug assembleAndroidTest >> /tmp/gradle.log
     if [ $? -gt 0 ]; then
+        FAILURE_STRING="${FAILURE_STRING}. Build failed for $current_build_flavor"
         notify_failure $current_build_flavor 
         return 1
     fi
@@ -464,6 +470,7 @@ check_config () {
 }
 
 run_tests_one_iteration () {
+    FAILURE_STRING=""
 	current_build_flavor=$1
 	echo "CHECKED:2 CONFIG: JAVA_HOME:$JAVA_HOME ANDROID_SDK:$ANDROID_HOME" 
     
@@ -484,7 +491,7 @@ run_tests_one_iteration () {
     #run the tests
     run_emulator_tests $current_build_flavor
 
-    if [ $should_report_failure -gt 0 ]; then
+    if [ $SHOULD_REPORT_FAILURE -gt 0 ]; then
         echo "notify_failure"
 		notify_failure $current_build_flavor
     else 
@@ -527,6 +534,7 @@ MAX_VMS_TO_RUN=1
 RESULT_URL=
 BUILD_FLAVORS="wifidoc,dobby"
 ONLY_NOTIFY_ON_FAILURE=0
+FAILURE_STRING=""
 
 if [ "$#" -lt 1 ]; then
     show_help
