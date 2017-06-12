@@ -353,6 +353,10 @@ public class MainActivity extends AppCompatActivity
         //Get the welcome message
         DobbyLog.v("MainActivity:onRecyclerViewReady Setting isFragmentActive to true");
         isFragmentActive = true;
+    }
+
+    @Override
+    public void onFirstTimeCreated() {
         if (dobbyAi != null) {
             dobbyAi.sendEvent(ApiAiClient.APIAI_WELCOME_EVENT);
         }

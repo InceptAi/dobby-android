@@ -2,7 +2,6 @@ package com.inceptai.dobby.ui;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -127,6 +126,8 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
 
     private boolean shownDetailsHint = false;
 
+    private boolean createdFirstTime = true;
+
     @Inject
     DobbyAnalytics dobbyAnalytics;
 
@@ -143,6 +144,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         void onMicPressed();
         void onRecyclerViewReady();
         void onFragmentDetached();
+        void onFirstTimeCreated();
     }
 
     public ChatFragment() {
@@ -175,6 +177,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
+        createdFirstTime = true;
     }
 
     @Override
@@ -246,17 +249,15 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
             mListener.onRecyclerViewReady();
         }
 
-        dobbyAnalytics.wifiExpertFragmentEntered();
+        if (createdFirstTime) {
+            dobbyAnalytics.wifiExpertFragmentEntered();
+            if (mListener != null) {
+                mListener.onFirstTimeCreated();
+            }
+        }
 
         DobbyLog.v("CF: Finished with onCreateView");
         return fragmentView;
-    }
-
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            // mListener.onFragmentInteraction(uri);
-        }
     }
 
     @Override
@@ -316,6 +317,13 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     public void onDestroy() {
         DobbyLog.v("CF: In onDestroy");
         super.onDestroy();
+    }
+
+    @Override
+    public void onDestroyView() {
+        DobbyLog.v("CF: In onDestroyView");
+        super.onDestroyView();
+        createdFirstTime = false;
     }
 
     public void addUserChat(String text) {
