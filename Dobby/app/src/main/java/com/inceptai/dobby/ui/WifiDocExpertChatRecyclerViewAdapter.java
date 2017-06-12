@@ -12,6 +12,7 @@ import android.widget.TextView;
 
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.expert.ExpertChat;
+import com.inceptai.dobby.expert.ExpertData;
 import com.inceptai.dobby.utils.DobbyLog;
 
 import org.w3c.dom.Text;
@@ -28,6 +29,7 @@ public class WifiDocExpertChatRecyclerViewAdapter extends Adapter<RecyclerView.V
         LinearLayout fromUserLayout;
         TextView userChatTv;
         TextView expertChatTv;
+        TextView generalMessageTv;
 
         public ChatViewHolder(View rootView) {
             super(rootView);
@@ -35,6 +37,7 @@ public class WifiDocExpertChatRecyclerViewAdapter extends Adapter<RecyclerView.V
             fromUserLayout = (LinearLayout) rootView.findViewById(R.id.wd_user_chat_ll);
             userChatTv = (TextView) rootView.findViewById(R.id.wd_user_chat_tv);
             expertChatTv = (TextView) rootView.findViewById(R.id.wd_expert_chat_tv);
+            generalMessageTv = (TextView) rootView.findViewById(R.id.general_message_tv);
         }
     }
 
@@ -81,10 +84,17 @@ public class WifiDocExpertChatRecyclerViewAdapter extends Adapter<RecyclerView.V
             viewHolder.fromUserLayout.setVisibility(View.GONE);
             viewHolder.fromExpertLayout.setVisibility(View.VISIBLE);
             viewHolder.expertChatTv.setText(expertChat.getText());
+            viewHolder.generalMessageTv.setVisibility(View.GONE);
         } else if (ExpertChat.isUserChat(expertChat)) {
             viewHolder.fromExpertLayout.setVisibility(View.GONE);
             viewHolder.fromUserLayout.setVisibility(View.VISIBLE);
             viewHolder.userChatTv.setText(expertChat.getText());
+            viewHolder.generalMessageTv.setVisibility(View.GONE);
+        } else if (expertChat.getMessageType() == ExpertChat.MSG_TYPE_GENERAL_MESSAGE) {
+            viewHolder.fromExpertLayout.setVisibility(View.GONE);
+            viewHolder.fromUserLayout.setVisibility(View.GONE);
+            viewHolder.generalMessageTv.setText(expertChat.getText());
+            viewHolder.generalMessageTv.setVisibility(View.VISIBLE);
         }
     }
 }

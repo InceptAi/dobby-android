@@ -107,6 +107,10 @@ public class ExpertChatService implements ChildEventListener, ValueEventListener
         });
     }
 
+    public long getCurrentEtaSeconds() {
+        return currentEtaSeconds;
+    }
+
     public void setCallback(ChatCallback callback) {
         this.chatCallback = callback;
     }
