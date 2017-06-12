@@ -81,7 +81,7 @@ ExpertChat.prototype.initFirebase = function() {
 // Loads chat messages history and listens for upcoming ones.
 ExpertChat.prototype.loadMessages = function(userUuid) {
   // Reference to the /messages/ database path.
-  this.messagesRef = this.database.ref('/wifidoc_chat_rooms/debug/' + userUuid +'/');
+  this.messagesRef = this.database.ref('/wifidoc_chat_rooms/release/' + userUuid +'/');
   // Make sure we remove all previous listeners.
   this.messagesRef.off();
 
