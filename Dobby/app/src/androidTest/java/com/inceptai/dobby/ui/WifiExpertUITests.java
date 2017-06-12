@@ -323,8 +323,10 @@ public class WifiExpertUITests {
     }
 
     private void checkFeedbackState(boolean checkDetailsButton) {
-        ViewInteraction textView = onView(
-                allOf(withId(R.id.dobbyTextTv), withText(containsString("helpful for you"))));
+        captureScreenshot("feedback_state");
+        ViewInteraction textView = onView(withIndex(withText(containsString("helpful for you")), 0));
+        //ViewInteraction textView = onView(
+        //        allOf(withId(R.id.dobbyTextTv), withText(containsString("helpful for you"))));
         textView.check(matches(isDisplayed()));
 
         ViewInteraction posFeedback = onView(
