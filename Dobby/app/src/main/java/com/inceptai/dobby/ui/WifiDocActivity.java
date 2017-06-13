@@ -137,6 +137,12 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
         });
     }
 
+    @Override
+    public void onLocationPermissionGranted() {
+        //Trigger a wifiScan when permission is granted
+        networkLayer.wifiScan();
+    }
+
     public DobbyEventBus getEventBus() {
         return eventBus;
     }
