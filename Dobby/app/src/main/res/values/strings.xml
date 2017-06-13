@@ -112,4 +112,6 @@
     <string name="wifi_leaderboard">Wifi Leaderboard</string>
     <string name="talk_to_an_expert_title">Talk to an Expert !</string>
     <string name="expected_response_time_for_expert">Expert response time:</string>
+    <string name="location_permission_approval_text">We need the \'Location\' permission on Android to collect Wifi Scan Signal data. This will help us find issues with your Wifi Network.</string>
+    <string name="location_permission_approval_title">Approval for the Location permission</string>
 </resources>
