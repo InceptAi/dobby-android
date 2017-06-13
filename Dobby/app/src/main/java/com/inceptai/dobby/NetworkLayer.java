@@ -42,7 +42,7 @@ public class NetworkLayer {
     private static final int MAX_AGE_GAP_TO_RETRIGGER_PING_MS = 120000; // 2 mins
     private static final int MAX_AGE_GAP_TO_RETRIGGER_WIFI_SCAN_MS = 120000; // 2 mins
     private static final boolean RETRIGGER_PING_AUTOMATICALLY = false;
-    private static final boolean DISABLE_WIFI_SCAN = true; //We will disable wifi scan for this release
+    private static final boolean DISABLE_WIFI_SCAN = false; //We will disable wifi scan for this release
 
     private Context context;
     private DobbyThreadpool threadpool;
