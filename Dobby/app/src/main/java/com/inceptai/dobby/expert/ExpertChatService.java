@@ -49,9 +49,9 @@ public class ExpertChatService implements ChildEventListener, ValueEventListener
     private static final String CHAT_NOTIFICATION_TITLE = "You have a new chat message.";
     private static final String EXPERT_BASE = "/expert";
 
-    private static final long ETA_OFFLINE = 24L * 60L * 60L;  // 24 hours.
-    private static final long ETA_ONLINE = 2L * 60L; // 2 minutes or less.
-    private static final long ETA_PRESENT = 20L * 60L; // 20 minutes or less.
+    public static final long ETA_OFFLINE = 24L * 60L * 60L;  // 24 hours.
+    public static final long ETA_ONLINE = 2L * 60L; // 2 minutes or less.
+    public static final long ETA_PRESENT = 20L * 60L; // 20 minutes or less.
 
     private static ExpertChatService INSTANCE;
 

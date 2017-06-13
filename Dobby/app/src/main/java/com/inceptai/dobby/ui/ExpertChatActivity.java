@@ -45,6 +45,8 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
     private ExpertChatService expertChatService;
     private WifiDocExpertChatRecyclerViewAdapter recyclerViewAdapter;
     private DobbyApplication dobbyApplication;
+    private long currentEtaSeconds;
+    private boolean isPresent;
 
     private Handler handler;
 
@@ -117,6 +119,8 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
             fragment.show(getSupportFragmentManager(), "Wifi Expert Chat");
             dobbyAnalytics.chatActivityEnteredFirstTime();
         }
+        currentEtaSeconds = ExpertChatService.ETA_OFFLINE;
+        isPresent = false;
     }
 
     @Override
@@ -131,7 +135,7 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
             addGeneralMessage("Welcome back !");
         }
 
-        addGeneralMessage(getEtaString(expertChatService.getCurrentEtaSeconds(), true));
+        addGeneralMessage(getEtaString(currentEtaSeconds, isPresent));
     }
 
     @Override
