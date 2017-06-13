@@ -68,6 +68,9 @@ public class NetworkLayer {
         }
         eventBus.registerListener(this);
         getConnectivityAnalyzerInstance().rescheduleConnectivityTest(MIN_CHECKS_CONNECTIIVITY);
+        //Trigger a wifi scan when NL initializes
+        DobbyLog.v("Triggering wifi scan from NL initialize");
+        wifiScan();
         DobbyLog.v("NL initialized");
     }
 
@@ -76,9 +79,9 @@ public class NetworkLayer {
             return null;
         }
         //If scanning not disabled, continue
-        if (getConnectivityAnalyzerInstance().isWifiInCaptivePortal()) {
-            return null;
-        }
+        //if (getConnectivityAnalyzerInstance().isWifiInCaptivePortal()) {
+        //    return null;
+        //}
         return getWifiAnalyzerInstance().startWifiScan(MAX_AGE_GAP_TO_RETRIGGER_WIFI_SCAN_MS);
     }
 
