@@ -1,6 +1,7 @@
 package com.inceptai.dobby.ui;
 
 import android.app.Dialog;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -36,6 +37,7 @@ public class WifiDocDialogFragment extends DialogFragment {
     public static final int DIALOG_SHOW_ABOUT_AND_PRIVACY_POLICY = 1003;
     public static final int DIALOG_EXPERT_ONBOARDING = 1004;
     public static final int DIALOG_SHOW_SIMPLE_FEEDBACK = 1005;
+    public static final int DIALOG_SHOW_LOCATION_PERMISSION_REQUEST = 1006;
 
     public static final String DIALOG_PAYLOAD = "payload";
     public static final String DIALOG_SUGGESTION_TILTE = "suggestionTitle";
@@ -55,8 +57,13 @@ public class WifiDocDialogFragment extends DialogFragment {
 
     @Inject
     FeedbackDatabaseWriter feedbackDatabaseWriter;
+    private WifiDocMainFragment wifiDocMainFragment;
 
     public WifiDocDialogFragment() {
+    }
+
+    public void setWifiDocMainFragment(WifiDocMainFragment mainFragment) {
+        this.wifiDocMainFragment = mainFragment;
     }
 
     @Override
@@ -75,6 +82,8 @@ public class WifiDocDialogFragment extends DialogFragment {
                 return createExpertOnboardingDialog(bundle);
             case DIALOG_SHOW_SIMPLE_FEEDBACK:
                 return createSimpleFeedbackForm(bundle);
+            case DIALOG_SHOW_LOCATION_PERMISSION_REQUEST:
+                return createLocationPermissionRequestDialog(bundle);
         }
         return new AlertDialog.Builder(getActivity()).create();
     }
@@ -119,6 +128,15 @@ public class WifiDocDialogFragment extends DialogFragment {
         Bundle bundle = new Bundle();
         bundle.putInt(DIALOG_TYPE, DIALOG_SHOW_SIMPLE_FEEDBACK);
         bundle.putString(USER_UUID, userUuid);
+        fragment.setArguments(bundle);
+        return fragment;
+    }
+
+    public static WifiDocDialogFragment forLocationPermission(WifiDocMainFragment mainFragment)  {
+        WifiDocDialogFragment fragment = new WifiDocDialogFragment();
+        fragment.setWifiDocMainFragment(mainFragment);
+        Bundle bundle = new Bundle();
+        bundle.putInt(DIALOG_TYPE, DIALOG_SHOW_LOCATION_PERMISSION_REQUEST);
         fragment.setArguments(bundle);
         return fragment;
     }
@@ -184,6 +202,24 @@ public class WifiDocDialogFragment extends DialogFragment {
                 View rootView = getActivity().findViewById(android.R.id.content);
                 if (rootView != null) {
                     Snackbar.make(rootView, "Thanks for your feedback !", Snackbar.LENGTH_SHORT).show();
+                }
+                dismiss();
+            }
+        });
+        builder.setView(rootView);
+        return builder.create();
+    }
+
+    private Dialog createLocationPermissionRequestDialog(Bundle bundle) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        LayoutInflater inflater = getActivity().getLayoutInflater();
+        rootView = inflater.inflate(R.layout.location_permission_dialog_fragment, null);
+        FrameLayout nextFl = (FrameLayout) rootView.findViewById(R.id.bottom_next_fl);
+        nextFl.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (wifiDocMainFragment != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    wifiDocMainFragment.requestLocationPermission();
                 }
                 dismiss();
             }

@@ -222,6 +222,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         // requestPermissions();
         uiStateVisibilityChanges(view);
         dobbyAnalytics.wifiDocFragmentEntered();
+        showLocationPermissionRequest();
         return view;
     }
 
@@ -300,23 +301,15 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
 
     @TargetApi(Build.VERSION_CODES.M)
-    private void requestPermissions() {
+    public void showLocationPermissionRequest() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            // Android M Permission check 
-            if (getActivity().checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                final AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-                builder.setTitle("This app needs the LOCATION permission");
-                builder.setMessage(" In order to analyze your wifi network, Android requires us to ask for the LOCATION permission." +
-                " We do not compute or use your location in this app.");
-                builder.setPositiveButton(android.R.string.ok, null);
-                builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
-                    public void onDismiss(DialogInterface dialog) {
-                        requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSION_COARSE_LOCATION_REQUEST_CODE);
-                    }
-                });
-                builder.show();
-            }
+            WifiDocDialogFragment fragment = WifiDocDialogFragment.forLocationPermission(this);
+            fragment.show(getActivity().getSupportFragmentManager(), "Request Location Permission.");
         }
+    }
+
+    public void requestLocationPermission() {
+        requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSION_COARSE_LOCATION_REQUEST_CODE);
     }
 
     @Override
