@@ -450,7 +450,9 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                     //Informing inference engine of the error.
                 } finally {
                     DobbyLog.v("DobbyAI: Notifying wifi state ");
-                    DataInterpreter.WifiGrade wifiGrade = inferenceEngine.notifyWifiState(networkLayer.getWifiState(),
+                    DataInterpreter.WifiGrade wifiGrade = inferenceEngine.notifyWifiState(
+                            networkLayer.getWifiState(),
+                            networkLayer.getLatestScanResult(),
                             networkLayer.getWifiLinkMode(),
                             networkLayer.getCurrentConnectivityMode());
                     if (wifiGrade != null) {

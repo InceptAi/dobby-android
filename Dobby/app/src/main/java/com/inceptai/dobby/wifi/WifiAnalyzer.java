@@ -101,6 +101,10 @@ public class WifiAnalyzer {
         lastScanCompletionTimestampMs = 0;
     }
 
+    public List<ScanResult> getLatestWifiScan() {
+        return combinedScanResult;
+    }
+
     /**
      * @return An instance of a {@link ListenableFuture<List<ScanResult>>} or null on immediate failure.
      */

@@ -1,8 +1,12 @@
 package com.inceptai.dobby.ai;
 
+import android.net.wifi.ScanResult;
 import android.support.annotation.IntDef;
 
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.inceptai.dobby.connectivity.ConnectivityAnalyzer;
 import com.inceptai.dobby.model.DobbyWifiInfo;
 import com.inceptai.dobby.model.IPLayerInfo;
@@ -13,7 +17,9 @@ import com.inceptai.dobby.wifi.WifiState;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Created by arunesh on 4/14/17.
@@ -487,16 +493,28 @@ public class DataInterpreter {
         int primaryApChannelInterferingAps;
         int leastOccupiedChannelAps;
         int primaryApSignal;
-        private long updatedAtMs;
         @BandwidthTestCodes.ErrorCodes int errorCode = BandwidthTestCodes.ErrorCodes.ERROR_UNINITIAlIZED;
+        List<ScanResult> scanResultList;
+        private long updatedAtMs;
+
 
 
         public WifiGrade() {
+            scanResultList = new ArrayList<>();
             wifiChannelOccupancyMetric = new HashMap<>();
         }
 
+        /*
         public String toJson() {
             Gson gson = new Gson();
+            String json = gson.toJson(this);
+            return json;
+        }
+        */
+        public String toJson() {
+            Gson gson = new GsonBuilder()
+                        .setExclusionStrategies(new TestExclStrat())
+                        .create();
             String json = gson.toJson(this);
             return json;
         }
@@ -653,6 +671,17 @@ public class DataInterpreter {
         public boolean isFresh() {
             return updatedAtMs > 0.0 && DataInterpreter.isFresh(updatedAtMs);
         }
+
+        public class TestExclStrat implements ExclusionStrategy {
+            public boolean shouldSkipClass(Class<?> arg0) {
+                return false;
+            }
+
+            public boolean shouldSkipField(FieldAttributes f) {
+                return (f.getDeclaringClass() == ScanResult.class && f.getName().equals("wifiSsid"));
+            }
+        }
+
     }
 
     public static String metricTypeToString(@MetricType int metricType) {
@@ -797,6 +826,7 @@ public class DataInterpreter {
     }
 
     public static WifiGrade interpret(HashMap<Integer, WifiState.ChannelInfo> wifiChannelInfo,
+                                      List<ScanResult> scanResultList,
                                       DobbyWifiInfo linkInfo,
                                       @WifiState.WifiLinkMode int wifiProblemMode,
                                       @ConnectivityAnalyzer.WifiConnectivityMode int wifiConnectivityMode) {
@@ -832,6 +862,7 @@ public class DataInterpreter {
         wifiGrade.leastOccupiedChannel = leastOccupiedChannel;
         wifiGrade.leastOccupiedChannelAps = minOccupancyAPs;
         wifiGrade.primaryApSignal = linkInfo.getRssi();
+        wifiGrade.scanResultList = scanResultList;
         return wifiGrade;
     }
 

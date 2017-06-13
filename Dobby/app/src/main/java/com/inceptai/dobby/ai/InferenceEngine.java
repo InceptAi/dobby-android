@@ -1,5 +1,6 @@
 package com.inceptai.dobby.ai;
 
+import android.net.wifi.ScanResult;
 import android.support.annotation.IntDef;
 
 import com.inceptai.dobby.DobbyApplication;
@@ -19,6 +20,7 @@ import com.inceptai.dobby.wifi.WifiState;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -121,13 +123,16 @@ public class InferenceEngine {
         return testModeString;
     }
 
-    synchronized public DataInterpreter.WifiGrade notifyWifiState(WifiState wifiState, @WifiState.WifiLinkMode int wifiLinkMode,
+    synchronized public DataInterpreter.WifiGrade notifyWifiState(WifiState wifiState,
+                                                                  List<ScanResult> scanResultList,
+                                                                  @WifiState.WifiLinkMode int wifiLinkMode,
                                                                   @ConnectivityAnalyzer.WifiConnectivityMode int wifiConnectivityMode) {
         DataInterpreter.WifiGrade wifiGrade = new DataInterpreter.WifiGrade();
         if (wifiState != null) {
             HashMap<Integer, WifiState.ChannelInfo> channelMap = wifiState.getChannelInfoMap();
             DobbyWifiInfo wifiInfo = wifiState.getLinkInfo();
-            wifiGrade = DataInterpreter.interpret(channelMap, wifiInfo, wifiLinkMode, wifiConnectivityMode);
+            wifiGrade = DataInterpreter.interpret(channelMap, scanResultList, wifiInfo,
+                    wifiLinkMode, wifiConnectivityMode);
             wifiGrade.errorCode = getWifiErrorCode(wifiConnectivityMode);
         }
         metricsDb.updateWifiGrade(wifiGrade);

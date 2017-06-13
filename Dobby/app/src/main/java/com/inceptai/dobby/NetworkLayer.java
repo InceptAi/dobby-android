@@ -86,7 +86,9 @@ public class NetworkLayer {
     public DataInterpreter.WifiGrade getCurrentWifiGrade() {
         HashMap<Integer, WifiState.ChannelInfo> channelMap = getWifiState().getChannelInfoMap();
         DobbyWifiInfo wifiInfo = getWifiState().getLinkInfo();
-        DataInterpreter.WifiGrade wifiGrade = DataInterpreter.interpret(channelMap,
+        DataInterpreter.WifiGrade wifiGrade = DataInterpreter.interpret(
+                channelMap,
+                getLatestScanResult(),
                 wifiInfo,
                 getWifiLinkMode(),
                 getCurrentConnectivityMode());
@@ -171,6 +173,10 @@ public class NetworkLayer {
     public void clearStatsCache() {
         getWifiAnalyzerInstance().clearWifiScanCache();
         getPingAnalyzerInstance().clearPingStatsCache();
+    }
+
+    public List<ScanResult> getLatestScanResult() {
+        return getWifiAnalyzerInstance().getLatestWifiScan();
     }
 
     public synchronized BandwidthObserver startBandwidthTest(final @BandwidthTestCodes.TestMode int mode) {
