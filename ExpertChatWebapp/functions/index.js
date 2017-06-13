@@ -56,6 +56,7 @@ exports.sendNotification = functions.database.ref('/notifications/messages/{push
         admin.messaging().sendToDevice(instanceId, payload)
             .then(function (response) {
                 console.log("Successfully sent message:", response);
+                event.data.current.ref.remove();
             })
         .catch(function (error) {
             console.log("Error sending message:", error);
