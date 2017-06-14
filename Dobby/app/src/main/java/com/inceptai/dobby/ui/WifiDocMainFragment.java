@@ -20,6 +20,8 @@ import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.ShareCompat;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.CardView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -59,6 +61,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 import static com.inceptai.dobby.ai.DataInterpreter.MetricType.ABYSMAL;
 import static com.inceptai.dobby.ai.DataInterpreter.MetricType.AVERAGE;
 import static com.inceptai.dobby.ai.DataInterpreter.MetricType.EXCELLENT;
@@ -302,20 +305,24 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     @TargetApi(Build.VERSION_CODES.M)
     public void showLocationPermissionRequest() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            WifiDocDialogFragment fragment = WifiDocDialogFragment.forLocationPermission(this);
-            fragment.show(getActivity().getSupportFragmentManager(), "Request Location Permission.");
+            // Assume thisActivity is the current activity
+            int permissionCheck = ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION);
+            if (permissionCheck != PERMISSION_GRANTED) {
+                WifiDocDialogFragment fragment = WifiDocDialogFragment.forLocationPermission(this);
+                fragment.show(getActivity().getSupportFragmentManager(), "Request Location Permission.");
+            }
         }
     }
 
     public void requestLocationPermission() {
-        requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSION_COARSE_LOCATION_REQUEST_CODE);
+        requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_COARSE_LOCATION_REQUEST_CODE);
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
             case PERMISSION_COARSE_LOCATION_REQUEST_CODE:
-                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (grantResults[0] == PERMISSION_GRANTED) {
                     DobbyLog.i("Coarse location permission granted.");
                     if (mListener != null) {
                         mListener.onLocationPermissionGranted();
@@ -323,7 +330,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                     //Trigger a scan here if needed
                 } else {
                     Utils.buildSimpleDialog(getContext(), "Functionality limited",
-                            "Since location access has not been granted, this app will not be able to analyze your wifi network.");
+                            "Since location access has not been granted, this app will not be able to analyze your wifi network. You can still use all the other features.");
                 }
                 return;
         }

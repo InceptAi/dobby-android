@@ -116,7 +116,7 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
                 // Send messages on click.
                 ExpertChat expertChat = new
                         ExpertChat(mMessageEditText.getText().toString(), ExpertChat.MSG_TYPE_USER_TEXT);
-                expertChatService.pushData(expertChat);
+                expertChatService.pushChatMessage(expertChat);
                 mMessageEditText.setText("");
             }
         });
@@ -267,6 +267,7 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
 
     @Override
     protected void onStop() {
+        sendUserLeftMetaMessage();
         expertChatService.disconnect();
         expertChatService.unregisterChatCallback();
         super.onStop();
@@ -280,5 +281,9 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
     private boolean isFirstChat() {
         return Boolean.valueOf(Utils.readSharedSetting(this,
                 PREF_FIRST_CHAT, Utils.TRUE_STRING));
+    }
+
+    private void sendUserLeftMetaMessage() {
+        expertChatService.pushMetaChatMessage(ExpertChat.MSG_TYPE_META_USER_LEFT);
     }
 }

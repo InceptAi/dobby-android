@@ -16,6 +16,8 @@ public class ExpertChat {
     public static final int MSG_TYPE_GENERAL_MESSAGE = 1003;
     public static final int MSG_TYPE_UNKNOWN = 1;
 
+    public static final int MSG_TYPE_META_USER_LEFT = 5001;
+
 
     String id;
     String text;
