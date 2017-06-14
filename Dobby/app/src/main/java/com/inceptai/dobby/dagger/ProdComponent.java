@@ -29,8 +29,6 @@ public interface ProdComponent {
 
     void inject(MainActivity mainActivity);
 
-    void inject(DobbyAi dobbyAi);
-
     void inject(NetworkLayer networkLayer);
 
     void inject(ChatFragment chatFragment);

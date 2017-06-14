@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import ai.api.model.Result;
 
@@ -58,6 +59,7 @@ import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_WIFI_CHECK;
  * It can be made to send queries to API AI's server or use a local/another AI system.
  */
 
+@Singleton
 public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.ActionListener {
     private static final boolean CLEAR_STATS_EVERY_TIME_USER_ASKS_TO_RUN_TESTS = true;
     private Context context;
@@ -100,6 +102,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         void actionCompleted();
     }
 
+    @Inject
     public DobbyAi(DobbyThreadpool threadpool,
                    InferenceDatabaseWriter inferenceDatabaseWriter,
                    FailureDatabaseWriter failureDatabaseWriter,

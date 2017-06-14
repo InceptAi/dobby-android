@@ -37,16 +37,16 @@ public class ProdModule {
         return new DobbyThreadpool();
     }
 
-    @Singleton
-    @Provides
-    public DobbyAi providesDobbyAi(DobbyApplication application,
-                                   DobbyThreadpool threadpool,
-                                   InferenceDatabaseWriter inferenceDatabaseWriter,
-                                   FailureDatabaseWriter failureDatabaseWriter) {
-        DobbyAi dobbyAi = new DobbyAi(threadpool, inferenceDatabaseWriter, failureDatabaseWriter, application);
-        application.getProdComponent().inject(dobbyAi);
-        return dobbyAi;
-    }
+//    @Singleton
+//    @Provides
+//    public DobbyAi providesDobbyAi(DobbyApplication application,
+//                                   DobbyThreadpool threadpool,
+//                                   InferenceDatabaseWriter inferenceDatabaseWriter,
+//                                   FailureDatabaseWriter failureDatabaseWriter) {
+//        DobbyAi dobbyAi = new DobbyAi(threadpool, inferenceDatabaseWriter, failureDatabaseWriter, application);
+//        application.getProdComponent().inject(dobbyAi);
+//        return dobbyAi;
+//    }
 
     @Singleton
     @Provides

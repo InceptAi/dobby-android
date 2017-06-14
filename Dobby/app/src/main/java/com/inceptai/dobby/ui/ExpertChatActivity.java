@@ -156,6 +156,7 @@ public class ExpertChatActivity extends AppCompatActivity implements
         }
 
         addGeneralMessage(getEtaString(currentEtaSeconds, isPresent));
+        sendUserEnteredMetaMessage();
     }
 
     //Dobby AI callbacks
@@ -375,5 +376,7 @@ public class ExpertChatActivity extends AppCompatActivity implements
         expertChatService.pushMetaChatMessage(ExpertChat.MSG_TYPE_META_USER_LEFT);
     }
 
-
+    private void sendUserEnteredMetaMessage() {
+        expertChatService.pushMetaChatMessage(ExpertChat.MSG_TYPE_META_USER_ENTERED);
+    }
 }

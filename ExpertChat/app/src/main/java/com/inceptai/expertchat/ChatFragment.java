@@ -189,10 +189,10 @@ public class ChatFragment extends Fragment {
                     viewHolder.fromUserLayout.setVisibility(View.VISIBLE);
                     viewHolder.userMessageTv.setText(expertChat.getText());
                     viewHolder.generalMessageTv.setVisibility(View.GONE);
-                } else if (expertChat.getMessageType() == ExpertChat.MSG_TYPE_META_USER_LEFT) {
+                } else if (ExpertChatUtil.isEventType(expertChat)) {
                     viewHolder.fromExpertLayout.setVisibility(View.GONE);
                     viewHolder.fromUserLayout.setVisibility(View.GONE);
-                    viewHolder.generalMessageTv.setText("USER LEFT CHAT.");
+                    viewHolder.generalMessageTv.setText(ExpertChatUtil.getDisplayStringForEvent(expertChat));
                 } else if (expertChat.getMessageType() == ExpertChat.MSG_TYPE_META_ACTION_STARTED) {
                     viewHolder.fromExpertLayout.setVisibility(View.GONE);
                     viewHolder.fromUserLayout.setVisibility(View.GONE);
