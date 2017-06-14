@@ -282,6 +282,7 @@ public class ExpertChatService implements ChildEventListener, ValueEventListener
             }
         }
     }
+
     @Override
     public void onChildAdded(DataSnapshot dataSnapshot, String s) {
         if (chatCallback != null) {
