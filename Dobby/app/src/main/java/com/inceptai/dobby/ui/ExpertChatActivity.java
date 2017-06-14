@@ -111,7 +111,6 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
         });
 
         expertChatService = ExpertChatService.fetchInstance(dobbyApplication.getUserUuid());
-        fetchChatMessages();
         if (isFirstChat()) {
             isFirstRun = true;
             progressBar.setVisibility(View.GONE);

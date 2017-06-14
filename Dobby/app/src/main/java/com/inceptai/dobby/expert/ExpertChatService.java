@@ -291,7 +291,9 @@ public class ExpertChatService implements ChildEventListener, ValueEventListener
                 assignedExpertUsername = (String) dataSnapshot.getValue();
             } else {
                 ExpertChat expertChat = parse(dataSnapshot);
-                chatCallback.onMessageAvailable(expertChat);
+                if (ExpertChatUtil.isDisplayableMessageType(expertChat)) {
+                    chatCallback.onMessageAvailable(expertChat);
+                }
                 DobbyLog.i("Got chat message: " + expertChat.getText());
             }
         }
