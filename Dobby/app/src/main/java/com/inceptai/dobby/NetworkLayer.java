@@ -313,17 +313,17 @@ public class NetworkLayer {
 
     /**
      *
-     * @return False on failure such as lack of permission.
+     * @return null on failure such as lack of permission.
      */
-    public boolean fetchLastKnownLocation() {
+    public Location fetchLastKnownLocation() {
         LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
         boolean locationPermissionAvailable = (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) ||
                 ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PERMISSION_GRANTED));
         if (locationPermissionAvailable) {
             lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-            return true;
+            return lastKnownLocation;
         }
-        return false;
+        return null;
     }
 
     public void cleanup() {
