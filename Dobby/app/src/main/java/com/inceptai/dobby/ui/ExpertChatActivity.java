@@ -18,6 +18,7 @@ import android.widget.TextView;
 import com.inceptai.dobby.DobbyAnalytics;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.R;
+import com.inceptai.dobby.ai.DobbyAi;
 import com.inceptai.dobby.expert.ExpertChat;
 import com.inceptai.dobby.expert.ExpertChatService;
 import com.inceptai.dobby.utils.Utils;
@@ -34,6 +35,12 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
 
     private static final int MSG_UPDATE_CHAT = 1001;
     private static final int MSG_UPDATE_ETA = 1002;
+
+    private static final int WIFI_SCAN_ACTION = 2001;
+    private static final int PING_ACTION = 2002;
+    private static final int HTTP_ACTION = 2003;
+    private static final int ALL_ACTIONS = 2100;
+
 
     private RecyclerView mMessageRecyclerView;
     private LinearLayoutManager mLinearLayoutManager;
@@ -52,6 +59,10 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
 
     @Inject
     DobbyAnalytics dobbyAnalytics;
+
+    @Inject
+    DobbyAi dobbyAi;
+
     private boolean isFirstRun = false;
 
     @Override
@@ -194,6 +205,20 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
             message += " Less than " + Utils.timeSecondsToString(newEtaSeconds);
         }
         return message;
+    }
+
+    private void triggerDiagnosticAction(final int actionToTrigger) {
+        switch (actionToTrigger) {
+            case WIFI_SCAN_ACTION:
+                dobbyAi.performAndRecordWifiAction();
+                return;
+            case PING_ACTION:
+                dobbyAi.performAndRecordPingAction();
+                return;
+            case HTTP_ACTION:
+            case ALL_ACTIONS:
+
+        }
     }
 
     private void addGeneralMessage(String generalMessage) {

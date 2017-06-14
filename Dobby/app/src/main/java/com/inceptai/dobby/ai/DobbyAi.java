@@ -9,6 +9,8 @@ import com.inceptai.dobby.DobbyAnalytics;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.NetworkLayer;
+import com.inceptai.dobby.database.ActionDatabaseWriter;
+import com.inceptai.dobby.database.ActionRecord;
 import com.inceptai.dobby.database.FailureDatabaseWriter;
 import com.inceptai.dobby.database.InferenceDatabaseWriter;
 import com.inceptai.dobby.eventbus.DobbyEvent;
@@ -80,6 +82,10 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     DobbyEventBus eventBus;
     @Inject
     DobbyAnalytics dobbyAnalytics;
+    @Inject
+    DobbyApplication dobbyApplication;
+    @Inject
+    ActionDatabaseWriter actionDatabaseWriter;
 
     public interface ResponseCallback {
         void showResponse(String text);
@@ -615,4 +621,114 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         apiAiClient = new ApiAiClient(context, threadpool);
         apiAiClient.connect();
     }
+
+
+    public void performAndRecordPingAction() {
+        final ComposableOperation ping = pingOperation();
+        ping.getFuture().addListener(new Runnable() {
+            @Override
+            public void run() {
+                DataInterpreter.PingGrade pingGrade = new DataInterpreter.PingGrade();
+                try {
+                    OperationResult result = ping.getFuture().get();
+                    DobbyLog.v("DobbyAI: Getting result for pingFuture");
+                    HashMap<String, PingStats> payload = (HashMap<String, PingStats>) result.getPayload();
+                    if (payload == null) {
+                        //Error.
+                        DobbyLog.i("Error starting ping.");
+                    } else {
+                        DobbyLog.v("DobbyAI: Notifying ping stats with payload " + payload.toString());
+                    }
+                    //We notify inferencing engine in any case so it knows that ping
+                    // failed and can make the inferencing based on other measurements.
+                    pingGrade = DataInterpreter.interpret(payload, networkLayer.getIpLayerInfo());
+                } catch (Exception e) {
+                    e.printStackTrace(System.out);
+                    DobbyLog.w("Exception getting ping results: " + e.getStackTrace().toString());
+                    //Informing inference engine of the error.
+                    DobbyLog.v("DobbyAI: Notifying ping stats with null payload ");
+                    pingGrade = DataInterpreter.interpret(null, networkLayer.getIpLayerInfo());
+                } finally {
+                    writeActionRecord(null, null, pingGrade, null);
+                }
+            }
+        }, threadpool.getExecutor());
+    }
+
+    private void performAndRecordHttpAction() {
+
+    }
+
+    public void performAndRecordWifiAction() {
+        final ComposableOperation wifiScan = wifiScanOperation();
+        wifiScan.getFuture().addListener(new Runnable() {
+            @Override
+            public void run() {
+                DataInterpreter.WifiGrade wifiGrade;
+                try {
+                    OperationResult result = wifiScan.getFuture().get();
+                    DobbyLog.v("DobbyAI: Setting the result for wifiscan");
+                }catch (Exception e) {
+                    e.printStackTrace(System.out);
+                    DobbyLog.w("Exception getting wifi results: " + e.getStackTrace().toString());
+                    //Informing inference engine of the error.
+                } finally {
+                    DobbyLog.v("DobbyAI: Notifying wifi state ");
+                    wifiGrade = DataInterpreter.interpret(networkLayer.getWifiState(),
+                            networkLayer.getLatestScanResult(),
+                            networkLayer.getWifiLinkMode(),
+                            networkLayer.getCurrentConnectivityMode());
+                    writeActionRecord(null, wifiGrade, null, null);
+                }
+            }
+        }, threadpool.getExecutor());
+    }
+
+    private void writeActionRecord(@Nullable DataInterpreter.BandwidthGrade bandwidthGrade,
+                                            @Nullable DataInterpreter.WifiGrade wifiGrade,
+                                            @Nullable DataInterpreter.PingGrade pingGrade,
+                                            @Nullable DataInterpreter.HttpGrade httpGrade) {
+        ActionRecord actionRecord = new ActionRecord();
+        HashMap<String, String> phoneInfo = new HashMap<>();
+        actionRecord.uid = dobbyApplication.getUserUuid();
+        actionRecord.phoneInfo = dobbyApplication.getPhoneInfo();
+        actionRecord.appVersion = DobbyApplication.getAppVersion();
+        actionRecord.actionType = "UNKNOWN";
+
+        int count = 0;
+        //Assign all the grades
+        if (bandwidthGrade != null) {
+            actionRecord.bandwidthGradeJson = bandwidthGrade.toJson();
+            actionRecord.actionType = "BWTEST";
+            count++;
+        }
+
+        if (wifiGrade != null) {
+            actionRecord.wifiGradeJson = wifiGrade.toJson();
+            actionRecord.actionType = "WIFI";
+            count++;
+        }
+
+        if (pingGrade != null) {
+            actionRecord.pingGradeJson = pingGrade.toJson();
+            actionRecord.actionType = "PING";
+            count++;
+        }
+
+        if (httpGrade != null) {
+            actionRecord.httpGradeJson = httpGrade.toJson();
+            actionRecord.actionType = "HTTP";
+            count++;
+        }
+
+        if (count > 1) {
+            actionRecord.actionType = "MIXED";
+        }
+
+        //Assign the timestamp
+        actionRecord.timestamp = System.currentTimeMillis();
+        //Write to db.
+        actionDatabaseWriter.writeActionToDatabase(actionRecord);
+    }
+
 }
