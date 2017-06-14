@@ -193,6 +193,14 @@ public class ChatFragment extends Fragment {
                     viewHolder.fromExpertLayout.setVisibility(View.GONE);
                     viewHolder.fromUserLayout.setVisibility(View.GONE);
                     viewHolder.generalMessageTv.setText("USER LEFT CHAT.");
+                } else if (expertChat.getMessageType() == ExpertChat.MSG_TYPE_META_ACTION_STARTED) {
+                    viewHolder.fromExpertLayout.setVisibility(View.GONE);
+                    viewHolder.fromUserLayout.setVisibility(View.GONE);
+                    viewHolder.generalMessageTv.setText("ACTION STARTED.");
+                } else if (expertChat.getMessageType() == ExpertChat.MSG_TYPE_META_ACTION_COMPLETED) {
+                    viewHolder.fromExpertLayout.setVisibility(View.GONE);
+                    viewHolder.fromUserLayout.setVisibility(View.GONE);
+                    viewHolder.generalMessageTv.setText("ACTION COMPLETED.");
                 }
             }
         };

@@ -10,6 +10,8 @@ public class ExpertChat {
     private static final String EMPTY_STRING = "";
     public static final int MSG_TYPE_EXPERT_TEXT = 1001;
     public static final int MSG_TYPE_USER_TEXT = 1002;
+    public static final String SPECIAL_MESSAGE_PREFIX = "#";
+
 
     // General messages include ETA and welcome messages.
 
@@ -17,6 +19,8 @@ public class ExpertChat {
     public static final int MSG_TYPE_UNKNOWN = 1;
 
     public static final int MSG_TYPE_META_USER_LEFT = 5001;
+    public static final int MSG_TYPE_META_ACTION_STARTED = 5002;
+    public static final int MSG_TYPE_META_ACTION_COMPLETED = 5003;
 
 
     String id;

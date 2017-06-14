@@ -21,7 +21,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.inceptai.dobby.BuildConfig;
-import com.inceptai.dobby.DobbyAnalytics;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.ui.ExpertChatActivity;
 import com.inceptai.dobby.utils.DobbyLog;
@@ -30,8 +29,6 @@ import com.inceptai.dobby.utils.Utils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import javax.inject.Inject;
 
 import static android.support.v4.app.NotificationCompat.VISIBILITY_PUBLIC;
 
@@ -291,6 +288,10 @@ public class ExpertChatService implements ChildEventListener, ValueEventListener
             } else {
                 ExpertChat expertChat = parse(dataSnapshot);
                 chatCallback.onMessageAvailable(expertChat);
+                //Deleting special messages
+                if (expertChat.getText().contains(ExpertChat.SPECIAL_MESSAGE_PREFIX)) {
+                    dataSnapshot.getRef().removeValue();
+                }
                 DobbyLog.i("Got chat message: " + expertChat.getText());
             }
         }

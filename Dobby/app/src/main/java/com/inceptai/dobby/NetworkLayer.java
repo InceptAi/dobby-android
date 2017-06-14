@@ -90,9 +90,8 @@ public class NetworkLayer {
         HashMap<Integer, WifiState.ChannelInfo> channelMap = getWifiState().getChannelInfoMap();
         DobbyWifiInfo wifiInfo = getWifiState().getLinkInfo();
         DataInterpreter.WifiGrade wifiGrade = DataInterpreter.interpret(
-                channelMap,
+                getWifiState(),
                 getLatestScanResult(),
-                wifiInfo,
                 getWifiLinkMode(),
                 getCurrentConnectivityMode());
         return wifiGrade;

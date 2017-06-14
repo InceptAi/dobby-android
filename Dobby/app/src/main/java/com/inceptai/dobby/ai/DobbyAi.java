@@ -96,6 +96,8 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         void showBandwidthViewCard(DataInterpreter.BandwidthGrade bandwidthGrade);
         void showNetworkInfoViewCard(DataInterpreter.WifiGrade wifiGrade, String isp, String ip);
         void showDetailedSuggestions(SuggestionCreator.Suggestion suggestion);
+        void actionStarted();
+        void actionCompleted();
     }
 
     public DobbyAi(DobbyThreadpool threadpool,
@@ -630,6 +632,9 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             public void run() {
                 DataInterpreter.PingGrade pingGrade = new DataInterpreter.PingGrade();
                 try {
+                    if (responseCallback != null) {
+                        responseCallback.actionStarted();
+                    }
                     OperationResult result = ping.getFuture().get();
                     DobbyLog.v("DobbyAI: Getting result for pingFuture");
                     HashMap<String, PingStats> payload = (HashMap<String, PingStats>) result.getPayload();
@@ -650,9 +655,13 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                     pingGrade = DataInterpreter.interpret(null, networkLayer.getIpLayerInfo());
                 } finally {
                     writeActionRecord(null, null, pingGrade, null);
+                    if (responseCallback != null) {
+                        responseCallback.actionCompleted();
+                    }
                 }
             }
         }, threadpool.getExecutor());
+        ping.post();
     }
 
     private void performAndRecordHttpAction() {
@@ -666,6 +675,9 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             public void run() {
                 DataInterpreter.WifiGrade wifiGrade;
                 try {
+                    if (responseCallback != null) {
+                        responseCallback.actionStarted();
+                    }
                     OperationResult result = wifiScan.getFuture().get();
                     DobbyLog.v("DobbyAI: Setting the result for wifiscan");
                 }catch (Exception e) {
@@ -679,9 +691,13 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                             networkLayer.getWifiLinkMode(),
                             networkLayer.getCurrentConnectivityMode());
                     writeActionRecord(null, wifiGrade, null, null);
+                    if (responseCallback != null) {
+                        responseCallback.actionCompleted();
+                    }
                 }
             }
         }, threadpool.getExecutor());
+        wifiScan.post();
     }
 
     private void writeActionRecord(@Nullable DataInterpreter.BandwidthGrade bandwidthGrade,
