@@ -1,8 +1,13 @@
 package com.inceptai.dobby;
 
+import android.*;
 import android.content.Context;
+import android.location.Location;
+import android.location.LocationManager;
 import android.net.wifi.ScanResult;
+import android.os.Build;
 import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
 
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -27,6 +32,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 import static com.inceptai.dobby.connectivity.ConnectivityAnalyzerFactory.getConnecitivityAnalyzer;
 import static com.inceptai.dobby.ping.PingAnalyzerFactory.getPingAnalyzer;
 import static com.inceptai.dobby.wifi.WifiAnalyzerFactory.getWifiAnalyzer;
@@ -48,6 +54,7 @@ public class NetworkLayer {
     private DobbyThreadpool threadpool;
     private DobbyEventBus eventBus;
     private IPLayerInfo ipLayerInfo;
+    private Location lastKnownLocation;
 
     @Nullable
     private BandwidthObserver bandwidthObserver;  // Represents any currently running b/w tests.
@@ -81,7 +88,6 @@ public class NetworkLayer {
         }
         return getWifiAnalyzerInstance().startWifiScan(MAX_AGE_GAP_TO_RETRIGGER_WIFI_SCAN_MS);
     }
-
 
     public DataInterpreter.WifiGrade getCurrentWifiGrade() {
         HashMap<Integer, WifiState.ChannelInfo> channelMap = getWifiState().getChannelInfoMap();
@@ -303,6 +309,21 @@ public class NetworkLayer {
         //Passing this info to ConnectivityAnalyzer
         getNewBandwidthAnalyzerInstance().processDobbyBusEvents(event);
         getConnectivityAnalyzerInstance().processDobbyBusEvents(event);
+    }
+
+    /**
+     *
+     * @return False on failure such as lack of permission.
+     */
+    public boolean fetchLastKnownLocation() {
+        LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        boolean locationPermissionAvailable = (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) ||
+                ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PERMISSION_GRANTED));
+        if (locationPermissionAvailable) {
+            lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+            return true;
+        }
+        return false;
     }
 
     public void cleanup() {
