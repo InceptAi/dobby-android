@@ -183,13 +183,19 @@ public class ExpertChatService implements ChildEventListener, ValueEventListener
         listenerConnected = true;
     }
 
-    public void pushData(ExpertChat expertChat) {
+    public void pushChatMessage(ExpertChat expertChat) {
         getChatReference().push().setValue(expertChat);
         if (assignedExpertUsername == null || assignedExpertUsername.isEmpty()) {
             sendExpertNotificationToAll(expertChat);
         } else {
             sendExpertNotification(assignedExpertUsername, expertChat);
         }
+    }
+
+    public void pushMetaChatMessage(int metaMessageType) {
+        ExpertChat expertChat = new ExpertChat();
+        expertChat.setMessageType(metaMessageType);
+        getChatReference().push().setValue(expertChat);
     }
 
     public void sendExpertNotification(String toExpert, ExpertChat expertChat) {

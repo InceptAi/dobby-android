@@ -62,6 +62,7 @@ public class ChatFragment extends Fragment {
         LinearLayout fromUserLayout;
         TextView expertMessageTv;
         TextView userMessageTv;
+        TextView generalMessageTv;
 
         public MessageViewHolder(View v) {
             super(v);
@@ -69,6 +70,7 @@ public class ChatFragment extends Fragment {
             fromUserLayout = (LinearLayout) itemView.findViewById(R.id.user_chat_ll);
             expertMessageTv = (TextView) itemView.findViewById(R.id.expert_chat_tv);
             userMessageTv = (TextView) itemView.findViewById(R.id.user_chat_tv);
+            generalMessageTv = (TextView) itemView.findViewById(R.id.general_message_tv);
         }
     }
 
@@ -181,10 +183,16 @@ public class ChatFragment extends Fragment {
                     viewHolder.fromUserLayout.setVisibility(View.GONE);
                     viewHolder.fromExpertLayout.setVisibility(View.VISIBLE);
                     viewHolder.expertMessageTv.setText(expertChat.getText());
+                    viewHolder.generalMessageTv.setVisibility(View.GONE);
                 } else if (ExpertChat.isUserChat(expertChat)) {
                     viewHolder.fromExpertLayout.setVisibility(View.GONE);
                     viewHolder.fromUserLayout.setVisibility(View.VISIBLE);
                     viewHolder.userMessageTv.setText(expertChat.getText());
+                    viewHolder.generalMessageTv.setVisibility(View.GONE);
+                } else if (expertChat.getMessageType() == ExpertChat.MSG_TYPE_META_USER_LEFT) {
+                    viewHolder.fromExpertLayout.setVisibility(View.GONE);
+                    viewHolder.fromUserLayout.setVisibility(View.GONE);
+                    viewHolder.generalMessageTv.setText("USER LEFT CHAT.");
                 }
             }
         };
