@@ -136,6 +136,7 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
         }
 
         addGeneralMessage(getEtaString(currentEtaSeconds, isPresent));
+        sendUserEnteredMetaMessage();
     }
 
     @Override
@@ -260,5 +261,9 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
 
     private void sendUserLeftMetaMessage() {
         expertChatService.pushMetaChatMessage(ExpertChat.MSG_TYPE_META_USER_LEFT);
+    }
+
+    private void sendUserEnteredMetaMessage() {
+        expertChatService.pushMetaChatMessage(ExpertChat.MSG_TYPE_META_USER_ENTERED);
     }
 }
