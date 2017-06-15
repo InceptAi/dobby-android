@@ -1,6 +1,5 @@
 package com.inceptai.dobby;
 
-import android.*;
 import android.content.Context;
 import android.location.Location;
 import android.location.LocationManager;
