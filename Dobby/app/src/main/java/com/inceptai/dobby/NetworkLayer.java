@@ -3,9 +3,11 @@ package com.inceptai.dobby;
 import android.*;
 import android.content.Context;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.wifi.ScanResult;
 import android.os.Build;
+import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 
@@ -32,6 +34,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import static android.content.Context.LOCATION_SERVICE;
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 import static com.inceptai.dobby.connectivity.ConnectivityAnalyzerFactory.getConnecitivityAnalyzer;
 import static com.inceptai.dobby.ping.PingAnalyzerFactory.getPingAnalyzer;
@@ -42,19 +45,21 @@ import static com.inceptai.dobby.wifi.WifiAnalyzerFactory.getWifiAnalyzer;
  * local bots would interact with this class to run tests, diagnostics etc. Also
  */
 
-public class NetworkLayer {
+public class NetworkLayer implements LocationListener {
     private static final int MIN_PKT_LOSS_RATE_TO_RETRIGGER_PING_PERCENT = 50;
     private static final int MIN_CHECKS_CONNECTIIVITY = 5;
     private static final int MAX_AGE_GAP_TO_RETRIGGER_PING_MS = 120000; // 2 mins
     private static final int MAX_AGE_GAP_TO_RETRIGGER_WIFI_SCAN_MS = 120000; // 2 mins
     private static final boolean RETRIGGER_PING_AUTOMATICALLY = false;
     private static final boolean DISABLE_WIFI_SCAN = false; //We will disable wifi scan for this release
+    private static final long LOCATION_UPDATE_MIN_TIME_MS = 5 * 60 * 1000;
 
     private Context context;
     private DobbyThreadpool threadpool;
     private DobbyEventBus eventBus;
     private IPLayerInfo ipLayerInfo;
     private Location lastKnownLocation;
+    private LocationManager locationManager;
 
     @Nullable
     private BandwidthObserver bandwidthObserver;  // Represents any currently running b/w tests.
@@ -79,6 +84,7 @@ public class NetworkLayer {
         DobbyLog.v("Triggering wifi scan from NL initialize");
         wifiScan();
         DobbyLog.v("NL initialized");
+        initLocation();
     }
 
     public ListenableFuture<List<ScanResult>> wifiScan() {
@@ -318,11 +324,12 @@ public class NetworkLayer {
      * @return null on failure such as lack of permission.
      */
     public Location fetchLastKnownLocation() {
-        LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-        boolean locationPermissionAvailable = (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) ||
-                ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PERMISSION_GRANTED));
-        if (locationPermissionAvailable) {
-            lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+        LocationManager locationManager = (LocationManager) context.getSystemService(LOCATION_SERVICE);
+        if (checkLocationPermission()) {
+            Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+            if (location != null) {
+                lastKnownLocation = location;
+            }
             return lastKnownLocation;
         }
         return null;
@@ -351,6 +358,31 @@ public class NetworkLayer {
         }
     }
 
+    private boolean checkLocationPermission() {
+        return (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) ||
+                ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PERMISSION_GRANTED));
+    }
+
+    private void initLocation() {
+        locationManager = (LocationManager) context.getApplicationContext().getSystemService(LOCATION_SERVICE);
+        List<String> providers = locationManager.getProviders(true);
+        Location bestLocation = null;
+        for (String provider : providers) {
+            Location l = locationManager.getLastKnownLocation(provider);
+            if (l == null) {
+                continue;
+            }
+            if (bestLocation == null || l.getAccuracy() < bestLocation.getAccuracy()) {
+                // Found best last known location: %s", l);
+                bestLocation = l;
+            }
+        }
+        lastKnownLocation = bestLocation;
+        if (checkLocationPermission()) {
+            locationManager.requestSingleUpdate(LocationManager.NETWORK_PROVIDER, this, context.getMainLooper());
+        }
+    }
+
     private PingAnalyzer getPingAnalyzerInstance() {
         return getPingAnalyzer(ipLayerInfo, threadpool, eventBus);
     }
@@ -363,5 +395,27 @@ public class NetworkLayer {
     // Asynchronous post.
     private void sendBandwidthEvent(BandwidthObserver observer){
         eventBus.postEvent(DobbyEvent.EventType.BANDWIDTH_TEST_STARTING, observer);
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        if (location != null) {
+            lastKnownLocation = location;
+        }
+    }
+
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+
+    }
+
+    @Override
+    public void onProviderEnabled(String provider) {
+
+    }
+
+    @Override
+    public void onProviderDisabled(String provider) {
+
     }
 }
