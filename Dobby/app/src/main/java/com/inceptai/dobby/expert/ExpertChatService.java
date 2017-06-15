@@ -60,6 +60,7 @@ public class ExpertChatService implements
     public static final long ETA_OFFLINE = 24L * 60L * 60L;  // 24 hours.
     public static final long ETA_ONLINE = 2L * 60L; // 2 minutes or less.
     public static final long ETA_PRESENT = 20L * 60L; // 20 minutes or less.
+    public static final long ETA_12HOURS = 12L * 60L * 60L;
 
     private static final int WIFI_SCAN_ACTION = 2001;
     private static final int PING_ACTION = 2002;

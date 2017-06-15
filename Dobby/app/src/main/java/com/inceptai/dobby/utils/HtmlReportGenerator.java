@@ -29,6 +29,7 @@ public class HtmlReportGenerator {
     "Router: %s ms    Google: %s ms" + HTML_BREAK +
     "Your DNS: %s ms  Alt DNS: %s " + HTML_BREAK + "Contact: hello@obiai.tech for further support." + HTML_BREAK +
     "Download Wifi Tester at the Google Play Store.";
+    private static final String ERROR_STRING = "Error.";
 
     private HtmlReportGenerator(){}
 
@@ -39,12 +40,12 @@ public class HtmlReportGenerator {
         String uploadMbps = Utils.toMbpsString(uploadBw);
         String date = new Date().toString();
         String htmlReport = HTML_REPORT_FALLBACK;
-        String routerLatencyMs = Utils.doubleToString(pingGrade.getRouterLatencyMs());
-        String googleLatencyMs = Utils.doubleToString(pingGrade.getExternalServerLatencyMs());
-        String yourDnsLatencyMs = Utils.doubleToString(pingGrade.getDnsServerLatencyMs());
-        String altDnsLatencyMs = Utils.doubleToString(pingGrade.getAlternativeDnsLatencyMs());
-        String wifiSignalDbm = String.valueOf(wifiGrade.getPrimaryApSignal());
-        String SSID = "\"" + wifiGrade.getPrimaryApSsid() + "\"";
+        String routerLatencyMs = pingGrade == null ? ERROR_STRING : Utils.doubleToString(pingGrade.getRouterLatencyMs());
+        String googleLatencyMs = pingGrade == null ? ERROR_STRING : Utils.doubleToString(pingGrade.getExternalServerLatencyMs());
+        String yourDnsLatencyMs = pingGrade == null ? ERROR_STRING : Utils.doubleToString(pingGrade.getDnsServerLatencyMs());
+        String altDnsLatencyMs = pingGrade == null ? ERROR_STRING : Utils.doubleToString(pingGrade.getAlternativeDnsLatencyMs());
+        String wifiSignalDbm = wifiGrade == null ? ERROR_STRING : String.valueOf(wifiGrade.getPrimaryApSignal());
+        String SSID = wifiGrade == null ? ERROR_STRING : "\"" + wifiGrade.getPrimaryApSsid() + "\"";
 
         try {
             htmlReport = IOUtils.toString(is);

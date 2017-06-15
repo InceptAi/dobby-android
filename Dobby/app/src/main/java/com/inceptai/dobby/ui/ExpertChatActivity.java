@@ -26,6 +26,8 @@ import java.util.ArrayList;
 
 import javax.inject.Inject;
 
+import static com.inceptai.dobby.utils.Utils.EMPTY_STRING;
+
 public class ExpertChatActivity extends AppCompatActivity implements
         ExpertChatService.ChatCallback,
         Handler.Callback {
@@ -140,7 +142,7 @@ public class ExpertChatActivity extends AppCompatActivity implements
             addGeneralMessage("Welcome back !");
         }
 
-        addGeneralMessage(getEtaString(currentEtaSeconds, isPresent));
+        // addGeneralMessage(getEtaString(currentEtaSeconds, isPresent));
         sendUserEnteredMetaMessage();
     }
 
@@ -165,8 +167,6 @@ public class ExpertChatActivity extends AppCompatActivity implements
         }
     }
 
-
-
     @Override
     public void onMessageAvailable(ExpertChat expertChat) {
         Message.obtain(handler, MSG_UPDATE_CHAT, expertChat).sendToTarget();
@@ -185,26 +185,34 @@ public class ExpertChatActivity extends AppCompatActivity implements
 
     @Override
     public void onEtaUpdated(long newEtaSeconds, boolean isPresent) {
-        String message = getResources().getString(R.string.expected_response_time_for_expert);
-        if (!isPresent) {
-            message += " Less than 12 hours.";
+        updateEta(newEtaSeconds, isPresent, false);
+    }
+
+    private void updateEta(long newEtaSeconds, boolean isPresent, boolean showInChat) {
+        String messagePrefix = getResources().getString(R.string.expected_response_time_for_expert);
+        String message = EMPTY_STRING;
+        if (!isPresent || newEtaSeconds > ExpertChatService.ETA_12HOURS) {
+            message = "Our experts are current offline. You shall receive a response in about 12 hours.";
         } else {
-            message += " Less than " + Utils.timeSecondsToString(newEtaSeconds);
+            message = messagePrefix + " Less than " + Utils.timeSecondsToString(newEtaSeconds);
         }
+        currentEtaSeconds = newEtaSeconds;
+        this.isPresent = isPresent;
         Message.obtain(handler, MSG_UPDATE_ETA, message).sendToTarget();
-    }
-
-    private String getEtaString(long newEtaSeconds, boolean isPresent) {
-        String message = getResources().getString(R.string.expected_response_time_for_expert);
-        if (!isPresent) {
-            message += " Less than 12 hours.";
-        } else {
-            message += " Less than " + Utils.timeSecondsToString(newEtaSeconds);
+        if (showInChat) {
+            addGeneralMessage(message);
         }
-        return message;
     }
 
-
+//    private String getEtaString(long newEtaSeconds, boolean isPresent) {
+//        String message = getResources().getString(R.string.expected_response_time_for_expert);
+//        if (!isPresent) {
+//            message += " Less than 12 hours.";
+//        } else {
+//            message += " Less than " + Utils.timeSecondsToString(newEtaSeconds);
+//        }
+//        return message;
+//    }
 
     private void addGeneralMessage(String generalMessage) {
         ExpertChat expertChat = new ExpertChat();
@@ -216,7 +224,7 @@ public class ExpertChatActivity extends AppCompatActivity implements
     @Override
     public void onEtaAvailable(long newEtaSeconds, boolean isPresent) {
         if (etaTextView != null && etaTextView.getVisibility() == View.INVISIBLE) {
-            onEtaUpdated(newEtaSeconds, isPresent);
+            updateEta(newEtaSeconds, isPresent, true /* show in chat */);
         }
     }
 
@@ -238,8 +246,6 @@ public class ExpertChatActivity extends AppCompatActivity implements
         etaTextView.setVisibility(View.VISIBLE);
         dobbyAnalytics.showETAToUser(message);
     }
-
-
 
     private void addChatEntry(ExpertChat expertChat) {
         recyclerViewAdapter.addChatEntry(expertChat);
