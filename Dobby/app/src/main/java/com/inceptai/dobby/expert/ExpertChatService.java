@@ -21,8 +21,13 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.inceptai.dobby.BuildConfig;
-import com.inceptai.dobby.DobbyAnalytics;
 import com.inceptai.dobby.R;
+import com.inceptai.dobby.ai.DataInterpreter;
+import com.inceptai.dobby.ai.DobbyAi;
+import com.inceptai.dobby.ai.RtDataSource;
+import com.inceptai.dobby.ai.SuggestionCreator;
+import com.inceptai.dobby.dagger.ProdComponent;
+import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.ui.ExpertChatActivity;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
@@ -39,7 +44,10 @@ import static android.support.v4.app.NotificationCompat.VISIBILITY_PUBLIC;
  * A "service" that connects to the expert chat system.
  * This is NOT an Android service.
  */
-public class ExpertChatService implements ChildEventListener, ValueEventListener {
+public class ExpertChatService implements
+        ChildEventListener,
+        ValueEventListener,
+        DobbyAi.ResponseCallback {
 
     private static final String USER_ROOT = BuildConfig.FLAVOR + "/" + BuildConfig.BUILD_TYPE  + "/" + "users/";
     private static final String CHAT_ROOM_CHILD = BuildConfig.FLAVOR + "_chat_rooms/" + BuildConfig.BUILD_TYPE;
@@ -52,6 +60,12 @@ public class ExpertChatService implements ChildEventListener, ValueEventListener
     public static final long ETA_OFFLINE = 24L * 60L * 60L;  // 24 hours.
     public static final long ETA_ONLINE = 2L * 60L; // 2 minutes or less.
     public static final long ETA_PRESENT = 20L * 60L; // 20 minutes or less.
+
+    private static final int WIFI_SCAN_ACTION = 2001;
+    private static final int PING_ACTION = 2002;
+    private static final int HTTP_ACTION = 2003;
+    private static final int ALL_ACTIONS = 2100;
+
 
     private static ExpertChatService INSTANCE;
 
@@ -68,6 +82,10 @@ public class ExpertChatService implements ChildEventListener, ValueEventListener
     // TODO Use this field.
     private boolean isChatEmpty;
 
+    @Inject
+    DobbyAi dobbyAi;
+
+
     public interface ChatCallback {
         void onMessageAvailable(ExpertChat expertChat);
         void onNoHistoryAvailable();
@@ -75,7 +93,8 @@ public class ExpertChatService implements ChildEventListener, ValueEventListener
         void onEtaAvailable(long newEtaSeconds, boolean isPresent);
     }
 
-    private ExpertChatService(String userUuid) {
+    private ExpertChatService(String userUuid, ProdComponent prodComponent) {
+        prodComponent.inject(this);
         this.userUuid = userUuid;
         this.chatRoomPath =  CHAT_ROOM_CHILD + "/" + userUuid;
         this.userTokenPath = USER_ROOT + "/" + userUuid + "/" + FCM_KEY;
@@ -84,12 +103,17 @@ public class ExpertChatService implements ChildEventListener, ValueEventListener
         DobbyLog.i("Using chat room ID: " + chatRoomPath);
         isChatEmpty = true;
         currentEtaSeconds = ETA_PRESENT;
+        dobbyAi.setResponseCallback(this);
     }
 
-    public static ExpertChatService fetchInstance(String userUuid) {
+    public static ExpertChatService fetchInstance(String userUuid, ProdComponent prodComponent) {
         if (INSTANCE == null) {
-            INSTANCE = new ExpertChatService(userUuid);
+            INSTANCE = new ExpertChatService(userUuid, prodComponent);
         }
+        return INSTANCE;
+    }
+
+    public static ExpertChatService get() {
         return INSTANCE;
     }
 
@@ -291,7 +315,11 @@ public class ExpertChatService implements ChildEventListener, ValueEventListener
                 assignedExpertUsername = (String) dataSnapshot.getValue();
             } else {
                 ExpertChat expertChat = parse(dataSnapshot);
-                if (ExpertChatUtil.isDisplayableMessageType(expertChat)) {
+                //Deleting special messages
+                if (expertChat.getText().contains(ExpertChat.SPECIAL_MESSAGE_PREFIX)) {
+                    dataSnapshot.getRef().removeValue();
+                    parseExpertTextAndTakeActionIfNeeded(expertChat);
+				} else if (ExpertChatUtil.isDisplayableMessageType(expertChat)) {
                     chatCallback.onMessageAvailable(expertChat);
                 }
                 DobbyLog.i("Got chat message: " + expertChat.getText());
@@ -332,4 +360,93 @@ public class ExpertChatService implements ChildEventListener, ValueEventListener
             }
         }
     }
+
+    //Dobby AI callbacks
+    @Override
+    public void showResponse(String text) {
+        //No-op
+    }
+
+    @Override
+    public void showRtGraph(RtDataSource<Float, Integer> rtDataSource) {
+        //No-op
+    }
+
+    @Override
+    public void observeBandwidth(BandwidthObserver observer) {
+        //No-op
+    }
+
+    @Override
+    public void cancelTests() {
+        //No-op
+    }
+
+    @Override
+    public void showUserActionOptions(List<Integer> userResponseTypes) {
+        //No-op
+    }
+
+    @Override
+    public void showBandwidthViewCard(DataInterpreter.BandwidthGrade bandwidthGrade) {
+        //No-op
+    }
+
+    @Override
+    public void showNetworkInfoViewCard(DataInterpreter.WifiGrade wifiGrade, String isp, String ip) {
+        //No-op
+    }
+
+    @Override
+    public void showDetailedSuggestions(SuggestionCreator.Suggestion suggestion) {
+        //No-op
+    }
+
+    @Override
+    public void actionStarted() {
+        sendActionStarted();
+    }
+
+    @Override
+    public void actionCompleted() {
+        sendActionCompletedMessage();
+    }
+
+    private void sendActionCompletedMessage() {
+        pushMetaChatMessage(ExpertChat.MSG_TYPE_META_ACTION_COMPLETED);
+    }
+
+    private void sendActionStarted() {
+        pushMetaChatMessage(ExpertChat.MSG_TYPE_META_ACTION_STARTED);
+    }
+
+    private void triggerDiagnosticAction(final int actionToTrigger) {
+        switch (actionToTrigger) {
+            case WIFI_SCAN_ACTION:
+                dobbyAi.performAndRecordWifiAction();
+                return;
+            case PING_ACTION:
+                dobbyAi.performAndRecordPingAction();
+                return;
+            case HTTP_ACTION:
+            case ALL_ACTIONS:
+
+        }
+    }
+
+    private boolean parseExpertTextAndTakeActionIfNeeded(ExpertChat expertChat) {
+        if (expertChat.getMessageType() == ExpertChat.MSG_TYPE_EXPERT_TEXT) {
+            String expertMessage = expertChat.getText();
+            if (expertMessage.startsWith("#")) {
+                if (expertMessage.toLowerCase().contains("wifi")) {
+                    triggerDiagnosticAction(WIFI_SCAN_ACTION);
+                } else if (expertMessage.toLowerCase().contains("ping")) {
+                    triggerDiagnosticAction(PING_ACTION);
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

@@ -26,7 +26,9 @@ import java.util.ArrayList;
 
 import javax.inject.Inject;
 
-public class ExpertChatActivity extends AppCompatActivity implements ExpertChatService.ChatCallback, Handler.Callback {
+public class ExpertChatActivity extends AppCompatActivity implements
+        ExpertChatService.ChatCallback,
+        Handler.Callback {
     public static final String CHAT_MESSAGES_CHILD = "expert_chat_rooms";
     private static final String PREF_FIRST_CHAT = "first_expert_chat";
 
@@ -52,6 +54,7 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
 
     @Inject
     DobbyAnalytics dobbyAnalytics;
+
     private boolean isFirstRun = false;
 
     @Override
@@ -110,7 +113,10 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
             }
         });
 
-        expertChatService = ExpertChatService.fetchInstance(dobbyApplication.getUserUuid());
+        expertChatService = ExpertChatService.get();
+		//TODO: Check do we need this
+        fetchChatMessages();
+
         if (isFirstChat()) {
             isFirstRun = true;
             progressBar.setVisibility(View.GONE);
@@ -159,6 +165,8 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
         }
     }
 
+
+
     @Override
     public void onMessageAvailable(ExpertChat expertChat) {
         Message.obtain(handler, MSG_UPDATE_CHAT, expertChat).sendToTarget();
@@ -196,6 +204,8 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
         return message;
     }
 
+
+
     private void addGeneralMessage(String generalMessage) {
         ExpertChat expertChat = new ExpertChat();
         expertChat.setMessageType(ExpertChat.MSG_TYPE_GENERAL_MESSAGE);
@@ -228,6 +238,8 @@ public class ExpertChatActivity extends AppCompatActivity implements ExpertChatS
         etaTextView.setVisibility(View.VISIBLE);
         dobbyAnalytics.showETAToUser(message);
     }
+
+
 
     private void addChatEntry(ExpertChat expertChat) {
         recyclerViewAdapter.addChatEntry(expertChat);

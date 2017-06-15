@@ -109,6 +109,10 @@ public class WifiAnalyzer {
      * @return An instance of a {@link ListenableFuture<List<ScanResult>>} or null on immediate failure.
      */
     public ListenableFuture<List<ScanResult>> startWifiScan(int maxAgeForRetriggeringScan) {
+        if (wifiScanFuture != null && !wifiScanFuture.isDone()) {
+            //WifiScan in progress, just return the current future.
+            return wifiScanFuture;
+        }
         //Check if the last scan result is fresh enough
         if (System.currentTimeMillis() - lastScanCompletionTimestampMs > maxAgeForRetriggeringScan) {
             //Clearing out previous scan results

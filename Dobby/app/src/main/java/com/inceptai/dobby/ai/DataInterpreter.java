@@ -733,9 +733,19 @@ public class DataInterpreter {
 
     public static PingGrade interpret(HashMap<String, PingStats> pingStatsHashMap, IPLayerInfo ipLayerInfo) {
         PingGrade pingGrade = new PingGrade();
-        if (pingStatsHashMap == null || ipLayerInfo == null) {
+        pingGrade.errorCode = BandwidthTestCodes.ErrorCodes.NO_ERROR;
+
+        if (ipLayerInfo == null || ipLayerInfo.gateway == null || ipLayerInfo.gateway.equals("0.0.0.0")) {
+            pingGrade.errorCode = BandwidthTestCodes.ErrorCodes.ERROR_DHCP_INFO_UNAVAILABLE;
+            return pingGrade;
+        } else if (pingStatsHashMap == null) {
+            pingGrade.errorCode = BandwidthTestCodes.ErrorCodes.ERROR_DHCP_INFO_UNAVAILABLE;
+            return pingGrade;
+        } else if (pingStatsHashMap.isEmpty()) {
+            pingGrade.errorCode = BandwidthTestCodes.ErrorCodes.ERROR_PERFORMING_PING;
             return pingGrade;
         }
+
         //Get external server stats
         pingGrade.primaryDns = ipLayerInfo.dns1;
         HashMap<String, PingStats> externalServerStats = new HashMap<>();
@@ -815,7 +825,9 @@ public class DataInterpreter {
 
     public static HttpGrade interpret(PingStats httpRouterStats) {
         HttpGrade httpGrade = new HttpGrade();
+        httpGrade.errorCode = BandwidthTestCodes.ErrorCodes.NO_ERROR;
         if (httpRouterStats == null) {
+            httpGrade.errorCode = BandwidthTestCodes.ErrorCodes.ERROR_DHCP_INFO_UNAVAILABLE;
             return httpGrade;
         }
         httpGrade.httpDownloadLatencyMetric = getGradeLowerIsBetter(httpRouterStats.avgLatencyMs,
@@ -825,12 +837,20 @@ public class DataInterpreter {
         return  httpGrade;
     }
 
-    public static WifiGrade interpret(HashMap<Integer, WifiState.ChannelInfo> wifiChannelInfo,
+    public static WifiGrade interpret(WifiState wifiState,
                                       List<ScanResult> scanResultList,
-                                      DobbyWifiInfo linkInfo,
                                       @WifiState.WifiLinkMode int wifiProblemMode,
                                       @ConnectivityAnalyzer.WifiConnectivityMode int wifiConnectivityMode) {
         WifiGrade wifiGrade = new WifiGrade();
+        wifiGrade.errorCode = getWifiErrorCode(wifiConnectivityMode);
+
+        if (wifiState == null) {
+            return wifiGrade;
+        }
+
+        HashMap<Integer, WifiState.ChannelInfo> wifiChannelInfo = wifiState.getChannelInfoMap();
+        DobbyWifiInfo linkInfo = wifiState.getLinkInfo();
+
         // Figure out the # of APs on primary channel
         WifiState.ChannelInfo primaryChannelInfo = wifiChannelInfo.get(linkInfo.getFrequency());
         int numStrongInterferingAps = computeStrongInterferingAps(primaryChannelInfo);
@@ -864,6 +884,28 @@ public class DataInterpreter {
         wifiGrade.primaryApSignal = linkInfo.getRssi();
         wifiGrade.scanResultList = scanResultList;
         return wifiGrade;
+    }
+
+    @BandwidthTestCodes.ErrorCodes
+    private static int getWifiErrorCode(@ConnectivityAnalyzer.WifiConnectivityMode int wifiConnectivityMode) {
+        switch (wifiConnectivityMode) {
+            case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_ONLINE:
+                return BandwidthTestCodes.ErrorCodes.NO_ERROR;
+            case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL:
+                return BandwidthTestCodes.ErrorCodes.ERROR_WIFI_IN_CAPTIVE_PORTAL;
+            case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_OFFLINE:
+                return BandwidthTestCodes.ErrorCodes.ERROR_WIFI_IN_CAPTIVE_PORTAL;
+            case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_UNKNOWN:
+                return BandwidthTestCodes.ErrorCodes.ERROR_WIFI_CONNECTED_AND_UNKNOWN;
+            case ConnectivityAnalyzer.WifiConnectivityMode.ON_AND_DISCONNECTED:
+                return BandwidthTestCodes.ErrorCodes.ERROR_WIFI_ON_AND_DISCONNECTED;
+            case ConnectivityAnalyzer.WifiConnectivityMode.OFF:
+                return BandwidthTestCodes.ErrorCodes.ERROR_WIFI_OFF;
+            case ConnectivityAnalyzer.WifiConnectivityMode.UNKNOWN:
+                return BandwidthTestCodes.ErrorCodes.ERROR_WIFI_UNKNOWN_STATE;
+            default:
+                return BandwidthTestCodes.ErrorCodes.ERROR_UNKNOWN;
+        }
     }
 
     private static int computeStrongInterferingAps(WifiState.ChannelInfo channelInfo) {

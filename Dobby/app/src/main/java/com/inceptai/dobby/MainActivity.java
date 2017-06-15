@@ -28,7 +28,6 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.google.common.util.concurrent.ListenableFuture;
-import com.inceptai.dobby.ai.ApiAiClient;
 import com.inceptai.dobby.ai.DataInterpreter;
 import com.inceptai.dobby.ai.DobbyAi;
 import com.inceptai.dobby.ai.RtDataSource;
@@ -261,6 +260,16 @@ public class MainActivity extends AppCompatActivity
     @Override
     public boolean handleMessage(Message msg) {
         return false;
+    }
+
+    @Override
+    public void actionStarted() {
+
+    }
+
+    @Override
+    public void actionCompleted() {
+
     }
 
     public void sendEvent(String eventString) {

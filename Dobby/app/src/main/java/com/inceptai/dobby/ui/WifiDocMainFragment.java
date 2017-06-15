@@ -6,7 +6,6 @@ import android.animation.LayoutTransition;
 import android.animation.ObjectAnimator;
 import android.annotation.TargetApi;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -37,6 +36,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.common.eventbus.Subscribe;
+import com.inceptai.dobby.DobbyAnalytics;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.RemoteConfig;
@@ -54,7 +54,6 @@ import com.inceptai.dobby.speedtest.SpeedTestConfig;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.HtmlReportGenerator;
 import com.inceptai.dobby.utils.Utils;
-import com.inceptai.dobby.DobbyAnalytics;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -299,6 +298,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         void onFragmentInteraction(Uri uri);
         void onMainButtonClick();
         void cancelTests();
+        void onLocationPermissionGranted();
     }
 
 
@@ -324,6 +324,10 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             case PERMISSION_COARSE_LOCATION_REQUEST_CODE:
                 if (grantResults[0] == PERMISSION_GRANTED) {
                     DobbyLog.i("Coarse location permission granted.");
+                    if (mListener != null) {
+                        mListener.onLocationPermissionGranted();
+                    }
+                    //Trigger a scan here if needed
                 } else {
                     Utils.buildSimpleDialog(getContext(), "Functionality limited",
                             "Since location access has not been granted, this app will not be able to analyze your wifi network. You can still use all the other features.");

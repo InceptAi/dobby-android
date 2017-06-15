@@ -9,7 +9,6 @@ import com.inceptai.dobby.database.FailureDatabaseWriter;
 import com.inceptai.dobby.database.FailureRecord;
 import com.inceptai.dobby.database.InferenceDatabaseWriter;
 import com.inceptai.dobby.database.InferenceRecord;
-import com.inceptai.dobby.model.DobbyWifiInfo;
 import com.inceptai.dobby.model.IPLayerInfo;
 import com.inceptai.dobby.model.PingStats;
 import com.inceptai.dobby.speedtest.BandwidthTestCodes;
@@ -127,14 +126,7 @@ public class InferenceEngine {
                                                                   List<ScanResult> scanResultList,
                                                                   @WifiState.WifiLinkMode int wifiLinkMode,
                                                                   @ConnectivityAnalyzer.WifiConnectivityMode int wifiConnectivityMode) {
-        DataInterpreter.WifiGrade wifiGrade = new DataInterpreter.WifiGrade();
-        if (wifiState != null) {
-            HashMap<Integer, WifiState.ChannelInfo> channelMap = wifiState.getChannelInfoMap();
-            DobbyWifiInfo wifiInfo = wifiState.getLinkInfo();
-            wifiGrade = DataInterpreter.interpret(channelMap, scanResultList, wifiInfo,
-                    wifiLinkMode, wifiConnectivityMode);
-            wifiGrade.errorCode = getWifiErrorCode(wifiConnectivityMode);
-        }
+        DataInterpreter.WifiGrade wifiGrade = DataInterpreter.interpret(wifiState, scanResultList, wifiLinkMode, wifiConnectivityMode);
         metricsDb.updateWifiGrade(wifiGrade);
         PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(wifiGrade);
         currentConditions.mergeIn(conditions);
@@ -146,17 +138,7 @@ public class InferenceEngine {
     }
 
     synchronized public DataInterpreter.PingGrade notifyPingStats(HashMap<String, PingStats> pingStatsMap, IPLayerInfo ipLayerInfo) {
-        DataInterpreter.PingGrade pingGrade = new DataInterpreter.PingGrade();
-        if (pingStatsMap != null && ipLayerInfo != null) {
-            pingGrade = DataInterpreter.interpret(pingStatsMap, ipLayerInfo);
-            pingGrade.errorCode = BandwidthTestCodes.ErrorCodes.NO_ERROR;
-        } else if (ipLayerInfo == null || ipLayerInfo.gateway == null || ipLayerInfo.gateway.equals("0.0.0.0")) {
-            pingGrade.errorCode = BandwidthTestCodes.ErrorCodes.ERROR_DHCP_INFO_UNAVAILABLE;
-        } else if (pingStatsMap == null) {
-            pingGrade.errorCode = BandwidthTestCodes.ErrorCodes.ERROR_DHCP_INFO_UNAVAILABLE;
-        } else if (pingStatsMap.isEmpty()) {
-            pingGrade.errorCode = BandwidthTestCodes.ErrorCodes.ERROR_PERFORMING_PING;
-        }
+        DataInterpreter.PingGrade pingGrade = DataInterpreter.interpret(pingStatsMap, ipLayerInfo);
         metricsDb.updatePingGrade(pingGrade);
         PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(pingGrade);
         currentConditions.mergeIn(conditions);
@@ -168,12 +150,7 @@ public class InferenceEngine {
     }
 
     synchronized public DataInterpreter.HttpGrade notifyGatewayHttpStats(PingStats gatewayHttpStats) {
-        DataInterpreter.HttpGrade httpGrade = new DataInterpreter.HttpGrade();
-        if (gatewayHttpStats != null) {
-            httpGrade = DataInterpreter.interpret(gatewayHttpStats);
-        } else {
-            httpGrade.errorCode = BandwidthTestCodes.ErrorCodes.ERROR_DHCP_INFO_UNAVAILABLE;
-        }
+        DataInterpreter.HttpGrade httpGrade = DataInterpreter.interpret(gatewayHttpStats);
         metricsDb.updateHttpGrade(httpGrade);
         PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(httpGrade);
         currentConditions.mergeIn(conditions);
@@ -204,28 +181,6 @@ public class InferenceEngine {
             //Write the suggestion and inferencing parameters to DB
             InferenceRecord newInferenceRecord = createInferenceRecord(suggestion);
             inferenceDatabaseWriter.writeInferenceToDatabase(newInferenceRecord);
-        }
-    }
-
-    @BandwidthTestCodes.ErrorCodes
-    private int getWifiErrorCode(@ConnectivityAnalyzer.WifiConnectivityMode int wifiConnectivityMode) {
-        switch (wifiConnectivityMode) {
-            case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_ONLINE:
-                return BandwidthTestCodes.ErrorCodes.NO_ERROR;
-            case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL:
-                return BandwidthTestCodes.ErrorCodes.ERROR_WIFI_IN_CAPTIVE_PORTAL;
-            case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_OFFLINE:
-                return BandwidthTestCodes.ErrorCodes.ERROR_WIFI_IN_CAPTIVE_PORTAL;
-            case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_UNKNOWN:
-                return BandwidthTestCodes.ErrorCodes.ERROR_WIFI_CONNECTED_AND_UNKNOWN;
-            case ConnectivityAnalyzer.WifiConnectivityMode.ON_AND_DISCONNECTED:
-                return BandwidthTestCodes.ErrorCodes.ERROR_WIFI_ON_AND_DISCONNECTED;
-            case ConnectivityAnalyzer.WifiConnectivityMode.OFF:
-                return BandwidthTestCodes.ErrorCodes.ERROR_WIFI_OFF;
-            case ConnectivityAnalyzer.WifiConnectivityMode.UNKNOWN:
-                return BandwidthTestCodes.ErrorCodes.ERROR_WIFI_UNKNOWN_STATE;
-            default:
-                return BandwidthTestCodes.ErrorCodes.ERROR_UNKNOWN;
         }
     }
 
