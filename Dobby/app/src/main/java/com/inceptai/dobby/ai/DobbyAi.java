@@ -1,6 +1,7 @@
 package com.inceptai.dobby.ai;
 
 import android.content.Context;
+import android.location.Location;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
@@ -301,6 +302,11 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         Action shortSuggestionAction = new Action(Utils.EMPTY_STRING, ACTION_TYPE_SHOW_SHORT_SUGGESTION);
         takeAction(shortSuggestionAction);
         eventBus.postEvent(DobbyEvent.EventType.SUGGESTIONS_AVAILABLE, suggestion);
+    }
+
+    @Override
+    public Location fetchLocation() {
+        return networkLayer.fetchLastKnownLocation();
     }
 
     public void sendQuery(String text) {
@@ -744,10 +750,17 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             actionRecord.actionType = "MIXED";
         }
 
+        Location location = networkLayer.fetchLastKnownLocation();
+        if (location != null) {
+            actionRecord.lat = location.getLatitude();
+            actionRecord.lon = location.getLongitude();
+            actionRecord.accuracy = location.getAccuracy();
+        }
         //Assign the timestamp
         actionRecord.timestamp = System.currentTimeMillis();
         //Write to db.
         actionDatabaseWriter.writeActionToDatabase(actionRecord);
     }
+
 
 }

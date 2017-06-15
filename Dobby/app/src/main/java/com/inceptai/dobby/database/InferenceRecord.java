@@ -24,6 +24,9 @@ public class InferenceRecord {
     public String httpGradeJson;
     public List<String> detailedMessageList;
     public String conditionsUsedForInference;
+    public double lat;
+    public double lon;
+    public double accuracy;
 
     public InferenceRecord() {}
 
@@ -41,7 +44,9 @@ public class InferenceRecord {
         result.put("pingGradeJson", pingGradeJson);
         result.put("httpGradeJson", httpGradeJson);
         result.put("conditionsUsedForInference", conditionsUsedForInference);
-
+        result.put("lat", lat);
+        result.put("lon", lon);
+        result.put("accuracy", accuracy);
         return result;
     }
 
@@ -87,5 +92,17 @@ public class InferenceRecord {
 
     public String getAppVersion() {
         return appVersion;
+    }
+
+    public double getLat() {
+        return lat;
+    }
+
+    public double getLon() {
+        return lon;
+    }
+
+    public double getAccuracy() {
+        return accuracy;
     }
 }

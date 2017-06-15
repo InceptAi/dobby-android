@@ -22,6 +22,9 @@ public class ActionRecord {
     public String pingGradeJson = Utils.EMPTY_STRING;
     public String httpGradeJson = Utils.EMPTY_STRING;
     public String actionType = Utils.EMPTY_STRING;
+    public double lat;
+    public double lon;
+    public double accuracy;
 
     public ActionRecord() {}
 
@@ -37,6 +40,9 @@ public class ActionRecord {
         result.put("pingGradeJson", pingGradeJson);
         result.put("httpGradeJson", httpGradeJson);
         result.put("actionType", actionType);
+        result.put("lat", lat);
+        result.put("lon", lon);
+        result.put("accuracy", accuracy);
         return result;
     }
 
@@ -76,4 +82,15 @@ public class ActionRecord {
         return actionType;
     }
 
+    public double getLat() {
+        return lat;
+    }
+
+    public double getLon() {
+        return lon;
+    }
+
+    public double getAccuracy() {
+        return accuracy;
+    }
 }

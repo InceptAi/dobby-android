@@ -1,5 +1,6 @@
 package com.inceptai.dobby.ai;
 
+import android.location.Location;
 import android.net.wifi.ScanResult;
 import android.support.annotation.IntDef;
 
@@ -71,6 +72,7 @@ public class InferenceEngine {
     public interface ActionListener {
         void takeAction(Action action);
         void suggestionsAvailable(SuggestionCreator.Suggestion suggestion);
+        Location fetchLocation();
     }
 
     @IntDef({
@@ -206,6 +208,15 @@ public class InferenceEngine {
 
         //Assign the timestamp
         inferenceRecord.timestamp = System.currentTimeMillis();
+        //Lat/lng/accuracy
+        if (actionListener != null) {
+            Location location = actionListener.fetchLocation();
+            if (location != null) {
+                inferenceRecord.lat = location.getLatitude();
+                inferenceRecord.lon = location.getLongitude();
+                inferenceRecord.accuracy = location.getAccuracy();
+            }
+        }
         return inferenceRecord;
     }
 
