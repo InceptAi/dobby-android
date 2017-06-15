@@ -114,7 +114,9 @@ public class ExpertChatActivity extends AppCompatActivity implements
         });
 
         expertChatService = ExpertChatService.get();
+		//TODO: Check do we need this
         fetchChatMessages();
+
         if (isFirstChat()) {
             isFirstRun = true;
             progressBar.setVisibility(View.GONE);

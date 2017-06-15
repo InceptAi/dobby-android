@@ -315,11 +315,12 @@ public class ExpertChatService implements
                 assignedExpertUsername = (String) dataSnapshot.getValue();
             } else {
                 ExpertChat expertChat = parse(dataSnapshot);
-                chatCallback.onMessageAvailable(expertChat);
                 //Deleting special messages
                 if (expertChat.getText().contains(ExpertChat.SPECIAL_MESSAGE_PREFIX)) {
                     dataSnapshot.getRef().removeValue();
                     parseExpertTextAndTakeActionIfNeeded(expertChat);
+				} else if (ExpertChatUtil.isDisplayableMessageType(expertChat)) {
+                    chatCallback.onMessageAvailable(expertChat);
                 }
                 DobbyLog.i("Got chat message: " + expertChat.getText());
             }
