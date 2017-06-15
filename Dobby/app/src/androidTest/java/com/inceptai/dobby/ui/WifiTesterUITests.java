@@ -7,17 +7,24 @@ import android.os.SystemClock;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.Espresso;
 import android.support.test.espresso.NoActivityResumedException;
+import android.support.test.espresso.ViewInteraction;
 import android.support.test.espresso.action.ViewActions;
 import android.support.test.espresso.matcher.ViewMatchers;
 import android.support.test.filters.LargeTest;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewParent;
 
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.utils.Utils;
 import com.squareup.spoon.Spoon;
 
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
+import org.hamcrest.TypeSafeMatcher;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -25,6 +32,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import static android.content.ContentValues.TAG;
+import static android.support.test.InstrumentationRegistry.getInstrumentation;
+import static android.support.test.InstrumentationRegistry.getTargetContext;
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
@@ -32,9 +42,7 @@ import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withParent;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
-import static com.inceptai.dobby.DobbyApplication.TAG;
 import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 
@@ -46,7 +54,7 @@ import static org.hamcrest.Matchers.not;
  */
 @RunWith(AndroidJUnit4.class)
 @LargeTest
-public class CheckMainScreenWifiDocTest {
+public class WifiTesterUITests {
     private final int BW_WAITING_TIME_MS = 21000; // ~21 secs
     private final int SUGGESTION_WAITING_TIME_AFTER_BW_MS = 7000; // ~6 secs
     private final int BOTTOM_DRAWER_WAITING_TIME_MS = 1000; // ~200 ms
@@ -57,10 +65,11 @@ public class CheckMainScreenWifiDocTest {
     private final String DISMISS_TITLE = "DISMISS";
     private final String CANCEL_TITLE = "CANCEL";
     private final String MORE_TITLE = "MORE";
+    private final String CONTACT_EXPERT = "CONTACT EXPERT";
     private final String STATUS_RUNNING_TESTS_MESSAGE = "Running tests..";
     private final String STATUS_IDLE_MESSAGE = "Ready to run tests.";
     private final int CANCEL_WAIT_MS = 5000; // ~500 ms
-    private static final boolean ENABLE_SCREENSHOTS = true;
+    private static final boolean ENABLE_SCREENSHOTS = false;
 
     private void captureScreenshot(String label) {
         if (ENABLE_SCREENSHOTS) {
@@ -102,7 +111,16 @@ public class CheckMainScreenWifiDocTest {
                             + " android.permission.WRITE_EXTERNAL_STORAGE");
         }
     }
-    */
+*/
+    @Before
+    public void grantPhonePermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            getInstrumentation().getUiAutomation().executeShellCommand(
+                    "pm grant " + getTargetContext().getPackageName()
+                            + " android.permission.ACCESS_FINE_LOCATION");
+        }
+    }
+
 
     @After
     public void tearDown() throws Exception {
@@ -151,6 +169,17 @@ public class CheckMainScreenWifiDocTest {
         onView(withId(R.id.status_cardview)).check(matches(isDisplayed()));
         onView(withId(R.id.status_tv)).check(matches(withText(STATUS_IDLE_MESSAGE)));
         onView(withId(R.id.bottom_dialog_inc)).check(matches(not(isDisplayed())));
+
+        //Check Contact expert button exists
+        ViewInteraction frameLayout2 = onView(withId(R.id.contact_expert_fl));
+        frameLayout2.check(matches(isDisplayed()));
+
+        //Check Run button exists
+        ViewInteraction textViewRunTests = onView((withText("RUN TESTS")));
+        textViewRunTests.check(matches(isDisplayed()));
+
+        ViewInteraction textViewShare = onView((withText("Share")));
+        textViewShare.check(matches(isDisplayed()));
     }
 
     private void checkRunningUIState() {
@@ -188,18 +217,18 @@ public class CheckMainScreenWifiDocTest {
 
         //When suggestions are available -- make sure the more button is available and bottom dialog title changes to "Suggestions"
         onView(withId(R.id.bottomDialog_title)).check(matches(withText(SUGGESTIONS_TITLE)));
-        onView(withId(R.id.bottomDialog_cancel)).check(matches(withText(DISMISS_TITLE)));
-        onView(withId(R.id.bottomDialog_ok)).check(matches(withText(MORE_TITLE)));
-        onView(withId(R.id.bottomDialog_ok)).check(matches(isDisplayed()));
+        onView(withId(R.id.bottomDialog_contact_expert)).check(matches(withText(CONTACT_EXPERT)));
     }
 
     @Test
     public void bwTestDefaultTest() {
-        Utils.safeSleep(10000);
+        Utils.safeSleep(5000);
+        //clickNextOnLocationPermission();
+
         checkIdleUIState();
         captureScreenshot("initial_state");
         //Click the run tests button
-        onView(withId(R.id.main_fab_button)).perform(click());
+        onView(withId(R.id.bottom_run_tests_fl)).perform(click());
         SystemClock.sleep(BOTTOM_DRAWER_WAITING_TIME_MS);
         //Check that the status card view text changes
         captureScreenshot("running_state");
@@ -215,6 +244,11 @@ public class CheckMainScreenWifiDocTest {
 
     }
 
+    private void clickNextOnLocationPermission() {
+        ViewInteraction frameLayout = onView(
+                allOf(withId(R.id.bottom_next_fl), isDisplayed()));
+        frameLayout.perform(click());
+    }
     /*
     @Test
     public void bwTestCancelTest() {
@@ -289,7 +323,7 @@ public class CheckMainScreenWifiDocTest {
         captureScreenshot("first_initial_state");
         checkIdleUIState();
         //Click the run tests button
-        onView(withId(R.id.main_fab_button)).perform(click());
+        onView(withId(R.id.bottom_run_tests_fl)).perform(click());
         SystemClock.sleep(BOTTOM_DRAWER_WAITING_TIME_MS);
         //Check that the status card view text changes
 
@@ -312,7 +346,7 @@ public class CheckMainScreenWifiDocTest {
         captureScreenshot("ready_for_second_bw_test_state");
 
         //Then start the test again
-        onView(withId(R.id.main_fab_button)).perform(click());
+        onView(withId(R.id.bottom_run_tests_fl)).perform(click());
         SystemClock.sleep(BOTTOM_DRAWER_WAITING_TIME_MS);
 
         //Check that the status card view text changes
@@ -335,8 +369,27 @@ public class CheckMainScreenWifiDocTest {
     @Test
     public void animationScalesSetToZeroDuringTest() throws Exception {
         Utils.safeSleep(10000);
-        boolean isSystemAnimationEnabled = Utils.areSystemAnimationsEnabled(InstrumentationRegistry.getTargetContext());
+        boolean isSystemAnimationEnabled = Utils.areSystemAnimationsEnabled(getTargetContext());
         Assert.assertFalse(isSystemAnimationEnabled);
+    }
+
+    private static Matcher<View> childAtPosition(
+            final Matcher<View> parentMatcher, final int position) {
+
+        return new TypeSafeMatcher<View>() {
+            @Override
+            public void describeTo(Description description) {
+                description.appendText("Child at position " + position + " in parent ");
+                parentMatcher.describeTo(description);
+            }
+
+            @Override
+            public boolean matchesSafely(View view) {
+                ViewParent parent = view.getParent();
+                return parent instanceof ViewGroup && parentMatcher.matches(parent)
+                        && view.equals(((ViewGroup) parent).getChildAt(position));
+            }
+        };
     }
 
 }

@@ -321,7 +321,7 @@ run_emulator_tests () {
 			if [ $current_build_flavor = "dobby" ]; then
 				TEST_CLASS="com.inceptai.dobby.ui.WifiExpertUITests"
 			elif [ $current_build_flavor = "wifidoc" ]; then
-				TEST_CLASS="com.inceptai.dobby.ui.CheckMainScreenWifiDocTest"
+				TEST_CLASS="com.inceptai.dobby.ui.WifiTesterUITests"
 			else
 				echo "UNSUPPORTED BUILD FLAVOR FOR TESTS, FAILING" >> /tmp/gradle.log
                 FAILURE_STRING="$FAILURE_STRING. Unsupported app flavor"
