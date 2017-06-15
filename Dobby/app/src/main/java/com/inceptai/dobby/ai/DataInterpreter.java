@@ -502,6 +502,7 @@ public class DataInterpreter {
         int primaryApChannelInterferingAps;
         int leastOccupiedChannelAps;
         int primaryApSignal;
+        int linkSpeed;
         @BandwidthTestCodes.ErrorCodes int errorCode = BandwidthTestCodes.ErrorCodes.ERROR_UNINITIAlIZED;
         List<ScanResult> scanResultList;
         private long updatedAtMs;
@@ -541,6 +542,7 @@ public class DataInterpreter {
             builder.append("\n leastOccupiedChannel:" + leastOccupiedChannel);
             builder.append("\n primaryApChannelAps:" + primaryApChannelInterferingAps);
             builder.append("\n leastOccupiedChannelAps:" + leastOccupiedChannelAps);
+            builder.append("\n linkSpeed:" + linkSpeed);
             return builder.toString();
         }
 
@@ -886,13 +888,14 @@ public class DataInterpreter {
             wifiGrade.wifiChannelOccupancyMetric.put(channelInfo.channelFrequency, occupancy);
         }
 
+        wifiGrade.linkSpeed = linkInfo.getLinkSpeed();
         wifiGrade.primaryApChannelInterferingAps = numStrongInterferingAps;
         wifiGrade.primaryLinkChannelOccupancyMetric = getGradeLowerIsBetter(numStrongInterferingAps,
                 WIFI_CHANNEL_OCCUPANCY_STEPS,
                 (linkInfo.getFrequency() > 0 && numStrongInterferingAps >= 0), false);
         wifiGrade.primaryApSignalMetric = getGradeHigherIsBetter(linkInfo.getRssi(),
                 WIFI_RSSI_STEPS_DBM, linkInfo.getRssi() < 0, false);
-        wifiGrade.primaryApLinkSpeedMetric = getGradeHigherIsBetter(linkInfo.getLinkSpeed(),
+        wifiGrade.primaryApLinkSpeedMetric = getGradeHigherIsBetter(wifiGrade.linkSpeed,
                 LINK_SPEED_STEPS_MBPS, linkInfo.getLinkSpeed() > 0, false);
 
         wifiGrade.wifiConnectivityMode = wifiConnectivityMode;
@@ -908,7 +911,7 @@ public class DataInterpreter {
         wifiGrade.connectivityModeString = ConnectivityAnalyzer.connectivityModeToString(wifiGrade.wifiConnectivityMode);
         wifiGrade.linkModeString = WifiState.wifiLinkModeToString(wifiGrade.wifiLinkMode);
         wifiGrade.errorCodeString = BandwidthTestCodes.bandwidthTestErrorCodesToStrings(wifiGrade.errorCode);
-        wifiGrade.primaryApSignalString = DataInterpreter.metricTypeToString(wifiGrade.primaryApLinkSpeedMetric);
+        wifiGrade.primaryApSignalString = DataInterpreter.metricTypeToString(wifiGrade.primaryApSignalMetric);
         wifiGrade.primaryChannelOccupancyString = DataInterpreter.metricTypeToString(wifiGrade.primaryLinkChannelOccupancyMetric);
         wifiGrade.linkSpeedString = DataInterpreter.metricTypeToString(wifiGrade.primaryApLinkSpeedMetric);
         return wifiGrade;

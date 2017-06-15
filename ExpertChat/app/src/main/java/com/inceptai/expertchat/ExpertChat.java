@@ -28,6 +28,9 @@ public class ExpertChat {
     public ExpertChat() {
         id = EMPTY_STRING;
         text = EMPTY_STRING;
+
+
+        
         messageType = MSG_TYPE_UNKNOWN;
         computeTimestamp();
     }
