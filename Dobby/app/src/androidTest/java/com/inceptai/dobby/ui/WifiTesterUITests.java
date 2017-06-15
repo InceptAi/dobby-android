@@ -69,7 +69,7 @@ public class WifiTesterUITests {
     private final String STATUS_RUNNING_TESTS_MESSAGE = "Running tests..";
     private final String STATUS_IDLE_MESSAGE = "Ready to run tests.";
     private final int CANCEL_WAIT_MS = 5000; // ~500 ms
-    private static final boolean ENABLE_SCREENSHOTS = false;
+    private static final boolean ENABLE_SCREENSHOTS = true;
 
     private void captureScreenshot(String label) {
         if (ENABLE_SCREENSHOTS) {
