@@ -92,6 +92,19 @@ ExpertChat.prototype.loadMessages = function(userUuid) {
   // Loads the last 12 messages and listen for new ones.
   var setMessage = function(data) {
     var val = data.val();
+    if (val.messageType == 5001) {
+	    val.text = "META: User left chat.";
+	    val.name = val.timestamp;
+    } else if (val.messageType == 5002) {
+	    val.text = "META: User entered chat.";
+	    val.name = val.timestamp;
+    }  else if (val.messageType == 5003) {
+	    val.text = "META: Action started.";
+	    val.name = val.timestamp;
+    }  else if (val.messageType == 5004)  {
+	    val.text = "META: Action completed.";
+	    val.name = val.timestamp;
+    }
     this.displayMessage(data.key, val.name, val.text, val.photoUrl, val.imageUrl);
   }.bind(this);
   this.messagesRef.limitToLast(12).on('child_added', setMessage);
