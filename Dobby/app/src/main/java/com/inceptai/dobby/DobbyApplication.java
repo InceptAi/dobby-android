@@ -7,14 +7,12 @@ import android.util.Log;
 import com.inceptai.dobby.dagger.DaggerProdComponent;
 import com.inceptai.dobby.dagger.ProdComponent;
 import com.inceptai.dobby.dagger.ProdModule;
+import com.inceptai.dobby.expert.ExpertChatService;
 import com.inceptai.dobby.utils.Utils;
 
 import java.util.HashMap;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-
-import static com.inceptai.dobby.utils.Utils.EMPTY_STRING;
 
 /**
  * Created by arunesh on 3/28/17.
@@ -39,6 +37,7 @@ public class DobbyApplication extends Application {
         Log.i("Dobby", "DobbyApplication: Old handler:" + handler.getClass().getCanonicalName());
         // Thread.setDefaultUncaughtExceptionHandler(new DobbyThreadpool.DobbyUncaughtExceptionHandler(handler));
         fetchUuid();
+        ExpertChatService instance = ExpertChatService.fetchInstance(userUuid.get(), prodComponent);
     }
 
     private synchronized void fetchUuid() {

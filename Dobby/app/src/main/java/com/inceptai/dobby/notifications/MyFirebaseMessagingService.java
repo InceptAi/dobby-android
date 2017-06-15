@@ -6,7 +6,6 @@ import com.inceptai.dobby.DobbyAnalytics;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.expert.ExpertChatService;
 import com.inceptai.dobby.utils.DobbyLog;
-import com.inceptai.dobby.utils.Utils;
 
 import javax.inject.Inject;
 
@@ -28,7 +27,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         // Also if you intend on generating your own notifications as a result of a received FCM
         // message, here is where that should be initiated.
         DobbyLog.i("From: " + remoteMessage.getFrom());
-        ExpertChatService instance = ExpertChatService.fetchInstance(Utils.fetchUuid(getApplicationContext()));
+        //ExpertChatService instance = ExpertChatService.fetchInstance(Utils.fetchUuid(getApplicationContext()));
+        ExpertChatService instance = ExpertChatService.get();
         instance.showNotification(getApplicationContext(), remoteMessage.getData());
         dobbyAnalytics.expertChatNotificationShown();
     }

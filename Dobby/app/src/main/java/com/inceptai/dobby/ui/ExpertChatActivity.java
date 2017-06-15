@@ -18,23 +18,16 @@ import android.widget.TextView;
 import com.inceptai.dobby.DobbyAnalytics;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.R;
-import com.inceptai.dobby.ai.DataInterpreter;
-import com.inceptai.dobby.ai.DobbyAi;
-import com.inceptai.dobby.ai.RtDataSource;
-import com.inceptai.dobby.ai.SuggestionCreator;
 import com.inceptai.dobby.expert.ExpertChat;
 import com.inceptai.dobby.expert.ExpertChatService;
-import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.utils.Utils;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import javax.inject.Inject;
 
 public class ExpertChatActivity extends AppCompatActivity implements
         ExpertChatService.ChatCallback,
-        DobbyAi.ResponseCallback,
         Handler.Callback {
     public static final String CHAT_MESSAGES_CHILD = "expert_chat_rooms";
     private static final String PREF_FIRST_CHAT = "first_expert_chat";
@@ -43,12 +36,6 @@ public class ExpertChatActivity extends AppCompatActivity implements
 
     private static final int MSG_UPDATE_CHAT = 1001;
     private static final int MSG_UPDATE_ETA = 1002;
-
-    private static final int WIFI_SCAN_ACTION = 2001;
-    private static final int PING_ACTION = 2002;
-    private static final int HTTP_ACTION = 2003;
-    private static final int ALL_ACTIONS = 2100;
-
 
     private RecyclerView mMessageRecyclerView;
     private LinearLayoutManager mLinearLayoutManager;
@@ -67,9 +54,6 @@ public class ExpertChatActivity extends AppCompatActivity implements
 
     @Inject
     DobbyAnalytics dobbyAnalytics;
-
-    @Inject
-    DobbyAi dobbyAi;
 
     private boolean isFirstRun = false;
 
@@ -129,7 +113,7 @@ public class ExpertChatActivity extends AppCompatActivity implements
             }
         });
 
-        expertChatService = ExpertChatService.fetchInstance(dobbyApplication.getUserUuid());
+        expertChatService = ExpertChatService.get();
         fetchChatMessages();
         if (isFirstChat()) {
             isFirstRun = true;
@@ -140,7 +124,6 @@ public class ExpertChatActivity extends AppCompatActivity implements
         }
         currentEtaSeconds = ExpertChatService.ETA_OFFLINE;
         isPresent = false;
-        dobbyAi.setResponseCallback(this);
     }
 
     @Override
@@ -157,59 +140,6 @@ public class ExpertChatActivity extends AppCompatActivity implements
 
         addGeneralMessage(getEtaString(currentEtaSeconds, isPresent));
         sendUserEnteredMetaMessage();
-    }
-
-    //Dobby AI callbacks
-
-
-    @Override
-    public void showResponse(String text) {
-        //No-op
-    }
-
-    @Override
-    public void showRtGraph(RtDataSource<Float, Integer> rtDataSource) {
-        //No-op
-    }
-
-    @Override
-    public void observeBandwidth(BandwidthObserver observer) {
-        //No-op
-    }
-
-    @Override
-    public void cancelTests() {
-        //No-op
-    }
-
-    @Override
-    public void showUserActionOptions(List<Integer> userResponseTypes) {
-        //No-op
-    }
-
-    @Override
-    public void showBandwidthViewCard(DataInterpreter.BandwidthGrade bandwidthGrade) {
-        //No-op
-    }
-
-    @Override
-    public void showNetworkInfoViewCard(DataInterpreter.WifiGrade wifiGrade, String isp, String ip) {
-        //No-op
-    }
-
-    @Override
-    public void showDetailedSuggestions(SuggestionCreator.Suggestion suggestion) {
-        //No-op
-    }
-
-    @Override
-    public void actionStarted() {
-        sendActionStarted();
-    }
-
-    @Override
-    public void actionCompleted() {
-        sendActionCompletedMessage();
     }
 
     @Override
@@ -233,13 +163,7 @@ public class ExpertChatActivity extends AppCompatActivity implements
         }
     }
 
-    private void sendActionCompletedMessage() {
-        expertChatService.pushMetaChatMessage(ExpertChat.MSG_TYPE_META_ACTION_COMPLETED);
-    }
 
-    private void sendActionStarted() {
-        expertChatService.pushMetaChatMessage(ExpertChat.MSG_TYPE_META_ACTION_STARTED);
-    }
 
     @Override
     public void onMessageAvailable(ExpertChat expertChat) {
@@ -278,19 +202,7 @@ public class ExpertChatActivity extends AppCompatActivity implements
         return message;
     }
 
-    private void triggerDiagnosticAction(final int actionToTrigger) {
-        switch (actionToTrigger) {
-            case WIFI_SCAN_ACTION:
-                dobbyAi.performAndRecordWifiAction();
-                return;
-            case PING_ACTION:
-                dobbyAi.performAndRecordPingAction();
-                return;
-            case HTTP_ACTION:
-            case ALL_ACTIONS:
 
-        }
-    }
 
     private void addGeneralMessage(String generalMessage) {
         ExpertChat expertChat = new ExpertChat();
@@ -325,25 +237,9 @@ public class ExpertChatActivity extends AppCompatActivity implements
         dobbyAnalytics.showETAToUser(message);
     }
 
-    private boolean parseExpertTextAndTakeActionIfNeeded(ExpertChat expertChat) {
-        if (expertChat.getMessageType() == ExpertChat.MSG_TYPE_EXPERT_TEXT) {
-            String expertMessage = expertChat.getText();
-            if (expertMessage.startsWith("#")) {
-                if (expertMessage.toLowerCase().contains("wifi")) {
-                    triggerDiagnosticAction(WIFI_SCAN_ACTION);
-                } else if (expertMessage.toLowerCase().contains("ping")) {
-                    triggerDiagnosticAction(PING_ACTION);
-                }
-                return true;
-            }
-        }
-        return false;
-    }
+
 
     private void addChatEntry(ExpertChat expertChat) {
-        if (parseExpertTextAndTakeActionIfNeeded(expertChat)) {
-            return;
-        }
         recyclerViewAdapter.addChatEntry(expertChat);
         mMessageRecyclerView.smoothScrollToPosition(recyclerViewAdapter.getItemCount());
         progressBar.setVisibility(View.GONE);
