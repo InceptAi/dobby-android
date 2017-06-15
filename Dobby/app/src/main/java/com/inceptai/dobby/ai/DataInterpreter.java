@@ -226,6 +226,9 @@ public class DataInterpreter {
         double lat;
         double lon;
         @BandwidthTestCodes.ErrorCodes int errorCode = BandwidthTestCodes.ErrorCodes.ERROR_UNINITIAlIZED;
+        private String errorCodeString = Utils.EMPTY_STRING;
+        private String downloadMetricString = Utils.EMPTY_STRING;
+        private String uploadMetricString  = Utils.EMPTY_STRING;
 
         public BandwidthGrade() {
             //Set timestamp here
@@ -358,7 +361,11 @@ public class DataInterpreter {
         double alternativeDnsLatencyMs;
         long updatedAtMs;
         @BandwidthTestCodes.ErrorCodes int errorCode = BandwidthTestCodes.ErrorCodes.ERROR_UNINITIAlIZED;
-
+        private String errorCodeString = Utils.EMPTY_STRING;
+        private String externalServerMetricString = Utils.EMPTY_STRING;
+        private String dnsServerMetricString = Utils.EMPTY_STRING;
+        private String routerMetricString = Utils.EMPTY_STRING;
+        private String alternativeDnsMetricString = Utils.EMPTY_STRING;
 
         public PingGrade() {}
 
@@ -448,6 +455,8 @@ public class DataInterpreter {
         @MetricType int httpDownloadLatencyMetric = MetricType.UNKNOWN;
         private long updatedAtMs;
         @BandwidthTestCodes.ErrorCodes int errorCode = BandwidthTestCodes.ErrorCodes.ERROR_UNINITIAlIZED;
+        private String errorCodeString = Utils.EMPTY_STRING;
+        private String httpDownloadMetricString = Utils.EMPTY_STRING;
 
         public HttpGrade() {
         }
@@ -496,7 +505,12 @@ public class DataInterpreter {
         @BandwidthTestCodes.ErrorCodes int errorCode = BandwidthTestCodes.ErrorCodes.ERROR_UNINITIAlIZED;
         List<ScanResult> scanResultList;
         private long updatedAtMs;
-
+        private String connectivityModeString = Utils.EMPTY_STRING;
+        private String linkModeString = Utils.EMPTY_STRING;
+        private String errorCodeString = Utils.EMPTY_STRING;
+        private String primaryApSignalString = Utils.EMPTY_STRING;
+        private String primaryChannelOccupancyString = Utils.EMPTY_STRING;
+        private String linkSpeedString = Utils.EMPTY_STRING;
 
 
         public WifiGrade() {
@@ -504,19 +518,11 @@ public class DataInterpreter {
             wifiChannelOccupancyMetric = new HashMap<>();
         }
 
-        /*
-        public String toJson() {
-            Gson gson = new Gson();
-            String json = gson.toJson(this);
-            return json;
-        }
-        */
         public String toJson() {
             Gson gson = new GsonBuilder()
                         .setExclusionStrategies(new TestExclStrat())
                         .create();
-            String json = gson.toJson(this);
-            return json;
+            return gson.toJson(this);
         }
 
         @Override
@@ -728,6 +734,9 @@ public class DataInterpreter {
         grade.bestServerName = bestServerName;
         grade.bestServerLatencyMs = bestServerLatency;
         grade.errorCode = errorCode;
+        grade.errorCodeString = BandwidthTestCodes.bandwidthTestErrorCodesToStrings(grade.errorCode);
+        grade.downloadMetricString = DataInterpreter.metricTypeToString(grade.downloadBandwidthMetric);
+        grade.uploadMetricString = DataInterpreter.metricTypeToString(grade.uploadBandwidthMetric);
         return grade;
     }
 
@@ -737,12 +746,15 @@ public class DataInterpreter {
 
         if (ipLayerInfo == null || ipLayerInfo.gateway == null || ipLayerInfo.gateway.equals("0.0.0.0")) {
             pingGrade.errorCode = BandwidthTestCodes.ErrorCodes.ERROR_DHCP_INFO_UNAVAILABLE;
+            pingGrade.errorCodeString = BandwidthTestCodes.bandwidthTestErrorCodesToStrings(pingGrade.errorCode);
             return pingGrade;
         } else if (pingStatsHashMap == null) {
             pingGrade.errorCode = BandwidthTestCodes.ErrorCodes.ERROR_DHCP_INFO_UNAVAILABLE;
+            pingGrade.errorCodeString = BandwidthTestCodes.bandwidthTestErrorCodesToStrings(pingGrade.errorCode);
             return pingGrade;
         } else if (pingStatsHashMap.isEmpty()) {
             pingGrade.errorCode = BandwidthTestCodes.ErrorCodes.ERROR_PERFORMING_PING;
+            pingGrade.errorCodeString = BandwidthTestCodes.bandwidthTestErrorCodesToStrings(pingGrade.errorCode);
             return pingGrade;
         }
 
@@ -819,6 +831,12 @@ public class DataInterpreter {
         pingGrade.dnsServerLatencyMs = getEffectivePingLatency(primaryDnsStats.avgLatencyMs,
                 primaryDnsStats.lossRatePercent);
         pingGrade.externalServerLatencyMs = getEffectivePingLatency(avgExternalServerLatencyMs, avgExternalServerLossPercent);
+        //Grade strings
+        pingGrade.errorCodeString = BandwidthTestCodes.bandwidthTestErrorCodesToStrings(pingGrade.errorCode);
+        pingGrade.routerMetricString = DataInterpreter.metricTypeToString(pingGrade.routerLatencyMetric);
+        pingGrade.dnsServerMetricString = DataInterpreter.metricTypeToString(pingGrade.dnsServerLatencyMetric);
+        pingGrade.externalServerMetricString = DataInterpreter.metricTypeToString(pingGrade.externalServerLatencyMetric);
+        pingGrade.alternativeDnsMetricString = DataInterpreter.metricTypeToString(pingGrade.alternativeDnsMetric);
 
         return pingGrade;
     }
@@ -828,12 +846,14 @@ public class DataInterpreter {
         httpGrade.errorCode = BandwidthTestCodes.ErrorCodes.NO_ERROR;
         if (httpRouterStats == null) {
             httpGrade.errorCode = BandwidthTestCodes.ErrorCodes.ERROR_DHCP_INFO_UNAVAILABLE;
+            httpGrade.errorCodeString = BandwidthTestCodes.bandwidthTestErrorCodesToStrings(httpGrade.errorCode);
             return httpGrade;
         }
         httpGrade.httpDownloadLatencyMetric = getGradeLowerIsBetter(httpRouterStats.avgLatencyMs,
                 HTTP_LATENCY_ROUTER_STEPS_MS,
                 httpRouterStats.avgLatencyMs > 0.0,
                 httpRouterStats.avgLatencyMs > MAX_LATENCY_FOR_BEING_NONFUNCTIONAL_MS);
+        httpGrade.httpDownloadMetricString = DataInterpreter.metricTypeToString(httpGrade.httpDownloadLatencyMetric);
         return  httpGrade;
     }
 
@@ -883,6 +903,14 @@ public class DataInterpreter {
         wifiGrade.leastOccupiedChannelAps = minOccupancyAPs;
         wifiGrade.primaryApSignal = linkInfo.getRssi();
         wifiGrade.scanResultList = scanResultList;
+
+        //Initializing the strings
+        wifiGrade.connectivityModeString = ConnectivityAnalyzer.connectivityModeToString(wifiGrade.wifiConnectivityMode);
+        wifiGrade.linkModeString = WifiState.wifiLinkModeToString(wifiGrade.wifiLinkMode);
+        wifiGrade.errorCodeString = BandwidthTestCodes.bandwidthTestErrorCodesToStrings(wifiGrade.errorCode);
+        wifiGrade.primaryApSignalString = DataInterpreter.metricTypeToString(wifiGrade.primaryApLinkSpeedMetric);
+        wifiGrade.primaryChannelOccupancyString = DataInterpreter.metricTypeToString(wifiGrade.primaryLinkChannelOccupancyMetric);
+        wifiGrade.linkSpeedString = DataInterpreter.metricTypeToString(wifiGrade.primaryApLinkSpeedMetric);
         return wifiGrade;
     }
 

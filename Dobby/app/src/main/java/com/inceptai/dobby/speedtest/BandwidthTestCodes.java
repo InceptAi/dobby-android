@@ -71,7 +71,7 @@ public class BandwidthTestCodes {
         int ERROR_WIFI_UNKNOWN_STATE = 21;
     }
 
-    public static String BandwidthTestErrorCodesToStrings(@ErrorCodes int errorCode) {
+    public static String bandwidthTestErrorCodesToStrings(@ErrorCodes int errorCode) {
         switch (errorCode) {
             case ErrorCodes.NO_ERROR:
                 return "NO_ERROR";
