@@ -50,6 +50,7 @@ public class ExpertChatService implements
         DobbyAi.ResponseCallback {
 
     private static final String USER_ROOT = BuildConfig.FLAVOR + "/" + BuildConfig.BUILD_TYPE  + "/" + "users/";
+    private static final String WIFI_EXPERT_BUILD_FLAVOR = "dobby";
     private static final String CHAT_ROOM_CHILD = BuildConfig.FLAVOR + "_chat_rooms/" + BuildConfig.BUILD_TYPE;
     private static final String FCM_KEY = "fcmToken";
     private static final String ASSIGNED_EXPERT_KEY = "assignedExpert";
@@ -169,11 +170,14 @@ public class ExpertChatService implements
         PendingIntent resultPendingIntent =
                 stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
 
+
+        int iconResource = WIFI_EXPERT_BUILD_FLAVOR.equals(BuildConfig.FLAVOR) ? R.mipmap.wifi_expert_launcher : R.mipmap.wifi_doc_launcher;
+
         Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         NotificationCompat.Builder notificationBuilder = (NotificationCompat.Builder) new NotificationCompat.Builder(context)
                 .setAutoCancel(true)   //Automatically delete the notification
                 .setSmallIcon(R.drawable.ic_person_64dp) //Notification icon
-                .setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.mipmap.wifi_doc_launcher))
+                .setLargeIcon(BitmapFactory.decodeResource(context.getResources(), iconResource))
                 .setContentIntent(resultPendingIntent)
                 .setContentTitle(title)
                 .setContentText(body)
