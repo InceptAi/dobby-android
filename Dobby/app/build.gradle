@@ -119,6 +119,26 @@ spoon {
     }
 }
 
+/*
+android.productFlavors.all { flavour ->
+    def applicationId = flavour.applicationId
+    def adb = android.getAdbExe().toString()
+
+    def grantPermissionsTask = tasks.create("grant${flavour.name.capitalize()}Permissions") << {
+        "${adb} shell pm grant ${applicationId} android.permission.ACCESS_FINE_LOCATION".execute()
+        "${adb} shell pm grant ${applicationId} android.permission.ACCESS_COARSE_LOCATION".execute()
+    }
+    grantPermissionsTask.description = "Grants permissions for Marshmallow"
+
+    tasks.whenTaskAdded { theTask ->
+        def assemblePattern = ~"assemble${flavour.name.capitalize()}DebugAndroidTest"
+        if (assemblePattern.matcher(theTask.name).matches()) {
+            theTask.dependsOn grantPermissionsTask.name
+        }
+    }
+}
+*/
+
 dependencies {
     compile files('libs/jspeedtest-1.26.jar')
     compile fileTree(include: ['*.jar'], dir: 'libs')

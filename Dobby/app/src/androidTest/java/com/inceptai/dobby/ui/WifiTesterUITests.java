@@ -4,16 +4,12 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.os.Build;
 import android.os.SystemClock;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.espresso.Espresso;
-import android.support.test.espresso.NoActivityResumedException;
 import android.support.test.espresso.ViewInteraction;
 import android.support.test.espresso.action.ViewActions;
 import android.support.test.espresso.matcher.ViewMatchers;
 import android.support.test.filters.LargeTest;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
@@ -25,15 +21,11 @@ import com.squareup.spoon.Spoon;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static android.content.ContentValues.TAG;
-import static android.support.test.InstrumentationRegistry.getInstrumentation;
 import static android.support.test.InstrumentationRegistry.getTargetContext;
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
@@ -69,7 +61,7 @@ public class WifiTesterUITests {
     private final String STATUS_RUNNING_TESTS_MESSAGE = "Running tests..";
     private final String STATUS_IDLE_MESSAGE = "Ready to run tests.";
     private final int CANCEL_WAIT_MS = 5000; // ~500 ms
-    private static final boolean ENABLE_SCREENSHOTS = true;
+    private static final boolean ENABLE_SCREENSHOTS = true  ;
 
     private void captureScreenshot(String label) {
         if (ENABLE_SCREENSHOTS) {
@@ -111,15 +103,8 @@ public class WifiTesterUITests {
                             + " android.permission.WRITE_EXTERNAL_STORAGE");
         }
     }
-*/
-    @Before
-    public void grantPhonePermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            getInstrumentation().getUiAutomation().executeShellCommand(
-                    "pm grant " + getTargetContext().getPackageName()
-                            + " android.permission.ACCESS_FINE_LOCATION");
-        }
-    }
+
+
 
 
     @After
@@ -141,6 +126,16 @@ public class WifiTesterUITests {
         }
     }
 
+
+    @Before
+    public void grantPhonePermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            getInstrumentation().getUiAutomation().executeShellCommand(
+                    "pm grant " + getTargetContext().getPackageName()
+                            + " android.permission.ACCESS_FINE_LOCATION");
+        }
+    }
+*/
     /**
      * A JUnit {@link Rule @Rule} to launch your activity under test. This is a replacement
      * for {@link ActivityInstrumentationTestCase2}.

@@ -378,7 +378,10 @@ public class NetworkLayer implements LocationListener {
         }
         lastKnownLocation = bestLocation;
         if (checkLocationPermission()) {
-            locationManager.requestSingleUpdate(LocationManager.NETWORK_PROVIDER, this, context.getMainLooper());
+            if(locationManager.getAllProviders().contains(LocationManager.NETWORK_PROVIDER) && locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)){
+                //locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
+                locationManager.requestSingleUpdate(LocationManager.NETWORK_PROVIDER, this, context.getMainLooper());
+            }
         }
     }
 
