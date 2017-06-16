@@ -246,6 +246,10 @@ public class NetworkLayer implements LocationListener {
         return getConnectivityAnalyzerInstance().isWifiOnline();
     }
 
+    public boolean isWifiOff() {
+        return getConnectivityAnalyzerInstance().isWifiOff();
+    }
+
     public String getCachedClientIspIfAvailable() {
         String clientIsp = Utils.EMPTY_STRING;
         if (getNewBandwidthAnalyzerInstance().getSpeedTestConfig() != null) {

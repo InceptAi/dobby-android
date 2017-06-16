@@ -278,6 +278,11 @@ public class ConnectivityAnalyzer {
     }
 
 
+    synchronized public boolean isWifiOff() {
+        return (wifiConnectivityMode == WifiConnectivityMode.OFF) ;
+    }
+
+
     public void processDobbyBusEvents(DobbyEvent event) {
         int eventType = event.getEventType();
         DobbyLog.v("ConnectivityAnalyzer Got event: " + event);

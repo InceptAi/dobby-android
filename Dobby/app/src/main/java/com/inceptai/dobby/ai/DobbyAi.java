@@ -232,7 +232,10 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 if (responseCallback != null) {
                     responseCallback.showNetworkInfoViewCard(getCurrentWifiGrade(), getCurrentIsp(), getCurrentIp());
                 }
-                if (networkLayer.isWifiOnline()) {
+                //We only proceed with bw tests requests if wifi is online -- otherwise there is no point.
+                // We can actually analyze this further and run the tests to show detailed analysis.
+                //if (networkLayer.isWifiOnline()) {
+                if (!networkLayer.isWifiOff()) {
                     sendEvent(ApiAiClient.APIAI_WIFI_ANALYSIS_SHOWN_EVENT);
                 }
                 wifiCheckDone = true;
