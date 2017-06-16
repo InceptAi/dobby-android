@@ -124,6 +124,10 @@ install_app () {
 	fi
     $ADB push $DOBBY_PATH/$relative_path_instrumentation_apk /data/local/tmp/com.inceptai.dobby.${current_build_flavor}.debug.test >> /tmp/gradle.log
     $ADB shell pm install -r "/data/local/tmp/com.inceptai.dobby.${current_build_flavor}.debug.test" >> /tmp/gradle.log
+
+	echo "$ADB shell pm grant com.inceptai.dobby.${current_build_flavor}.debug android.permission.ACCESS_FINE_LOCATION >> /tmp/gradle.log"
+	$ADB shell pm grant com.inceptai.dobby.${current_build_flavor}.debug android.permission.ACCESS_FINE_LOCATION >> /tmp/gradle.log
+	
 }
 
 notify_failure () {
