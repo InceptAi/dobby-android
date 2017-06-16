@@ -125,8 +125,13 @@ install_app () {
     $ADB push $DOBBY_PATH/$relative_path_instrumentation_apk /data/local/tmp/com.inceptai.dobby.${current_build_flavor}.debug.test >> /tmp/gradle.log
     $ADB shell pm install -r "/data/local/tmp/com.inceptai.dobby.${current_build_flavor}.debug.test" >> /tmp/gradle.log
 
-	echo "$ADB shell pm grant com.inceptai.dobby.${current_build_flavor}.debug android.permission.ACCESS_FINE_LOCATION >> /tmp/gradle.log"
-	$ADB shell pm grant com.inceptai.dobby.${current_build_flavor}.debug android.permission.ACCESS_FINE_LOCATION >> /tmp/gradle.log
+	if [ "$current_build_flavor" = "dobby" ]; then
+		echo "$ADB shell pm grant com.inceptai.wifiexpert.debug android.permission.ACCESS_FINE_LOCATION >> /tmp/gradle.log"
+		$ADB shell pm grant com.inceptai.wifiexpert.debug android.permission.ACCESS_FINE_LOCATION >> /tmp/gradle.log
+	elif [ "$current_build_flavor" = "wifidoc" ]; then
+		echo "$ADB shell pm grant com.inceptai.dobby.${current_build_flavor}.debug android.permission.ACCESS_FINE_LOCATION >> /tmp/gradle.log"
+		$ADB shell pm grant com.inceptai.dobby.${current_build_flavor}.debug android.permission.ACCESS_FINE_LOCATION >> /tmp/gradle.log
+	fi
 	
 }
 
@@ -659,7 +664,7 @@ while :; do
                 exit 1
             fi
             ;;
-          -z|--buildflavor)       # Takes an option argument, ensuring it has been specified.
+          -z|--buildflavors)       # Takes an option argument, ensuring it has been specified.
             if [ -n "$2" ]; then
                 BUILD_FLAVORS=$2
                 shift
