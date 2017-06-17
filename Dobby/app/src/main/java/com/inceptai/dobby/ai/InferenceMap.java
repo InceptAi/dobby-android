@@ -233,7 +233,8 @@ public class InferenceMap {
                 conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.2);
             }
         } else if (DataInterpreter.isGoodOrExcellentOrAverage(wifiGrade.primaryApSignalMetric)){
-            conditions.exclude(Condition.WIFI_CHANNEL_BAD_SIGNAL);
+            //Can't excluse BAD_SIGNAL here since it could be on the threshold
+            //conditions.exclude(Condition.WIFI_CHANNEL_BAD_SIGNAL);
             if (DataInterpreter.isPoorOrAbysmalOrNonFunctional(wifiGrade.primaryApLinkSpeedMetric)) {
                 conditions.include(Condition.ROUTER_GOOD_SIGNAL_USING_SLOW_DATA_RATE, 0.2);
             }
@@ -323,11 +324,11 @@ public class InferenceMap {
                 conditions.include(Condition.DNS_UNREACHABLE, 0.8);
                 conditions.include(Condition.CABLE_MODEM_FAULT, 0.2);
             }
-        } else if (DataInterpreter.isNonFunctional(pingGrade.routerLatencyMetric)) {
+        } else if (DataInterpreter.isAbysmalOrNonFunctional(pingGrade.routerLatencyMetric)) {
             //Router ping is Non functional -- loss rate could be 100%
             conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.2);
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.7);
-            conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.7);
+            conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.3);
             conditions.exclude(ISP_CONDITIONS);
             conditions.exclude(DNS_CONDITIONS);
         }
