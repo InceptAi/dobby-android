@@ -43,7 +43,7 @@ class BandwidthGrade(object):
         double lon;
 '''
 
-class InferenceRecord(object):
+class Record(object):
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 '''
@@ -141,11 +141,10 @@ def parse_handle(handle_json_dict, handle_key):
     handle.key = handle_key
     return handle
 
-def parse_inference(inference_json_dict,  inference_key):
-    inference_record = InferenceRecord(**inference_json_dict)
-    timestamp = inference_record.timestamp
-    inference_record.inference_key = inference_key
-    return inference_record
+def parse_record(json_dict,  key):
+    record = Record(**json_dict)
+    record.key = key
+    return record
 '''    
     bandwidth_grade_dict = json.loads(inference_record.bandwidthGradeJson)
     ping_grade_dict = json.loads(inference_record.pingGradeJson)
@@ -187,30 +186,30 @@ def fetch_data(url_to_fetch):
     return data
 
 
-def get_inferences(uid, build_type, flavor):
-    inference_list = []
+def get_info_from_endpoint(uid, build_type, flavor, endpoint):
+    record_list = []
     base_url = "https://dobbybackend.firebaseio.com"
-    url_to_fetch = base_url + "/" + flavor + "/" + build_type + "/users/" + "/" + uid + "/inferences.json"
+    url_to_fetch = base_url + "/" + flavor + "/" + build_type + "/users/" + "/" + uid + "/" + endpoint + ".json"
     print ("processing url {0}".format(url_to_fetch))
-    inference_data_for_user = fetch_data(url_to_fetch)
-    for inference_key, inference_value in inference_data_for_user.items():
-        inference = parse_inference(inference_json_dict=inference_value, inference_key=inference_key)
-        inference_list.append(inference)
-    return inference_list
+    data_for_user = fetch_data(url_to_fetch)
+    for key, value in data_for_user.items():
+        record = parse_record(json_dict=value, key=key)
+        record_list.append(record)
+    return record_list
 
-def get_inferences_partial_uid(partial_uid, build_type, flavor):
-    inference_list = []
+def get_info_from_endpoint_partial_uid(partial_uid, build_type, flavor, endpoint):
+    record_list = []
     base_url = "https://dobbybackend.firebaseio.com"
     url_to_fetch = base_url + "/" + flavor + "/" + build_type + "/users.json"
     print ("processing url {0}".format(url_to_fetch))
     all_user_data = fetch_data(url_to_fetch)
     for user_id, user_values in all_user_data.items():
         if partial_uid in user_id:
-            inference_data_for_user = user_values.get("inferences", {})
-            for inference_key, inference_value in inference_data_for_user.items():
-                inference = parse_inference(inference_json_dict=inference_value, inference_key=inference_key)
-                inference_list.append(inference)
-    return inference_list
+            data_for_user = user_values.get(endpoint, {})
+            for key, value in data_for_user.items():
+                record = parse_record(json_dict=value, key=key)
+                record_list.append(record)
+    return record_list
 
 
 def print_pretty_timestamp(timestamp):
@@ -218,18 +217,18 @@ def print_pretty_timestamp(timestamp):
     print (datetime.datetime.utcfromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S'))
 
 
-def pretty_print_inference_list(inference_list, max_inferences):
-    sorted_inference_list = sorted(inference_list, key=lambda t: t.timestamp, reverse=True) 
+def pretty_print_record_list(record_list, max_records, record_type):
+    sorted_list = sorted(record_list, key=lambda t: t.timestamp, reverse=True) 
     count = 0
-    for inference in sorted_inference_list:
+    for record in sorted_list:
 
-        if count >= max_inferences:
+        if count >= max_records:
             break
 
         count = count + 1
         print ("=======================================================")
-        print ("INFERENCE {0}\n".format(count))
-        for attr, value in inference.__dict__.items():
+        print ("{0} :{1}\n".format(record_type, count))
+        for attr, value in record.__dict__.items():
             print ("-----------------------------------------------")
             print ("KEY:", attr)
             try:
@@ -246,6 +245,7 @@ def pretty_print_inference_list(inference_list, max_inferences):
                         print (value)
         print ("=======================================================")
 
+
 def main():
     default_url = "https://dobbybackend.firebaseio.com/dobby/release/users/ac0ad728-c80a-4daf-8125-3ae5545e3d7f.json?print=pretty"
     default_leaderboard_base_url = "https://dobbybackend.firebaseio.com/leaderboard"
@@ -254,7 +254,8 @@ def main():
     op.add_option("-v", "--verbose", action="store_true", help="verbose", default=False)
     op.add_option("-d", "--usedebug", action="store_true", dest="use_debug", help="Use Debug app data", default=False)
     op.add_option("-z", "--usedummy", action="store_true", dest="use_dummy", help="Use Dummy data", default=False)
-    op.add_option("-m", "--maxinferences", dest="max_inferences", help="Max inferences", default="1")
+    op.add_option("-a", "--action", action="store_true", dest="fetch_action", help="Fetch action records", default=False)
+    op.add_option("-m", "--maxrecords", dest="max_records", help="Max Records", default="1")
     op.add_option("-f", "--flavor", dest="app_flavor", help="App flavor (default:wifidoc)", default="wifidoc")
     op.add_option("-u", "--uid", dest="user_id", help="User ID", default=None)
     (opts, args) = op.parse_args()
@@ -272,19 +273,32 @@ def main():
         flavor = "dummy"
     else:
         flavor = opts.app_flavor
-    
-    max_inferences = int(opts.max_inferences)
-    
-    if (len(opts.user_id) == 36):   	
-        inference_list = get_inferences(uid=opts.user_id, 
-            build_type=build_type,
-            flavor=flavor)
-    else:
-        inference_list = get_inferences_partial_uid(partial_uid=opts.user_id, 
-            build_type=build_type,
-            flavor=flavor)
 
-    pretty_print_inference_list(inference_list, max_inferences)
     
+    max_records = int(opts.max_records)
+  
+    endpoint = "inferences"
+
+    user_id = opts.user_id
+
+    if opts.fetch_action:
+        endpoint="expert_actions"
+
+    if (len(user_id) == 36):   	
+        record_list = get_info_from_endpoint(uid=user_id, 
+            build_type=build_type,
+            flavor=flavor,
+            endpoint=endpoint)
+    else:
+        record_list = get_info_from_endpoint_partial_uid(partial_uid=user_id, 
+            build_type=build_type,
+            flavor=flavor,
+            endpoint=endpoint)
+
+    pretty_print_record_list(record_list, max_records, endpoint)
+
+
+    
+   
 if __name__ == '__main__':
     main()
