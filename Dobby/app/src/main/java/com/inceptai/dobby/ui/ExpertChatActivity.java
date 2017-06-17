@@ -266,6 +266,12 @@ public class ExpertChatActivity extends AppCompatActivity implements
         super.onStop();
     }
 
+    @Override
+    protected void onStart() {
+        expertChatService.connect();
+        super.onStart();
+    }
+
     private void saveChatStarted() {
         Utils.saveSharedSetting(this,
                 PREF_FIRST_CHAT, Utils.FALSE_STRING);

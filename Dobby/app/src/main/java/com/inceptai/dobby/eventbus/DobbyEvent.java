@@ -5,6 +5,7 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
+import static com.inceptai.dobby.eventbus.DobbyEvent.EventType.EXPERT_ACTION_STARTED;
 import static com.inceptai.dobby.eventbus.DobbyEvent.EventType.NO_EVENT_RECEIVED;
 import static com.inceptai.dobby.eventbus.DobbyEvent.EventType.WIFI_STATE_CHANGED;
 
@@ -25,7 +26,7 @@ public class DobbyEvent {
             EventType.BANDWIDTH_TEST_STARTING, EventType.WIFI_SCAN_STARTING,
             EventType.PING_GRADE_AVAILABLE, EventType.GATEWAY_HTTP_GRADE_AVAILABLE, EventType.WIFI_GRADE_AVAILABLE,
             EventType.SUGGESTIONS_AVAILABLE, EventType.WIFI_INTERNET_CONNECTIVITY_CAPTIVE_PORTAL, EventType.BANDWIDTH_GRADE_AVAILABLE,
-            EventType.BANDWIDTH_TEST_FAILED_WIFI_OFFLINE})
+            EventType.BANDWIDTH_TEST_FAILED_WIFI_OFFLINE, EventType.EXPERT_ACTION_STARTED, EventType.EXPERT_ACTION_COMPLETED})
     public @interface EventType {
         //Unknown event type
         int NO_EVENT_RECEIVED = 0;
@@ -76,6 +77,10 @@ public class DobbyEvent {
         int WIFI_INTERNET_CONNECTIVITY_CAPTIVE_PORTAL = 31;
         int BANDWIDTH_GRADE_AVAILABLE = 32;
         int BANDWIDTH_TEST_FAILED_WIFI_OFFLINE = 33;
+
+        //Dobby AI action events
+        int EXPERT_ACTION_STARTED = 101;
+        int EXPERT_ACTION_COMPLETED = 102;
     }
 
     @DobbyEvent.EventType
@@ -189,6 +194,14 @@ public class DobbyEvent {
                 return "SUGGESTIONS_AVAILABLE";
             case EventType.BANDWIDTH_TEST_FAILED_WIFI_OFFLINE:
                 return "BANDWIDTH_TEST_FAILED_WIFI_OFFLINE";
+
+            //Expert events
+            case EventType.EXPERT_ACTION_STARTED:
+                return "EXPERT_ACTION_STARTED";
+            case EventType.EXPERT_ACTION_COMPLETED:
+                return "EXPERT_ACTION_COMPLETED";
+
+
             default:
                 return "UNKNOWN EVENT TYPE:" + eventType;
         }

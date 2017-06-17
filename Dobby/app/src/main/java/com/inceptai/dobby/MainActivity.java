@@ -262,15 +262,6 @@ public class MainActivity extends AppCompatActivity
         return false;
     }
 
-    @Override
-    public void actionStarted() {
-
-    }
-
-    @Override
-    public void actionCompleted() {
-
-    }
 
     public void sendEvent(String eventString) {
         if (dobbyAi != null) {

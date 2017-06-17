@@ -14,6 +14,7 @@ import android.net.Uri;
 import android.support.v4.app.TaskStackBuilder;
 import android.support.v7.app.NotificationCompat;
 
+import com.google.common.eventbus.Subscribe;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -22,12 +23,10 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.inceptai.dobby.BuildConfig;
 import com.inceptai.dobby.R;
-import com.inceptai.dobby.ai.DataInterpreter;
 import com.inceptai.dobby.ai.DobbyAi;
-import com.inceptai.dobby.ai.RtDataSource;
-import com.inceptai.dobby.ai.SuggestionCreator;
 import com.inceptai.dobby.dagger.ProdComponent;
-import com.inceptai.dobby.speedtest.BandwidthObserver;
+import com.inceptai.dobby.eventbus.DobbyEvent;
+import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.ui.ExpertChatActivity;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
@@ -46,8 +45,7 @@ import static android.support.v4.app.NotificationCompat.VISIBILITY_PUBLIC;
  */
 public class ExpertChatService implements
         ChildEventListener,
-        ValueEventListener,
-        DobbyAi.ResponseCallback {
+        ValueEventListener {
 
     private static final String USER_ROOT = BuildConfig.FLAVOR + "/" + BuildConfig.BUILD_TYPE  + "/" + "users/";
     private static final String WIFI_EXPERT_BUILD_FLAVOR = "dobby";
@@ -87,6 +85,9 @@ public class ExpertChatService implements
     @Inject
     DobbyAi dobbyAi;
 
+    @Inject
+    DobbyEventBus eventBus;
+
 
     public interface ChatCallback {
         void onMessageAvailable(ExpertChat expertChat);
@@ -105,7 +106,8 @@ public class ExpertChatService implements
         DobbyLog.i("Using chat room ID: " + chatRoomPath);
         isChatEmpty = true;
         currentEtaSeconds = ETA_PRESENT;
-        dobbyAi.setResponseCallback(this);
+        //Being called in connect from the activity onStart.
+        //eventBus.registerListener(this);
     }
 
     public static ExpertChatService fetchInstance(String userUuid, ProdComponent prodComponent) {
@@ -193,10 +195,15 @@ public class ExpertChatService implements
         }
     }
 
+    public void connect() {
+        eventBus.registerListener(this);
+    }
+
     public void disconnect() {
         getChatReference().removeEventListener((ChildEventListener) this);
         getChatReference().removeEventListener((ValueEventListener) this);
         listenerConnected = false;
+        eventBus.unregisterListener(this);
     }
 
     public boolean isListenerConnected() {
@@ -366,62 +373,11 @@ public class ExpertChatService implements
         }
     }
 
-    //Dobby AI callbacks
-    @Override
-    public void showResponse(String text) {
-        //No-op
-    }
-
-    @Override
-    public void showRtGraph(RtDataSource<Float, Integer> rtDataSource) {
-        //No-op
-    }
-
-    @Override
-    public void observeBandwidth(BandwidthObserver observer) {
-        //No-op
-    }
-
-    @Override
-    public void cancelTests() {
-        //No-op
-    }
-
-    @Override
-    public void showUserActionOptions(List<Integer> userResponseTypes) {
-        //No-op
-    }
-
-    @Override
-    public void showBandwidthViewCard(DataInterpreter.BandwidthGrade bandwidthGrade) {
-        //No-op
-    }
-
-    @Override
-    public void showNetworkInfoViewCard(DataInterpreter.WifiGrade wifiGrade, String isp, String ip) {
-        //No-op
-    }
-
-    @Override
-    public void showDetailedSuggestions(SuggestionCreator.Suggestion suggestion) {
-        //No-op
-    }
-
-    @Override
-    public void actionStarted() {
-        sendActionStarted();
-    }
-
-    @Override
-    public void actionCompleted() {
-        sendActionCompletedMessage();
-    }
-
     private void sendActionCompletedMessage() {
         pushMetaChatMessage(ExpertChat.MSG_TYPE_META_ACTION_COMPLETED);
     }
 
-    private void sendActionStarted() {
+    private void sendActionStartedMessage() {
         pushMetaChatMessage(ExpertChat.MSG_TYPE_META_ACTION_STARTED);
     }
 
@@ -452,6 +408,16 @@ public class ExpertChatService implements
             }
         }
         return false;
+    }
+
+    //EventBus events
+    @Subscribe
+    public void listenToEventBus(DobbyEvent event) {
+        if (event.getEventType() == DobbyEvent.EventType.EXPERT_ACTION_STARTED) {
+            sendActionStartedMessage();
+        } else if (event.getEventType() == DobbyEvent.EventType.EXPERT_ACTION_COMPLETED) {
+            sendActionCompletedMessage();
+        }
     }
 
 }
