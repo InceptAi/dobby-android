@@ -172,7 +172,7 @@ public class InferenceMap {
         if (DataInterpreter.isGoodOrExcellent(allWifiMetrics) &&
                 wifiGrade.wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_ONLINE &&
                 wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.NO_PROBLEM_DEFAULT_STATE) {
-            conditions.exclude(WIFI_CONDITIONS);
+            //conditions.exclude(WIFI_CONDITIONS);
             conditions.exclude(ROUTER_CONDITIONS);
             return conditions;
         }
