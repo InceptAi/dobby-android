@@ -49,6 +49,7 @@ public class ApiAiClient implements AIListener {
     public static final String APIAI_ACTION_NEGATIVE_FEEDBACK = "user-says-app-not-helpful";
     public static final String APIAI_ACTION_NO_FEEDBACK = "user-says-no-to-giving-feedback";
     public static final String APIAI_ACTION_UNSTRUCTURED_FEEDBACK = "user-feedback-unstructured";
+    public static final String APIAI_ACTION_CONTACT_HUMAN_EXPERT = "contact-human-expert-action";
 
 
     private static final String CLIENT_ACCESS_TOKEN = "81dbd5289ee74637bf582fc3112b7dcb";
@@ -99,13 +100,14 @@ public class ApiAiClient implements AIListener {
             public void run() {
                 final AIRequest aiRequest = new AIRequest();
                 if (query != null) {
+                    DobbyLog.i("Submitting query: " + query);
                     aiRequest.setQuery(query);
                 }
                 if (event != null) {
+                    DobbyLog.i("Submitting event: " + event);
                     aiRequest.setEvent(new AIEvent(event));
                 }
                 try {
-                    DobbyLog.i("Submitting query: " + query);
                     final AIResponse response = aiDataService.request(aiRequest);
                     DobbyLog.i(" Response:" + GsonFactory.getGson().toJson(response.toString()));
                     processResult(response.getResult(), listener);
@@ -128,7 +130,10 @@ public class ApiAiClient implements AIListener {
         Action actionToReturn = new Action(Utils.EMPTY_STRING, Action.ActionType.ACTION_TYPE_NONE);
         if (query != null && ! query.equals(Utils.EMPTY_STRING)) {
             DobbyLog.v("Submitting offline query with text " + query);
-            if (Utils.grepForString(query, Arrays.asList("run", "test", "bandwidth", "find"))) {
+            if (Utils.grepForString(query, Arrays.asList("contact"))) {
+                actionToReturn = new Action(Utils.EMPTY_STRING,
+                        Action.ActionType.ACTION_TYPE_USER_ASKS_FOR_HUMAN_EXPERT);
+            } else if (Utils.grepForString(query, Arrays.asList("run", "test", "bandwidth", "find"))) {
                 //Run bw test
                 actionToReturn = new Action("Sure I can run some tests for you. " +
                         "I will start with a quick wifi check ... ",
@@ -259,6 +264,9 @@ public class ApiAiClient implements AIListener {
             case APIAI_ACTION_UNSTRUCTURED_FEEDBACK:
                 actionInt = Action.ActionType.ACTION_TYPE_UNSTRUCTURED_FEEDBACK;
                 break;
+            case APIAI_ACTION_CONTACT_HUMAN_EXPERT:
+                actionInt = Action.ActionType.ACTION_TYPE_USER_ASKS_FOR_HUMAN_EXPERT;
+                break;
         }
         if (listener != null) {
             listener.onResult(new Action(response, actionInt), result);
@@ -278,6 +286,20 @@ public class ApiAiClient implements AIListener {
     }
 
     public void cleanup() {
+    }
+
+    public void resetContexts() {
+        threadpool.submit(new Runnable() {
+            @Override
+            public void run() {
+                boolean contextsCleared = aiDataService.resetContexts();
+                if (contextsCleared) {
+                    DobbyLog.v("Context clearing succeeded");
+                } else {
+                    DobbyLog.v("Context clearing failed");
+                }
+            }
+        });
     }
 
     /////// AIListener methods :

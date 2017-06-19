@@ -40,6 +40,7 @@ import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_ASK_FOR_LONG_S
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_BANDWIDTH_TEST;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_CANCEL_BANDWIDTH_TEST;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_CONTACT_HUMAN_EXPERT;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_DEFAULT_FALLBACK;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_DIAGNOSE_SLOW_INTERNET;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_LIST_DOBBY_FUNCTIONS;
@@ -51,6 +52,7 @@ import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_SHOW_LONG_SUGG
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_SHOW_SHORT_SUGGESTION;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_UNKNOWN;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_UNSTRUCTURED_FEEDBACK;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_USER_ASKS_FOR_HUMAN_EXPERT;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_WELCOME;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_WIFI_CHECK;
 
@@ -67,8 +69,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     private DobbyThreadpool threadpool;
     private ApiAiClient apiAiClient;
 
-    @Nullable
-    private ResponseCallback responseCallback;
+    @Nullable private ResponseCallback responseCallback;
     private InferenceEngine inferenceEngine;
     private boolean useApiAi = false; // We do not use ApiAi for the WifiDoc app.
     private AtomicBoolean repeatBwWifiPingAction;
@@ -77,6 +78,9 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     private boolean longSuggestionShown = false;
     private boolean wifiCheckDone = false;
     private boolean shortSuggestionShown = false;
+    private boolean userAskedForHumanExpert = false;
+    private boolean chatInExpertMode = false;
+
 
 
     @Inject
@@ -99,6 +103,8 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         void showBandwidthViewCard(DataInterpreter.BandwidthGrade bandwidthGrade);
         void showNetworkInfoViewCard(DataInterpreter.WifiGrade wifiGrade, String isp, String ip);
         void showDetailedSuggestions(SuggestionCreator.Suggestion suggestion);
+        void contactExpertAndGetETA();
+        void onUserMessageAvailable(String text, boolean sendMessageToExpert);
     }
 
     @Inject
@@ -159,6 +165,12 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         DobbyLog.v("In takeAction with action: " + action.getAction() + " and user resp: " + action.getUserResponse());
         setLastAction(action.getAction());
         showMessageToUser(action.getUserResponse());
+
+        //Suppress non-action messages from bot when the expert is talking to the user.
+        //if (!(chatInExpertMode && Action.isNonEssentialAction(action))) {
+        //    showMessageToUser(action.getUserResponse());
+        //}
+
         if (responseCallback != null) {
             responseCallback.showUserActionOptions(getPotentialUserResponses(lastAction));
         }
@@ -172,8 +184,6 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                     //Clear the ping/wifi cache to get fresh results.
                     clearCache();
                 }
-                //Action diagnoseAction = inferenceEngine.addGoal(InferenceEngine.Goal.GOAL_DIAGNOSE_SLOW_INTERNET);
-                //takeAction(diagnoseAction);
                 return;
             case ACTION_TYPE_CANCEL_BANDWIDTH_TEST:
                 DobbyLog.i("Starting ACTION CANCEL BANDWIDTH TEST.");
@@ -208,7 +218,16 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                     showMessageToUser(lastSuggestion.getTitle());
                     dobbyAnalytics.wifiExpertShowShortSuggestion(lastSuggestion.getTitle());
                 }
-                sendEvent(ApiAiClient.APIAI_SHORT_SUGGESTION_SHOWN_EVENT);
+                //See if we are pending on contacting a human expert.
+                // If so, contact the human here and don't display long suggestion.
+                // User has not run a full test -- run a full test and then contact the expert
+                if (userAskedForHumanExpert) {
+                    String messageToShow = "I will contact a human expert with these results...";
+                    Action actionToTake = new Action(messageToShow, ACTION_TYPE_CONTACT_HUMAN_EXPERT);
+                    takeAction(actionToTake);
+                } else {
+                    sendEvent(ApiAiClient.APIAI_SHORT_SUGGESTION_SHOWN_EVENT);
+                }
                 break;
             case ACTION_TYPE_SHOW_LONG_SUGGESTION:
                 //Show the long suggestion here and send the event
@@ -289,6 +308,33 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                     dobbyAnalytics.wifiExpertUnstructuredFeedbackAfterWifiCheck(action.getUserResponse());
                 }
                 break;
+            case ACTION_TYPE_USER_ASKS_FOR_HUMAN_EXPERT:
+                String messageToShow = Utils.EMPTY_STRING;
+                Action actionToTake;
+                if (lastSuggestion != null) {
+                    //User has already run a test and now needs help -- contact the expert
+                    messageToShow = "Sure, I will contact a person with Wifi Expertise who can look at your problem. ";
+                    actionToTake = new Action(messageToShow, ACTION_TYPE_CONTACT_HUMAN_EXPERT);
+                } else {
+                    // User has not run a full test -- run a full test and then contact the expert
+                    messageToShow = "Sure, I will contact a person with Wifi Expertise who can look at your problem. " +
+                            "I will first run some tests so the expert can identify the issue";
+                    actionToTake = new Action(messageToShow, ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS);
+                }
+                userAskedForHumanExpert = true;
+                takeAction(actionToTake);
+                break;
+            case ACTION_TYPE_CONTACT_HUMAN_EXPERT:
+                //We are here and we have the results. Now tell the user ETA and next steps.
+                chatInExpertMode = true;
+                //Fulfilled the request to contact expert, so setting to false.
+                userAskedForHumanExpert = false;
+                String expertContactMessage = "Contacting Wifi Expert and getting ETA now ...";
+                showMessageToUser(expertContactMessage);
+                if (responseCallback != null) {
+                    responseCallback.contactExpertAndGetETA();
+                }
+                break;
             default:
                 DobbyLog.i("Unknown Action");
                 break;
@@ -310,15 +356,26 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         return networkLayer.fetchLastKnownLocation();
     }
 
-    public void sendQuery(String text) {
+    public void sendQuery(String text, boolean isButtonActionText ) {
         if (useApiAi) {
-            if (networkLayer.isWifiOnline()) {
-                apiAiClient.sendTextQuery(text, null, getLastAction(), this);
-            } else {
-                apiAiClient.processTextQueryOffline(text, null, getLastAction(), this);
+            if (!chatInExpertMode || isButtonActionText) {
+                if (networkLayer.isWifiOnline()) {
+                    if (isQueryRequestForHumanExpert(text)) {
+                        //User is asking for human through button,
+                        //so reset the contexts before sending the request
+                        apiAiClient.resetContexts();
+                    }
+                    apiAiClient.sendTextQuery(text, null, getLastAction(), this);
+                } else {
+                    //Context doesn't matter here.
+                    apiAiClient.processTextQueryOffline(text, null, getLastAction(), this);
+                }
             }
         } else {
             DobbyLog.w("Ignoring text query for Wifi doc version :" + text);
+        }
+        if (responseCallback != null) {
+            responseCallback.onUserMessageAvailable(text, chatInExpertMode);
         }
     }
 
@@ -351,6 +408,9 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         responseCallback = null;
     }
 
+    private boolean isQueryRequestForHumanExpert(String text) {
+        return (text.toLowerCase().contains("contact human"));
+    }
 
     private List<Integer> getPotentialUserResponses(@Action.ActionType int lastActionShownToUser) {
         ArrayList<Integer> responseList = new ArrayList<Integer>();
@@ -403,6 +463,9 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 lastActionShownToUser != ACTION_TYPE_DIAGNOSE_SLOW_INTERNET &&
                 lastActionShownToUser != ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS) {
             responseList.add(UserResponse.ResponseType.SHOW_LAST_SUGGESTION_DETAILS);
+        }
+        if (lastActionShownToUser != ACTION_TYPE_BANDWIDTH_TEST) {
+            responseList.add(UserResponse.ResponseType.CONTACT_HUMAN_EXPERT);
         }
         return responseList;
     }
@@ -637,6 +700,8 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
 
     public void performAndRecordPingAction() {
         final ComposableOperation ping = pingOperation();
+        //Clear the cache of results first
+        clearCache();
         ping.getFuture().addListener(new Runnable() {
             @Override
             public void run() {
@@ -676,6 +741,8 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
 
     public void performAndRecordWifiAction() {
         final ComposableOperation wifiScan = wifiScanOperation();
+        //Clear the cache of results first
+        clearCache();
         wifiScan.getFuture().addListener(new Runnable() {
             @Override
             public void run() {

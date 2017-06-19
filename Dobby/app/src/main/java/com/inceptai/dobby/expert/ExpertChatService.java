@@ -219,18 +219,25 @@ public class ExpertChatService implements
         listenerConnected = true;
     }
 
-    public void pushChatMessage(ExpertChat expertChat) {
+    public void pushUserChatMessage(ExpertChat expertChat, boolean shouldContactExpert) {
         getChatReference().push().setValue(expertChat);
-        if (assignedExpertUsername == null || assignedExpertUsername.isEmpty()) {
-            sendExpertNotificationToAll(expertChat);
-        } else {
-            sendExpertNotification(assignedExpertUsername, expertChat);
+        if (shouldContactExpert) {
+            if (assignedExpertUsername == null || assignedExpertUsername.isEmpty()) {
+                sendExpertNotificationToAll(expertChat);
+            } else {
+                sendExpertNotification(assignedExpertUsername, expertChat);
+            }
         }
     }
 
     public void pushMetaChatMessage(int metaMessageType) {
         ExpertChat expertChat = new ExpertChat();
         expertChat.setMessageType(metaMessageType);
+        getChatReference().push().setValue(expertChat);
+    }
+
+
+    public void pushBotChatMessage(ExpertChat expertChat) {
         getChatReference().push().setValue(expertChat);
     }
 
@@ -248,6 +255,14 @@ public class ExpertChatService implements
         for (ExpertData expertData : expertList) {
             sendExpertNotification(expertData.getAvatar(), expertChat);
         }
+    }
+
+    public void sendUserLeftMetaMessage() {
+        pushMetaChatMessage(ExpertChat.MSG_TYPE_META_USER_LEFT);
+    }
+
+    public void sendUserEnteredMetaMessage() {
+        pushMetaChatMessage(ExpertChat.MSG_TYPE_META_USER_ENTERED);
     }
 
     // TODO
@@ -361,6 +376,7 @@ public class ExpertChatService implements
 
     private static ExpertChat parse(DataSnapshot dataSnapshot) {
         ExpertChat expertChat = dataSnapshot.getValue(ExpertChat.class);
+        expertChat.id = dataSnapshot.getKey();
         return expertChat;
     }
 

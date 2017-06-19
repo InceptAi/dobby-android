@@ -31,6 +31,7 @@ import com.inceptai.dobby.ai.DataInterpreter;
 import com.inceptai.dobby.ai.RtDataSource;
 import com.inceptai.dobby.ai.SuggestionCreator;
 import com.inceptai.dobby.ai.UserResponse;
+import com.inceptai.dobby.expert.ExpertChat;
 import com.inceptai.dobby.model.BandwidthStats;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.speedtest.BandwidthTestCodes;
@@ -50,6 +51,7 @@ import java.util.Locale;
 import javax.inject.Inject;
 
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.CANCEL;
+import static com.inceptai.dobby.ai.UserResponse.ResponseType.CONTACT_HUMAN_EXPERT;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.LIST_ALL_FUNCTIONS;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.RUN_BW_TESTS;
@@ -83,6 +85,8 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     private static final int MSG_SHOW_STATUS = 8;
     private static final int MSG_SHOW_OVERALL_NETWORK_STATUS = 9;
     private static final int MSG_SHOW_DETAILED_SUGGESTIONS = 10;
+    private static final int MSG_SHOW_EXPERT_CHAT = 11;
+    private static final int MSG_UPDATE_ETA = 12;
 
 
     private static final int BW_TEST_INITIATED = 200;
@@ -140,7 +144,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
          * Called when user enters a text.
          * @param text
          */
-        void onUserQuery(String text);
+        void onUserQuery(String text, boolean isButtonActionText);
         void onMicPressed();
         void onRecyclerViewReady();
         void onFragmentDetached();
@@ -207,12 +211,12 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
                 }
                 if (actionId == EditorInfo.IME_NULL && event.getAction() == KeyEvent.ACTION_DOWN) {
                     DobbyLog.i("ENTER 1");
-                    processTextQuery(text);
+                    processTextQuery(text, false);
                 } else if (actionId == EditorInfo.IME_ACTION_DONE ||
                         actionId == EditorInfo.IME_ACTION_GO ||
                         actionId == EditorInfo.IME_ACTION_NEXT) {
                     DobbyLog.i("ENTER 2");
-                    processTextQuery(text);
+                    processTextQuery(text, false);
                 }
                 queryEditText.getText().clear();
                 return false;
@@ -391,6 +395,10 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         Message.obtain(handler, MSG_SHOW_USER_ACTION_BUTTONS, userResponseTypes).sendToTarget();
     }
 
+    public void showExpertChatMessage(String text) {
+        Message.obtain(handler, MSG_SHOW_EXPERT_CHAT, text).sendToTarget();
+    }
+
     @Override
     public boolean handleMessage(Message msg) {
         switch (msg.what) {
@@ -402,9 +410,15 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
                 break;
             case MSG_SHOW_STATUS:
                 // Add to the recycler view.
-                DobbyLog.v("In handleMessage for DobbyChat");
+                DobbyLog.v("In handleMessage for DobbyChat show status");
                 String status = (String) msg.obj;
                 addDobbyChat(status, true);
+                break;
+            case MSG_SHOW_EXPERT_CHAT:
+                // Add to the recycler view.
+                DobbyLog.v("In handleMessage for ExpertChat");
+                String expertChatText = (String) msg.obj;
+                addExpertChat(expertChatText);
                 break;
             case MSG_SHOW_RT_GRAPH:
                 RtDataSource<Float, Integer> rtDataSource = (RtDataSource<Float, Integer>) msg.obj;
@@ -530,6 +544,29 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         }
     }
 
+    private void addExpertChatEntry(ExpertChat expertChat, boolean isStatusMessage) {
+        //TODO: Move completely to expert chat service
+        String expertChatText = expertChat.getText();
+        ChatEntry chatEntry;
+        if (expertChat.getMessageType() == ExpertChat.MSG_TYPE_USER_TEXT) {
+            dobbyAnalytics.sentMessageToExpert();
+            //chatEntry = new ChatEntry(expertChatText.trim(), ChatEntry.USER_CHAT, isStatusMessage);
+        } else {
+            chatEntry = new ChatEntry(expertChatText.trim(), ChatEntry.EXPERT_CHAT, isStatusMessage);
+            recyclerViewAdapter.addEntryAtBottom(chatEntry);
+            chatRv.scrollToPosition(recyclerViewAdapter.getItemCount() - 1);
+            dobbyAnalytics.receivedMessageFromExpert();
+        }
+    }
+
+    private void addExpertChat(String expertChatText) {
+        ChatEntry chatEntry = new ChatEntry(expertChatText.trim(), ChatEntry.EXPERT_CHAT, false);
+        recyclerViewAdapter.addEntryAtBottom(chatEntry);
+        chatRv.scrollToPosition(recyclerViewAdapter.getItemCount() - 1);
+        dobbyAnalytics.receivedMessageFromExpert();
+    }
+
+
     private void showBandwidthGauge(BandwidthObserver observer) {
         observer.registerCallback(this);
         uiStateChange(UI_STATE_SHOW_BW_GAUGE);
@@ -554,6 +591,9 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
                 break;
             case SHOW_LAST_SUGGESTION_DETAILS:
                 dobbyAnalytics.wifiExpertMoreDetailsButtonClicked();
+                break;
+            case CONTACT_HUMAN_EXPERT:
+                //TODO record analytic event here
                 break;
         }
     }
@@ -585,22 +625,22 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
                 @Override
                 public void onClick(View v) {
                     logUserResponseButtonClickedEvent(userResponseType);
-                    processTextQuery(buttonText);
+                    processTextQuery(buttonText, true);
                 }
             });
             actionMenu.addView(button);
         }
     }
 
-    private void processTextQuery(String text) {
-        if (text.length() < 2) {
-            return;
-        }
+    private void processTextQuery(String text, boolean isButtonActionText) {
+//        if (text.length() < 2) {
+//            return;
+//        }
         addUserChat(text);
         useVoiceOutput = false;
         // Parent activity callback.
         if (mListener != null) {
-            mListener.onUserQuery(text);
+            mListener.onUserQuery(text, isButtonActionText);
         }
     }
 

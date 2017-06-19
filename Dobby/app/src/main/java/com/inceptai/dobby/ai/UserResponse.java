@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.ASK_ABOUT_DOBBY;
+import static com.inceptai.dobby.ai.UserResponse.ResponseType.CONTACT_HUMAN_EXPERT;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.CANCEL;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.LIST_ALL_FUNCTIONS;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.NO;
@@ -38,7 +39,8 @@ public class UserResponse {
             ASK_ABOUT_DOBBY,
             NO_RESPONSE,
             SHOW_LAST_SUGGESTION_DETAILS,
-            NO_COMMENTS
+            NO_COMMENTS,
+            CONTACT_HUMAN_EXPERT
     })
     @Retention(RetentionPolicy.SOURCE)
     public @interface ResponseType {
@@ -53,6 +55,7 @@ public class UserResponse {
         int NO_RESPONSE = 8;
         int SHOW_LAST_SUGGESTION_DETAILS = 9;
         int NO_COMMENTS = 10;
+        int CONTACT_HUMAN_EXPERT = 11;
     }
 
     /* User response to be shown, null for no response. */
@@ -105,6 +108,8 @@ public class UserResponse {
                 return "Details";
             case NO_COMMENTS:
                 return "Cancel";
+            case CONTACT_HUMAN_EXPERT:
+                return "Contact Human Expert";
             case NO_RESPONSE:
             default:
                 return Utils.EMPTY_STRING;
