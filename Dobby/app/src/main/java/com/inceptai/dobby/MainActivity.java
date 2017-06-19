@@ -247,6 +247,15 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    public void showStatus(String text) {
+        DobbyLog.v("In showStatus of MainActivity: text: " + text);
+        if (isFragmentActive) {
+            chatFragment.showStatus(text);
+        }
+        pushBotChatMessage(text);
+    }
+
+    @Override
     public void showBandwidthViewCard(DataInterpreter.BandwidthGrade bandwidthGrade) {
         if (isFragmentActive) {
             chatFragment.addBandwidthResultsCardView(bandwidthGrade);
@@ -380,7 +389,7 @@ public class MainActivity extends AppCompatActivity
         currentEtaSeconds = newEtaSeconds;
         expertIsPresent = isPresent;
         if (showInChat && isFragmentActive) {
-            chatFragment.showResponse(message);
+            chatFragment.showStatus(message);
         }
     }
 

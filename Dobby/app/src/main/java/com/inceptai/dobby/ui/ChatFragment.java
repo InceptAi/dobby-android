@@ -544,6 +544,11 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         }
     }
 
+    public void showStatus(String message) {
+        DobbyLog.v("ChatF: showResponse text " + message);
+        Message.obtain(handler, MSG_SHOW_STATUS, message).sendToTarget();
+    }
+
     private void addExpertChatEntry(ExpertChat expertChat, boolean isStatusMessage) {
         //TODO: Move completely to expert chat service
         String expertChatText = expertChat.getText();
@@ -674,10 +679,6 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         showStatus(message);
     }
 
-    private void showStatus(String message) {
-        DobbyLog.v("ChatF: showResponse text " + message);
-        Message.obtain(handler, MSG_SHOW_STATUS, message).sendToTarget();
-    }
 
     private void updateBandwidthGauge(Message msg) {
         Utils.BandwidthValue bandwidthValue = (Utils.BandwidthValue) msg.obj;

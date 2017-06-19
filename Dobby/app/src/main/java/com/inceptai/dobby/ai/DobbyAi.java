@@ -105,6 +105,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         void showDetailedSuggestions(SuggestionCreator.Suggestion suggestion);
         void contactExpertAndGetETA();
         void onUserMessageAvailable(String text, boolean sendMessageToExpert);
+        void showStatus(String text);
     }
 
     @Inject
@@ -330,8 +331,9 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 //Fulfilled the request to contact expert, so setting to false.
                 userAskedForHumanExpert = false;
                 String expertContactMessage = "Contacting Wifi Expert and getting ETA now ...";
-                showMessageToUser(expertContactMessage);
+                //showMessageToUser(expertContactMessage);
                 if (responseCallback != null) {
+                    responseCallback.showStatus(expertContactMessage);
                     responseCallback.contactExpertAndGetETA();
                 }
                 break;
@@ -464,7 +466,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 lastActionShownToUser != ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS) {
             responseList.add(UserResponse.ResponseType.SHOW_LAST_SUGGESTION_DETAILS);
         }
-        if (lastActionShownToUser != ACTION_TYPE_BANDWIDTH_TEST) {
+        if (lastActionShownToUser != ACTION_TYPE_BANDWIDTH_TEST && !chatInExpertMode) {
             responseList.add(UserResponse.ResponseType.CONTACT_HUMAN_EXPERT);
         }
         return responseList;
