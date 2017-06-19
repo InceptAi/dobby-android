@@ -162,21 +162,19 @@ public class MainActivity extends AppCompatActivity
         // Insert the fragment by replacing any existing fragment
         FragmentManager fragmentManager = getSupportFragmentManager();
         Fragment existingFragment = fragmentManager.findFragmentByTag(tag);
-
-        if (existingFragment == null) {
-            try {
-                existingFragment = (Fragment) fragmentClass.newInstance();
-            } catch (Exception e) {
-                Log.e(Utils.TAG, "Unable to create fragment: " + fragmentClass.getCanonicalName());
-                return null;
-            }
+        Fragment newFragment = null;
+        try {
+            newFragment = (Fragment) fragmentClass.newInstance();
+        } catch (Exception e) {
+            Log.e(Utils.TAG, "Unable to create fragment: " + fragmentClass.getCanonicalName());
+            return null;
         }
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        // fragmentTransaction.remove(existingFragment);
         fragmentTransaction.replace(R.id.placeholder_fl,
-                existingFragment, tag);
-        //fragmentTransaction.addToBackStack(null);
+                newFragment, tag);
         fragmentTransaction.commit();
-        return existingFragment;
+        return newFragment;
     }
 
     private void showWelcome(String photoUrl, String name) {
@@ -267,11 +265,18 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    protected void onStop() {
+        super.onStop();
+        // destroy fragments.
+    }
+
+    @Override
     public void onUserSelected(String userId) {
         selectedUserId = userId;
+        Utils.saveSharedSetting(this, Utils.SELECTED_USER_UUID, selectedUserId);
+        ExpertChatService.fetchInstance(this.getApplicationContext()).setSelectedUserId(selectedUserId);
         showChatFragment();
         navigationView.setCheckedItem(R.id.nav_user_chat);
-        Utils.saveSharedSetting(this, Utils.SELECTED_USER_UUID, selectedUserId);
     }
 
     @Override

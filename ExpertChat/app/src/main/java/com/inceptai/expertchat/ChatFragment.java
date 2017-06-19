@@ -119,7 +119,6 @@ public class ChatFragment extends Fragment {
         mSendButton = (Button) rootView.findViewById(R.id.sendButton);
         mFirebaseDatabaseReference = FirebaseDatabase.getInstance().getReference();
 
-
         // Initialize Firebase Measurement.
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(getContext());
 
@@ -156,6 +155,7 @@ public class ChatFragment extends Fragment {
 
     private void reloadData() {
         childPath = service.getPathForUserChat(selectedUserUuid);
+        roomTitleTv.setText("UUID: " + selectedUserUuid + "\n" + "Path: " + childPath);
         Log.i(Utils.TAG, "Selected UUID: " + selectedUserUuid);
         Log.i(Utils.TAG, "ChildPath for retrieving chat messages: " + childPath);
 
@@ -221,5 +221,11 @@ public class ChatFragment extends Fragment {
         });
 
         mMessageRecyclerView.setAdapter(mFirebaseAdapter);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        getFragmentManager().beginTransaction().remove(this).commitAllowingStateLoss();
     }
 }

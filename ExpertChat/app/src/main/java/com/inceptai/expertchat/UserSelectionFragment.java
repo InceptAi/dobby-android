@@ -8,6 +8,7 @@ import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -85,9 +86,11 @@ public class UserSelectionFragment extends Fragment implements ChildEventListene
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
+        Log.i(Utils.TAG, "UserSelectionFragment: onCreateView called.");
         View rootView = inflater.inflate(R.layout.fragment_user_selection, container, false);
         progressBar = (ProgressBar) rootView.findViewById(R.id.mainProgressBar);
         roomListView = (ListView) rootView.findViewById(R.id.mainListView);
+        selectedUserId = expertChatService.getSelectedUserId();
         arrayAdapter = new RoomArrayAdapter(getContext(), android.R.layout.simple_list_item_1, android.R.id.text1, new ArrayList<String>(), selectedUserId);
         roomListView.setAdapter(arrayAdapter);
         roomListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -101,6 +104,7 @@ public class UserSelectionFragment extends Fragment implements ChildEventListene
 
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(String userId) {
+        Log.i(Utils.TAG, "new UUID: " + userId);
         selectedUserId = userId;
         if (mListener != null) {
             mListener.onUserSelected(userId);
@@ -151,9 +155,10 @@ public class UserSelectionFragment extends Fragment implements ChildEventListene
     }
 
     @Override
-    public void onStop() {
+    public void onPause() {
+        super.onPause();
         mFirebaseDatabaseReference.removeEventListener(this);
-        super.onStop();
+        getFragmentManager().beginTransaction().remove(this).commitAllowingStateLoss();
     }
 
     private void noUserChatsFound() {
