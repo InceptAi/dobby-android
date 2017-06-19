@@ -64,7 +64,10 @@ public class ExpertChatService implements
     private static final int WIFI_SCAN_ACTION = 2001;
     private static final int PING_ACTION = 2002;
     private static final int HTTP_ACTION = 2003;
-    private static final int ALL_ACTIONS = 2100;
+    private static final int ALL_TESTS = 2100;
+
+    private static final int ASK_FOR_FEEDBACK_ACTION = 3001;
+    private static final int SWITCH_TO_BOT_MODE = 3002;
 
 
     private static ExpertChatService INSTANCE;
@@ -406,8 +409,17 @@ public class ExpertChatService implements
                 dobbyAi.performAndRecordPingAction();
                 return;
             case HTTP_ACTION:
-            case ALL_ACTIONS:
-
+                //no-op for now
+                return;
+            case ALL_TESTS:
+                //no-op for now
+                return;
+            case ASK_FOR_FEEDBACK_ACTION:
+                dobbyAi.triggerFeedbackRequest();
+                break;
+            case SWITCH_TO_BOT_MODE:
+                dobbyAi.triggerSwitchToBotMode();
+                break;
         }
     }
 
@@ -419,6 +431,10 @@ public class ExpertChatService implements
                     triggerDiagnosticAction(WIFI_SCAN_ACTION);
                 } else if (expertMessage.toLowerCase().contains("ping")) {
                     triggerDiagnosticAction(PING_ACTION);
+                } else if (expertMessage.toLowerCase().contains("feedback")) {
+                    triggerDiagnosticAction(ASK_FOR_FEEDBACK_ACTION);
+                } else if (expertMessage.toLowerCase().contains("bot")) {
+                    triggerDiagnosticAction(SWITCH_TO_BOT_MODE);
                 }
                 return true;
             }

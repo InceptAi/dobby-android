@@ -26,7 +26,7 @@ public class Action {
             ActionType.ACTION_TYPE_SHOW_SHORT_SUGGESTION,
             ActionType.ACTION_TYPE_SHOW_LONG_SUGGESTION,
             ActionType.ACTION_TYPE_UNKNOWN,
-            ACTION_TYPE_WELCOME,
+            ActionType.ACTION_TYPE_WELCOME,
             ActionType.ACTION_TYPE_DEFAULT_FALLBACK,
             ActionType.ACTION_TYPE_ASK_FOR_LONG_SUGGESTION,
             ActionType.ACTION_TYPE_SHOW_WIFI_ANALYSIS,
@@ -38,7 +38,9 @@ public class Action {
             ActionType.ACTION_TYPE_NO_FEEDBACK,
             ActionType.ACTION_TYPE_UNSTRUCTURED_FEEDBACK,
             ActionType.ACTION_TYPE_USER_ASKS_FOR_HUMAN_EXPERT,
-            ActionType.ACTION_TYPE_CONTACT_HUMAN_EXPERT
+            ActionType.ACTION_TYPE_CONTACT_HUMAN_EXPERT,
+            ActionType.ACTION_TYPE_RUN_TESTS_FOR_EXPERT,
+            ActionType.ACTION_TYPE_CANCEL_TESTS_FOR_EXPERT
     })
     @Retention(RetentionPolicy.SOURCE)
     public @interface ActionType {
@@ -64,6 +66,8 @@ public class Action {
         int ACTION_TYPE_UNSTRUCTURED_FEEDBACK = 19;
         int ACTION_TYPE_USER_ASKS_FOR_HUMAN_EXPERT = 20;
         int ACTION_TYPE_CONTACT_HUMAN_EXPERT = 21;
+        int ACTION_TYPE_RUN_TESTS_FOR_EXPERT = 22;
+        int ACTION_TYPE_CANCEL_TESTS_FOR_EXPERT = 23;
     }
 
     /* User response to be shown, null for no response. */

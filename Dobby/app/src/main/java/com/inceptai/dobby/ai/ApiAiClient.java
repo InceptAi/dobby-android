@@ -34,6 +34,8 @@ public class ApiAiClient implements AIListener {
     public static final String APIAI_SHORT_SUGGESTION_SHOWN_EVENT = "short_suggestion_shown_event";
     public static final String APIAI_LONG_SUGGESTION_SHOWN_EVENT = "long_suggestion_shown_event";
     public static final String APIAI_WIFI_ANALYSIS_SHOWN_EVENT = "wifi_analysis_shown_event";
+    public static final String APIAI_RUN_TESTS_FOR_EXPERT_EVENT = "run_tests_for_expert_event";
+
 
     //API AI actions
     public static final String APIAI_ACTION_DIAGNOSE_SLOW_INTERNET = "diagnose-slow-internet-action";
@@ -50,6 +52,8 @@ public class ApiAiClient implements AIListener {
     public static final String APIAI_ACTION_NO_FEEDBACK = "user-says-no-to-giving-feedback";
     public static final String APIAI_ACTION_UNSTRUCTURED_FEEDBACK = "user-feedback-unstructured";
     public static final String APIAI_ACTION_CONTACT_HUMAN_EXPERT = "contact-human-expert-action";
+    public static final String APIAI_ACTION_RUN_TESTS_FOR_EXPERT = "run-tests-for-expert-action";
+    public static final String APIAI_ACTION_CANCEL_TESTS_FOR_EXPERT = "cancel-expert-tests";
 
 
     private static final String CLIENT_ACCESS_TOKEN = "81dbd5289ee74637bf582fc3112b7dcb";
@@ -267,6 +271,12 @@ public class ApiAiClient implements AIListener {
             case APIAI_ACTION_CONTACT_HUMAN_EXPERT:
                 actionInt = Action.ActionType.ACTION_TYPE_USER_ASKS_FOR_HUMAN_EXPERT;
                 break;
+            case APIAI_ACTION_RUN_TESTS_FOR_EXPERT:
+                actionInt = Action.ActionType.ACTION_TYPE_RUN_TESTS_FOR_EXPERT;
+                break;
+            case APIAI_ACTION_CANCEL_TESTS_FOR_EXPERT:
+                actionInt = Action.ActionType.ACTION_TYPE_CANCEL_TESTS_FOR_EXPERT;
+                break;
         }
         if (listener != null) {
             listener.onResult(new Action(response, actionInt), result);
@@ -288,7 +298,7 @@ public class ApiAiClient implements AIListener {
     public void cleanup() {
     }
 
-    public void resetContexts() {
+    void resetContexts() {
         threadpool.submit(new Runnable() {
             @Override
             public void run() {
