@@ -34,7 +34,6 @@ public class ExpertChatActivity extends AppCompatActivity implements
     public static final String CHAT_MESSAGES_CHILD = "expert_chat_rooms";
     private static final String PREF_FIRST_CHAT = "first_expert_chat";
 
-    public static final String INTENT_NOTIF_SOURCE = "IntentNotifSource";
 
     private static final int MSG_UPDATE_CHAT = 1001;
     private static final int MSG_UPDATE_ETA = 1002;
@@ -144,6 +143,7 @@ public class ExpertChatActivity extends AppCompatActivity implements
 
         // addGeneralMessage(getEtaString(currentEtaSeconds, isPresent));
         sendUserEnteredMetaMessage();
+        expertChatService.disableNotifications();
     }
 
     @Override
@@ -153,7 +153,7 @@ public class ExpertChatActivity extends AppCompatActivity implements
     }
 
     private void processIntent(Intent intent) {
-        String notifSource = intent.getStringExtra(ExpertChatActivity.INTENT_NOTIF_SOURCE);
+        String notifSource = intent.getStringExtra(ExpertChatService.INTENT_NOTIF_SOURCE);
         if (notifSource != null) {
             dobbyAnalytics.expertChatNotificationConsumed();
         }
@@ -263,6 +263,7 @@ public class ExpertChatActivity extends AppCompatActivity implements
         sendUserLeftMetaMessage();
         expertChatService.disconnect();
         expertChatService.unregisterChatCallback();
+        expertChatService.enableNotifications();
         super.onStop();
     }
 

@@ -16,6 +16,7 @@ import android.support.v4.app.TaskStackBuilder;
 import android.support.v7.app.NotificationCompat;
 
 import com.google.common.eventbus.Subscribe;
+import com.google.firebase.crash.FirebaseCrash;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -50,6 +51,7 @@ public class ExpertChatService implements
 
     private static final String USER_ROOT = BuildConfig.FLAVOR + "/" + BuildConfig.BUILD_TYPE  + "/" + "users/";
     private static final String WIFI_EXPERT_BUILD_FLAVOR = "dobby";
+    private static final String WIFI_TESTER_BUILD_FLAVOR = "wifidoc";
     private static final String CHAT_ROOM_CHILD = BuildConfig.FLAVOR + "_chat_rooms/" + BuildConfig.BUILD_TYPE;
     private static final String FCM_KEY = "fcmToken";
     private static final String ASSIGNED_EXPERT_KEY = "assignedExpert";
@@ -57,6 +59,7 @@ public class ExpertChatService implements
     private static final String CHAT_NOTIFICATION_TITLE = "You have a new chat message.";
     private static final String EXPERT_BASE = "/expert";
 
+    public static final String INTENT_NOTIF_SOURCE = "NotifSource";
     public static final long ETA_OFFLINE = 24L * 60L * 60L;  // 24 hours.
     public static final long ETA_ONLINE = 2L * 60L; // 2 minutes or less.
     public static final long ETA_PRESENT = 20L * 60L; // 20 minutes or less.
@@ -82,6 +85,7 @@ public class ExpertChatService implements
     private List<ExpertData> expertList;
     private long currentEtaSeconds;
     private boolean listenerConnected = false; // whether firebase listerners are registered.
+    private boolean notificationsEnabled = true;
 
     // TODO Use this field.
     private boolean isChatEmpty;
@@ -125,6 +129,14 @@ public class ExpertChatService implements
         return INSTANCE;
     }
 
+    public void disableNotifications() {
+        notificationsEnabled = false;
+    }
+
+    public void enableNotifications() {
+        notificationsEnabled = true;
+    }
+
     public void addAssignedExpertNameListener() {
         getAssignedExpertReference().addValueEventListener(new ValueEventListener() {
             @Override
@@ -163,19 +175,19 @@ public class ExpertChatService implements
         DobbyLog.i("Title: " + title);
         DobbyLog.i(" Body: " + body);
         DobbyLog.i(" Data: " + data);
+        if (!notificationsEnabled) {
+            DobbyLog.v("Not showing notification.");
+            return;
+        }
         Intent intent = new Intent(context, ExpertChatActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        intent.putExtra(ExpertChatActivity.INTENT_NOTIF_SOURCE, source);
+        intent.putExtra(INTENT_NOTIF_SOURCE, source);
 
-        TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
-        // Adds the back stack
-        stackBuilder.addParentStack(ExpertChatActivity.class);
-        // Adds the Intent to the top of the stack
-        stackBuilder.addNextIntent(intent);
-        // Gets a PendingIntent containing the entire back stack
-        PendingIntent resultPendingIntent =
-                stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
-
+        PendingIntent resultPendingIntent = getPendingIntentForNotification(context, intent);
+        if (resultPendingIntent == null) {
+            FirebaseCrash.report(new RuntimeException("Null pending Intent for build flavor" + BuildConfig.FLAVOR));
+            return;
+        }
 
         int iconResource = WIFI_EXPERT_BUILD_FLAVOR.equals(BuildConfig.FLAVOR) ? R.mipmap.wifi_expert_launcher : R.mipmap.wifi_doc_launcher;
 
@@ -274,6 +286,28 @@ public class ExpertChatService implements
 
     public void sendUserEnteredMetaMessage() {
         pushMetaChatMessage(ExpertChat.MSG_TYPE_META_USER_ENTERED);
+    }
+
+    private PendingIntent getPendingIntentForNotification(Context context, Intent intent) {
+        PendingIntent pendingIntent = null;
+        if (BuildConfig.FLAVOR.equals(WIFI_TESTER_BUILD_FLAVOR)) {
+            TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
+
+            // Adds the back stack
+            stackBuilder.addParentStack(ExpertChatActivity.class);
+
+            // Adds the Intent to the top of the stack
+            stackBuilder.addNextIntent(intent);
+            // Gets a PendingIntent containing the entire back stack
+            pendingIntent =
+                    stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        } else if (BuildConfig.FLAVOR.equals(WIFI_EXPERT_BUILD_FLAVOR)) {
+            pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_ONE_SHOT);
+        } else {
+            DobbyLog.e("Unknown build flavor: " + BuildConfig.FLAVOR);
+        }
+        return pendingIntent;
     }
 
     // TODO

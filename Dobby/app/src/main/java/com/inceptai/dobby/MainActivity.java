@@ -408,7 +408,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void processIntent(Intent intent) {
-        String notifSource = intent.getStringExtra(ExpertChatActivity.INTENT_NOTIF_SOURCE);
+        String notifSource = intent.getStringExtra(ExpertChatService.INTENT_NOTIF_SOURCE);
         if (notifSource != null) {
             dobbyAnalytics.expertChatNotificationConsumed();
         }
