@@ -110,7 +110,7 @@ public class ExpertChatActivity extends AppCompatActivity implements
                 // Send messages on click.
                 ExpertChat expertChat = new
                         ExpertChat(mMessageEditText.getText().toString(), ExpertChat.MSG_TYPE_USER_TEXT);
-                expertChatService.pushChatMessage(expertChat);
+                expertChatService.pushUserChatMessage(expertChat, true);
                 mMessageEditText.setText("");
             }
         });
@@ -264,6 +264,12 @@ public class ExpertChatActivity extends AppCompatActivity implements
         expertChatService.disconnect();
         expertChatService.unregisterChatCallback();
         super.onStop();
+    }
+
+    @Override
+    protected void onStart() {
+        expertChatService.connect();
+        super.onStart();
     }
 
     private void saveChatStarted() {

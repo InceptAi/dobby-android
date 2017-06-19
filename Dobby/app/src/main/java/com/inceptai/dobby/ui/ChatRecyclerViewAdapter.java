@@ -55,6 +55,9 @@ public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
         } else if (viewType == ChatEntry.USER_CHAT) {
             View v = inflater.inflate(R.layout.user_chat, parent, false);
             viewHolder = new UserChatViewHolder(v);
+        } else if (viewType == ChatEntry.EXPERT_CHAT) {
+            View v = inflater.inflate(R.layout.expert_chat, parent, false);
+            viewHolder = new ExpertChatViewHolder(v);
         } else if (viewType == ChatEntry.RT_GRAPH) {
             View v = inflater.inflate(R.layout.rt_graph, parent, false);
             viewHolder = new RtGraphViewHolder(v);
@@ -87,9 +90,14 @@ public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
               configureUserViewHolder(vh2, position);
               break;
 
+          case ChatEntry.EXPERT_CHAT:
+              ExpertChatViewHolder expertChatViewHolder = (ExpertChatViewHolder) holder;
+              configureExpertViewHolder(expertChatViewHolder, position);
+              break;
+
           case ChatEntry.RT_GRAPH:
-              RtGraphViewHolder vh3 = (RtGraphViewHolder) holder;
-              configureRtGraphViewHolder(vh3, position);
+              RtGraphViewHolder vh4 = (RtGraphViewHolder) holder;
+              configureRtGraphViewHolder(vh4, position);
               break;
 
           case ChatEntry.BW_RESULTS_GAUGE_CARDVIEW:
@@ -125,6 +133,11 @@ public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
 
     private void configureUserViewHolder(UserChatViewHolder userChatViewHolder, int position) {
         userChatViewHolder.getUserChatTv().setText(entryList.get(position).getText());
+    }
+
+    private void configureExpertViewHolder(ExpertChatViewHolder expertChatViewHolder, int position) {
+        ChatEntry entry = entryList.get(position);
+        expertChatViewHolder.getExpertChatTextView().setText(entryList.get(position).getText());
     }
 
     private void configureBandwidthResultsViewHolder(BandwidthResultsCardViewHolder viewHolder, int position) {

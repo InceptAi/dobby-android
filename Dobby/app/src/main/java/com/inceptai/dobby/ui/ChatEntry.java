@@ -1,10 +1,6 @@
 package com.inceptai.dobby.ui;
 
-import android.support.annotation.Nullable;
-
 import com.inceptai.dobby.ai.DataInterpreter;
-
-import lecho.lib.hellocharts.model.LineChartData;
 
 /**
  * Created by arunesh on 3/28/17.
@@ -16,10 +12,11 @@ public class ChatEntry {
     // zero.
     public static final int DOBBY_CHAT= 0;
     public static final int USER_CHAT = 1;
-    public static final int RT_GRAPH = 2; /* real time graph */
-    public static final int BW_RESULTS_GAUGE_CARDVIEW = 3;
-    public static final int PING_RESULTS_CARDVIEW = 4;
-    public static final int OVERALL_NETWORK_CARDVIEW = 5;
+    public static final int EXPERT_CHAT = 2;
+    public static final int RT_GRAPH = 3; /* real time graph */
+    public static final int BW_RESULTS_GAUGE_CARDVIEW = 4;
+    public static final int PING_RESULTS_CARDVIEW = 5;
+    public static final int OVERALL_NETWORK_CARDVIEW = 6;
 
 
     private static int UNKNOWN = -1;
@@ -110,4 +107,5 @@ public class ChatEntry {
     public void setRouterIp(String routerIp) {
         this.routerIp = routerIp;
     }
+
 }

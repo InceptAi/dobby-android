@@ -184,6 +184,11 @@ public class ChatFragment extends Fragment {
                     viewHolder.fromExpertLayout.setVisibility(View.VISIBLE);
                     viewHolder.expertMessageTv.setText(expertChat.getText());
                     viewHolder.generalMessageTv.setVisibility(View.GONE);
+                } else if (ExpertChat.isBotChat(expertChat)) {
+                    viewHolder.fromUserLayout.setVisibility(View.GONE);
+                    viewHolder.fromExpertLayout.setVisibility(View.VISIBLE);
+                    viewHolder.expertMessageTv.setText("Bot: " + expertChat.getText());
+                    viewHolder.generalMessageTv.setVisibility(View.GONE);
                 } else if (ExpertChat.isUserChat(expertChat)) {
                     viewHolder.fromExpertLayout.setVisibility(View.GONE);
                     viewHolder.fromUserLayout.setVisibility(View.VISIBLE);

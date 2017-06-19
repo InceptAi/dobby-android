@@ -10,12 +10,13 @@ public class ExpertChat {
     private static final String EMPTY_STRING = "";
     public static final int MSG_TYPE_EXPERT_TEXT = 1001;
     public static final int MSG_TYPE_USER_TEXT = 1002;
+    public static final int MSG_TYPE_BOT_TEXT = 1003;
     public static final String SPECIAL_MESSAGE_PREFIX = "#";
 
 
     // General messages include ETA and welcome messages.
 
-    public static final int MSG_TYPE_GENERAL_MESSAGE = 1003;
+    public static final int MSG_TYPE_GENERAL_MESSAGE = 1004;
     public static final int MSG_TYPE_UNKNOWN = 1;
 
     public static final int MSG_TYPE_META_USER_LEFT = 5001;
@@ -28,6 +29,7 @@ public class ExpertChat {
     String text;
     int messageType;
     String timestamp;
+    long utcTimestampMs;
 
 
     public ExpertChat() {
@@ -41,7 +43,9 @@ public class ExpertChat {
         this.text = text;
         this.messageType = messageType;
         computeTimestamp();
+        utcTimestampMs = System.currentTimeMillis();
     }
+
 
     private void computeTimestamp() {
         Date date = new Date();
@@ -84,7 +88,16 @@ public class ExpertChat {
         return timestamp;
     }
 
+    public long getUtcTimestampMs() {
+        return utcTimestampMs;
+    }
+
+    public void setUtcTimestampMs(long utcTimestampMs) {
+        this.utcTimestampMs = utcTimestampMs;
+    }
+
     public void setTimestamp(String timestamp) {
         this.timestamp = timestamp;
     }
+
 }

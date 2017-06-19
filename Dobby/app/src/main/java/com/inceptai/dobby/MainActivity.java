@@ -33,10 +33,13 @@ import com.inceptai.dobby.ai.DobbyAi;
 import com.inceptai.dobby.ai.RtDataSource;
 import com.inceptai.dobby.ai.SuggestionCreator;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
+import com.inceptai.dobby.expert.ExpertChat;
+import com.inceptai.dobby.expert.ExpertChatService;
 import com.inceptai.dobby.heartbeat.HeartBeatManager;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.ui.ChatFragment;
 import com.inceptai.dobby.ui.DebugFragment;
+import com.inceptai.dobby.ui.ExpertChatActivity;
 import com.inceptai.dobby.ui.FakeDataFragment;
 import com.inceptai.dobby.ui.WifiDocDialogFragment;
 import com.inceptai.dobby.ui.WifiFragment;
@@ -44,18 +47,28 @@ import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 import javax.inject.Inject;
+
+import static com.inceptai.dobby.utils.Utils.EMPTY_STRING;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
         DobbyAi.ResponseCallback,
-        Handler.Callback, ChatFragment.OnFragmentInteractionListener {
+        Handler.Callback,
+        ChatFragment.OnFragmentInteractionListener,
+        ExpertChatService.ChatCallback {
 
     private static final int PERMISSION_COARSE_LOCATION_REQUEST_CODE = 101;
     private static final int SPEECH_RECOGNITION_REQUEST_CODE = 102;
+    private static final boolean ENABLE_HISTORY = false;
+
+    private static final String PREF_FIRST_CHAT = "first_dobby_expert_chat";
+
 
     @Inject DobbyApplication dobbyApplication;
     @Inject DobbyThreadpool threadpool;
@@ -69,6 +82,12 @@ public class MainActivity extends AppCompatActivity
     private Handler handler;
     private ChatFragment chatFragment;
     private boolean isFragmentActive = false;
+    private ExpertChatService expertChatService;
+    private boolean expertIsPresent = false;
+    private long currentEtaSeconds;
+    private long sessionStartedTimestamp;
+    private Set<String> expertChatIdsDisplayed;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,11 +112,21 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
+        expertChatIdsDisplayed = new HashSet<>();
+
         dobbyAi.setResponseCallback(this);
         handler = new Handler(this);
 
         setupChatFragment();
         heartBeatManager.setDailyHeartBeat();
+        expertChatService = ExpertChatService.get();
+
+
+        //TODO: Check do we need this
+        fetchChatMessages();
+        currentEtaSeconds = ExpertChatService.ETA_OFFLINE;
+        expertIsPresent = false;
+        sessionStartedTimestamp = System.currentTimeMillis();
     }
 
     private Fragment setupFragment(Class fragmentClass, String tag) {
@@ -131,6 +160,13 @@ public class MainActivity extends AppCompatActivity
         fragmentTransaction.commit();
     }
 
+    private void fetchChatMessages() {
+        expertChatService.setCallback(this);
+        if (!expertChatService.isListenerConnected()) {
+            //recyclerViewAdapter.clear();
+            expertChatService.fetchChatMessages();
+        }
+    }
 
     @Override
     public void onBackPressed() {
@@ -207,6 +243,16 @@ public class MainActivity extends AppCompatActivity
         if (isFragmentActive) {
             chatFragment.showResponse(text);
         }
+        pushBotChatMessage(text);
+    }
+
+    @Override
+    public void showStatus(String text) {
+        DobbyLog.v("In showStatus of MainActivity: text: " + text);
+        if (isFragmentActive) {
+            chatFragment.showStatus(text);
+        }
+        pushBotChatMessage(text);
     }
 
     @Override
@@ -239,6 +285,11 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    @Override
+    public void onUserQuery(String text, boolean isButtonActionText) {
+        dobbyAi.sendQuery(text, isButtonActionText);
+    }
+
     // From DobbyAi.ResponseCallback interface.
     @Override
     public void showRtGraph(RtDataSource<Float, Integer> rtDataSource) {
@@ -252,9 +303,10 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+
     @Override
-    public void onUserQuery(String text) {
-        dobbyAi.sendQuery(text);
+    public void onUserMessageAvailable(String text, boolean sendMessageToExpert) {
+        pushUserChatMessage(text, sendMessageToExpert);
     }
 
     @Override
@@ -263,14 +315,85 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void actionStarted() {
+    public void contactExpertAndGetETA() {
+        //Contact expert and show ETA to user
+        //Showing ETA to user
+        updateEta(currentEtaSeconds, expertIsPresent, true);
+        //Contacting expert
+        ExpertChat expertChat = new ExpertChat("Expert help needed here", ExpertChat.MSG_TYPE_BOT_TEXT);
+        expertChatService.pushUserChatMessage(expertChat, true);
+    }
+
+    //Handle ExpertChatServiceCallback
+    @Override
+    public void onMessageAvailable(ExpertChat expertChat) {
+        //Check the timestamp | if this is the history, then display all else just display the expert chat message
+        //TODO finish the function
+        if (!ENABLE_HISTORY) {
+            if (expertChat.getUtcTimestampMs() < sessionStartedTimestamp) {
+                //This message is in past and history is disabled
+                return;
+            }
+            if (expertChat.getMessageType() != ExpertChat.MSG_TYPE_EXPERT_TEXT) {
+                //History is disabled and message type is not expert type
+                return;
+            }
+        }
+
+        //Check if hashset contains this id
+        if (!expertChat.getId().equals(Utils.EMPTY_STRING) && expertChatIdsDisplayed.contains(expertChat.getId())) {
+            //We have already displayed this chat message
+            return;
+        }
+
+        expertChatIdsDisplayed.add(expertChat.getId());
+
+        switch (expertChat.getMessageType()) {
+            case ExpertChat.MSG_TYPE_EXPERT_TEXT:
+                chatFragment.showExpertChatMessage(expertChat.getText());
+                saveExpertChatStarted();
+                break;
+            case ExpertChat.MSG_TYPE_BOT_TEXT:
+                chatFragment.showResponse(expertChat.getText());
+                break;
+            case ExpertChat.MSG_TYPE_USER_TEXT:
+                chatFragment.addUserChat(expertChat.getText());
+                break;
+        }
+    }
+
+    @Override
+    public void onNoHistoryAvailable() {
 
     }
 
     @Override
-    public void actionCompleted() {
-
+    public void onEtaUpdated(long newEtaSeconds, boolean isPresent) {
+        updateEta(newEtaSeconds, isPresent, false);
     }
+
+    @Override
+    public void onEtaAvailable(long newEtaSeconds, boolean isPresent) {
+        updateEta(newEtaSeconds, isPresent, false);
+    }
+
+
+    private void updateEta(long newEtaSeconds, boolean isPresent, boolean showInChat) {
+        String messagePrefix = getResources().getString(R.string.expected_response_time_for_expert);
+        String message = EMPTY_STRING;
+        if (!isPresent || newEtaSeconds > ExpertChatService.ETA_12HOURS) {
+            message = "Our experts are current offline. You shall receive a response in about 12 hours.";
+        } else {
+            message = messagePrefix + " Less than " + Utils.timeSecondsToString(newEtaSeconds);
+        }
+        currentEtaSeconds = newEtaSeconds;
+        expertIsPresent = isPresent;
+        if (showInChat && isFragmentActive) {
+            chatFragment.showStatus(message);
+        }
+    }
+
+
 
     public void sendEvent(String eventString) {
         if (dobbyAi != null) {
@@ -278,21 +401,39 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void showAboutAndPrivacyPolicy() {
-        WifiDocDialogFragment fragment = WifiDocDialogFragment.forAboutAndPrivacyPolicy();
-        fragment.show(getSupportFragmentManager(), "About");
-        dobbyAnalytics.aboutShown();
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
     }
 
-    private void showFeedbackForm() {
-        WifiDocDialogFragment fragment = WifiDocDialogFragment.forFeedback(R.layout.activity_main);
-        fragment.show(getSupportFragmentManager(), "Feedback");
-        dobbyAnalytics.feedbackFormShown();
+    private void processIntent(Intent intent) {
+        String notifSource = intent.getStringExtra(ExpertChatActivity.INTENT_NOTIF_SOURCE);
+        if (notifSource != null) {
+            dobbyAnalytics.expertChatNotificationConsumed();
+        }
     }
 
-    private Fragment getFragmentByTag(String tag) {
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        return fragmentManager.findFragmentByTag(tag);
+    private void saveExpertChatStarted() {
+        Utils.saveSharedSetting(this,
+                PREF_FIRST_CHAT, Utils.FALSE_STRING);
+    }
+
+    private boolean isFirstChat() {
+        return Boolean.valueOf(Utils.readSharedSetting(this,
+                PREF_FIRST_CHAT, Utils.TRUE_STRING));
+    }
+
+    private void pushUserChatMessage(String text, boolean shouldShowToExpert) {
+        ExpertChat expertChat = new
+                ExpertChat(text, ExpertChat.MSG_TYPE_USER_TEXT);
+        expertChatService.pushUserChatMessage(expertChat, shouldShowToExpert);
+    }
+
+    private void pushBotChatMessage(String text) {
+        ExpertChat expertChat = new
+                ExpertChat(text, ExpertChat.MSG_TYPE_BOT_TEXT);
+        expertChatService.pushBotChatMessage(expertChat);
     }
 
     @TargetApi(Build.VERSION_CODES.M)
@@ -332,17 +473,30 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
+        fetchChatMessages();
+        processIntent(getIntent());
+        expertChatService.sendUserEnteredMetaMessage();
     }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-    }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         dobbyAi.cleanup();
+    }
+
+    @Override
+    protected void onStop() {
+        expertChatService.sendUserLeftMetaMessage();
+        expertChatService.disconnect();
+        expertChatService.unregisterChatCallback();
+        super.onStop();
+    }
+
+    @Override
+    protected void onStart() {
+        expertChatService.connect();
+        super.onStart();
     }
 
     @Override
@@ -386,11 +540,28 @@ public class MainActivity extends AppCompatActivity
                 if (isFragmentActive) {
                     chatFragment.addSpokenText(inSpeech);
                 }
-                onUserQuery(inSpeech);
+                onUserQuery(inSpeech, false);
             }
         } else {
             super.onActivityResult(requestCode, resultCode, data);
         }
+    }
+
+    private void showAboutAndPrivacyPolicy() {
+        WifiDocDialogFragment fragment = WifiDocDialogFragment.forAboutAndPrivacyPolicy();
+        fragment.show(getSupportFragmentManager(), "About");
+        dobbyAnalytics.aboutShown();
+    }
+
+    private void showFeedbackForm() {
+        WifiDocDialogFragment fragment = WifiDocDialogFragment.forFeedback(R.layout.activity_main);
+        fragment.show(getSupportFragmentManager(), "Feedback");
+        dobbyAnalytics.feedbackFormShown();
+    }
+
+    private Fragment getFragmentByTag(String tag) {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        return fragmentManager.findFragmentByTag(tag);
     }
 
     private void listen() {

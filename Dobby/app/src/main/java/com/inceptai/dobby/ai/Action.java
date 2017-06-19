@@ -7,15 +7,18 @@ import com.inceptai.dobby.utils.Utils;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_NONE;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_WELCOME;
+
 /**
  * Represents an action (to be taken or in progress) by the InferenceEngine.
  */
 
 public class Action {
-    public static final Action ACTION_NONE = new Action(Utils.EMPTY_STRING, ActionType.ACTION_TYPE_NONE);
+    public static final Action ACTION_NONE = new Action(Utils.EMPTY_STRING, ACTION_TYPE_NONE);
 
     @IntDef({ActionType.ACTION_TYPE_BANDWIDTH_TEST,
-            ActionType.ACTION_TYPE_NONE,
+            ACTION_TYPE_NONE,
             ActionType.ACTION_TYPE_WIFI_CHECK,
             ActionType.ACTION_TYPE_CANCEL_BANDWIDTH_TEST,
             ActionType.ACTION_TYPE_DIAGNOSE_SLOW_INTERNET,
@@ -33,7 +36,11 @@ public class Action {
             ActionType.ACTION_TYPE_POSITIVE_FEEDBACK,
             ActionType.ACTION_TYPE_NEGATIVE_FEEDBACK,
             ActionType.ACTION_TYPE_NO_FEEDBACK,
-            ActionType.ACTION_TYPE_UNSTRUCTURED_FEEDBACK
+            ActionType.ACTION_TYPE_UNSTRUCTURED_FEEDBACK,
+            ActionType.ACTION_TYPE_USER_ASKS_FOR_HUMAN_EXPERT,
+            ActionType.ACTION_TYPE_CONTACT_HUMAN_EXPERT,
+            ActionType.ACTION_TYPE_RUN_TESTS_FOR_EXPERT,
+            ActionType.ACTION_TYPE_CANCEL_TESTS_FOR_EXPERT
     })
     @Retention(RetentionPolicy.SOURCE)
     public @interface ActionType {
@@ -57,6 +64,10 @@ public class Action {
         int ACTION_TYPE_NEGATIVE_FEEDBACK = 17;
         int ACTION_TYPE_NO_FEEDBACK = 18;
         int ACTION_TYPE_UNSTRUCTURED_FEEDBACK = 19;
+        int ACTION_TYPE_USER_ASKS_FOR_HUMAN_EXPERT = 20;
+        int ACTION_TYPE_CONTACT_HUMAN_EXPERT = 21;
+        int ACTION_TYPE_RUN_TESTS_FOR_EXPERT = 22;
+        int ACTION_TYPE_CANCEL_TESTS_FOR_EXPERT = 23;
     }
 
     /* User response to be shown, null for no response. */
@@ -77,5 +88,11 @@ public class Action {
     public Action(String userResponse, @ActionType  int action) {
         this.userResponse = userResponse;
         this.action = action;
+    }
+
+    public static boolean isNonEssentialAction(Action action) {
+        @ActionType int actionType = action.getAction();
+        return  (actionType == ACTION_TYPE_NONE || actionType == ACTION_TYPE_WELCOME ||
+                actionType == ActionType.ACTION_TYPE_DEFAULT_FALLBACK);
     }
 }
