@@ -162,9 +162,15 @@ public class ApiAiClient implements AIListener {
                             Action.ActionType.ACTION_TYPE_NONE);
                 } else {
                     //Cancel intent
-                    actionToReturn = new Action("No worries, I am cancelling the tests. " +
-                            "Let me know if I can be of any other help ",
-                            Action.ActionType.ACTION_TYPE_CANCEL_BANDWIDTH_TEST);
+                    if (lastAction == Action.ActionType.ACTION_TYPE_RUN_TESTS_FOR_EXPERT) {
+                        actionToReturn = new Action("No worries, I am cancelling the tests. " +
+                                "Will try to contact the expert now ...",
+                                Action.ActionType.ACTION_TYPE_CANCEL_TESTS_FOR_EXPERT);
+                    } else {
+                        actionToReturn = new Action("No worries, I am cancelling the tests. " +
+                                "Let me know if I can be of any other help ",
+                                Action.ActionType.ACTION_TYPE_CANCEL_BANDWIDTH_TEST);
+                    }
                 }
             } else if (Utils.grepForString(query, Arrays.asList("show", "yes", "sure", "of course", "sounds good", "ok", "kk", "k"))) {
                 //Show long suggestion
@@ -194,17 +200,18 @@ public class ApiAiClient implements AIListener {
             } else {
                 //Default fallback
                 actionToReturn = new Action("I'm sorry, I don't support that yet. " +
-                        "You can say things like \"Run speed test\", \"why is my internet slow\" " +
-                        "or \"why is my wireless slow\"",
+                        "You can say things like \"Run speed test\", \"why is my wifi slow\". You can also " +
+                        "just say \"Contact expert\" to connect to a Wifi expert who can help with your problem",
                         Action.ActionType.ACTION_TYPE_DEFAULT_FALLBACK);
             }
         } else if (event != null && ! event.equals(Utils.EMPTY_STRING)) {
             DobbyLog.v("Submitting offline event with text " + event);
             //Process the events
             if (event.equals(APIAI_WELCOME_EVENT)) {
+                //Handle the case when user exited in expert mode.
                 actionToReturn = new Action("Hi there,  I can help you if you have questions about " +
-                        "your network. You can say things like \"run tests\" or \"Is my wifi bad\" " +
-                        "or \"why is my internet slow\" etc.",
+                        "your network. You can say things like \"run tests\" or  " +
+                        "or \"why is my internet slow\" etc. You can also contact a real Wifi expert for your problem by saying \"Contact expert\" ",
                         Action.ActionType.ACTION_TYPE_WELCOME);
             } else if (event.equals(APIAI_SHORT_SUGGESTION_SHOWN_EVENT)) {
                 actionToReturn = new Action("Do you want more details on this analysis ?",
@@ -214,6 +221,9 @@ public class ApiAiClient implements AIListener {
             } else if (event.equals(APIAI_WIFI_ANALYSIS_SHOWN_EVENT)) {
                 actionToReturn = new Action("Do you want to run detailed tests to see why we are offline ?",
                         Action.ActionType.ACTION_TYPE_ASK_FOR_BW_TESTS);
+            } else if (event.equals(APIAI_ACTION_RUN_TESTS_FOR_EXPERT)) {
+                actionToReturn = new Action("I will run some tests for you right and contact an expert with the results.",
+                        Action.ActionType.ACTION_TYPE_RUN_TESTS_FOR_EXPERT);
             }
         }
         DobbyLog.v("Sending action to listeners" + actionToReturn.getAction() + " with user response: " + actionToReturn.getUserResponse());

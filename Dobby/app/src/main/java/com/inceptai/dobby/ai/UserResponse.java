@@ -42,6 +42,8 @@ public class UserResponse {
             NO_COMMENTS,
             CONTACT_HUMAN_EXPERT
     })
+
+
     @Retention(RetentionPolicy.SOURCE)
     public @interface ResponseType {
         int YES = 0;

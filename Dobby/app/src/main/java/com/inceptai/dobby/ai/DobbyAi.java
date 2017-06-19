@@ -108,6 +108,8 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         void contactExpertAndGetETA();
         void onUserMessageAvailable(String text, boolean sendMessageToExpert);
         void showStatus(String text);
+        void switchedToExpertMode();
+        void switchedToBotMode();
     }
 
     @Inject
@@ -320,7 +322,8 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 break;
             case ACTION_TYPE_CONTACT_HUMAN_EXPERT:
                 //We are here and we have the results. Now tell the user ETA and next steps.
-                chatInExpertMode = true;
+                //chatInExpertMode = true;
+                setChatInExpertMode();
                 //Fulfilled the request to contact expert, so setting to false.
                 userAskedForHumanExpert = false;
                 String expertContactMessage = "Contacting Wifi Expert and getting ETA now ...";
@@ -355,9 +358,12 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         }
     }
 
-    private void contactExpert() {
-        Action actionToTake = new Action(Utils.EMPTY_STRING, ACTION_TYPE_CONTACT_HUMAN_EXPERT);
-        takeAction(actionToTake);
+    public void setChatInExpertMode() {
+        chatInExpertMode = true;
+    }
+
+    public void setChatInBotMode() {
+        chatInExpertMode = false;
     }
 
     @Override
@@ -396,6 +402,11 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         if (responseCallback != null) {
             responseCallback.onUserMessageAvailable(text, chatInExpertMode);
         }
+    }
+
+    private void contactExpert() {
+        Action actionToTake = new Action(Utils.EMPTY_STRING, ACTION_TYPE_CONTACT_HUMAN_EXPERT);
+        takeAction(actionToTake);
     }
 
     public void sendEvent(String text) {
@@ -770,7 +781,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     }
 
     public void triggerSwitchToBotMode() {
-        chatInExpertMode = false;
+        setChatInBotMode();
     }
 
 

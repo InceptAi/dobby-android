@@ -598,7 +598,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
                 dobbyAnalytics.wifiExpertMoreDetailsButtonClicked();
                 break;
             case CONTACT_HUMAN_EXPERT:
-                //TODO record analytic event here
+                dobbyAnalytics.wifiExpertContactExpertButtonClicked();
                 break;
         }
     }
@@ -616,7 +616,12 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
                     LinearLayout.LayoutParams.WRAP_CONTENT);
             params.setMargins(10, 0, 10, 10);
             button.setLayoutParams(params);
-            button.setTextColor(Color.LTGRAY); // light gray
+            if (userResponseType == UserResponse.ResponseType.CONTACT_HUMAN_EXPERT) {
+                button.setTextColor(Color.DKGRAY); // light gray
+            } else {
+                button.setTextColor(Color.LTGRAY); // light gray
+            }
+
             button.setText(buttonText);
             button.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
             //button.setMinHeight((int)Utils.convertPixelsToDp(10, this.getContext())); // In pixels
@@ -625,7 +630,14 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
             button.setMinWidth(0);
             button.setClickable(true);
             button.setAllCaps(false);
-            button.setBackgroundResource(R.drawable.rounded_shape_action_button);
+
+            if (userResponseType == UserResponse.ResponseType.CONTACT_HUMAN_EXPERT) {
+                button.setBackgroundResource(R.drawable.rounded_shape_action_button_contact_expert);
+            } else {
+                button.setBackgroundResource(R.drawable.rounded_shape_action_button);
+            }
+
+
             button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {

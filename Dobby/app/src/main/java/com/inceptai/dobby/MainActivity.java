@@ -68,6 +68,7 @@ public class MainActivity extends AppCompatActivity
     private static final boolean ENABLE_HISTORY = false;
 
     private static final String PREF_FIRST_CHAT = "first_dobby_expert_chat";
+    private static final String PREF_CHAT_IN_EXPERT_MODE = "dobby_in_expert_mode";
 
 
     @Inject DobbyApplication dobbyApplication;
@@ -115,6 +116,12 @@ public class MainActivity extends AppCompatActivity
         expertChatIdsDisplayed = new HashSet<>();
 
         dobbyAi.setResponseCallback(this);
+        //If chat was last saved in expert mode, we will start in expert mode.
+        //TODO change messaging accordingly
+        if (isChatInExpertMode()) {
+            dobbyAi.setChatInExpertMode();
+        }
+
         handler = new Handler(this);
 
         setupChatFragment();
@@ -324,6 +331,20 @@ public class MainActivity extends AppCompatActivity
         expertChatService.pushUserChatMessage(expertChat, true);
     }
 
+    public MainActivity() {
+        super();
+    }
+
+    @Override
+    public void switchedToExpertMode() {
+        saveSwitchedToExpertMode();
+    }
+
+    @Override
+    public void switchedToBotMode() {
+        saveSwitchedToBotMode();
+    }
+
     //Handle ExpertChatServiceCallback
     @Override
     public void onMessageAvailable(ExpertChat expertChat) {
@@ -389,7 +410,7 @@ public class MainActivity extends AppCompatActivity
         currentEtaSeconds = newEtaSeconds;
         expertIsPresent = isPresent;
         if (showInChat && isFragmentActive) {
-            chatFragment.showStatus(message);
+            chatFragment.showResponse(message);
         }
     }
 
@@ -422,6 +443,21 @@ public class MainActivity extends AppCompatActivity
     private boolean isFirstChat() {
         return Boolean.valueOf(Utils.readSharedSetting(this,
                 PREF_FIRST_CHAT, Utils.TRUE_STRING));
+    }
+
+    private void saveSwitchedToBotMode() {
+        Utils.saveSharedSetting(this,
+                PREF_CHAT_IN_EXPERT_MODE, Utils.FALSE_STRING);
+    }
+
+    private void saveSwitchedToExpertMode() {
+        Utils.saveSharedSetting(this,
+                PREF_CHAT_IN_EXPERT_MODE, Utils.TRUE_STRING);
+    }
+
+    private boolean isChatInExpertMode() {
+        return Boolean.valueOf(Utils.readSharedSetting(this,
+                PREF_CHAT_IN_EXPERT_MODE, Utils.FALSE_STRING));
     }
 
     private void pushUserChatMessage(String text, boolean shouldShowToExpert) {

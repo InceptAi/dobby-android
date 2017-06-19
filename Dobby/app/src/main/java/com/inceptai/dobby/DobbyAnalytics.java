@@ -52,6 +52,7 @@ public class DobbyAnalytics {
     private static final String WIFI_EXPERT_DECLINE_RUNNING_FULL_BANDWIDTH_TESTS_CLICKED = "expert_decline_tests";
     private static final String WIFI_EXPERT_ACCEPT_RUNNING_FULL_BANDWIDTH_TESTS_CLICKED = "expert_accept_tests";
     private static final String WIFI_EXPERT_CANCEL_BANDWIDTH_TEST_BUTTON_CLICKED = "expert_cancel_tests";
+    private static final String WIFI_EXPERT_CONTACT_EXPERT_BUTTON_CLICKED = "contact_expert_clicked";
 
     /*
     Contact expert click event.
@@ -237,6 +238,13 @@ public class DobbyAnalytics {
         bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, WIFI_EXPERT_MORE_DETAILS_BUTTON_CLICKED);
         firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
         firebaseAnalytics.logEvent(WIFI_EXPERT_MORE_DETAILS_BUTTON_CLICKED, bundle);
+    }
+
+    public void wifiExpertContactExpertButtonClicked() {
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, WIFI_EXPERT_CONTACT_EXPERT_BUTTON_CLICKED);
+        firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
+        firebaseAnalytics.logEvent(WIFI_EXPERT_CONTACT_EXPERT_BUTTON_CLICKED, bundle);
     }
 
     public void wifiExpertDeclineRunningFullBandwidthTestsClicked() {
