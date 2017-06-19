@@ -9,6 +9,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.support.v4.app.TaskStackBuilder;
@@ -188,6 +189,13 @@ public class ExpertChatService implements
                 .setContentText(body)
                 .setVisibility(VISIBILITY_PUBLIC)
                 .setSound(defaultSoundUri);
+
+
+        // Vibration
+        notificationBuilder.setVibrate(new long[] { 1000, 1000, 1000, 1000, 1000 });
+
+        // LED
+        notificationBuilder.setLights(Color.RED, 3000, 3000);
 
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
