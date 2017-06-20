@@ -192,7 +192,7 @@ public class ExpertChatActivity extends AppCompatActivity implements
         String messagePrefix = getResources().getString(R.string.expected_response_time_for_expert);
         String message = EMPTY_STRING;
         if (!isPresent || newEtaSeconds > ExpertChatService.ETA_12HOURS) {
-            message = "Our experts are current offline. You shall receive a response in about 12 hours.";
+            message = "Our experts are currently offline. You shall receive a response in about 12 hours.";
         } else {
             message = messagePrefix + " Less than " + Utils.timeSecondsToString(newEtaSeconds);
         }

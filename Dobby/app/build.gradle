@@ -49,7 +49,7 @@ android {
     productFlavors {
         wifidoc {
             applicationId  "com.inceptai.dobby.wifidoc"
-            versionCode 24
+            versionCode 25
             versionName "1.2.0-wifitester-chat"
         }
         dobby {
