@@ -113,23 +113,23 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
 
         expertChatIdsDisplayed = new HashSet<>();
-
-        dobbyAi.setResponseCallback(this);
         //If chat was last saved in expert mode, we will start in expert mode.
         //TODO change messaging accordingly
+        expertChatService = ExpertChatService.get();
+        //TODO: Check do we need this
+        fetchChatMessages();
+
+        dobbyAi.setResponseCallback(this);
         if (isChatInExpertMode()) {
             dobbyAi.setChatInExpertMode();
+            sendInitialMessageToExpert();
         }
 
         handler = new Handler(this);
 
         setupChatFragment();
         heartBeatManager.setDailyHeartBeat();
-        expertChatService = ExpertChatService.get();
 
-
-        //TODO: Check do we need this
-        fetchChatMessages();
         currentEtaSeconds = ExpertChatService.ETA_OFFLINE;
         expertIsPresent = false;
         sessionStartedTimestamp = System.currentTimeMillis();
@@ -325,9 +325,7 @@ public class MainActivity extends AppCompatActivity
         //Contact expert and show ETA to user
         //Showing ETA to user
         updateEta(currentEtaSeconds, expertIsPresent, true);
-        //Contacting expert
-        ExpertChat expertChat = new ExpertChat("Expert help needed here", ExpertChat.MSG_TYPE_BOT_TEXT);
-        expertChatService.pushUserChatMessage(expertChat, true);
+        sendInitialMessageToExpert();
         //Show a message showing trying to get expert
         updateExpertIndicator();
     }
@@ -336,24 +334,38 @@ public class MainActivity extends AppCompatActivity
     public void switchedToExpertIsListeningMode() {
         //Show the message saying you are talking to expert
         updateExpertIndicator();
-        if (isFragmentActive) {
-            chatFragment.showStatus(getString(R.string.talking_to_human_expert_with_response_time));
-        }
+//        if (isFragmentActive) {
+//            chatFragment.showStatus(getString(R.string.talking_to_human_expert_with_response_time));
+//        }
     }
 
     public MainActivity() {
         super();
     }
 
+    private void sendInitialMessageToExpert() {
+        //Contacting expert
+        ExpertChat expertChat = new ExpertChat("Expert help needed here", ExpertChat.MSG_TYPE_BOT_TEXT);
+        expertChatService.pushUserChatMessage(expertChat, true);
+    }
+
     @Override
     public void switchedToExpertMode() {
         saveSwitchedToExpertMode();
         updateExpertIndicator();
+        if (expertChatService != null) {
+            expertChatService.checkIn(this);
+        }
     }
 
     @Override
     public void switchedToBotMode() {
         saveSwitchedToBotMode();
+        updateExpertIndicator();
+    }
+
+    @Override
+    public void userAskedForExpert() {
         updateExpertIndicator();
     }
 
@@ -421,8 +433,8 @@ public class MainActivity extends AppCompatActivity
         }
         currentEtaSeconds = newEtaSeconds;
         expertIsPresent = isPresent;
-        if (showInChat && isFragmentActive) {
-            chatFragment.showStatus(message);
+        if (isFragmentActive && showInChat) {
+            chatFragment.showResponse(message);
         }
         dobbyAi.updatedEtaAvailable(currentEtaSeconds);
     }

@@ -116,7 +116,7 @@
     <string name="location_permission_approval_text">We need the \'Location\' permission on Android to collect Wifi Scan Signal data. This will help us find issues with your Wifi Network.</string>
     <string name="location_permission_approval_title">Approval for the Location permission</string>
     <string name="you_are_now_talking_to_human_expert">You are now talking to a Human Expert !</string>
-    <string name="contacting_human_expert">Contacting human expert &#8230;</string>
+    <string name="contacting_human_expert">Contacted human expert, you can type any message to them &#8230;</string>
     <string name="pre_human_contact_tests">Preparing reports to contact human expert &#8230;</string>
     <string name="talking_to_human_expert_with_response_time">Expert is listening in now, response time less than 2 mins &#8230;</string>
 </resources>

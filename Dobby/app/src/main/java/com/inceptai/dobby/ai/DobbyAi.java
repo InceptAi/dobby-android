@@ -116,6 +116,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         void switchedToExpertMode();
         void switchedToBotMode();
         void switchedToExpertIsListeningMode();
+        void userAskedForExpert();
     }
 
     @Inject
@@ -337,6 +338,9 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                     sendEvent(ApiAiClient.APIAI_RUN_TESTS_FOR_EXPERT_EVENT);
                 }
                 userAskedForHumanExpert = true;
+                if (responseCallback != null) {
+                    responseCallback.userAskedForExpert();
+                }
                 break;
             case ACTION_TYPE_CONTACT_HUMAN_EXPERT:
                 //We are here and we have the results. Now tell the user ETA and next steps.
