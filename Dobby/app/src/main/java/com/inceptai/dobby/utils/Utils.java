@@ -55,6 +55,7 @@ public class Utils {
     public static final String WIFIDOC_FLAVOR = "wifidoc";
     public static final String PREFERENCES_FILE = "wifi_tester_settings";
     public static final String USER_UUID = "userUuid";
+    public static final String PREF_EXPERT_CHAT_TIMESTAMP_MS = "ExpertChatTs";
 
     private static final int READ_TIMEOUT_MS = 5000;
     private static final int CONNECTION_TIMEOUT_MS = 5000;
@@ -715,7 +716,6 @@ public class Utils {
         editor.putLong(settingName, settingValue);
         editor.apply();
     }
-
 
     public static String convertIntegerDoubleHashMapToJsonString(HashMap<Integer, Double> integerDoubleHashMap) {
         Gson gson = new Gson();
