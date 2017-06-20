@@ -24,6 +24,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.inceptai.dobby.BuildConfig;
+import com.inceptai.dobby.MainActivity;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.ai.DobbyAi;
 import com.inceptai.dobby.dagger.ProdComponent;
@@ -179,11 +180,8 @@ public class ExpertChatService implements
             DobbyLog.v("Not showing notification.");
             return;
         }
-        Intent intent = new Intent(context, ExpertChatActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        intent.putExtra(INTENT_NOTIF_SOURCE, source);
 
-        PendingIntent resultPendingIntent = getPendingIntentForNotification(context, intent);
+        PendingIntent resultPendingIntent = getPendingIntentForNotification(context, source);
         if (resultPendingIntent == null) {
             FirebaseCrash.report(new RuntimeException("Null pending Intent for build flavor" + BuildConfig.FLAVOR));
             return;
@@ -288,9 +286,30 @@ public class ExpertChatService implements
         pushMetaChatMessage(ExpertChat.MSG_TYPE_META_USER_ENTERED);
     }
 
-    private PendingIntent getPendingIntentForNotification(Context context, Intent intent) {
-        PendingIntent pendingIntent = null;
+    private PendingIntent getPendingIntentForNotification(Context context, String source) {
+        boolean isWifiTester = false;
+
         if (BuildConfig.FLAVOR.equals(WIFI_TESTER_BUILD_FLAVOR)) {
+            isWifiTester = true;
+        } else if (!(BuildConfig.FLAVOR.equals(WIFI_EXPERT_BUILD_FLAVOR))) {
+            DobbyLog.e("Unknown build flavor: " + BuildConfig.FLAVOR);
+            return null;
+        }
+        Intent intent = null;
+
+        if (isWifiTester) {
+            intent = new Intent(context, ExpertChatActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+        } else {
+            intent = new Intent(context, MainActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        }
+
+        intent.putExtra(INTENT_NOTIF_SOURCE, source);
+
+        PendingIntent pendingIntent = null;
+        if (isWifiTester) {
             TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
 
             // Adds the back stack
@@ -302,11 +321,10 @@ public class ExpertChatService implements
             pendingIntent =
                     stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        } else if (BuildConfig.FLAVOR.equals(WIFI_EXPERT_BUILD_FLAVOR)) {
-            pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_ONE_SHOT);
         } else {
-            DobbyLog.e("Unknown build flavor: " + BuildConfig.FLAVOR);
+            pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_ONE_SHOT);
         }
+
         return pendingIntent;
     }
 

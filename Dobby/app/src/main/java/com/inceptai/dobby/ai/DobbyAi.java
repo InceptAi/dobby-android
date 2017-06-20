@@ -37,6 +37,7 @@ import static com.inceptai.dobby.DobbyApplication.TAG;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_ASK_FOR_BW_TESTS;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_ASK_FOR_FEEDBACK;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_ASK_FOR_LONG_SUGGESTION;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_ASK_FOR_RESUMING_EXPERT_CHAT;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_BANDWIDTH_TEST;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_CANCEL_BANDWIDTH_TEST;
@@ -50,6 +51,7 @@ import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_NONE;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_NO_FEEDBACK;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_POSITIVE_FEEDBACK;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_RUN_TESTS_FOR_EXPERT;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_SET_CHAT_TO_BOT_MODE;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_SHOW_LONG_SUGGESTION;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_SHOW_SHORT_SUGGESTION;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_UNKNOWN;
@@ -352,6 +354,10 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 cancelBandwidthTest();
                 //Contact the expert
                 contactExpert();
+                break;
+            case ACTION_TYPE_SET_CHAT_TO_BOT_MODE:
+                setChatInBotMode();
+                break;
             default:
                 DobbyLog.i("Unknown Action");
                 break;
@@ -360,10 +366,16 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
 
     public void setChatInExpertMode() {
         chatInExpertMode = true;
+        if (responseCallback != null) {
+            responseCallback.switchedToExpertMode();
+        }
     }
 
     public void setChatInBotMode() {
         chatInExpertMode = false;
+        if (responseCallback != null) {
+            responseCallback.switchedToBotMode();
+        }
     }
 
     @Override
@@ -423,7 +435,12 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
 
     public void sendWelcomeEvent() {
         if (useApiAi) {
-            apiAiClient.processTextQueryOffline(null, ApiAiClient.APIAI_WELCOME_EVENT, getLastAction(), this);
+            if (chatInExpertMode) {
+                //apiAiClient.resetContexts();
+                apiAiClient.sendTextQuery(null, ApiAiClient.APIAI_WELCOME_AND_RESUME_EXPERT_EVENT, getLastAction(), this);
+            } else {
+                apiAiClient.processTextQueryOffline(null, ApiAiClient.APIAI_WELCOME_EVENT, getLastAction(), this);
+            }
         } else {
             DobbyLog.w("Ignoring events for Wifi doc version :" + ApiAiClient.APIAI_WELCOME_EVENT);
         }
@@ -443,7 +460,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     }
 
     private List<Integer> getPotentialUserResponses(@Action.ActionType int lastActionShownToUser) {
-        ArrayList<Integer> responseList = new ArrayList<Integer>();
+        List<Integer> responseList = new ArrayList<>();
         switch (lastActionShownToUser) {
             case ACTION_TYPE_ASK_FOR_LONG_SUGGESTION:
                 responseList.add(UserResponse.ResponseType.YES);
@@ -477,6 +494,13 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 responseList.add(UserResponse.ResponseType.NO);
                 responseList.add(UserResponse.ResponseType.NO_COMMENTS);
                 break;
+            case ACTION_TYPE_ASK_FOR_RESUMING_EXPERT_CHAT:
+                responseList.add(UserResponse.ResponseType.YES);
+                responseList.add(UserResponse.ResponseType.NO);
+                responseList.add(UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS);
+                responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
+                responseList.add(UserResponse.ResponseType.RUN_WIFI_TESTS);
+                break;
             case ACTION_TYPE_WELCOME:
             case ACTION_TYPE_NONE:
             case ACTION_TYPE_UNKNOWN:
@@ -496,6 +520,10 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             responseList.add(UserResponse.ResponseType.SHOW_LAST_SUGGESTION_DETAILS);
         }
         if (!responseList.contains(UserResponse.ResponseType.CANCEL) && !userAskedForHumanExpert && !chatInExpertMode) {
+            responseList.add(UserResponse.ResponseType.CONTACT_HUMAN_EXPERT);
+        }
+        //Special case since, chatInExpertMode is not properly yet
+        if (!responseList.contains(UserResponse.ResponseType.CONTACT_HUMAN_EXPERT) && lastActionShownToUser == ACTION_TYPE_SET_CHAT_TO_BOT_MODE) {
             responseList.add(UserResponse.ResponseType.CONTACT_HUMAN_EXPERT);
         }
         return responseList;

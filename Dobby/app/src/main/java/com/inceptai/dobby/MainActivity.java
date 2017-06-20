@@ -39,7 +39,6 @@ import com.inceptai.dobby.heartbeat.HeartBeatManager;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.ui.ChatFragment;
 import com.inceptai.dobby.ui.DebugFragment;
-import com.inceptai.dobby.ui.ExpertChatActivity;
 import com.inceptai.dobby.ui.FakeDataFragment;
 import com.inceptai.dobby.ui.WifiDocDialogFragment;
 import com.inceptai.dobby.ui.WifiFragment;
@@ -512,6 +511,7 @@ public class MainActivity extends AppCompatActivity
         fetchChatMessages();
         processIntent(getIntent());
         expertChatService.sendUserEnteredMetaMessage();
+        expertChatService.disableNotifications();
     }
 
 
@@ -526,6 +526,7 @@ public class MainActivity extends AppCompatActivity
         expertChatService.sendUserLeftMetaMessage();
         expertChatService.disconnect();
         expertChatService.unregisterChatCallback();
+        expertChatService.enableNotifications();
         super.onStop();
     }
 

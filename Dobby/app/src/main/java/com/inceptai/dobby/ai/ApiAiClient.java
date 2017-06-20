@@ -22,6 +22,8 @@ import ai.api.model.AIRequest;
 import ai.api.model.AIResponse;
 import ai.api.model.Result;
 
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_ASK_FOR_RESUMING_EXPERT_CHAT;
+
 /**
  * Created by arunesh on 3/28/17.
  */
@@ -35,6 +37,7 @@ public class ApiAiClient implements AIListener {
     public static final String APIAI_LONG_SUGGESTION_SHOWN_EVENT = "long_suggestion_shown_event";
     public static final String APIAI_WIFI_ANALYSIS_SHOWN_EVENT = "wifi_analysis_shown_event";
     public static final String APIAI_RUN_TESTS_FOR_EXPERT_EVENT = "run_tests_for_expert_event";
+    public static final String APIAI_WELCOME_AND_RESUME_EXPERT_EVENT = "ask_user_for_resuming_expert_chat_event";
 
 
     //API AI actions
@@ -54,6 +57,8 @@ public class ApiAiClient implements AIListener {
     public static final String APIAI_ACTION_CONTACT_HUMAN_EXPERT = "contact-human-expert-action";
     public static final String APIAI_ACTION_RUN_TESTS_FOR_EXPERT = "run-tests-for-expert-action";
     public static final String APIAI_ACTION_CANCEL_TESTS_FOR_EXPERT = "cancel-expert-tests";
+    public static final String APIAI_ACTION_SET_TO_BOT_MODE = "set-chat-to-bot-mode-action";
+    public static final String APIAI_ACTION_WELCOME_AND_ASK_USER_FOR_RESUMING_EXPERT_CHAT = "ask-user-for-resuming-expert-chat-action";
 
 
     private static final String CLIENT_ACCESS_TOKEN = "81dbd5289ee74637bf582fc3112b7dcb";
@@ -156,21 +161,24 @@ public class ApiAiClient implements AIListener {
                     Action.ActionType.ACTION_TYPE_WIFI_CHECK);
             } else if (Utils.grepForString(query, Arrays.asList("cancel", "stop", "later", "skip",
                     "never mind", "dismiss", "forget", "no", "nm"))) {
+                //User says no
                 if (lastAction == Action.ActionType.ACTION_TYPE_ASK_FOR_LONG_SUGGESTION || lastAction == Action.ActionType.ACTION_TYPE_ASK_FOR_BW_TESTS) {
                     actionToReturn = new Action("Ok sure. Hope I was of some help ! " +
                             "Let me know if I can answer any other questions.",
                             Action.ActionType.ACTION_TYPE_NONE);
-                } else {
-                    //Cancel intent
-                    if (lastAction == Action.ActionType.ACTION_TYPE_RUN_TESTS_FOR_EXPERT) {
+                } else if (lastAction == Action.ActionType.ACTION_TYPE_RUN_TESTS_FOR_EXPERT) {
                         actionToReturn = new Action("No worries, I am cancelling the tests. " +
                                 "Will try to contact the expert now ...",
                                 Action.ActionType.ACTION_TYPE_CANCEL_TESTS_FOR_EXPERT);
-                    } else {
+                } else if (lastAction == ACTION_TYPE_ASK_FOR_RESUMING_EXPERT_CHAT) {
+                    actionToReturn = new Action("No worries, I can help you if you have questions about " +
+                            "your network. You can say things like \"run tests\" or  " +
+                            "or \"why is my wifi slow\" etc. You can also contact a real Wifi expert for your problem by saying \"Contact expert\"" ,
+                            Action.ActionType.ACTION_TYPE_SET_CHAT_TO_BOT_MODE);
+                } else {
                         actionToReturn = new Action("No worries, I am cancelling the tests. " +
                                 "Let me know if I can be of any other help ",
                                 Action.ActionType.ACTION_TYPE_CANCEL_BANDWIDTH_TEST);
-                    }
                 }
             } else if (Utils.grepForString(query, Arrays.asList("show", "yes", "sure", "of course", "sounds good", "ok", "kk", "k"))) {
                 //Show long suggestion
@@ -185,6 +193,9 @@ public class ApiAiClient implements AIListener {
                 } else if (lastAction == Action.ActionType.ACTION_TYPE_ASK_FOR_BW_TESTS) {
                     actionToReturn = new Action("Sure, I will run some speed tests for you now. Hold tight ...",
                             Action.ActionType.ACTION_TYPE_DIAGNOSE_SLOW_INTERNET);
+                } else if (lastAction == ACTION_TYPE_ASK_FOR_RESUMING_EXPERT_CHAT) {
+                    actionToReturn = new Action(Utils.EMPTY_STRING,
+                            Action.ActionType.ACTION_TYPE_USER_ASKS_FOR_HUMAN_EXPERT);
                 }
             } else if (Utils.grepForString(query, Arrays.asList("details", "more", "summary"))) {
                 //Show long suggestion
@@ -224,6 +235,9 @@ public class ApiAiClient implements AIListener {
             } else if (event.equals(APIAI_ACTION_RUN_TESTS_FOR_EXPERT)) {
                 actionToReturn = new Action("I will run some tests for you right and contact an expert with the results.",
                         Action.ActionType.ACTION_TYPE_RUN_TESTS_FOR_EXPERT);
+            } else if (event.equals(APIAI_WELCOME_AND_RESUME_EXPERT_EVENT)) {
+                actionToReturn = new Action("Hi, welcome back. You can ask me any question about your network. Do you want to resume your chat with the Wifi experts ?",
+                        ACTION_TYPE_ASK_FOR_RESUMING_EXPERT_CHAT);
             }
         }
         DobbyLog.v("Sending action to listeners" + actionToReturn.getAction() + " with user response: " + actionToReturn.getUserResponse());
@@ -286,6 +300,12 @@ public class ApiAiClient implements AIListener {
                 break;
             case APIAI_ACTION_CANCEL_TESTS_FOR_EXPERT:
                 actionInt = Action.ActionType.ACTION_TYPE_CANCEL_TESTS_FOR_EXPERT;
+                break;
+            case APIAI_ACTION_SET_TO_BOT_MODE:
+                actionInt = Action.ActionType.ACTION_TYPE_SET_CHAT_TO_BOT_MODE;
+                break;
+            case APIAI_ACTION_WELCOME_AND_ASK_USER_FOR_RESUMING_EXPERT_CHAT:
+                actionInt = Action.ActionType.ACTION_TYPE_ASK_FOR_RESUMING_EXPERT_CHAT;
                 break;
         }
         if (listener != null) {

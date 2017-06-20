@@ -40,7 +40,9 @@ public class Action {
             ActionType.ACTION_TYPE_USER_ASKS_FOR_HUMAN_EXPERT,
             ActionType.ACTION_TYPE_CONTACT_HUMAN_EXPERT,
             ActionType.ACTION_TYPE_RUN_TESTS_FOR_EXPERT,
-            ActionType.ACTION_TYPE_CANCEL_TESTS_FOR_EXPERT
+            ActionType.ACTION_TYPE_CANCEL_TESTS_FOR_EXPERT,
+            ActionType.ACTION_TYPE_ASK_FOR_RESUMING_EXPERT_CHAT,
+            ActionType.ACTION_TYPE_SET_CHAT_TO_BOT_MODE
     })
     @Retention(RetentionPolicy.SOURCE)
     public @interface ActionType {
@@ -68,6 +70,8 @@ public class Action {
         int ACTION_TYPE_CONTACT_HUMAN_EXPERT = 21;
         int ACTION_TYPE_RUN_TESTS_FOR_EXPERT = 22;
         int ACTION_TYPE_CANCEL_TESTS_FOR_EXPERT = 23;
+        int ACTION_TYPE_ASK_FOR_RESUMING_EXPERT_CHAT = 24;
+        int ACTION_TYPE_SET_CHAT_TO_BOT_MODE = 25;
     }
 
     /* User response to be shown, null for no response. */
