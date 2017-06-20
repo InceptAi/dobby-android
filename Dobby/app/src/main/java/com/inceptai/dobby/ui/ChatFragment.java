@@ -96,9 +96,8 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     private static final int BW_SERVER_INFO_FETCHED = 204;
     private static final int BW_BEST_SERVER_DETERMINED = 205;
     private static final int BW_IDLE = 207;
+    private static final int DELAY_FOR_DOBBY_MESSAGES_MS = 1500;
 
-
-    private static final int MIN_DELAY_BOT_REPLY_MS = 500;
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
@@ -336,15 +335,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         chatRv.scrollToPosition(recyclerViewAdapter.getItemCount() - 1);
     }
 
-    public void addBandwidthResultsCardView(DataInterpreter.BandwidthGrade bandwidthGrade) {
-        dobbyAnalytics.wifiExpertBandwidthCardShown();
-        Message.obtain(handler, MSG_SHOW_BANDWIDTH_RESULT_CARDVIEW, bandwidthGrade).sendToTarget();
-    }
 
-    public void addOverallNetworkResultsCardView(DataInterpreter.WifiGrade wifiGrade, String ispName, String externalIp) {
-        dobbyAnalytics.wifiExpertWifiCardShown();
-        Message.obtain(handler, MSG_SHOW_OVERALL_NETWORK_STATUS, new OverallNetworkInfo(wifiGrade, ispName, externalIp)).sendToTarget();
-    }
 
     public void showDetailedSuggestionsView(SuggestionCreator.Suggestion suggestion) {
         if (suggestion != null) {
@@ -370,23 +361,54 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         chatRv.scrollToPosition(recyclerViewAdapter.getItemCount() - 1);
     }
 
-    public void observeBandwidthNonUi(BandwidthObserver observer) {
-        Message.obtain(handler, MSG_SHOW_BW_GAUGE, observer).sendToTarget();
+    //All the methods that show stuff to user
+
+    public void addBandwidthResultsCardView(final DataInterpreter.BandwidthGrade bandwidthGrade) {
+        dobbyAnalytics.wifiExpertBandwidthCardShown();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                Message.obtain(handler, MSG_SHOW_BANDWIDTH_RESULT_CARDVIEW, bandwidthGrade).sendToTarget();
+            }
+        }, DELAY_FOR_DOBBY_MESSAGES_MS);
+        //Message.obtain(handler, MSG_SHOW_BANDWIDTH_RESULT_CARDVIEW, bandwidthGrade).sendToTarget();
     }
 
-    public void showResponse(String text) {
+    public void addOverallNetworkResultsCardView(final DataInterpreter.WifiGrade wifiGrade, final String ispName, final String externalIp) {
+        dobbyAnalytics.wifiExpertWifiCardShown();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                Message.obtain(handler, MSG_SHOW_OVERALL_NETWORK_STATUS, new OverallNetworkInfo(wifiGrade, ispName, externalIp)).sendToTarget();
+            }
+        }, DELAY_FOR_DOBBY_MESSAGES_MS);
+        //Message.obtain(handler, MSG_SHOW_OVERALL_NETWORK_STATUS, new OverallNetworkInfo(wifiGrade, ispName, externalIp)).sendToTarget();
+    }
+
+    public void observeBandwidthNonUi(final BandwidthObserver observer) {
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                Message.obtain(handler, MSG_SHOW_BW_GAUGE, observer).sendToTarget();
+            }
+        }, DELAY_FOR_DOBBY_MESSAGES_MS);
+        //Message.obtain(handler, MSG_SHOW_BW_GAUGE, observer).sendToTarget();
+    }
+
+    public void showResponse(final String text) {
         DobbyLog.v("ChatF: showResponse text " + text);
-        Message.obtain(handler, MSG_SHOW_DOBBY_CHAT, text).sendToTarget();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                Message.obtain(handler, MSG_SHOW_DOBBY_CHAT, text).sendToTarget();
+            }
+        }, DELAY_FOR_DOBBY_MESSAGES_MS);
+        //Message.obtain(handler, MSG_SHOW_DOBBY_CHAT, text).sendToTarget();
     }
 
+    //No delay for following
     public void showRtGraph(RtDataSource<Float, Integer> rtDataSource) {
         Message.obtain(handler, MSG_SHOW_RT_GRAPH, rtDataSource).sendToTarget();
-    }
-
-    public void cancelTests() {
-        //resetData();
-        //uiStateChange(UI_STATE_FULL_CHAT);
-        dismissBandwidthGaugeNonUi();
     }
 
     public void showUserActionOptions(List<Integer> userResponseTypes) {
@@ -398,6 +420,14 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     public void showExpertChatMessage(String text) {
         Message.obtain(handler, MSG_SHOW_EXPERT_CHAT, text).sendToTarget();
     }
+
+
+    public void cancelTests() {
+        //resetData();
+        //uiStateChange(UI_STATE_FULL_CHAT);
+        dismissBandwidthGaugeNonUi();
+    }
+
 
     @Override
     public boolean handleMessage(Message msg) {

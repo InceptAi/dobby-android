@@ -497,9 +497,9 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             case ACTION_TYPE_ASK_FOR_RESUMING_EXPERT_CHAT:
                 responseList.add(UserResponse.ResponseType.YES);
                 responseList.add(UserResponse.ResponseType.NO);
-                responseList.add(UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS);
-                responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
-                responseList.add(UserResponse.ResponseType.RUN_WIFI_TESTS);
+//                responseList.add(UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS);
+//                responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
+//                responseList.add(UserResponse.ResponseType.RUN_WIFI_TESTS);
                 break;
             case ACTION_TYPE_WELCOME:
             case ACTION_TYPE_NONE:
