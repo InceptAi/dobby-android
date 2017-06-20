@@ -189,7 +189,8 @@ public class WifiState {
         final int GAP_FOR_OTHER_STRENGTHS_DBM = 10;
         HashMap<Integer, ChannelInfo> infoToReturn = new HashMap<>();
         //Prepopulate the map with all channels
-        int[] channelList2GHz = Utils.get2GHzNonOverlappingChannelList();
+        //int[] channelList2GHz = Utils.get2GHzNonOverlappingChannelList();
+        int[] channelList2GHz = Utils.get2GHzChannelList();
         for (int channelIndex=0; channelIndex < channelList2GHz.length; channelIndex++) {
             ChannelInfo channelInfo = new ChannelInfo(channelList2GHz[channelIndex]);
             infoToReturn.put(channelList2GHz[channelIndex], channelInfo);
