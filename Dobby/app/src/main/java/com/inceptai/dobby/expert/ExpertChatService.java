@@ -165,7 +165,7 @@ public class ExpertChatService implements
         if (lastTs < 0 || (currentTs - lastTs) > TWO_DAYS_IN_MS) {
             // do a checkin to update as a "recent chat"
             Date date = new Date();
-            getRecentsReference().setValue(date.toString());
+            getRecentsReference().setValue(date.getTime());
             Utils.saveSharedSetting(context, Utils.PREF_EXPERT_CHAT_TIMESTAMP_MS, currentTs);
         }
     }
