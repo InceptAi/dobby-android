@@ -144,6 +144,7 @@ public class ExpertChatActivity extends AppCompatActivity implements
         // addGeneralMessage(getEtaString(currentEtaSeconds, isPresent));
         sendUserEnteredMetaMessage();
         expertChatService.disableNotifications();
+        expertChatService.checkIn(this);
     }
 
     @Override

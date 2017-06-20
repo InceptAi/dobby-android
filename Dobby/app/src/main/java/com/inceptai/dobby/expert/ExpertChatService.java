@@ -8,6 +8,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.media.RingtoneManager;
@@ -35,6 +36,7 @@ import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -54,11 +56,13 @@ public class ExpertChatService implements
     private static final String WIFI_EXPERT_BUILD_FLAVOR = "dobby";
     private static final String WIFI_TESTER_BUILD_FLAVOR = "wifidoc";
     private static final String CHAT_ROOM_CHILD = BuildConfig.FLAVOR + "_chat_rooms/" + BuildConfig.BUILD_TYPE;
+    private static final String CHAT_ROOM_RECENTS =  BuildConfig.FLAVOR + "_chat_recents/" + BuildConfig.BUILD_TYPE;
     private static final String FCM_KEY = "fcmToken";
     private static final String ASSIGNED_EXPERT_KEY = "assignedExpert";
     private static final String NOTIFICATIONS_BASE = "/notifications/messages/";
     private static final String CHAT_NOTIFICATION_TITLE = "You have a new chat message.";
     private static final String EXPERT_BASE = "/expert";
+    private static final long TWO_DAYS_IN_MS = 2 * 24 * 60 * 60 * 1000L;
 
     public static final String INTENT_NOTIF_SOURCE = "NotifSource";
     public static final long ETA_OFFLINE = 24L * 60L * 60L;  // 24 hours.
@@ -82,6 +86,7 @@ public class ExpertChatService implements
     private String userTokenPath;
     private String assignedExpertUsernamePath;
     private String assignedExpertUsername;
+    private String recentsUpdatePath;
     private ChatCallback chatCallback;
     private List<ExpertData> expertList;
     private long currentEtaSeconds;
@@ -110,6 +115,7 @@ public class ExpertChatService implements
         this.userUuid = userUuid;
         this.chatRoomPath =  CHAT_ROOM_CHILD + "/" + userUuid;
         this.userTokenPath = USER_ROOT + "/" + userUuid + "/" + FCM_KEY;
+        this.recentsUpdatePath = CHAT_ROOM_RECENTS + "/" + userUuid;
         this.assignedExpertUsernamePath = USER_ROOT + "/" + userUuid + "/" + ASSIGNED_EXPERT_KEY;
         expertList = new ArrayList<>();
         DobbyLog.i("Using chat room ID: " + chatRoomPath);
@@ -153,6 +159,15 @@ public class ExpertChatService implements
     }
 
     public void checkIn(Context context) {
+        long lastTs = Utils.readSharedSetting(context, Utils.PREF_EXPERT_CHAT_TIMESTAMP_MS, -1);
+        long currentTs = System.currentTimeMillis();
+
+        if (lastTs < 0 || (currentTs - lastTs) > TWO_DAYS_IN_MS) {
+            // do a checkin to update as a "recent chat"
+            Date date = new Date();
+            getRecentsReference().setValue(date.toString());
+            Utils.saveSharedSetting(context, Utils.PREF_EXPERT_CHAT_TIMESTAMP_MS, currentTs);
+        }
     }
 
     public long getCurrentEtaSeconds() {
@@ -343,6 +358,10 @@ public class ExpertChatService implements
 
     private DatabaseReference getChatReference() {
         return FirebaseDatabase.getInstance().getReference().child(chatRoomPath);
+    }
+
+    private DatabaseReference getRecentsReference() {
+        return FirebaseDatabase.getInstance().getReference().child(recentsUpdatePath);
     }
 
     private DatabaseReference getNotificationReference() {
