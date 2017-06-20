@@ -51,6 +51,7 @@ public class MainActivity extends AppCompatActivity
     private NavigationView  navigationView;
     private ExpertChatService service;
     private boolean respondToNotification = false;
+    private boolean onCreateCalled = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,6 +96,7 @@ public class MainActivity extends AppCompatActivity
             Snackbar.make(drawerLayout, "Welcome " + mUsername, Snackbar.LENGTH_SHORT).show();
         }
         checkForNotificationStart(getIntent());
+        onCreateCalled = true;
     }
 
     @Override
@@ -124,16 +126,20 @@ public class MainActivity extends AppCompatActivity
         selectedFlavor = Utils.readSharedSetting(this, Utils.SELECTED_FLAVOR, DEFAULT_FLAVOR);
         selectedUserId = Utils.readSharedSetting(this, Utils.SELECTED_USER_UUID, EMPTY_STRING);
         selectedBuildType = Utils.readSharedSetting(this, Utils.SELECTED_BUILD_TYPE, DEFAULT_BUILD_TYPE);
-        if (respondToNotification) {
-            showChatFragment();
-            navigationView.setCheckedItem(R.id.nav_user_chat);
-            return;
-        }
-        showWelcome(mPhotoUrl, mUsername);
         if (service.isExpertOffline()) {
             Snackbar.make(drawerLayout, "YOU ARE OFFLINE.", Snackbar.LENGTH_LONG).show();
         } else {
             service.goOnline();
+        }
+        if (respondToNotification) {
+            showChatFragment();
+            navigationView.setCheckedItem(R.id.nav_user_chat);
+            respondToNotification = false;  // consume it.
+            return;
+        }
+        if (onCreateCalled) {
+            showWelcome(mPhotoUrl, mUsername);
+            onCreateCalled = false;
         }
     }
 

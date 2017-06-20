@@ -223,7 +223,6 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         // requestPermissions();
         uiStateVisibilityChanges(view);
         dobbyAnalytics.wifiDocFragmentEntered();
-        showLocationPermissionRequest();
         return view;
     }
 
@@ -259,6 +258,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             throw new RuntimeException(context.toString()
                     + " must implement OnFragmentInteractionListener");
         }
+        showLocationPermissionRequest();
     }
 
     @Override

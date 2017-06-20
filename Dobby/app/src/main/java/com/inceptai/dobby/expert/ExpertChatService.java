@@ -152,6 +152,9 @@ public class ExpertChatService implements
         });
     }
 
+    public void checkIn(Context context) {
+    }
+
     public long getCurrentEtaSeconds() {
         return currentEtaSeconds;
     }
