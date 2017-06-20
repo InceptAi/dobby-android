@@ -326,6 +326,7 @@ public class NetworkLayer implements LocationListener {
      *
      * @return null on failure such as lack of permission.
      */
+    @Nullable
     public Location fetchLastKnownLocation() {
         LocationManager locationManager = (LocationManager) context.getSystemService(LOCATION_SERVICE);
         if (checkLocationPermission() && isNetworkProviderAvailable()) {
