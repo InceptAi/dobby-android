@@ -328,7 +328,7 @@ public class NetworkLayer implements LocationListener {
      */
     public Location fetchLastKnownLocation() {
         LocationManager locationManager = (LocationManager) context.getSystemService(LOCATION_SERVICE);
-        if (checkLocationPermission()) {
+        if (checkLocationPermission() && isNetworkProviderAvailable()) {
             Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
             if (location != null) {
                 lastKnownLocation = location;
@@ -382,11 +382,15 @@ public class NetworkLayer implements LocationListener {
         }
         lastKnownLocation = bestLocation;
         if (checkLocationPermission()) {
-            if(locationManager.getAllProviders().contains(LocationManager.NETWORK_PROVIDER) && locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)){
+            if (isNetworkProviderAvailable()) {
                 //locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
                 locationManager.requestSingleUpdate(LocationManager.NETWORK_PROVIDER, this, context.getMainLooper());
             }
         }
+    }
+
+    private boolean isNetworkProviderAvailable() {
+        return locationManager.getAllProviders().contains(LocationManager.NETWORK_PROVIDER) && locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
     }
 
     private PingAnalyzer getPingAnalyzerInstance() {
