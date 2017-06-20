@@ -9,11 +9,27 @@
     android:background="@color/basicWhite"
     tools:showIn="@layout/app_bar_main">
 
+    <TextView
+        android:layout_width="match_parent"
+        android:background="@color/basicYellow"
+        android:paddingTop="10dp"
+        android:id="@+id/chatting_with_human_tv"
+        android:gravity="center_horizontal"
+        android:textColor="@android:color/black"
+        android:textSize="16sp"
+        android:paddingBottom="10dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        android:text="@string/you_are_now_talking_to_human_expert"
+        android:visibility="gone"
+        android:layout_height="wrap_content" />
+
     <LinearLayout
         android:layout_width="0dp"
         android:id="@+id/bw_gauge_ll"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/chatting_with_human_tv"
         app:layout_constraintRight_toRightOf="parent"
         android:orientation="horizontal"
         android:layout_marginLeft="8dp"
@@ -25,6 +41,7 @@
         android:visibility="gone"
         android:animateLayoutChanges="true"
         android:layout_marginRight="8dp">
+
 
         <include
             layout="@layout/circular_gauge_with_text"

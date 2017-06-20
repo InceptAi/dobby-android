@@ -86,8 +86,8 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     private static final int MSG_SHOW_OVERALL_NETWORK_STATUS = 9;
     private static final int MSG_SHOW_DETAILED_SUGGESTIONS = 10;
     private static final int MSG_SHOW_EXPERT_CHAT = 11;
-    private static final int MSG_UPDATE_ETA = 12;
-
+    private static final int MSG_SHOW_EXPERT_INDICATOR = 12;
+    private static final int MSG_HIDE_EXPERT_INDICATOR = 13;
 
     private static final int BW_TEST_INITIATED = 200;
     private static final int BW_CONFIG_FETCHED = 201;
@@ -120,6 +120,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     private TextView uploadGaugeTitleTv;
 
     private TextToSpeech textToSpeech;
+    private TextView expertIndicatorTextView;
 
     private boolean useVoiceOutput = false;
 
@@ -259,6 +260,8 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
             }
         }
 
+        expertIndicatorTextView = (TextView) fragmentView.findViewById(R.id.chatting_with_human_tv);
+
         DobbyLog.v("CF: Finished with onCreateView");
         return fragmentView;
     }
@@ -327,6 +330,14 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         DobbyLog.v("CF: In onDestroyView");
         super.onDestroyView();
         createdFirstTime = false;
+    }
+
+    public void showExpertIndicatorWithText(String text) {
+        Message.obtain(handler, MSG_SHOW_EXPERT_INDICATOR, text).sendToTarget();
+    }
+
+    public void hideExpertIndicator() {
+        Message.obtain(handler, MSG_HIDE_EXPERT_INDICATOR).sendToTarget();
     }
 
     public void addUserChat(String text) {
@@ -489,6 +500,16 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
                     shownDetailsHint = true;
                 }
                 break;
+            case MSG_SHOW_EXPERT_INDICATOR:
+                String expertIndicatorText = (String) msg.obj;
+                if (expertIndicatorTextView != null) {
+                    expertIndicatorTextView.setText(expertIndicatorText);
+                    expertIndicatorTextView.setVisibility(View.VISIBLE);
+                }
+                break;
+            case MSG_HIDE_EXPERT_INDICATOR:
+                expertIndicatorTextView.setVisibility(View.GONE);
+                break;
         }
         return false;
     }
@@ -638,7 +659,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         for (final int userResponseType: userResponseTypes) {
             final String buttonText = UserResponse.getStringForResponseType(userResponseType);
             //Returning if context is null
-            if (buttonText == null || buttonText.equals(Utils.EMPTY_STRING) || getContext() == null) {
+            if (buttonText == null || getContext() == null) {
                 continue;
             }
             Button button = new Button(getContext(), null, android.R.attr.buttonStyleSmall);
@@ -646,12 +667,6 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
                     LinearLayout.LayoutParams.WRAP_CONTENT);
             params.setMargins(10, 0, 10, 10);
             button.setLayoutParams(params);
-            if (userResponseType == UserResponse.ResponseType.CONTACT_HUMAN_EXPERT) {
-                button.setTextColor(Color.DKGRAY); // light gray
-            } else {
-                button.setTextColor(Color.LTGRAY); // light gray
-            }
-
             button.setText(buttonText);
             button.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
             //button.setMinHeight((int)Utils.convertPixelsToDp(10, this.getContext())); // In pixels
@@ -663,8 +678,10 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
 
             if (userResponseType == UserResponse.ResponseType.CONTACT_HUMAN_EXPERT) {
                 button.setBackgroundResource(R.drawable.rounded_shape_action_button_contact_expert);
+                button.setTextColor(Color.DKGRAY); // light gray
             } else {
                 button.setBackgroundResource(R.drawable.rounded_shape_action_button);
+                button.setTextColor(Color.LTGRAY); // light gray
             }
 
 

@@ -96,6 +96,7 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        toolbar.setTitle("Foo bar");
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -327,6 +328,17 @@ public class MainActivity extends AppCompatActivity
         //Contacting expert
         ExpertChat expertChat = new ExpertChat("Expert help needed here", ExpertChat.MSG_TYPE_BOT_TEXT);
         expertChatService.pushUserChatMessage(expertChat, true);
+        //Show a message showing trying to get expert
+        updateExpertIndicator();
+    }
+
+    @Override
+    public void switchedToExpertIsListeningMode() {
+        //Show the message saying you are talking to expert
+        updateExpertIndicator();
+        if (isFragmentActive) {
+            chatFragment.showStatus(getString(R.string.talking_to_human_expert_with_response_time));
+        }
     }
 
     public MainActivity() {
@@ -336,11 +348,13 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void switchedToExpertMode() {
         saveSwitchedToExpertMode();
+        updateExpertIndicator();
     }
 
     @Override
     public void switchedToBotMode() {
         saveSwitchedToBotMode();
+        updateExpertIndicator();
     }
 
     //Handle ExpertChatServiceCallback
@@ -401,15 +415,16 @@ public class MainActivity extends AppCompatActivity
         String messagePrefix = getResources().getString(R.string.expected_response_time_for_expert);
         String message = EMPTY_STRING;
         if (!isPresent || newEtaSeconds > ExpertChatService.ETA_12HOURS) {
-            message = "Our experts are current offline. You shall receive a response in about 12 hours.";
+            message = "Our experts are currently offline. You shall receive a response in about 12 hours.";
         } else {
             message = messagePrefix + " Less than " + Utils.timeSecondsToString(newEtaSeconds);
         }
         currentEtaSeconds = newEtaSeconds;
         expertIsPresent = isPresent;
         if (showInChat && isFragmentActive) {
-            chatFragment.showResponse(message);
+            chatFragment.showStatus(message);
         }
+        dobbyAi.updatedEtaAvailable(currentEtaSeconds);
     }
 
 
@@ -551,6 +566,7 @@ public class MainActivity extends AppCompatActivity
         DobbyLog.v("MainActivity:onRecyclerViewReady Setting isFragmentActive to true");
         isFragmentActive = true;
         showLocationPermissionRequest();
+        updateExpertIndicator();
     }
 
     @Override
@@ -579,6 +595,20 @@ public class MainActivity extends AppCompatActivity
             }
         } else {
             super.onActivityResult(requestCode, resultCode, data);
+        }
+    }
+
+    private void updateExpertIndicator() {
+        if (isFragmentActive) {
+            if (dobbyAi.getIsExpertListening()) {
+                chatFragment.showExpertIndicatorWithText(getString(R.string.you_are_now_talking_to_human_expert));
+            } else if (dobbyAi.getIsChatInExpertMode()){
+                chatFragment.showExpertIndicatorWithText(getString(R.string.contacting_human_expert));
+            } else if (dobbyAi.getUserAskedForExpertMode() && !dobbyAi.getIsChatInExpertMode()){
+                chatFragment.showExpertIndicatorWithText(getString(R.string.pre_human_contact_tests));
+            } else {
+                chatFragment.hideExpertIndicator();
+            }
         }
     }
 

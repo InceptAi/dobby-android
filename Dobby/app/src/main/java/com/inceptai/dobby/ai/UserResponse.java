@@ -10,8 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.ASK_ABOUT_DOBBY;
-import static com.inceptai.dobby.ai.UserResponse.ResponseType.CONTACT_HUMAN_EXPERT;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.CANCEL;
+import static com.inceptai.dobby.ai.UserResponse.ResponseType.CONTACT_HUMAN_EXPERT;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.LIST_ALL_FUNCTIONS;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.NO;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.NO_COMMENTS;

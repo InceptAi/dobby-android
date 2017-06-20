@@ -69,6 +69,8 @@ import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_WIFI_CHECK;
 @Singleton
 public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.ActionListener {
     private static final boolean CLEAR_STATS_EVERY_TIME_USER_ASKS_TO_RUN_TESTS = true;
+    private static final long MAX_ETA_TO_MARK_EXPERT_AS_LISTENING_SECONDS = 180;
+
     private Context context;
     private DobbyThreadpool threadpool;
     private ApiAiClient apiAiClient;
@@ -84,6 +86,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     private boolean shortSuggestionShown = false;
     private boolean userAskedForHumanExpert = false;
     private boolean chatInExpertMode = false;
+    private boolean isExpertListening = false;
 
 
 
@@ -112,6 +115,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         void showStatus(String text);
         void switchedToExpertMode();
         void switchedToBotMode();
+        void switchedToExpertIsListeningMode();
     }
 
     @Inject
@@ -160,6 +164,18 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
 
     public void startMic() {
 
+    }
+
+    public boolean getIsExpertListening() {
+        return isExpertListening;
+    }
+
+    public boolean getIsChatInExpertMode() {
+        return chatInExpertMode;
+    }
+
+    public boolean getUserAskedForExpertMode() {
+        return userAskedForHumanExpert;
     }
 
     /**
@@ -364,6 +380,17 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         }
     }
 
+    public void updatedEtaAvailable(long currentEtaSeconds) {
+        if (chatInExpertMode && currentEtaSeconds <= MAX_ETA_TO_MARK_EXPERT_AS_LISTENING_SECONDS) {
+            isExpertListening = true;
+            if (responseCallback != null) {
+                responseCallback.switchedToExpertIsListeningMode();
+            }
+        } else {
+            isExpertListening = false;
+        }
+    }
+
     public void setChatInExpertMode() {
         chatInExpertMode = true;
         if (responseCallback != null) {
@@ -373,6 +400,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
 
     public void setChatInBotMode() {
         chatInExpertMode = false;
+        isExpertListening = false;
         if (responseCallback != null) {
             responseCallback.switchedToBotMode();
         }
@@ -526,6 +554,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         if (!responseList.contains(UserResponse.ResponseType.CONTACT_HUMAN_EXPERT) && lastActionShownToUser == ACTION_TYPE_SET_CHAT_TO_BOT_MODE) {
             responseList.add(UserResponse.ResponseType.CONTACT_HUMAN_EXPERT);
         }
+
         return responseList;
     }
 
