@@ -706,7 +706,6 @@ public class DataInterpreter {
                 return "ABYSMAL";
             case MetricType.NONFUNCTIONAL:
                 return "NONFUNCTIONAL";
-
         }
         return "UNKNOWN";
     }
@@ -889,15 +888,6 @@ public class DataInterpreter {
         }
 
         wifiGrade.linkSpeed = linkInfo.getLinkSpeed();
-        wifiGrade.primaryApChannelInterferingAps = numStrongInterferingAps;
-        wifiGrade.primaryLinkChannelOccupancyMetric = getGradeLowerIsBetter(numStrongInterferingAps,
-                WIFI_CHANNEL_OCCUPANCY_STEPS,
-                (linkInfo.getFrequency() > 0 && numStrongInterferingAps >= 0), false);
-        wifiGrade.primaryApSignalMetric = getGradeHigherIsBetter(linkInfo.getRssi(),
-                WIFI_RSSI_STEPS_DBM, linkInfo.getRssi() < 0, false);
-        wifiGrade.primaryApLinkSpeedMetric = getGradeHigherIsBetter(wifiGrade.linkSpeed,
-                LINK_SPEED_STEPS_MBPS, linkInfo.getLinkSpeed() > 0, false);
-
         wifiGrade.wifiConnectivityMode = wifiConnectivityMode;
         wifiGrade.wifiLinkMode = wifiProblemMode;
         wifiGrade.primaryApSsid = linkInfo.getSSID();
@@ -906,6 +896,16 @@ public class DataInterpreter {
         wifiGrade.leastOccupiedChannelAps = minOccupancyAPs;
         wifiGrade.primaryApSignal = linkInfo.getRssi();
         wifiGrade.scanResultList = scanResultList;
+
+        //Compute metrics
+        wifiGrade.primaryApChannelInterferingAps = numStrongInterferingAps;
+        wifiGrade.primaryLinkChannelOccupancyMetric = getGradeLowerIsBetter(numStrongInterferingAps,
+                WIFI_CHANNEL_OCCUPANCY_STEPS,
+                (linkInfo.getFrequency() > 0 && numStrongInterferingAps >= 0), false);
+        wifiGrade.primaryApSignalMetric = getGradeHigherIsBetter(linkInfo.getRssi(),
+                WIFI_RSSI_STEPS_DBM, linkInfo.getRssi() < 0, false);
+        wifiGrade.primaryApLinkSpeedMetric = getGradeHigherIsBetter(wifiGrade.linkSpeed,
+                LINK_SPEED_STEPS_MBPS, linkInfo.getLinkSpeed() > 0, false);
 
         //Initializing the strings
         wifiGrade.connectivityModeString = ConnectivityAnalyzer.connectivityModeToString(wifiGrade.wifiConnectivityMode);
@@ -925,7 +925,7 @@ public class DataInterpreter {
             case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL:
                 return BandwidthTestCodes.ErrorCodes.ERROR_WIFI_IN_CAPTIVE_PORTAL;
             case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_OFFLINE:
-                return BandwidthTestCodes.ErrorCodes.ERROR_WIFI_IN_CAPTIVE_PORTAL;
+                return BandwidthTestCodes.ErrorCodes.ERROR_WIFI_CONNECTED_AND_OFFLINE;
             case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_UNKNOWN:
                 return BandwidthTestCodes.ErrorCodes.ERROR_WIFI_CONNECTED_AND_UNKNOWN;
             case ConnectivityAnalyzer.WifiConnectivityMode.ON_AND_DISCONNECTED:
