@@ -2,6 +2,7 @@ package com.inceptai.expertchat;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.wifi.ScanResult;
 import android.os.Bundle;
 import android.support.annotation.IdRes;
 import android.support.annotation.LayoutRes;
@@ -26,6 +27,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 public class UserSelectionFragment extends Fragment implements ChildEventListener {
@@ -44,6 +47,7 @@ public class UserSelectionFragment extends Fragment implements ChildEventListene
     private ListView roomListView;
     private RoomArrayAdapter arrayAdapter;
     private ExpertChatService expertChatService;
+    private HashSet<String> roomUuidSet;
 
     private static class RoomArrayAdapter extends ArrayAdapter<String> {
 
@@ -80,6 +84,7 @@ public class UserSelectionFragment extends Fragment implements ChildEventListene
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         expertChatService = ExpertChatService.fetchInstance(getContext().getApplicationContext());
+        roomUuidSet = new HashSet<>();
     }
 
     @Override
@@ -132,6 +137,7 @@ public class UserSelectionFragment extends Fragment implements ChildEventListene
     public void onResume() {
         super.onResume();
         arrayAdapter.clear();
+        roomUuidSet.clear();
 
         chatRoomBase = expertChatService.getChatRoomBase();
         flavor = expertChatService.getFlavor();
@@ -175,7 +181,11 @@ public class UserSelectionFragment extends Fragment implements ChildEventListene
             @Override
             public void run() {
                 progressBar.setVisibility(View.GONE);
-                arrayAdapter.add(dataSnapshot.getKey());
+                String key = dataSnapshot.getKey();
+                if (!roomUuidSet.contains(key)) {
+                    roomUuidSet.add(key);
+                    arrayAdapter.add(key);
+                }
             }
         });
     }
