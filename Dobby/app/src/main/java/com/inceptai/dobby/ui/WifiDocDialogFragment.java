@@ -22,6 +22,7 @@ import android.widget.TextView;
 
 import com.inceptai.dobby.BuildConfig;
 import com.inceptai.dobby.DobbyApplication;
+import com.inceptai.dobby.MainActivity;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.database.FeedbackDatabaseWriter;
 import com.inceptai.dobby.database.FeedbackRecord;
@@ -58,12 +59,18 @@ public class WifiDocDialogFragment extends DialogFragment {
     @Inject
     FeedbackDatabaseWriter feedbackDatabaseWriter;
     private WifiDocMainFragment wifiDocMainFragment;
+    private MainActivity mainActivity;
 
     public WifiDocDialogFragment() {
     }
 
     public void setWifiDocMainFragment(WifiDocMainFragment mainFragment) {
         this.wifiDocMainFragment = mainFragment;
+    }
+
+
+    public void setMainActivity(MainActivity mainActivity) {
+        this.mainActivity = mainActivity;
     }
 
     @Override
@@ -135,6 +142,15 @@ public class WifiDocDialogFragment extends DialogFragment {
     public static WifiDocDialogFragment forLocationPermission(WifiDocMainFragment mainFragment)  {
         WifiDocDialogFragment fragment = new WifiDocDialogFragment();
         fragment.setWifiDocMainFragment(mainFragment);
+        Bundle bundle = new Bundle();
+        bundle.putInt(DIALOG_TYPE, DIALOG_SHOW_LOCATION_PERMISSION_REQUEST);
+        fragment.setArguments(bundle);
+        return fragment;
+    }
+
+    public static WifiDocDialogFragment forDobbyLocationPermission(MainActivity mainActivity)  {
+        WifiDocDialogFragment fragment = new WifiDocDialogFragment();
+        fragment.setMainActivity(mainActivity);
         Bundle bundle = new Bundle();
         bundle.putInt(DIALOG_TYPE, DIALOG_SHOW_LOCATION_PERMISSION_REQUEST);
         fragment.setArguments(bundle);
@@ -213,13 +229,23 @@ public class WifiDocDialogFragment extends DialogFragment {
     private Dialog createLocationPermissionRequestDialog(Bundle bundle) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = getActivity().getLayoutInflater();
-        rootView = inflater.inflate(R.layout.location_permission_dialog_fragment, null);
+        if (BuildConfig.FLAVOR == "wifidoc") {
+            rootView = inflater.inflate(R.layout.location_permission_dialog_fragment, null);
+        } else {
+            rootView = inflater.inflate(R.layout.location_permission_dialog_fragment_dobby, null);
+        }
         FrameLayout nextFl = (FrameLayout) rootView.findViewById(R.id.bottom_next_fl);
         nextFl.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (wifiDocMainFragment != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    wifiDocMainFragment.requestLocationPermission();
+                if (BuildConfig.FLAVOR == "wifidoc") {
+                    if (wifiDocMainFragment != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        wifiDocMainFragment.requestLocationPermission();
+                    }
+                } else {
+                    if (mainActivity != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        mainActivity.requestLocationPermission();
+                    }
                 }
                 dismiss();
             }
