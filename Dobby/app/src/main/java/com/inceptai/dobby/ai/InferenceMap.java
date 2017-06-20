@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static com.inceptai.dobby.ai.InferenceMap.Condition.ISP_INTERNET_DOWN;
+import static com.inceptai.dobby.ai.InferenceMap.Condition.ISP_INTERNET_SLOW;
 
 /**
  * Created by arunesh on 4/14/17.
@@ -33,7 +34,7 @@ public class InferenceMap {
             Condition.ROUTER_SOFTWARE_FAULT,
             Condition.ROUTER_GOOD_SIGNAL_USING_SLOW_DATA_RATE,
             Condition.ISP_INTERNET_DOWN,
-            Condition.ISP_INTERNET_SLOW,
+            ISP_INTERNET_SLOW,
             Condition.ISP_INTERNET_SLOW_DOWNLOAD,
             Condition.ISP_INTERNET_SLOW_UPLOAD,
             Condition.DNS_RESPONSE_SLOW,
@@ -82,7 +83,7 @@ public class InferenceMap {
 
     private static int[] ISP_CONDITIONS = {
         Condition.ISP_INTERNET_DOWN,
-        Condition.ISP_INTERNET_SLOW,
+        ISP_INTERNET_SLOW,
         Condition.ISP_INTERNET_SLOW_DOWNLOAD,
         Condition.ISP_INTERNET_SLOW_UPLOAD,
         Condition.REMOTE_SERVER_IS_SLOW_TO_RESPOND
@@ -150,13 +151,14 @@ public class InferenceMap {
                 DataInterpreter.isPoorOrAbysmal(bandwidthGrade.getUploadBandwidthMetric())) {
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
             conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
-            conditions.include(Condition.ISP_INTERNET_SLOW, 0.7);
+            conditions.include(ISP_INTERNET_SLOW, 0.7);
             conditions.exclude(Condition.DNS_UNREACHABLE);
         } else if (DataInterpreter.isNonFunctional(bandwidthGrade.getDownloadBandwidthMetric()) ||
                 DataInterpreter.isNonFunctional(bandwidthGrade.getUploadBandwidthMetric())) {
-            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.7);
+            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.5);
             conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
             conditions.include(ISP_INTERNET_DOWN, 0.7);
+            conditions.include(ISP_INTERNET_SLOW, 0.5);
         }
         return conditions;
     }
@@ -291,7 +293,7 @@ public class InferenceMap {
                 conditions.exclude(DNS_CONDITIONS);
                 //Good Router / dns latency but poor external server latency
                 if (DataInterpreter.isAbysmal(pingGrade.externalServerLatencyMetric)) {
-                    conditions.include(Condition.ISP_INTERNET_SLOW, 0.7);
+                    conditions.include(ISP_INTERNET_SLOW, 0.7);
                     conditions.include(Condition.CABLE_MODEM_FAULT, 0.3);
                     conditions.include(Condition.REMOTE_SERVER_IS_SLOW_TO_RESPOND, 0.05);
                 } else if (DataInterpreter.isNonFunctional(pingGrade.externalServerLatencyMetric)) { // Use loss rates here instead of unknown
@@ -394,7 +396,7 @@ public class InferenceMap {
                 return "ROUTER_SOFTWARE_FAULT";
             case Condition.ROUTER_GOOD_SIGNAL_USING_SLOW_DATA_RATE:
                 return "ROUTER_GOOD_SIGNAL_USING_SLOW_DATA_RATE";
-            case Condition.ISP_INTERNET_SLOW:
+            case ISP_INTERNET_SLOW:
                 return "ISP_INTERNET_SLOW";
             case Condition.ISP_INTERNET_SLOW_DOWNLOAD:
                 return "ISP_INTERNET_SLOW_DOWNLOAD";
