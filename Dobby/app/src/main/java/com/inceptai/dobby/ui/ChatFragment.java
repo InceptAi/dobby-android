@@ -96,7 +96,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     private static final int BW_SERVER_INFO_FETCHED = 204;
     private static final int BW_BEST_SERVER_DETERMINED = 205;
     private static final int BW_IDLE = 207;
-    private static final int DELAY_FOR_DOBBY_MESSAGES_MS = 750;
+    private static final int DELAY_FOR_DOBBY_MESSAGES_MS = 500;
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -659,7 +659,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         for (final int userResponseType: userResponseTypes) {
             final String buttonText = UserResponse.getStringForResponseType(userResponseType);
             //Returning if context is null
-            if (buttonText == null || getContext() == null) {
+            if (buttonText == null || buttonText.equals(Utils.EMPTY_STRING) || getContext() == null) {
                 continue;
             }
             Button button = new Button(getContext(), null, android.R.attr.buttonStyleSmall);
