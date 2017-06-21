@@ -85,7 +85,6 @@ public class MainActivity extends AppCompatActivity
 
     private Handler handler;
     private ChatFragment chatFragment;
-    private boolean isFragmentActive = false;
     private ExpertChatService expertChatService;
     private boolean expertIsPresent = false;
     private long currentEtaSeconds;
@@ -122,7 +121,8 @@ public class MainActivity extends AppCompatActivity
         //TODO change messaging accordingly
         expertChatService = ExpertChatService.get();
         //TODO: Check do we need this
-        fetchChatMessages();
+        expertChatService.setCallback(this);
+        //fetchChatMessages();
 
         dobbyAi.setResponseCallback(this);
         if (checkSharedPrefForExpertModeResume()) {
@@ -139,6 +139,17 @@ public class MainActivity extends AppCompatActivity
         currentEtaSeconds = ExpertChatService.ETA_OFFLINE;
         expertIsPresent = false;
         sessionStartedTimestamp = System.currentTimeMillis();
+    }
+
+    private ChatFragment getChatFragmentFromTag() {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        if (fragmentManager != null) {
+            Fragment existingFragment = fragmentManager.findFragmentByTag(ChatFragment.FRAGMENT_TAG);
+            if (existingFragment != null) {
+                return (ChatFragment)existingFragment;
+            }
+        }
+        return null;
     }
 
     private Fragment setupFragment(Class fragmentClass, String tag) {
@@ -163,17 +174,16 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void setupChatFragment() {
-        chatFragment = new ChatFragment();
+        //chatFragment = new ChatFragment();
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.replace(R.id.placeholder_fl,
-                chatFragment, ChatFragment.FRAGMENT_TAG);
+                new ChatFragment(), ChatFragment.FRAGMENT_TAG);
         //fragmentTransaction.addToBackStack(null);
         fragmentTransaction.commit();
     }
 
     private void fetchChatMessages() {
-        expertChatService.setCallback(this);
         if (!expertChatService.isListenerConnected()) {
             //recyclerViewAdapter.clear();
             expertChatService.fetchChatMessages();
@@ -252,7 +262,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void showResponse(String text) {
         DobbyLog.v("In showResponse of MainActivity: text: " + text);
-        if (isFragmentActive) {
+        if (chatFragment != null) {
             chatFragment.showResponse(text);
         }
         pushBotChatMessage(text);
@@ -261,7 +271,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void showStatus(String text) {
         DobbyLog.v("In showStatus of MainActivity: text: " + text);
-        if (isFragmentActive) {
+        if (chatFragment != null) {
             chatFragment.showStatus(text);
         }
         pushBotChatMessage(text);
@@ -269,14 +279,14 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void showBandwidthViewCard(DataInterpreter.BandwidthGrade bandwidthGrade) {
-        if (isFragmentActive) {
+        if (chatFragment != null) {
             chatFragment.addBandwidthResultsCardView(bandwidthGrade);
         }
     }
 
     @Override
     public void showNetworkInfoViewCard(DataInterpreter.WifiGrade wifiGrade, String isp, String ip) {
-        if (isFragmentActive) {
+        if (chatFragment != null) {
             chatFragment.addOverallNetworkResultsCardView(wifiGrade, isp, ip);
         }
     }
@@ -284,7 +294,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void showUserActionOptions(List<Integer> userResponseTypes) {
         DobbyLog.v("In showUserActionOptions of MainActivity: responseTypes: " + userResponseTypes);
-        if (isFragmentActive) {
+        if (chatFragment != null) {
             chatFragment.showUserActionOptions(userResponseTypes);
         }
     }
@@ -292,7 +302,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void showDetailedSuggestions(SuggestionCreator.Suggestion suggestion) {
         DobbyLog.v("In showDetailedSuggestions of MainActivity");
-        if (isFragmentActive) {
+        if (chatFragment != null) {
             chatFragment.showDetailedSuggestionsView(suggestion);
         }
     }
@@ -310,7 +320,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void cancelTests() {
-        if (isFragmentActive) {
+        if (chatFragment != null) {
             chatFragment.cancelTests();
         }
     }
@@ -340,9 +350,6 @@ public class MainActivity extends AppCompatActivity
     public void switchedToExpertIsListeningMode() {
         //Show the message saying you are talking to expert
         updateExpertIndicator();
-//        if (isFragmentActive) {
-//            chatFragment.showStatus(getString(R.string.talking_to_human_expert_with_response_time));
-//        }
     }
 
     public MainActivity() {
@@ -439,7 +446,7 @@ public class MainActivity extends AppCompatActivity
         }
         currentEtaSeconds = newEtaSeconds;
         expertIsPresent = isPresent;
-        if (isFragmentActive && showInChat) {
+        if (chatFragment != null && showInChat) {
             chatFragment.showResponse(message);
         }
         dobbyAi.updatedEtaAvailable(currentEtaSeconds);
@@ -548,6 +555,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
+        expertChatService.setCallback(this);
         fetchChatMessages();
         processIntent(getIntent());
         expertChatService.sendUserEnteredMetaMessage();
@@ -578,7 +586,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void observeBandwidth(BandwidthObserver observer) {
-        if (isFragmentActive) {
+        if (chatFragment != null) {
             chatFragment.observeBandwidthNonUi(observer);
         }
     }
@@ -591,8 +599,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onRecyclerViewReady() {
         //Get the welcome message
-        DobbyLog.v("MainActivity:onRecyclerViewReady Setting isFragmentActive to true");
-        isFragmentActive = true;
+        DobbyLog.v("MainActivity:onRecyclerViewReady");
         showLocationPermissionRequest();
         updateExpertIndicator();
     }
@@ -606,8 +613,16 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onFragmentDetached() {
-        DobbyLog.v("MainActivity:onFragmentDetached Setting isFragmentActive to false");
-        isFragmentActive = false;
+        DobbyLog.v("MainActivity:onFragmentDetached Setting chatFragment to null");
+        //Setting chat fragment to null
+        chatFragment = null;
+    }
+
+    @Override
+    public void onFragmentAttached() {
+        DobbyLog.v("MainActivity:onFragmentAttached Setting chatFragment based on tag");
+        //Setting chat fragment here
+        chatFragment = getChatFragmentFromTag();
     }
 
     @Override
@@ -616,7 +631,7 @@ public class MainActivity extends AppCompatActivity
             if (resultCode == RESULT_OK && null != data) {
                 ArrayList<String> res = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
                 String inSpeech = res.get(0);
-                if (isFragmentActive) {
+                if (chatFragment != null) {
                     chatFragment.addSpokenText(inSpeech);
                 }
                 onUserQuery(inSpeech, false);
@@ -627,7 +642,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void updateExpertIndicator() {
-        if (isFragmentActive) {
+        if (chatFragment != null) {
             if (dobbyAi.getIsExpertListening()) {
                 chatFragment.showExpertIndicatorWithText(getString(R.string.you_are_now_talking_to_human_expert));
             } else if (dobbyAi.getIsChatInExpertMode()){

@@ -72,7 +72,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     private static final int UI_STATE_FULL_CHAT = 1001;
     private static final int UI_STATE_SHOW_BW_GAUGE = 1002;
 
-    public static final String FRAGMENT_TAG = "ChatFragment";
+    public static final String FRAGMENT_TAG = "DobbyChatFragment";
 
     // Handler message types.
     private static final int MSG_SHOW_DOBBY_CHAT = 1;
@@ -149,6 +149,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         void onRecyclerViewReady();
         void onFragmentDetached();
         void onFirstTimeCreated();
+        void onFragmentAttached();
     }
 
     public ChatFragment() {
@@ -249,6 +250,15 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         uploadGaugeTitleTv = (TextView) uploadView.findViewById(R.id.title_tv);
         uploadGaugeTitleTv.setText(R.string.upload_bw);
 
+        expertIndicatorTextView = (TextView) fragmentView.findViewById(R.id.chatting_with_human_tv);
+
+        DobbyLog.v("CF: Finished with onCreateView");
+        return fragmentView;
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
         if (mListener != null) {
             mListener.onRecyclerViewReady();
         }
@@ -259,11 +269,6 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
                 mListener.onFirstTimeCreated();
             }
         }
-
-        expertIndicatorTextView = (TextView) fragmentView.findViewById(R.id.chatting_with_human_tv);
-
-        DobbyLog.v("CF: Finished with onCreateView");
-        return fragmentView;
     }
 
     @Override
@@ -275,6 +280,8 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
             throw new RuntimeException(context.toString()
                     + " must implement OnFragmentInteractionListener");
         }
+        DobbyLog.v("Sending onFragmentAttached callback to listener");
+        mListener.onFragmentAttached();
     }
 
     @Override
