@@ -697,6 +697,10 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     }
 
     private void processTextQuery(String text, boolean isButtonActionText) {
+        //Ignore empty strings
+        if (text.equals(Utils.EMPTY_STRING)) {
+            return;
+        }
         addUserChat(text);
         useVoiceOutput = false;
         // Parent activity callback.
