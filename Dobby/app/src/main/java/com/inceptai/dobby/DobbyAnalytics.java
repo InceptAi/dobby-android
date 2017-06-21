@@ -42,6 +42,10 @@ public class DobbyAnalytics {
     private static final String WIFI_GRADE_EVENT = "wifi_grade";
     private static final String PING_GRADE_EVENT = "ping_grade";
 
+    private static final String WIFI_TESTER_SIMPLE_FEEDBACK_SHOWN = "simple_feedback_shown";
+    private static final String WIFI_TESTER_SIMPLE_FEEDBACK_POSITIVE = "simple_feedback_positive";
+    private static final String WIFI_TESTER_SIMPLE_FEEDBACK_NEGATIVE = "simple_feedback_negative";
+
 
     //Unique Wifi Expert events
     private static final String WIFI_EXPERT_FRAGMENT_ENTERED = "expert_opened";
@@ -53,6 +57,7 @@ public class DobbyAnalytics {
     private static final String WIFI_EXPERT_ACCEPT_RUNNING_FULL_BANDWIDTH_TESTS_CLICKED = "expert_accept_tests";
     private static final String WIFI_EXPERT_CANCEL_BANDWIDTH_TEST_BUTTON_CLICKED = "expert_cancel_tests";
     private static final String WIFI_EXPERT_CONTACT_EXPERT_BUTTON_CLICKED = "contact_expert_clicked";
+
 
     /*
     Contact expert click event.
@@ -509,4 +514,19 @@ public class DobbyAnalytics {
         firebaseAnalytics.logEvent(EXPERT_FEEDBACK_BUTTON_CLICKED, bundle);
     }
 
+    //Simple feedback for wifi tester
+    public void wifiTesterSimpleFeedbackShown() {
+        Bundle bundle = new Bundle();
+        firebaseAnalytics.logEvent(WIFI_TESTER_SIMPLE_FEEDBACK_SHOWN, bundle);
+    }
+
+    public void wifiTesterSimpleFeedbackPositive() {
+        Bundle bundle = new Bundle();
+        firebaseAnalytics.logEvent(WIFI_TESTER_SIMPLE_FEEDBACK_POSITIVE, bundle);
+    }
+
+    public void setWifiTesterSimpleFeedbackNegative() {
+        Bundle bundle = new Bundle();
+        firebaseAnalytics.logEvent(WIFI_TESTER_SIMPLE_FEEDBACK_NEGATIVE, bundle);
+    }
 }

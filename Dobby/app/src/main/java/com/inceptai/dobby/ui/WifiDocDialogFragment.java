@@ -21,6 +21,7 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import com.inceptai.dobby.BuildConfig;
+import com.inceptai.dobby.DobbyAnalytics;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.MainActivity;
 import com.inceptai.dobby.R;
@@ -58,6 +59,9 @@ public class WifiDocDialogFragment extends DialogFragment {
 
     @Inject
     FeedbackDatabaseWriter feedbackDatabaseWriter;
+    @Inject
+    DobbyAnalytics dobbyAnalytics;
+
     private WifiDocMainFragment wifiDocMainFragment;
     private MainActivity mainActivity;
 
@@ -207,6 +211,7 @@ public class WifiDocDialogFragment extends DialogFragment {
                 if (rootView != null) {
                     Snackbar.make(rootView, "Thanks for your feedback !", Snackbar.LENGTH_SHORT).show();
                 }
+                dobbyAnalytics.wifiTesterSimpleFeedbackPositive();
                 dismiss();
             }
         });
@@ -219,10 +224,12 @@ public class WifiDocDialogFragment extends DialogFragment {
                 if (rootView != null) {
                     Snackbar.make(rootView, "Thanks for your feedback !", Snackbar.LENGTH_SHORT).show();
                 }
+                dobbyAnalytics.setWifiTesterSimpleFeedbackNegative();
                 dismiss();
             }
         });
         builder.setView(rootView);
+        dobbyAnalytics.wifiTesterSimpleFeedbackShown();
         return builder.create();
     }
 
