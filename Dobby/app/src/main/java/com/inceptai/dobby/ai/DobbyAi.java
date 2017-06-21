@@ -87,6 +87,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     private boolean userAskedForHumanExpert = false;
     private boolean chatInExpertMode = false;
     private boolean isExpertListening = false;
+    private boolean resumedWithExpertMode = false;
 
 
 
@@ -395,6 +396,10 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         }
     }
 
+    public void setChatResumedInExpertMode() {
+         resumedWithExpertMode = true;
+    }
+
     public void setChatInExpertMode() {
         chatInExpertMode = true;
         if (responseCallback != null) {
@@ -467,7 +472,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
 
     public void sendWelcomeEvent() {
         if (useApiAi) {
-            if (chatInExpertMode) {
+            if (resumedWithExpertMode) {
                 //apiAiClient.resetContexts();
                 apiAiClient.sendTextQuery(null, ApiAiClient.APIAI_WELCOME_AND_RESUME_EXPERT_EVENT, getLastAction(), this);
             } else {

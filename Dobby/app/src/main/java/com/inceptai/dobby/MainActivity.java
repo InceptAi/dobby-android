@@ -120,9 +120,10 @@ public class MainActivity extends AppCompatActivity
         fetchChatMessages();
 
         dobbyAi.setResponseCallback(this);
-        if (isChatInExpertMode()) {
-            dobbyAi.setChatInExpertMode();
-            sendInitialMessageToExpert();
+        if (checkSharedPrefForExpertModeResume()) {
+            //dobbyAi.setChatInExpertMode();
+            //sendInitialMessageToExpert();
+            dobbyAi.setChatResumedInExpertMode();
         }
 
         handler = new Handler(this);
@@ -480,7 +481,7 @@ public class MainActivity extends AppCompatActivity
                 PREF_CHAT_IN_EXPERT_MODE, Utils.TRUE_STRING);
     }
 
-    private boolean isChatInExpertMode() {
+    private boolean checkSharedPrefForExpertModeResume() {
         return Boolean.valueOf(Utils.readSharedSetting(this,
                 PREF_CHAT_IN_EXPERT_MODE, Utils.FALSE_STRING));
     }
