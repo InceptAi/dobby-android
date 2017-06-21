@@ -457,6 +457,7 @@ public class DataInterpreter {
         @BandwidthTestCodes.ErrorCodes int errorCode = BandwidthTestCodes.ErrorCodes.ERROR_UNINITIAlIZED;
         private String errorCodeString = Utils.EMPTY_STRING;
         private String httpDownloadMetricString = Utils.EMPTY_STRING;
+        private double httpDownloadLatencyMs;
 
         public HttpGrade() {
         }
@@ -845,11 +846,13 @@ public class DataInterpreter {
     public static HttpGrade interpret(PingStats httpRouterStats) {
         HttpGrade httpGrade = new HttpGrade();
         httpGrade.errorCode = BandwidthTestCodes.ErrorCodes.NO_ERROR;
+        httpGrade.errorCodeString = BandwidthTestCodes.bandwidthTestErrorCodesToStrings(httpGrade.errorCode);
         if (httpRouterStats == null) {
             httpGrade.errorCode = BandwidthTestCodes.ErrorCodes.ERROR_DHCP_INFO_UNAVAILABLE;
             httpGrade.errorCodeString = BandwidthTestCodes.bandwidthTestErrorCodesToStrings(httpGrade.errorCode);
             return httpGrade;
         }
+        httpGrade.httpDownloadLatencyMs = httpRouterStats.maxLatencyMs;
         httpGrade.httpDownloadLatencyMetric = getGradeLowerIsBetter(httpRouterStats.avgLatencyMs,
                 HTTP_LATENCY_ROUTER_STEPS_MS,
                 httpRouterStats.avgLatencyMs > 0.0,
