@@ -58,6 +58,20 @@ public class DobbyAnalytics {
     private static final String WIFI_EXPERT_CANCEL_BANDWIDTH_TEST_BUTTON_CLICKED = "expert_cancel_tests";
     private static final String WIFI_EXPERT_CONTACT_EXPERT_BUTTON_CLICKED = "contact_expert_clicked";
 
+    private static final String EXPERT_CHAT_ACTIVITY_ENTERED_FIRST_TIME = "expert_chat_first_time";
+    private static final String EXPERT_CHAT_CONTINUE_BUTTON_CLICKED = "first_time_chat_continue";
+    private static final String USER_SENT_MESSAGE_TO_EXPERT = "user_sent_msg_to_expert";
+    private static final String USER_RECVD_MESSAGE_FROM_EXPERT = "user_got_msg_from_expert";
+
+    //Expert tagges events
+    private static final String EXPERT_SAYS_ISSUE_RESOLVED = "expert_issue_resolved";
+    private static final String EXPERT_SAYS_ISSUE_UNRESOLVED = "expert_issue_unresolved";
+    private static final String EXPERT_SAYS_MORE_DATA_NEEDED = "expert_more_data_needed";
+    private static final String EXPERT_SAYS_USER_DROPPED_OFF = "expert_says_user_dropped";
+    private static final String EXPERT_SAYS_GOOD_INFERENCING = "expert_says_good_infer";
+    private static final String EXPERT_SAYS_BAD_INFERENCING = "expert_says_bad_infer";
+    private static final String EXPERT_SAYS_INFERENCING_CAN_BE_BETTER = "expert_says_infer_can_be_better";
+
 
     /*
     Contact expert click event.
@@ -71,14 +85,10 @@ public class DobbyAnalytics {
     private static final String EXPERT_FEEDBACK_BUTTON_CLICKED = "feedback_button_clicked";
     private static final String EXPERT_CHAT_NOTIFICATION_SHOWN = "chat_notification_shown";
     private static final String EXPERT_CHAT_NOTIFICATION_CONSUMED = "chat_notification_consumed";
-    private static final String USER_SENT_MESSAGE_TO_EXPERT = "user_sent_msg_to_expert";
-    private static final String USER_RECVD_MESSAGE_FROM_EXPERT = "user_got_msg_from_expert";
     private static final String FIRST_USER_MESSAGE_TO_EXPERT = "first_user_message_to_expert";
-    private static final String EXPERT_CHAT_ACTIVITY_ENTERED_FIRST_TIME = "expert_chat_first_time";
     private static final String SHOW_ETA_TO_USER = "show_eta_to_user";
     private static final String ONBOARDING_FINISH_CLICKED = "onboarding_finish_click";
     private static final String ONBOARDING_SKIP_CLICKED = "onboarding_skip_click";
-    private static final String EXPERT_CHAT_CONTINUE_BUTTON_CLICKED = "first_time_chat_continue";
     private static final String ONBOARDING_NEXT_CLICKED = "onboarding_next_click";
     private static final String ONBOARDING_SHOWN = "onboarding_shown";
 
@@ -528,5 +538,35 @@ public class DobbyAnalytics {
     public void setWifiTesterSimpleFeedbackNegative() {
         Bundle bundle = new Bundle();
         firebaseAnalytics.logEvent(WIFI_TESTER_SIMPLE_FEEDBACK_NEGATIVE, bundle);
+    }
+
+    //Expert says events
+    public void setExpertSaysIssueResolved() {
+        Bundle bundle = new Bundle();
+        firebaseAnalytics.logEvent(EXPERT_SAYS_ISSUE_RESOLVED, bundle);
+    }
+    public void setExpertSaysIssueUnResolved() {
+        Bundle bundle = new Bundle();
+        firebaseAnalytics.logEvent(EXPERT_SAYS_ISSUE_UNRESOLVED, bundle);
+    }
+    public void setExpertSaysMoreDataNeeded() {
+        Bundle bundle = new Bundle();
+        firebaseAnalytics.logEvent(EXPERT_SAYS_MORE_DATA_NEEDED, bundle);
+    }
+    public void setExpertSaysGoodInferencing() {
+        Bundle bundle = new Bundle();
+        firebaseAnalytics.logEvent(EXPERT_SAYS_GOOD_INFERENCING, bundle);
+    }
+    public void setExpertSaysBadInferencing() {
+        Bundle bundle = new Bundle();
+        firebaseAnalytics.logEvent(EXPERT_SAYS_BAD_INFERENCING, bundle);
+    }
+    public void setExpertSaysUserDroppedOff() {
+        Bundle bundle = new Bundle();
+        firebaseAnalytics.logEvent(EXPERT_SAYS_USER_DROPPED_OFF, bundle);
+    }
+    public void setExpertSaysInferencingCanBeBetter() {
+        Bundle bundle = new Bundle();
+        firebaseAnalytics.logEvent(EXPERT_SAYS_INFERENCING_CAN_BE_BETTER, bundle);
     }
 }

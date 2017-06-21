@@ -8,7 +8,6 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.media.RingtoneManager;
@@ -25,6 +24,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.inceptai.dobby.BuildConfig;
+import com.inceptai.dobby.DobbyAnalytics;
 import com.inceptai.dobby.MainActivity;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.ai.DobbyAi;
@@ -77,6 +77,15 @@ public class ExpertChatService implements
 
     private static final int ASK_FOR_FEEDBACK_ACTION = 3001;
     private static final int SWITCH_TO_BOT_MODE = 3002;
+    private static final int RESOLVED_USER_QUERY = 3003;
+    private static final int UNRESOLVED_USER_QUERY = 3004;
+    private static final int NEED_MORE_DATA = 3005;
+    private static final int USER_LEFT_EARLY = 3006;
+    private static final int GOOD_INFERENCING = 3007;
+    private static final int BAD_INFERENCING = 3008;
+    private static final int BETTER_INFERENCING_NEEDED = 3009;
+
+
 
 
     private static ExpertChatService INSTANCE;
@@ -102,6 +111,8 @@ public class ExpertChatService implements
     @Inject
     DobbyEventBus eventBus;
 
+    @Inject
+    DobbyAnalytics dobbyAnalytics;
 
     public interface ChatCallback {
         void onMessageAvailable(ExpertChat expertChat);
@@ -502,6 +513,27 @@ public class ExpertChatService implements
             case SWITCH_TO_BOT_MODE:
                 dobbyAi.triggerSwitchToBotMode();
                 break;
+            case USER_LEFT_EARLY:
+                dobbyAnalytics.setExpertSaysUserDroppedOff();
+                break;
+            case RESOLVED_USER_QUERY:
+                dobbyAnalytics.setExpertSaysIssueResolved();
+                break;
+            case UNRESOLVED_USER_QUERY:
+                dobbyAnalytics.setExpertSaysIssueUnResolved();
+                break;
+            case NEED_MORE_DATA:
+                dobbyAnalytics.setExpertSaysMoreDataNeeded();
+                break;
+            case GOOD_INFERENCING:
+                dobbyAnalytics.setExpertSaysGoodInferencing();
+                break;
+            case BAD_INFERENCING:
+                dobbyAnalytics.setExpertSaysBadInferencing();
+                break;
+            case BETTER_INFERENCING_NEEDED:
+                dobbyAnalytics.setExpertSaysInferencingCanBeBetter();
+                break;
         }
     }
 
@@ -517,6 +549,22 @@ public class ExpertChatService implements
                     triggerDiagnosticAction(ASK_FOR_FEEDBACK_ACTION);
                 } else if (expertMessage.toLowerCase().contains("bot")) {
                     triggerDiagnosticAction(SWITCH_TO_BOT_MODE);
+                } else if (expertMessage.toLowerCase().contains("left") ||
+                        expertMessage.toLowerCase().contains("early") ||
+                        expertMessage.toLowerCase().contains("dropped")) {
+                    triggerDiagnosticAction(USER_LEFT_EARLY);
+                } else if (expertMessage.toLowerCase().contains("good")) {
+                    triggerDiagnosticAction(GOOD_INFERENCING);
+                } else if (expertMessage.toLowerCase().contains("bad")) {
+                    triggerDiagnosticAction(BAD_INFERENCING);
+                }  else if (expertMessage.toLowerCase().contains("unresolved") || expertMessage.toLowerCase().contains("unsolved")) {
+                    triggerDiagnosticAction(UNRESOLVED_USER_QUERY);
+                } else if (expertMessage.toLowerCase().contains("solved") || expertMessage.toLowerCase().contains("resolved")) {
+                    triggerDiagnosticAction(RESOLVED_USER_QUERY);
+                } else if (expertMessage.toLowerCase().contains("more") || expertMessage.toLowerCase().contains("data")) {
+                    triggerDiagnosticAction(NEED_MORE_DATA);
+                } else if (expertMessage.toLowerCase().contains("better")) {
+                    triggerDiagnosticAction(BETTER_INFERENCING_NEEDED);
                 }
                 return true;
             }
