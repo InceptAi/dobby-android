@@ -32,8 +32,8 @@ import java.util.HashSet;
 import java.util.List;
 
 public class UserSelectionFragment extends Fragment implements ChildEventListener {
-    public static String FRAGMENT_TAG = "UserSelectionFragment";
-    private static String SELECTED_USERID = "userUuid";
+    public static final String FRAGMENT_TAG = "UserSelectionFragment";
+    private static final String SELECTED_USERID = "userUuid";
     private static final String FLAVOR = "flavor";  // debug or release.
     private static final String BUILD_TYPE = "buildType";
 
