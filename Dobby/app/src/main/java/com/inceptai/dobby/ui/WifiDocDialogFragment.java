@@ -27,10 +27,13 @@ import com.inceptai.dobby.MainActivity;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.database.FeedbackDatabaseWriter;
 import com.inceptai.dobby.database.FeedbackRecord;
+import com.inceptai.dobby.utils.Utils;
 
 import java.util.ArrayList;
 
 import javax.inject.Inject;
+
+import static com.inceptai.dobby.utils.Utils.WIFIDOC_FLAVOR;
 
 
 public class WifiDocDialogFragment extends DialogFragment {
@@ -236,7 +239,7 @@ public class WifiDocDialogFragment extends DialogFragment {
     private Dialog createLocationPermissionRequestDialog(Bundle bundle) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = getActivity().getLayoutInflater();
-        if (BuildConfig.FLAVOR == "wifidoc") {
+        if (BuildConfig.FLAVOR.equals(WIFIDOC_FLAVOR)) {
             rootView = inflater.inflate(R.layout.location_permission_dialog_fragment, null);
         } else {
             rootView = inflater.inflate(R.layout.location_permission_dialog_fragment_dobby, null);
@@ -245,7 +248,7 @@ public class WifiDocDialogFragment extends DialogFragment {
         nextFl.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (BuildConfig.FLAVOR == "wifidoc") {
+                if (BuildConfig.FLAVOR.equals(WIFIDOC_FLAVOR)) {
                     if (wifiDocMainFragment != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                         wifiDocMainFragment.requestLocationPermission();
                     }

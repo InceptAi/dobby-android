@@ -23,6 +23,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.Map;
 
 import static com.inceptai.expertchat.Utils.EMPTY_STRING;
+import static com.inceptai.expertchat.Utils.TAG;
 
 /**
  * Created by arunesh on 6/9/17.
@@ -88,7 +89,7 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
         if (avatar != null && !avatar.isEmpty()) {
             String tokenChild = EXPERT_BASE + "/" + avatar + "/" + FCM_KEY;
             FirebaseDatabase.getInstance().getReference().child(tokenChild).setValue(expertFcmToken);
-            Log.i(Utils.TAG, "Writing token to: " + tokenChild);
+            Log.i(TAG, "Writing token to: " + tokenChild);
         } else {
             pendingFcmTokenSaveOperation = true;
         }
@@ -161,6 +162,10 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
     }
 
     public void sendUserNotification(String toUser, ExpertChat expertChat) {
+        if (expertChat.isHashtagMessage()) {
+            Log.i(TAG, "Not sending notification for hash tag message: " + expertChat.getText());
+            return;
+        }
         ChatNotification chatNotification = new ChatNotification();
         chatNotification.from = avatar;
         chatNotification.to = toUser;
@@ -185,17 +190,17 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
         String fromUuid = data.get("source");
         String title = data.get("titleText");
         String body = data.get("bodyText");
-        Log.i(Utils.TAG, "Title: " + title);
-        Log.i(Utils.TAG, " Body: " + body);
-        Log.i(Utils.TAG, " Data: " + data);
-        Log.i(Utils.TAG, " From User UUID: " + fromUuid);
+        Log.i(TAG, "Title: " + title);
+        Log.i(TAG, " Body: " + body);
+        Log.i(TAG, " Data: " + data);
+        Log.i(TAG, " From User UUID: " + fromUuid);
         Intent intent = new Intent(context, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         intent.putExtra(MainActivity.NOTIFICATION_USER_UUID, fromUuid);
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         for (String key : data.keySet()) {
-            Log.i(Utils.TAG, "Key: " + key + ", value: " + data.get(key));
+            Log.i(TAG, "Key: " + key + ", value: " + data.get(key));
         }
 
         Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
@@ -240,7 +245,7 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
     }
 
     private void loadExpertData(ExpertData expertData) {
-        Log.i(Utils.TAG, "Expert data loaded." + expertData.toString());
+        Log.i(TAG, "Expert data loaded." + expertData.toString());
         avatar = expertData.avatar != null ? expertData.avatar : EMPTY_STRING;
         if (avatar != null && !avatar.isEmpty()) {
             Utils.saveSharedSetting(context, Utils.PREF_EXPERT_AVATAR, avatar);
