@@ -2,6 +2,7 @@ package com.inceptai.dobby;
 
 import android.Manifest;
 import android.annotation.TargetApi;
+import android.app.AlarmManager;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -67,6 +68,10 @@ public class MainActivity extends AppCompatActivity
 
     private static final String PREF_FIRST_CHAT = "first_dobby_expert_chat";
     private static final String PREF_CHAT_IN_EXPERT_MODE = "dobby_in_expert_mode";
+    private static final String EXPERT_MODE_INITIATED_TIMESTAMP = "expert_mode_start_ts";
+    private static final long MAX_TIME_ELAPSED_FOR_RESUMING_EXPERT_MODE_MS = AlarmManager.INTERVAL_DAY;
+
+
 
 
     @Inject DobbyApplication dobbyApplication;
@@ -474,16 +479,26 @@ public class MainActivity extends AppCompatActivity
     private void saveSwitchedToBotMode() {
         Utils.saveSharedSetting(this,
                 PREF_CHAT_IN_EXPERT_MODE, Utils.FALSE_STRING);
+        Utils.saveSharedSetting(this,
+                EXPERT_MODE_INITIATED_TIMESTAMP, 0);
     }
 
     private void saveSwitchedToExpertMode() {
         Utils.saveSharedSetting(this,
                 PREF_CHAT_IN_EXPERT_MODE, Utils.TRUE_STRING);
+        Utils.saveSharedSetting(this,
+                EXPERT_MODE_INITIATED_TIMESTAMP, System.currentTimeMillis());
     }
 
     private boolean checkSharedPrefForExpertModeResume() {
-        return Boolean.valueOf(Utils.readSharedSetting(this,
-                PREF_CHAT_IN_EXPERT_MODE, Utils.FALSE_STRING));
+        long lastExpertInitiatedAtMs = Utils.readSharedSetting(this, EXPERT_MODE_INITIATED_TIMESTAMP, 0);
+        if (lastExpertInitiatedAtMs > 0 &&
+                System.currentTimeMillis() - lastExpertInitiatedAtMs < MAX_TIME_ELAPSED_FOR_RESUMING_EXPERT_MODE_MS) {
+            return true;
+        }
+        return false;
+        //return Boolean.valueOf(Utils.readSharedSetting(this,
+         //       PREF_CHAT_IN_EXPERT_MODE, Utils.FALSE_STRING));
     }
 
     private void pushUserChatMessage(String text, boolean shouldShowToExpert) {
