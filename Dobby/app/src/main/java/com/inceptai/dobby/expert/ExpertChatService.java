@@ -297,6 +297,7 @@ public class ExpertChatService implements
         chatNotification.to = toExpert;
         chatNotification.body = expertChat.getText();
         chatNotification.title = CHAT_NOTIFICATION_TITLE;
+        chatNotification.appFlavor = BuildConfig.FLAVOR;
         chatNotification.fcmIdPath = getFcmIdPathForExpert(toExpert);
         getNotificationReference().push().setValue(chatNotification);
     }

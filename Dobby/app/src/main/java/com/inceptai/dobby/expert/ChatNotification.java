@@ -14,6 +14,7 @@ public class ChatNotification {
     String body;
     String fcmIdPath;
     String id;
+    String appFlavor;
 
     ChatNotification() {}
 
@@ -59,5 +60,13 @@ public class ChatNotification {
 
     public String getId() {
         return id;
+    }
+
+    public String getAppFlavor() {
+        return appFlavor;
+    }
+
+    public void setAppFlavor(String appFlavor) {
+        this.appFlavor = appFlavor;
     }
 }
