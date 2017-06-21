@@ -105,4 +105,8 @@ public class ExpertChat {
         this.timestamp = timestamp;
     }
 
+    public boolean isHashtagMessage() {
+        return text != null && !text.isEmpty() && text.startsWith("#");
+    }
+
 }
