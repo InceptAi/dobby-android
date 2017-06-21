@@ -53,6 +53,7 @@ public class Utils {
     public static final String FALSE_STRING = "false";
     public static final String ZERO_POINT_ZERO = "0.0";
     public static final String WIFIDOC_FLAVOR = "wifidoc";
+    public static final String DOBBY_FLAVOR = "dobby";
     public static final String PREFERENCES_FILE = "wifi_tester_settings";
     public static final String USER_UUID = "userUuid";
     public static final String PREF_EXPERT_CHAT_TIMESTAMP_MS = "ExpertChatTs";

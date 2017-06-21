@@ -91,6 +91,7 @@ ExpertChat.prototype.loadMessages = function(userUuid) {
   } else if (window.isWifiExpert == true) {
 	  messagePath = '/dobby_chat_rooms/release/' + userUuid +'/';
   }
+  console.log("Message path: " + messagePath);
   this.messagesRef = this.database.ref(messagePath);
   // Make sure we remove all previous listeners.
   this.messagesRef.off();
