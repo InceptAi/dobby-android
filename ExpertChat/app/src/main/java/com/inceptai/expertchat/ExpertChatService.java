@@ -62,6 +62,8 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
     private boolean pendingFcmTokenSaveOperation = false;
     private long expertEtaSeconds = ETA_PRESENT;
     private OnExpertDataFetched expertDataFetchedCallback;
+    private NotificationRecents notificationRecents;
+    private int lastNotificationId = 0;
 
     public interface OnExpertDataFetched {
         void onExpertData(ExpertData expertData);
@@ -76,6 +78,7 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
         loadExpertOnlineFlag();
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
         sharedPref.registerOnSharedPreferenceChangeListener(this);
+        notificationRecents = new NotificationRecents();
     }
 
     public static ExpertChatService fetchInstance(Context context) {
@@ -174,6 +177,7 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
         chatNotification.title = USERCHAT_NOTIFICATION_TITLE;
         chatNotification.fcmIdPath = getFcmIdPathForUser(toUser);
         getNotificationReference().push().setValue(chatNotification);
+        notificationRecents.notificationSent(chatNotification);
     }
 
     public void setAssignedExpert() {
@@ -195,6 +199,9 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
         Log.i(TAG, " Body: " + body);
         Log.i(TAG, " Data: " + data);
         Log.i(TAG, " From User UUID: " + fromUuid);
+
+        notificationRecents.saveIncomingNotification(data);
+
         Intent intent = new Intent(context, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         intent.putExtra(MainActivity.NOTIFICATION_USER_UUID, fromUuid);
@@ -220,7 +227,7 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
         notificationBuilder.setLights(Color.RED, 3000, 3000);
 
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(0, notificationBuilder.build());
+        notificationManager.notify(lastNotificationId++, notificationBuilder.build());
 
         String pushId = data.get(NOTIF_PUSHID_KEY);
         if (pushId != null && !pushId.isEmpty()) {
