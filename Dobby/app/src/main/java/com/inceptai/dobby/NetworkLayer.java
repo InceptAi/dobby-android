@@ -98,8 +98,6 @@ public class NetworkLayer implements LocationListener {
     }
 
     public DataInterpreter.WifiGrade getCurrentWifiGrade() {
-        HashMap<Integer, WifiState.ChannelInfo> channelMap = getWifiState().getChannelInfoMap();
-        DobbyWifiInfo wifiInfo = getWifiState().getLinkInfo();
         DataInterpreter.WifiGrade wifiGrade = DataInterpreter.interpret(
                 getWifiState(),
                 getLatestScanResult(),

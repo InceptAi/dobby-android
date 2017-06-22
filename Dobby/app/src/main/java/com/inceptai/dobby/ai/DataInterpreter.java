@@ -877,12 +877,12 @@ public class DataInterpreter {
 
         // Figure out the # of APs on primary channel
         WifiState.ChannelInfo primaryChannelInfo = wifiChannelInfo.get(linkInfo.getFrequency());
-        int numStrongInterferingAps = computeStrongInterferingAps(primaryChannelInfo);
+        int numStrongInterferingAps = primaryChannelInfo.getNumberOfInterferingAPs();
         // Compute metrics for all channels -- for later use
         int leastOccupiedChannel = linkInfo.getFrequency(); // current ap channel
         int minOccupancyAPs = numStrongInterferingAps;
         for (WifiState.ChannelInfo channelInfo: wifiChannelInfo.values()) {
-            int occupancy = computeStrongInterferingAps(channelInfo);
+            int occupancy = channelInfo.getNumberOfInterferingAPs();
             if (occupancy < minOccupancyAPs) {
                 leastOccupiedChannel = channelInfo.channelFrequency;
                 minOccupancyAPs = occupancy;
@@ -942,17 +942,9 @@ public class DataInterpreter {
         }
     }
 
-    private static int computeStrongInterferingAps(WifiState.ChannelInfo channelInfo) {
-        if (channelInfo == null) {
-            return -1;
-        }
-        return channelInfo.similarStrengthAPs +
-                channelInfo.higherStrengthAps + channelInfo.highestStrengthAps;
-    }
-
     @MetricType
     private static int getPingGradeLowerIsBetter(double latencyMs, double lossRatePercent, double[] steps) {
-        double effectiveLatencyMs = getEffectivePingLatency(latencyMs, lossRatePercent);
+     git   double effectiveLatencyMs = getEffectivePingLatency(latencyMs, lossRatePercent);
         @MetricType int latencyMetric = getGradeLowerIsBetter(getEffectivePingLatency(latencyMs, lossRatePercent), steps,
                 effectiveLatencyMs > 0, effectiveLatencyMs >= MAX_LATENCY_FOR_BEING_NONFUNCTIONAL_MS);
         return latencyMetric;

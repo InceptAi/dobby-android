@@ -105,10 +105,10 @@ public class WifiState {
 
     public class ChannelInfo {
         public int channelFrequency;
-        public int similarStrengthAPs;
-        public int higherStrengthAps;
-        public int highestStrengthAps;
         int numberAPs;
+        int similarStrengthAPs;
+        int higherStrengthAps;
+        int highestStrengthAps;
         int lowerStrengthAps;
         int lowestStrengthAps;
         double contentionMetric;
@@ -124,6 +124,14 @@ public class WifiState {
         String toJson() {
             Gson gson = new Gson();
             return gson.toJson(this);
+        }
+
+        public int getNumberAPs() {
+            return numberAPs;
+        }
+
+        public int getNumberOfInterferingAPs() {
+            return numberAPs;
         }
     }
 
@@ -185,17 +193,17 @@ public class WifiState {
     }
 
     public HashMap<Integer, ChannelInfo> getChannelInfoMap() {
-        final int GAP_FOR_SIMILAR_STRENGTH_DBM = 5;
+        final int GAP_FOR_SIMILAR_STRENGTH_DBM = 10;
         final int GAP_FOR_OTHER_STRENGTHS_DBM = 10;
         HashMap<Integer, ChannelInfo> infoToReturn = new HashMap<>();
         //Prepopulate the map with all channels
         //int[] channelList2GHz = Utils.get2GHzNonOverlappingChannelList();
-        int[] channelList2GHz = Utils.get2GHzChannelList();
-        for (int channelIndex=0; channelIndex < channelList2GHz.length; channelIndex++) {
-            ChannelInfo channelInfo = new ChannelInfo(channelList2GHz[channelIndex]);
-            infoToReturn.put(channelList2GHz[channelIndex], channelInfo);
+        //int[] channelList2GHz = Utils.get2GHzChannelList();
+        int[] channelList2GHzAnd5GHzCombined = Utils.get2GHzAnd5GHzChannelList();
+        for (int channelIndex=0; channelIndex < channelList2GHzAnd5GHzCombined.length; channelIndex++) {
+            ChannelInfo channelInfo = new ChannelInfo(channelList2GHzAnd5GHzCombined[channelIndex]);
+            infoToReturn.put(channelList2GHzAnd5GHzCombined[channelIndex], channelInfo);
         }
-
 
         for (Map.Entry<String, Integer> entry : movingSignalAverage.entrySet()) {
             String freqBSSIDCombinedKey = entry.getKey();
