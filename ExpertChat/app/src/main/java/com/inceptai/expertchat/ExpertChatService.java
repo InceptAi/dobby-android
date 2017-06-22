@@ -64,6 +64,7 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
     private OnExpertDataFetched expertDataFetchedCallback;
     private NotificationRecents notificationRecents;
     private int lastNotificationId = 0;
+    private String disableNotificationsForUuid = EMPTY_STRING;
 
     public interface OnExpertDataFetched {
         void onExpertData(ExpertData expertData);
@@ -102,6 +103,14 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
 
     public void setExpertDataFetchedCallback(OnExpertDataFetched expertDataFetchedCallback) {
         this.expertDataFetchedCallback = expertDataFetchedCallback;
+    }
+
+    public void disableNotifications(String userUuid) {
+        disableNotificationsForUuid = userUuid;
+    }
+
+    public void enableNotifications() {
+        disableNotificationsForUuid = EMPTY_STRING;
     }
 
     public void clearExpertDataFetchedCallback() {
@@ -199,6 +208,12 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
         Log.i(TAG, " Body: " + body);
         Log.i(TAG, " Data: " + data);
         Log.i(TAG, " From User UUID: " + fromUuid);
+        Log.i(TAG, "Last notification ID: " + lastNotificationId);
+
+        if (disableNotificationsForUuid.equals(fromUuid)) {
+            Log.i(TAG, "Skipping notification for uuid: " + disableNotificationsForUuid);
+            return;
+        }
 
         notificationRecents.saveIncomingNotification(data);
 

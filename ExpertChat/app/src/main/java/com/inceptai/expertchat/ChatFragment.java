@@ -99,6 +99,7 @@ public class ChatFragment extends Fragment {
         buildType = service.getBuildType();
         selectedUserUuid = service.getSelectedUserId();
         service.setAssignedExpert();
+        service.disableNotifications(selectedUserUuid);
         reloadData();
     }
 
@@ -231,6 +232,7 @@ public class ChatFragment extends Fragment {
     @Override
     public void onPause() {
         super.onPause();
+        service.enableNotifications();
         getFragmentManager().beginTransaction().remove(this).commitAllowingStateLoss();
     }
 }
