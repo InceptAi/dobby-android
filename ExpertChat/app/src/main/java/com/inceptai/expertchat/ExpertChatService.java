@@ -30,12 +30,13 @@ import static com.inceptai.expertchat.Utils.TAG;
  */
 
 public class ExpertChatService implements SharedPreferences.OnSharedPreferenceChangeListener {
-
-    public static final String ASSIGNED_EXPERT_KEY = "assignedExpert";
-    private static final String SELF_NOTIFICATION_TITLE = "You have a new chat message.";
-    private static final String EXPERT_BASE = "/expert";
     public static final String CHAT_ROOM_SUFFIX = "_chat_rooms";
     public static final String USERCHAT_NOTIFICATION_TITLE = "You have a new message from a Wifi Expert";
+    public static final String ASSIGNED_EXPERT_KEY = "assignedExpert";
+
+
+    private static final String SELF_NOTIFICATION_TITLE = "You have a new chat message.";
+    private static final String EXPERT_BASE = "/expert";
     private static final String NOTIFICATIONS_BASE = "/notifications/messages/";
     private static final String FCM_KEY = "fcmToken";
     private static final String NOTIF_PUSHID_KEY = "pushId";
