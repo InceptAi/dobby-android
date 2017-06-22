@@ -4,6 +4,7 @@ import android.os.Bundle;
 
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.inceptai.dobby.ai.DataInterpreter;
+import com.inceptai.dobby.utils.Utils;
 
 import java.util.ArrayList;
 
@@ -141,6 +142,13 @@ public class DobbyAnalytics {
     @Inject
     DobbyAnalytics(DobbyApplication dobbyApplication) {
         firebaseAnalytics = FirebaseAnalytics.getInstance(dobbyApplication.getApplicationContext());
+        if (firebaseAnalytics != null) {
+            if (dobbyApplication.isRunningOnEmulator()) {
+                firebaseAnalytics.setUserProperty("isRunningOnEmulator", Utils.TRUE_STRING);
+            } else {
+                firebaseAnalytics.setUserProperty("isRunningOnEmulator", Utils.FALSE_STRING);
+            }
+        }
     }
 
     public void wifiDocFragmentEntered() {

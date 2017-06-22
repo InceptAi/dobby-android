@@ -8,6 +8,7 @@ import com.inceptai.dobby.dagger.DaggerProdComponent;
 import com.inceptai.dobby.dagger.ProdComponent;
 import com.inceptai.dobby.dagger.ProdModule;
 import com.inceptai.dobby.expert.ExpertChatService;
+import com.inceptai.dobby.utils.EmulatorDetector;
 import com.inceptai.dobby.utils.Utils;
 
 import java.util.HashMap;
@@ -77,5 +78,8 @@ public class DobbyApplication extends Application {
         return Utils.convertHashMapToJson(phoneInfo);
     }
 
+    public boolean isRunningOnEmulator() {
+        return EmulatorDetector.isEmulator();
+    }
 
 }
