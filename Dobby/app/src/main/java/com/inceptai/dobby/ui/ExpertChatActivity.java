@@ -142,7 +142,7 @@ public class ExpertChatActivity extends AppCompatActivity implements
         }
 
         // addGeneralMessage(getEtaString(currentEtaSeconds, isPresent));
-        sendUserEnteredMetaMessage();
+        expertChatService.sendUserEnteredMetaMessage();
         expertChatService.disableNotifications();
         expertChatService.checkIn(this);
     }
@@ -254,14 +254,14 @@ public class ExpertChatActivity extends AppCompatActivity implements
         progressBar.setVisibility(View.GONE);
         if (expertChat.getMessageType() == ExpertChat.MSG_TYPE_USER_TEXT) {
             dobbyAnalytics.sentMessageToExpert();
-        } else {
+        } else if (expertChat.getMessageType() == ExpertChat.MSG_TYPE_EXPERT_TEXT) {
             dobbyAnalytics.receivedMessageFromExpert();
         }
     }
 
     @Override
     protected void onStop() {
-        sendUserLeftMetaMessage();
+        expertChatService.sendUserLeftMetaMessage();
         expertChatService.disconnect();
         expertChatService.unregisterChatCallback();
         expertChatService.enableNotifications();
@@ -282,13 +282,5 @@ public class ExpertChatActivity extends AppCompatActivity implements
     private boolean isFirstChat() {
         return Boolean.valueOf(Utils.readSharedSetting(this,
                 PREF_FIRST_CHAT, Utils.TRUE_STRING));
-    }
-
-    private void sendUserLeftMetaMessage() {
-        expertChatService.pushMetaChatMessage(ExpertChat.MSG_TYPE_META_USER_LEFT);
-    }
-
-    private void sendUserEnteredMetaMessage() {
-        expertChatService.pushMetaChatMessage(ExpertChat.MSG_TYPE_META_USER_ENTERED);
     }
 }
