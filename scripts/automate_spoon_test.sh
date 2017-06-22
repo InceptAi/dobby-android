@@ -303,8 +303,8 @@ run_emulator_tests () {
 		#Run unit tests
         UNIT_TEST_TASK=`./gradlew tasks | grep -i test${current_build_flavor}DebugUnitTest | cut -d " " -f 1`
 		if [ ! -z $UNIT_TEST_TASK ]; then
-			echo "./gradlew $UNIT_TEST_TASK --stacktrace >>  /tmp/gradle.log"
-			./gradlew $UNIT_TEST_TASK --stacktrace >>  /tmp/gradle.log
+			echo "./gradlew $UNIT_TEST_TASK >>  /tmp/gradle.log"
+			./gradlew $UNIT_TEST_TASK >>  /tmp/gradle.log
         	if [ $? -gt 0 ]; then
             	SHOULD_REPORT_FAILURE=1
                 FAILURE_STRING="$FAILURE_STRING. Unit tests failed"
@@ -314,8 +314,8 @@ run_emulator_tests () {
 		#Run unit tests
         CONNECTED_TEST_TASK=`./gradlew tasks | grep -i connected${current_build_flavor}DebugAndroidTest | cut -d " " -f 1`
 		if [ ! -z $CONNECTED_TEST_TASK ]; then
-			echo "./gradlew $CONNECTED_TEST_TASK -Pandroid.testInstrumentationRunnerArguments.class=com.inceptai.dobby.BandwidthAnalyzerTest --stacktrace >>  /tmp/gradle.log"
-			./gradlew $CONNECTED_TEST_TASK -Pandroid.testInstrumentationRunnerArguments.class=com.inceptai.dobby.BandwidthAnalyzerTest --stacktrace >>  /tmp/gradle.log
+			echo "./gradlew $CONNECTED_TEST_TASK -Pandroid.testInstrumentationRunnerArguments.class=com.inceptai.dobby.BandwidthAnalyzerTest >>  /tmp/gradle.log"
+			./gradlew $CONNECTED_TEST_TASK -Pandroid.testInstrumentationRunnerArguments.class=com.inceptai.dobby.BandwidthAnalyzerTest >>  /tmp/gradle.log
     	    if [ $? -gt 0 ]; then
                 FAILURE_STRING="$FAILURE_STRING. Bandwidth Analyzer test failed for $api_level"
         	    SHOULD_REPORT_FAILURE=1
@@ -337,8 +337,8 @@ run_emulator_tests () {
             	SHOULD_REPORT_FAILURE=1
 				return
 			fi
-			echo "./gradlew $SPOON_TASK -PspoonClassName=$TEST_CLASS --stacktrace >>  /tmp/gradle.log"
-			./gradlew $SPOON_TASK -PspoonClassName=$TEST_CLASS --stacktrace >>  /tmp/gradle.log
+			echo "./gradlew $SPOON_TASK -PspoonClassName=$TEST_CLASS >>  /tmp/gradle.log"
+			./gradlew $SPOON_TASK -PspoonClassName=$TEST_CLASS >>  /tmp/gradle.log
         	if [ $? -gt 0 ]; then
                 FAILURE_STRING="$FAILURE_STRING. Espresso tests failed for ${api_level}."
             	SHOULD_REPORT_FAILURE=1
