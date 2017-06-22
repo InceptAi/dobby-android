@@ -96,7 +96,8 @@ public class UserSelectionFragment extends Fragment implements ChildEventListene
         progressBar = (ProgressBar) rootView.findViewById(R.id.mainProgressBar);
         roomListView = (ListView) rootView.findViewById(R.id.mainListView);
         selectedUserId = expertChatService.getSelectedUserId();
-        arrayAdapter = new RoomArrayAdapter(getContext(), android.R.layout.simple_list_item_1, android.R.id.text1, new ArrayList<String>(), selectedUserId);
+        arrayAdapter = new RoomArrayAdapter(getContext(), android.R.layout.simple_list_item_1,
+                android.R.id.text1, new ArrayList<String>(), selectedUserId);
         roomListView.setAdapter(arrayAdapter);
         roomListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
