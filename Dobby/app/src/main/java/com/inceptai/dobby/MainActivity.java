@@ -125,9 +125,8 @@ public class MainActivity extends AppCompatActivity
         //fetchChatMessages();
 
         dobbyAi.setResponseCallback(this);
+        dobbyAi.initChatToBotState(); //Resets booleans indicating which mode of expert are we in
         if (checkSharedPrefForExpertModeResume()) {
-            //dobbyAi.setChatInExpertMode();
-            //sendInitialMessageToExpert();
             dobbyAi.setChatResumedInExpertMode();
         }
 
@@ -139,6 +138,7 @@ public class MainActivity extends AppCompatActivity
         currentEtaSeconds = ExpertChatService.ETA_OFFLINE;
         expertIsPresent = false;
         sessionStartedTimestamp = System.currentTimeMillis();
+
     }
 
     private ChatFragment getChatFragmentFromTag() {

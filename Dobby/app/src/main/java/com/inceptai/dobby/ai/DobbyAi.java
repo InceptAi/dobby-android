@@ -25,6 +25,7 @@ import com.inceptai.dobby.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -135,6 +136,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         }
         repeatBwWifiPingAction = new AtomicBoolean(false);
         lastAction = ACTION_TYPE_UNKNOWN;
+        initChatToBotState();
     }
 
     @Action.ActionType
@@ -168,6 +170,13 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
 
     }
 
+    public void initChatToBotState() {
+        userAskedForHumanExpert = false;
+        chatInExpertMode = false;
+        isExpertListening = false;
+        resumedWithExpertMode = false;
+    }
+    
     public boolean getIsExpertListening() {
         return isExpertListening;
     }
@@ -408,8 +417,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     }
 
     public void setChatInBotMode() {
-        chatInExpertMode = false;
-        isExpertListening = false;
+        initChatToBotState();
         if (responseCallback != null) {
             responseCallback.switchedToBotMode();
         }
@@ -564,6 +572,14 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             responseList.add(UserResponse.ResponseType.CONTACT_HUMAN_EXPERT);
         }
 
+        if (userAskedForHumanExpert || chatInExpertMode) {
+            for (Iterator<Integer> iter = responseList.listIterator(); iter.hasNext(); ) {
+                Integer responseType = iter.next();
+                if (responseType == UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS || responseType == UserResponse.ResponseType.RUN_WIFI_TESTS) {
+                    iter.remove();
+                }
+            }
+        }
         return responseList;
     }
 
