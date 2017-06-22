@@ -73,8 +73,8 @@ public class DataInterpreter {
 
     private static final double[] WIFI_RSSI_STEPS_DBM = { /* higher is better */
             -50.0, /* excellent */
-            -70.0, /* good */
-            -88.0, /* average */
+            -65.0, /* good */
+            -80.0, /* average */
             -105.0 /* poor */
     };
 
@@ -852,7 +852,7 @@ public class DataInterpreter {
             httpGrade.errorCodeString = BandwidthTestCodes.bandwidthTestErrorCodesToStrings(httpGrade.errorCode);
             return httpGrade;
         }
-        httpGrade.httpDownloadLatencyMs = httpRouterStats.maxLatencyMs;
+        httpGrade.httpDownloadLatencyMs = httpRouterStats.avgLatencyMs;
         httpGrade.httpDownloadLatencyMetric = getGradeLowerIsBetter(httpRouterStats.avgLatencyMs,
                 HTTP_LATENCY_ROUTER_STEPS_MS,
                 httpRouterStats.avgLatencyMs > 0.0,

@@ -158,7 +158,7 @@ public class InferenceMap {
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.5);
             conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
             conditions.include(ISP_INTERNET_DOWN, 0.7);
-            conditions.include(ISP_INTERNET_SLOW, 0.5);
+            conditions.include(ISP_INTERNET_SLOW, 0.7);
         }
         return conditions;
     }
@@ -235,13 +235,12 @@ public class InferenceMap {
                 conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.2);
             }
         } else if (DataInterpreter.isGoodOrExcellentOrAverage(wifiGrade.primaryApSignalMetric)){
-            //Can't excluse BAD_SIGNAL here since it could be on the threshold
-            //conditions.exclude(Condition.WIFI_CHANNEL_BAD_SIGNAL);
+            conditions.exclude(Condition.WIFI_CHANNEL_BAD_SIGNAL);
             if (DataInterpreter.isPoorOrAbysmalOrNonFunctional(wifiGrade.primaryApLinkSpeedMetric)) {
                 conditions.include(Condition.ROUTER_GOOD_SIGNAL_USING_SLOW_DATA_RATE, 0.2);
             }
             if (DataInterpreter.isPoorOrAbysmalOrNonFunctional(wifiGrade.primaryLinkChannelOccupancyMetric)) {
-                conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.2);
+                conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.5);
             }
             if (wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.FREQUENT_DISCONNECTIONS) {
                 conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.7);
@@ -336,13 +335,12 @@ public class InferenceMap {
         }
 
         if (DataInterpreter.isNonFunctional(pingGrade.dnsServerLatencyMetric)) {
-            //conditions.exclude(ISP_CONDITIONS);
             if (DataInterpreter.isGoodOrExcellentOrAverage(pingGrade.alternativeDnsMetric)) {
                 conditions.exclude(Condition.CABLE_MODEM_FAULT);
             }
         }
 
-        if (!DataInterpreter.isNonFunctionalOrUnknown(pingGrade.externalServerLatencyMetric)) {
+        if (DataInterpreter.isGoodOrExcellentOrAverage(pingGrade.externalServerLatencyMetric)) {
             conditions.exclude(Condition.ISP_INTERNET_DOWN);
         }
 
@@ -357,16 +355,17 @@ public class InferenceMap {
             return conditions;
         }
 
-        if (DataInterpreter.isPoorOrAbysmal(httpGrade.httpDownloadLatencyMetric)) {
-            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.7);
-            conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
-            conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.1);
-        } else if (DataInterpreter.isNonFunctional(httpGrade.httpDownloadLatencyMetric)) {
-            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
-            conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.7);
-            conditions.exclude(ISP_CONDITIONS);
-            conditions.exclude(DNS_CONDITIONS);
+        if (DataInterpreter.isPoorOrAbysmalOrNonFunctional(httpGrade.httpDownloadLatencyMetric)) {
+            //conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.1);
+            //conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.3);
+            conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.3);
         }
+//        else if (DataInterpreter.isNonFunctional(httpGrade.httpDownloadLatencyMetric)) {
+//            conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.3);
+//            conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.7);
+//            conditions.exclude(ISP_CONDITIONS);
+//            conditions.exclude(DNS_CONDITIONS);
+//        }
         return conditions;
     }
 
