@@ -944,7 +944,7 @@ public class DataInterpreter {
 
     @MetricType
     private static int getPingGradeLowerIsBetter(double latencyMs, double lossRatePercent, double[] steps) {
-     git   double effectiveLatencyMs = getEffectivePingLatency(latencyMs, lossRatePercent);
+        double effectiveLatencyMs = getEffectivePingLatency(latencyMs, lossRatePercent);
         @MetricType int latencyMetric = getGradeLowerIsBetter(getEffectivePingLatency(latencyMs, lossRatePercent), steps,
                 effectiveLatencyMs > 0, effectiveLatencyMs >= MAX_LATENCY_FOR_BEING_NONFUNCTIONAL_MS);
         return latencyMetric;
