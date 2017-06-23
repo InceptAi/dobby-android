@@ -1,8 +1,6 @@
 package com.inceptai.expertchat;
 
 import android.content.Context;
-import android.content.Intent;
-import android.net.wifi.ScanResult;
 import android.os.Bundle;
 import android.support.annotation.IdRes;
 import android.support.annotation.LayoutRes;
@@ -27,7 +25,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
@@ -170,10 +167,6 @@ public class UserSelectionFragment extends Fragment implements ChildEventListene
 
     private void noUserChatsFound() {
         progressBar.setVisibility(View.GONE);
-    }
-
-    public interface OnUserSelected {
-        void onUserSelected(String userId);
     }
 
     @Override

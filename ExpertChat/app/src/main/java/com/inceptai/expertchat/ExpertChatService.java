@@ -13,6 +13,7 @@ import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -87,6 +88,10 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
             INSTANCE = new ExpertChatService(context);
         }
         return INSTANCE;
+    }
+
+    public NotificationRecents getNotificationRecents() {
+        return notificationRecents;
     }
 
     public void persistFcmToken(String expertFcmToken) {
@@ -215,38 +220,47 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
             return;
         }
 
-        notificationRecents.saveIncomingNotification(data);
-
-        Intent intent = new Intent(context, MainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        intent.putExtra(MainActivity.NOTIFICATION_USER_UUID, fromUuid);
-        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        for (String key : data.keySet()) {
-            Log.i(TAG, "Key: " + key + ", value: " + data.get(key));
+        final UserData userData = notificationRecents.saveIncomingNotification(data);
+        if (userData == null) {
+            Log.e(TAG, "Bad user data. Dumping notification.");
+            return;
+        }
+        boolean betterTitle = userData.hasBuildTypeAndFlavor();
+        if (betterTitle) {
+            title = createNotifiationTitleFor(userData, title);
         }
 
-        Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-        NotificationCompat.Builder notificationBuilder = (NotificationCompat.Builder) new NotificationCompat.Builder(context)
-                .setAutoCancel(true)   // Automatically delete the notification
-                .setSmallIcon(R.drawable.ic_person_notif) // Notification icon
-                .setContentIntent(pendingIntent)
-                .setContentTitle(title)
-                .setContentText(body)
-                .setSound(defaultSoundUri);
-
-        // Vibration
-        notificationBuilder.setVibrate(new long[] { 1000, 1000, 1000, 1000, 1000 });
-
-        // LED
-        notificationBuilder.setLights(Color.RED, 3000, 3000);
-
-        NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(lastNotificationId++, notificationBuilder.build());
+        final NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        final NotificationCompat.Builder builder = buildNotification(context, data, title);
+        notificationManager.notify(lastNotificationId, builder.build());
+        userData.lastNotificationId = lastNotificationId;
+        lastNotificationId ++;
 
         String pushId = data.get(NOTIF_PUSHID_KEY);
         if (pushId != null && !pushId.isEmpty()) {
             getNotificationReference().child(pushId).removeValue();
+        }
+
+        // Set up a renotification if needed.
+        if (!betterTitle) {
+            ListenableFuture<UserData> future = UserDataBackend.computeUserAppFlavorAndBuild(userData);
+            if (future != null) {
+                future.addListener(new Runnable() {
+                    @Override
+                    public void run() {
+                        reNotify(userData, builder);
+                    }
+                }, ExpertChatThreadpool.get().getExecutorService());
+            }
+        }
+    }
+
+    private void reNotify(UserData userData, NotificationCompat.Builder builder) {
+        String title = createNotifiationTitleFor(userData, EMPTY_STRING);
+        if (!title.isEmpty()) {
+            NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            builder.setContentTitle(title);
+            notificationManager.notify(userData.lastNotificationId, builder.build());
         }
     }
 
@@ -256,8 +270,7 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
 
     private String getFcmIdPathForUser(String userUuid) {
         String userRoot = flavor + "/" + buildType + "/" + "users/";
-        String userTokenPath = userRoot + "/" + userUuid + "/" + FCM_KEY;
-        return userTokenPath;
+        return userRoot + "/" + userUuid + "/" + FCM_KEY;
     }
 
     private void checkPendingFcmSaveOperation() {
@@ -374,5 +387,43 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
         } else {
             expertEtaSeconds = ETA_OFFLINE;
         }
+    }
+
+    private static String createNotifiationTitleFor(UserData userData, String oldTitle) {
+        if (userData.getAppFlavor().isEmpty() || userData.getBuildType().isEmpty()) {
+            return oldTitle;
+        }
+        return "New Chat: " + userData.getAppFlavor() + " / " + userData.getBuildType();
+    }
+
+    private NotificationCompat.Builder buildNotification(Context context, Map<String, String> data, String title) {
+        String fromUuid = data.get("source");
+        String body = data.get("bodyText");
+
+        Intent intent = new Intent(context, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intent.putExtra(MainActivity.NOTIFICATION_USER_UUID, fromUuid);
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        for (String key : data.keySet()) {
+            Log.i(TAG, "Key: " + key + ", value: " + data.get(key));
+        }
+
+        Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        NotificationCompat.Builder notificationBuilder = (NotificationCompat.Builder) new NotificationCompat.Builder(context)
+                .setAutoCancel(true)   // Automatically delete the notification
+                .setSmallIcon(R.drawable.ic_person_notif) // Notification icon
+                .setContentIntent(pendingIntent)
+                .setContentTitle(title)
+                .setContentText(body)
+                .setSound(defaultSoundUri);
+
+        // Vibration
+        notificationBuilder.setVibrate(new long[] { 1000, 1000, 1000, 1000, 1000 });
+
+        // LED
+        notificationBuilder.setLights(Color.RED, 3000, 3000);
+
+        return notificationBuilder;
     }
 }

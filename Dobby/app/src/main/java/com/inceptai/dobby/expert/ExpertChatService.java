@@ -86,8 +86,6 @@ public class ExpertChatService implements
     private static final int BETTER_INFERENCING_NEEDED = 3009;
 
 
-
-
     private static ExpertChatService INSTANCE;
 
     private String userUuid;

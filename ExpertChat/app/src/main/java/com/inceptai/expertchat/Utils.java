@@ -47,4 +47,25 @@ public class Utils {
     public static void saveExpertAvatar(Context context, String expertName) {
         saveSharedSetting(context, PREF_EXPERT_AVATAR, expertName);
     }
+
+    public static String getFlavorFromFcmIdPath(String fcmIdPath) {
+        if (fcmIdPath == null || fcmIdPath.isEmpty()) return EMPTY_STRING;
+        if (fcmIdPath.contains(WIFIDOC_FLAVOR)) return WIFIDOC_FLAVOR;
+        if (fcmIdPath.contains(DOBBY_FLAVOR)) return DOBBY_FLAVOR;
+        return EMPTY_STRING;
+    }
+
+    public static String getBuildTypeFromFcmIdPath(String fcmIdPath) {
+        if (fcmIdPath == null || fcmIdPath.isEmpty()) return EMPTY_STRING;
+        if (fcmIdPath.contains(BUILD_TYPE_DEBUG)) return BUILD_TYPE_DEBUG;
+        if (fcmIdPath.contains(BUILD_TYPE_RELEASE)) return BUILD_TYPE_RELEASE;
+        return EMPTY_STRING;
+    }
+
+    public static String unknownIfEmpty(String orig) {
+        if (orig == null || orig.isEmpty()) {
+            return "UNKNOWN";
+        }
+        return orig;
+    }
 }

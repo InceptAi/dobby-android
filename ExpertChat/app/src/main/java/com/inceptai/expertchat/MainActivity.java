@@ -31,7 +31,7 @@ import com.squareup.picasso.Picasso;
 import static com.inceptai.expertchat.Utils.EMPTY_STRING;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, UserSelectionFragment.OnUserSelected, GoogleApiClient.OnConnectionFailedListener, ExpertChatService.OnExpertDataFetched {
+        implements NavigationView.OnNavigationItemSelectedListener, OnUserSelected, GoogleApiClient.OnConnectionFailedListener, ExpertChatService.OnExpertDataFetched {
 
     public static final String NOTIFICATION_USER_UUID = "notificationUserId";
 
@@ -235,6 +235,8 @@ public class MainActivity extends AppCompatActivity
         clearFrameLayout();
         if (id == R.id.nav_select_user) {
             showUserSelectionFragment();
+        } else if (id == R.id.nav_notif_recents) {
+            showNotifRecentsFragment();
         } else if (id == R.id.nav_user_chat) {
             showChatFragment();
         } else if (id == R.id.nav_settings) {
@@ -258,6 +260,10 @@ public class MainActivity extends AppCompatActivity
 
     private void showPreferenceFragment() {
         PreferenceFragment fragment = (PreferenceFragment) setupFragment(PreferenceFragment.class, PreferenceFragment.FRAGMENT_TAG);
+    }
+
+    private void showNotifRecentsFragment() {
+        NotifRecentsFragment fragment = (NotifRecentsFragment) setupFragment(NotifRecentsFragment.class, NotifRecentsFragment.FRAGMENT_TAG);
     }
 
     @Override

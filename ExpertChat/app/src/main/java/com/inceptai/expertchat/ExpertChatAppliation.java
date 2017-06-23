@@ -17,5 +17,6 @@ public class ExpertChatAppliation extends Application {
         super.onCreate();
         service = ExpertChatService.fetchInstance(getApplicationContext());
         FlowManager.init(new FlowConfig.Builder(this).build());
+        ExpertChatThreadpool.get();
     }
 }

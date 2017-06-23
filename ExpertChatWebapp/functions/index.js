@@ -49,7 +49,8 @@ exports.sendNotification = functions.database.ref('/notifications/messages/{push
                 bodyText: message.body,
                 source: message.from,
                 destination: message.to,
-                messagePushId: event.params.pushId 
+                messagePushId: event.params.pushId,
+	        fcmIdPathForRecipient: message.fcmIdPath
             }
         };
 
