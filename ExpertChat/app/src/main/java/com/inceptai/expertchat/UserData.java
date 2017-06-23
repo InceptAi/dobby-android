@@ -44,6 +44,7 @@ public class UserData extends BaseModel {
         appFlavor = EMPTY_STRING;
         buildType = EMPTY_STRING;
         userUuid = EMPTY_STRING;
+        freshnessTimestampMs = System.currentTimeMillis();
     }
 
     public String getUserUuid() {

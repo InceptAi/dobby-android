@@ -33,8 +33,6 @@ import static com.inceptai.expertchat.Utils.EMPTY_STRING;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnUserSelected, GoogleApiClient.OnConnectionFailedListener, ExpertChatService.OnExpertDataFetched {
 
-    public static final String NOTIFICATION_USER_UUID = "notificationUserId";
-
     private static final String DEFAULT_FLAVOR = Utils.WIFIDOC_FLAVOR;
     private static final String DEFAULT_BUILD_TYPE = Utils.BUILD_TYPE_DEBUG;
 
@@ -107,7 +105,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void checkForNotificationStart(Intent intent) {
-        String notifUuid = intent.getStringExtra(NOTIFICATION_USER_UUID);
+        String notifUuid = intent.getStringExtra(Utils.NOTIFICATION_USER_UUID);
         if (notifUuid != null && !notifUuid.isEmpty()) {
             /// We have a user id from a notification.
             // TODO open chat for selected user ID.
@@ -133,6 +131,7 @@ public class MainActivity extends AppCompatActivity
         }
         if (respondToNotification) {
             showChatFragment();
+            selectedUserId = service.getSelectedUserId();
             navigationView.setCheckedItem(R.id.nav_user_chat);
             respondToNotification = false;  // consume it.
             return;

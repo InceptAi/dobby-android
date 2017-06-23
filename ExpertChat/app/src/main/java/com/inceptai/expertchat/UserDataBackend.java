@@ -24,6 +24,23 @@ public class UserDataBackend {
         return SQLite.select().from(UserData.class).where(UserData_Table.userUuid.eq(userUuid)).querySingle();
     }
 
+    public static UserData createOrFetchUser(String userUuid) {
+        if (userUuid == null || userUuid.isEmpty()) {
+            return null;
+        }
+
+        UserData userData = fetchUser(userUuid);
+        if (userData == null) {
+            userData = new UserData();
+            userData.setUserUuid(userUuid);
+        }
+
+        if (!userData.hasBuildTypeAndFlavor()) {
+            computeUserAppFlavorAndBuild(userData);
+        }
+        return userData;
+    }
+
     public static List<UserData> fetchUsers() {
         return SQLite.select().from(UserData.class).queryList();
     }

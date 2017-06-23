@@ -207,6 +207,10 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
 
     public void setSelectedUserId(String userUuid) {
         this.selectedUserId = userUuid;
+        selectedUserData = UserDataBackend.createOrFetchUser(userUuid);
+        if (selectedUserData == null) {
+            Log.e(TAG, "Bad user ID:" + userUuid);
+        }
         persistExpertData(firebaseUser);
     }
 
@@ -407,7 +411,7 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
 
         Intent intent = new Intent(context, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        intent.putExtra(MainActivity.NOTIFICATION_USER_UUID, fromUuid);
+        intent.putExtra(Utils.NOTIFICATION_USER_UUID, fromUuid);
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         for (String key : data.keySet()) {

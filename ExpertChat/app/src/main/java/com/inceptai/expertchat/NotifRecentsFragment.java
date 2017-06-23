@@ -81,6 +81,8 @@ public class NotifRecentsFragment extends Fragment {
                 buildTypeTv.setText(Utils.unknownIfEmpty(userData.buildType));
                 if (uuid.equals(this.selectedUserId)) {
                     convertView.setBackgroundResource(R.drawable.center_gradient_light);
+                } else {
+                    convertView.setBackgroundColor(context.getResources().getColor(android.R.color.white));
                 }
             return convertView;
         }

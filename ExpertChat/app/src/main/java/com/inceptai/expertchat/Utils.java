@@ -9,6 +9,8 @@ import android.preference.PreferenceManager;
  */
 
 public class Utils {
+
+    public static final String NOTIFICATION_USER_UUID = "notificationUserId";
     public static final String PREF_EXPERT_AVATAR = "expertName";
     public static final String DEFAULT_EXPERT_AVATAR = "Jack";
     public static final String TAG = "ExpertChat";
