@@ -10,7 +10,7 @@ import com.raizlabs.android.dbflow.config.FlowManager;
  * Created by arunesh on 6/9/17.
  */
 
-public class ExpertChatAppliation extends Application {
+public class ExpertChatApplication extends Application {
     ExpertChatService service;
     @Override
     public void onCreate() {

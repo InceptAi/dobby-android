@@ -28,6 +28,9 @@ public class Utils {
     public static final String BUILD_TYPE_DEBUG = "debug";
     public static final String BUILD_TYPE_RELEASE = "release";
 
+    public static final String WIFIDOC_RECENTS = "wifidoc_chat_recents/";
+    public static final String DOBBY_RECENTS = "dobby_chat_recents/";
+
     private Utils() {}
 
     public static String readSharedSetting(Context ctx, String settingName, String defaultValue) {
@@ -40,6 +43,10 @@ public class Utils {
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putString(settingName, settingValue);
         editor.apply();
+    }
+
+    public static boolean notNullOrEmpty(String src) {
+        return src != null && !src.isEmpty();
     }
 
     public static String getExpertAvatar(Context context) {

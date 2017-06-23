@@ -3,9 +3,14 @@
 
     <group android:checkableBehavior="single">
         <item
-            android:id="@+id/nav_select_user"
+            android:id="@+id/nav_wifidoc_recents"
             android:icon="@drawable/ic_user_circle_24dp"
-            android:title="Select User" />
+            android:title="WifiTester Recents" />
+
+        <item
+            android:id="@+id/nav_wifiexpert_recents"
+            android:icon="@drawable/ic_user_circle_24dp"
+            android:title="WifiExpert Recents" />
         <item
             android:id="@+id/nav_notif_recents"
             android:icon="@drawable/ic_user_circle_24dp"
@@ -18,10 +23,6 @@
             android:id="@+id/nav_settings"
             android:icon="@drawable/ic_settings_24dp"
             android:title="Settings" />
-        <item
-            android:id="@+id/nav_stats"
-            android:icon="@drawable/ic_info_24dp"
-            android:title="Stats" />
     </group>
 
 </menu>

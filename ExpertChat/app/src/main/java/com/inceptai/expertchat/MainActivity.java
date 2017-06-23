@@ -36,6 +36,11 @@ public class MainActivity extends AppCompatActivity
     private static final String DEFAULT_FLAVOR = Utils.WIFIDOC_FLAVOR;
     private static final String DEFAULT_BUILD_TYPE = Utils.BUILD_TYPE_DEBUG;
 
+    private static final String WIFIDOC_RECENTS_FRAGMENT_TAG = "WifiDocRecentsFragment";
+    private static final String WIFIEXPERT_RECENTS_FRAGMENT_TAG = "WifiExpertRecentsFragment";
+
+    public static final String FRAGMENT_ARG_FLAVOR_TYPE = "FlavorType";
+
     private String selectedUserId = EMPTY_STRING;
     private String selectedFlavor = DEFAULT_FLAVOR;
     private String selectedBuildType = DEFAULT_BUILD_TYPE;
@@ -232,16 +237,16 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         clearFrameLayout();
-        if (id == R.id.nav_select_user) {
-            showUserSelectionFragment();
+        if (id == R.id.nav_wifidoc_recents) {
+            showWifidocRecentsFragment();
+        } else if (id == R.id.nav_wifiexpert_recents) {
+            showWifiExpertRecentsFragment();
         } else if (id == R.id.nav_notif_recents) {
             showNotifRecentsFragment();
         } else if (id == R.id.nav_user_chat) {
             showChatFragment();
         } else if (id == R.id.nav_settings) {
             showPreferenceFragment();
-        } else if (id == R.id.nav_stats) {
-
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -263,6 +268,24 @@ public class MainActivity extends AppCompatActivity
 
     private void showNotifRecentsFragment() {
         NotifRecentsFragment fragment = (NotifRecentsFragment) setupFragment(NotifRecentsFragment.class, NotifRecentsFragment.FRAGMENT_TAG);
+    }
+
+    private void showWifidocRecentsFragment() {
+        Bundle args = new Bundle();
+        args.putString(FRAGMENT_ARG_FLAVOR_TYPE, Utils.WIFIDOC_FLAVOR);
+        RecentUsersFragment fragment = new RecentUsersFragment();
+        fragment.setArguments(args);
+        getSupportFragmentManager().beginTransaction().replace(R.id.placeholder_fl,
+                fragment, WIFIDOC_RECENTS_FRAGMENT_TAG).commitAllowingStateLoss();
+    }
+
+    private void showWifiExpertRecentsFragment() {
+        Bundle args = new Bundle();
+        args.putString(FRAGMENT_ARG_FLAVOR_TYPE, Utils.DOBBY_FLAVOR);
+        RecentUsersFragment fragment = new RecentUsersFragment();
+        fragment.setArguments(args);
+        getSupportFragmentManager().beginTransaction().replace(R.id.placeholder_fl,
+                fragment, WIFIEXPERT_RECENTS_FRAGMENT_TAG).commitAllowingStateLoss();
     }
 
     @Override

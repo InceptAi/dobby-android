@@ -2,6 +2,7 @@ package com.inceptai.expertchat;
 
 import android.util.Log;
 
+import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.firebase.database.DataSnapshot;
@@ -22,6 +23,23 @@ public class UserDataBackend {
 
     public static UserData fetchUser(String userUuid) {
         return SQLite.select().from(UserData.class).where(UserData_Table.userUuid.eq(userUuid)).querySingle();
+    }
+
+    public static UserData fetchUserWith(String userUuid, String flavor, String buildType) {
+        Preconditions.checkArgument(Utils.notNullOrEmpty(userUuid));
+        Preconditions.checkArgument(Utils.notNullOrEmpty(flavor));
+        Preconditions.checkArgument(Utils.notNullOrEmpty(buildType));
+
+        UserData userData = SQLite.select().from(UserData.class).where(UserData_Table.userUuid.eq(userUuid),
+                UserData_Table.appFlavor.eq(flavor), UserData_Table.buildType.eq(buildType)).querySingle();
+        if (userData == null) {
+            userData = new UserData();
+            userData.setUserUuid(userUuid);
+            userData.setAppFlavor(flavor);
+            userData.setBuildType(buildType);
+            userData.save();
+        }
+        return userData;
     }
 
     public static UserData createOrFetchUser(String userUuid) {
@@ -82,9 +100,12 @@ public class UserDataBackend {
         public void onDataChange(DataSnapshot dataSnapshot) {
             if (dataSnapshot.getValue() != null) {
                 if (userData.appFlavor != null && !userData.appFlavor.isEmpty() && userData.buildType != null && !userData.buildType.isEmpty()) {
-                    Log.e(TAG, "USERDATA already has app flavor and build type. Not writing duplicates.");
-                    future.set(userData);
-                    return;
+                    if (userData.buildType.equals(Utils.BUILD_TYPE_RELEASE) || buildType.equals(Utils.BUILD_TYPE_DEBUG)) {
+                        Log.e(TAG, "USERDATA already has app flavor and build type. Not writing duplicates.");
+                        future.set(userData);
+                        return;
+                    }
+                    // We do allow overwrite if existing build type is debug.
                 }
                 userData.appFlavor = flavor;
                 userData.buildType = buildType;
