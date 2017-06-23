@@ -64,7 +64,7 @@ public class UserDataBackend {
         @Override
         public void onDataChange(DataSnapshot dataSnapshot) {
             if (dataSnapshot.getValue() != null) {
-                if (!userData.appFlavor.isEmpty() && !userData.buildType.isEmpty()) {
+                if (userData.appFlavor != null && !userData.appFlavor.isEmpty() && userData.buildType != null && !userData.buildType.isEmpty()) {
                     Log.e(TAG, "USERDATA already has app flavor and build type. Not writing duplicates.");
                     future.set(userData);
                     return;

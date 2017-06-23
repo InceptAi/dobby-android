@@ -6,6 +6,8 @@ import com.raizlabs.android.dbflow.annotation.PrimaryKey;
 import com.raizlabs.android.dbflow.annotation.Table;
 import com.raizlabs.android.dbflow.structure.BaseModel;
 
+import static com.inceptai.expertchat.Utils.EMPTY_STRING;
+
 /**
  * Created by arunesh on 6/21/17.
  */
@@ -39,6 +41,9 @@ public class UserData extends BaseModel {
 
     public UserData() {
         interactionType = INTERACTION_UNKNOWN;
+        appFlavor = EMPTY_STRING;
+        buildType = EMPTY_STRING;
+        userUuid = EMPTY_STRING;
     }
 
     public String getUserUuid() {

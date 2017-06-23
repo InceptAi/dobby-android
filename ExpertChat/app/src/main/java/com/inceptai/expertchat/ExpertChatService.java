@@ -60,6 +60,7 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
     private String flavor;
     private String buildType;
     private String selectedUserId;
+    private UserData selectedUserData;
     private boolean pendingFcmTokenSaveOperation = false;
     private long expertEtaSeconds = ETA_PRESENT;
     private OnExpertDataFetched expertDataFetchedCallback;
@@ -123,6 +124,10 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
     }
 
     public String getPathForUserChat(String userUuid) {
+        UserData userData = UserDataBackend.fetchUser(userUuid);
+        if (userData != null && userData.hasBuildTypeAndFlavor()) {
+            return getChatRoomForFlavor(userData.appFlavor) + "/" + userData.buildType + "/" + userUuid + "/";
+        }
         return flavor + CHAT_ROOM_SUFFIX + "/" + buildType + "/" + userUuid + "/";
     }
 
@@ -425,5 +430,9 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
         notificationBuilder.setLights(Color.RED, 3000, 3000);
 
         return notificationBuilder;
+    }
+
+    private static String getChatRoomForFlavor(String flavor) {
+        return flavor + "_chat_rooms";
     }
 }
