@@ -73,8 +73,8 @@ public class DataInterpreter {
 
     private static final double[] WIFI_RSSI_STEPS_DBM = { /* higher is better */
             -50.0, /* excellent */
-            -70.0, /* good */
-            -88.0, /* average */
+            -65.0, /* good */
+            -80.0, /* average */
             -105.0 /* poor */
     };
 
@@ -852,7 +852,7 @@ public class DataInterpreter {
             httpGrade.errorCodeString = BandwidthTestCodes.bandwidthTestErrorCodesToStrings(httpGrade.errorCode);
             return httpGrade;
         }
-        httpGrade.httpDownloadLatencyMs = httpRouterStats.maxLatencyMs;
+        httpGrade.httpDownloadLatencyMs = httpRouterStats.avgLatencyMs;
         httpGrade.httpDownloadLatencyMetric = getGradeLowerIsBetter(httpRouterStats.avgLatencyMs,
                 HTTP_LATENCY_ROUTER_STEPS_MS,
                 httpRouterStats.avgLatencyMs > 0.0,
@@ -877,12 +877,12 @@ public class DataInterpreter {
 
         // Figure out the # of APs on primary channel
         WifiState.ChannelInfo primaryChannelInfo = wifiChannelInfo.get(linkInfo.getFrequency());
-        int numStrongInterferingAps = computeStrongInterferingAps(primaryChannelInfo);
+        int numStrongInterferingAps = primaryChannelInfo.getNumberOfInterferingAPs();
         // Compute metrics for all channels -- for later use
         int leastOccupiedChannel = linkInfo.getFrequency(); // current ap channel
         int minOccupancyAPs = numStrongInterferingAps;
         for (WifiState.ChannelInfo channelInfo: wifiChannelInfo.values()) {
-            int occupancy = computeStrongInterferingAps(channelInfo);
+            int occupancy = channelInfo.getNumberOfInterferingAPs();
             if (occupancy < minOccupancyAPs) {
                 leastOccupiedChannel = channelInfo.channelFrequency;
                 minOccupancyAPs = occupancy;
@@ -940,14 +940,6 @@ public class DataInterpreter {
             default:
                 return BandwidthTestCodes.ErrorCodes.ERROR_UNKNOWN;
         }
-    }
-
-    private static int computeStrongInterferingAps(WifiState.ChannelInfo channelInfo) {
-        if (channelInfo == null) {
-            return -1;
-        }
-        return channelInfo.similarStrengthAPs +
-                channelInfo.higherStrengthAps + channelInfo.highestStrengthAps;
     }
 
     @MetricType

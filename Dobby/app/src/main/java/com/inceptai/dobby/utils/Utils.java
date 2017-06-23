@@ -668,6 +668,21 @@ public class Utils {
         return channelList;
     }
 
+    public static int[] get5GHzChannelList() {
+        return new int[]{5180, 5200, 5220, 5240, 5260, 5280, 5300, 5320,
+                5500, 5520, 5540, 5560, 5580, 5600, 5620, 5640, 5660, 5680, 5700, 5745, 5765,
+                5785, 5805, 5825};
+    }
+
+    public static int[] get2GHzAnd5GHzChannelList() {
+        int[] channelList2GHz = Utils.get2GHzChannelList();
+        int[] channelList5GHz = Utils.get5GHzChannelList();
+        int[] combinedChannelList = new int[channelList2GHz.length + channelList5GHz.length];
+        System.arraycopy(channelList2GHz, 0, combinedChannelList, 0, channelList2GHz.length);
+        System.arraycopy(channelList5GHz, 0, combinedChannelList, channelList2GHz.length, channelList5GHz.length);
+        return combinedChannelList;
+    }
+
     public static int[] get2GHzNonOverlappingChannelList() {
         return new int[]{2412, 2437, 2462};
     }

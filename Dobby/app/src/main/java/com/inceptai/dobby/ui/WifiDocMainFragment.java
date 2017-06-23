@@ -7,7 +7,6 @@ import android.animation.ObjectAnimator;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -21,7 +20,6 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.ShareCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.CardView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -637,7 +635,6 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         expertChatFl.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                dobbyAnalytics.contactExpertEvent();
                 showExpertChat();
             }
         });
@@ -1112,6 +1109,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
     private void showExpertChat() {
         startActivity(new Intent(getContext(), ExpertChatActivity.class));
+        dobbyAnalytics.contactExpertEvent();
     }
 
     private void showAboutAndPrivacyPolicy() {
