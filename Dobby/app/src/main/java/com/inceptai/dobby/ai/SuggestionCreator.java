@@ -561,8 +561,8 @@ public class SuggestionCreator {
                 if (DataInterpreter.isPoorOrAbysmalOrNonFunctional(params.bandwidthGrade.getDownloadBandwidthMetric())
                         && DataInterpreter.isPoorOrAbysmalOrNonFunctional(params.bandwidthGrade.getUploadBandwidthMetric())) {
                     conditionalMessage = "This could be the key reason why you are getting poor download (" +
-                            params.bandwidthGrade.getDownloadMbps() + " Mbps) and upload (" +
-                            params.bandwidthGrade.getUploadMbps() + " Mbps) speeds. ";
+                            String.format("%.2f", params.bandwidthGrade.getDownloadMbps()) + " Mbps) and upload (" +
+                            String.format("%.2f", params.bandwidthGrade.getUploadMbps()) + " Mbps) speeds. ";
                 }
                 conditionalMessage  += " Try moving closer to the wifi router to get better speeds.";
                 break;

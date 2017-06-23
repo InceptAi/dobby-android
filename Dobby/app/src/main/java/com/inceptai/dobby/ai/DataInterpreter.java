@@ -506,6 +506,7 @@ public class DataInterpreter {
         int linkSpeed;
         @BandwidthTestCodes.ErrorCodes int errorCode = BandwidthTestCodes.ErrorCodes.ERROR_UNINITIAlIZED;
         List<ScanResult> scanResultList;
+        HashMap<String, Utils.PercentileStats> detailedNetworkStateStats;
         private long updatedAtMs;
         private String connectivityModeString = Utils.EMPTY_STRING;
         private String linkModeString = Utils.EMPTY_STRING;
@@ -518,6 +519,7 @@ public class DataInterpreter {
         public WifiGrade() {
             scanResultList = new ArrayList<>();
             wifiChannelOccupancyMetric = new HashMap<>();
+            detailedNetworkStateStats = new HashMap<>();
         }
 
         public String toJson() {
@@ -877,12 +879,18 @@ public class DataInterpreter {
 
         // Figure out the # of APs on primary channel
         WifiState.ChannelInfo primaryChannelInfo = wifiChannelInfo.get(linkInfo.getFrequency());
-        int numStrongInterferingAps = primaryChannelInfo.getNumberOfInterferingAPs();
+        int numStrongInterferingAps = 0;
+        if (primaryChannelInfo != null) {
+            numStrongInterferingAps = primaryChannelInfo.getNumberOfInterferingAPs();
+        }
         // Compute metrics for all channels -- for later use
         int leastOccupiedChannel = linkInfo.getFrequency(); // current ap channel
         int minOccupancyAPs = numStrongInterferingAps;
         for (WifiState.ChannelInfo channelInfo: wifiChannelInfo.values()) {
-            int occupancy = channelInfo.getNumberOfInterferingAPs();
+            int occupancy = 0;
+            if (channelInfo != null) {
+                occupancy = channelInfo.getNumberOfInterferingAPs();
+            }
             if (occupancy < minOccupancyAPs) {
                 leastOccupiedChannel = channelInfo.channelFrequency;
                 minOccupancyAPs = occupancy;
@@ -899,7 +907,7 @@ public class DataInterpreter {
         wifiGrade.leastOccupiedChannelAps = minOccupancyAPs;
         wifiGrade.primaryApSignal = linkInfo.getRssi();
         wifiGrade.scanResultList = scanResultList;
-
+        wifiGrade.detailedNetworkStateStats = wifiState.getDetailedNetworkStateStats();
         //Compute metrics
         wifiGrade.primaryApChannelInterferingAps = numStrongInterferingAps;
         wifiGrade.primaryLinkChannelOccupancyMetric = getGradeLowerIsBetter(numStrongInterferingAps,

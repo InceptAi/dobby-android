@@ -2,10 +2,12 @@ package com.inceptai.dobby.wifi;
 
 import android.net.NetworkInfo;
 import android.net.wifi.ScanResult;
+import android.os.Build;
 import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
 
 import com.google.gson.Gson;
+import com.inceptai.dobby.BuildConfig;
 import com.inceptai.dobby.model.DobbyWifiInfo;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
@@ -16,6 +18,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.inject.Inject;
+
+import static android.net.NetworkInfo.DetailedState.CAPTIVE_PORTAL_CHECK;
+import static android.net.NetworkInfo.DetailedState.OBTAINING_IPADDR;
+import static android.net.NetworkInfo.DetailedState.VERIFYING_POOR_LINK;
 
 /**
  * Created by vivek on 4/8/17.
@@ -151,15 +159,35 @@ public class WifiState {
         return channelMapToReturn;
     }
 
-    public Utils.PercentileStats getStatsForDetailedState(NetworkInfo.DetailedState detailedState,
-                                                          long timeIntervalMs) {
+    public HashMap<String, Utils.PercentileStats> getDetailedNetworkStateStats() {
+        HashMap<String, Utils.PercentileStats> detailedStats = new HashMap<>();
+        detailedStats.put(NetworkInfo.DetailedState.IDLE.name(), getStatsForDetailedState(NetworkInfo.DetailedState.IDLE));
+        detailedStats.put(NetworkInfo.DetailedState.SCANNING.name(), getStatsForDetailedState(NetworkInfo.DetailedState.SCANNING));
+        detailedStats.put(NetworkInfo.DetailedState.CONNECTING.name(), getStatsForDetailedState(NetworkInfo.DetailedState.CONNECTING));
+        detailedStats.put(NetworkInfo.DetailedState.AUTHENTICATING.name(), getStatsForDetailedState(NetworkInfo.DetailedState.AUTHENTICATING));
+        detailedStats.put(NetworkInfo.DetailedState.OBTAINING_IPADDR.name(), getStatsForDetailedState(NetworkInfo.DetailedState.OBTAINING_IPADDR));
+        detailedStats.put(NetworkInfo.DetailedState.CONNECTED.name(), getStatsForDetailedState(NetworkInfo.DetailedState.CONNECTED));
+        detailedStats.put(NetworkInfo.DetailedState.SUSPENDED.name(), getStatsForDetailedState(NetworkInfo.DetailedState.SUSPENDED));
+        detailedStats.put(NetworkInfo.DetailedState.DISCONNECTING.name(), getStatsForDetailedState(NetworkInfo.DetailedState.DISCONNECTING));
+        detailedStats.put(NetworkInfo.DetailedState.DISCONNECTED.name(), getStatsForDetailedState(NetworkInfo.DetailedState.DISCONNECTED));
+        detailedStats.put(NetworkInfo.DetailedState.FAILED.name(), getStatsForDetailedState(NetworkInfo.DetailedState.FAILED));
+        detailedStats.put(NetworkInfo.DetailedState.BLOCKED.name(), getStatsForDetailedState(NetworkInfo.DetailedState.BLOCKED));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            detailedStats.put(NetworkInfo.DetailedState.VERIFYING_POOR_LINK.name(), getStatsForDetailedState(NetworkInfo.DetailedState.VERIFYING_POOR_LINK));
+            detailedStats.put(NetworkInfo.DetailedState.CAPTIVE_PORTAL_CHECK.name(), getStatsForDetailedState(NetworkInfo.DetailedState.CAPTIVE_PORTAL_CHECK));
+        }
+        return detailedStats;
+    }
+
+    private Utils.PercentileStats getStatsForDetailedState(NetworkInfo.DetailedState detailedState) {
+        final long TIME_INTERVAL_FOR_DETAILED_STATS_MS = 15 * 60 * 1000;
         List<Double> duration = new ArrayList<>();
         List<WifiStateInfo> list = detailedWifiStateStats.get(detailedState);
         if (list == null) {
             return new Utils.PercentileStats();
         }
         for (WifiStateInfo wifiStateInfo: list) {
-            if ((System.currentTimeMillis() - wifiStateInfo.endTimestampMs) < timeIntervalMs) {
+            if ((System.currentTimeMillis() - wifiStateInfo.endTimestampMs) < TIME_INTERVAL_FOR_DETAILED_STATS_MS) {
                 duration.add((double)(wifiStateInfo.endTimestampMs - wifiStateInfo.startTimestampMs));
             }
         }
@@ -419,6 +447,7 @@ public class WifiState {
                         detailedWifiState.name() + " last state,lasted: " +
                         lastWifiState.name() + "," + (timestampMs - lastWifiStateTimestampMs) + "ms");
             }
+            DobbyLog.v("updateDetailedWifiStateInfo updating last wifi state from " + lastWifiState.name() + " to " + detailedWifiState.name());
             lastWifiState = detailedWifiState;
             lastWifiStateTimestampMs = timestampMs;
         } else if (lastWifiStateTimestampMs == 0) {
