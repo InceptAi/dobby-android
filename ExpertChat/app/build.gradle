@@ -43,8 +43,6 @@ dependencies {
     })
     compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'com.google.firebase:firebase-analytics:10.2.1'
-    compile 'com.google.firebase:firebase-analytics:10.2.1'
-    compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'com.android.support:design:25.3.1'
     compile 'com.github.bumptech.glide:glide:3.7.0'
     compile 'de.hdodenhof:circleimageview:1.3.0'
@@ -52,11 +50,9 @@ dependencies {
     compile 'com.google.firebase:firebase-database:10.2.1'
     compile 'com.google.firebase:firebase-storage:10.2.1'
     compile 'com.google.firebase:firebase-auth:10.2.1'
-    compile 'com.google.firebase:firebase-config:10.2.1'
-    compile 'com.google.android.gms:play-services-appinvite:10.2.1'
     compile 'com.google.firebase:firebase-messaging:10.2.1'
-    compile 'com.google.android.gms:play-services-ads:10.2.1'
     compile 'com.google.firebase:firebase-appindexing:10.2.1'
+    compile 'com.google.firebase:firebase-config:10.2.1'
     compile 'com.google.firebase:firebase-crash:10.2.1'
     compile 'com.firebaseui:firebase-ui-database:1.2.0'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
@@ -65,15 +61,16 @@ dependencies {
     compile 'com.takisoft.fix:preference-v7:25.3.1.0'
     compile 'de.hdodenhof:circleimageview:2.1.0'
     compile 'com.squareup.picasso:picasso:2.5.2'
+    compile 'com.google.guava:guava:22.0-android'
+    compile group: 'com.google.code.findbugs', name: 'jsr305', version: '2.0.1'
+    testCompile group: 'com.google.code.findbugs', name: 'jsr305', version: '2.0.1'
 
     annotationProcessor "com.github.Raizlabs.DBFlow:dbflow-processor:${dbflow_version}"
     compile "com.github.Raizlabs.DBFlow:dbflow-core:${dbflow_version}"
     compile "com.github.Raizlabs.DBFlow:dbflow:${dbflow_version}"
 
-
     testCompile 'junit:junit:4.12'
 }
-
 
 
 

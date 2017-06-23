@@ -7,6 +7,10 @@
             android:icon="@drawable/ic_user_circle_24dp"
             android:title="Select User" />
         <item
+            android:id="@+id/nav_notif_recents"
+            android:icon="@drawable/ic_user_circle_24dp"
+            android:title="Recents" />
+        <item
             android:id="@+id/nav_user_chat"
             android:icon="@drawable/ic_chat_bubble_24dp"
             android:title="Chat" />
