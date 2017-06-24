@@ -1,5 +1,17 @@
 apply plugin: 'com.android.application'
 
+
+// Create a variable called keystorePropertiesFileWifiDoc, and initialize it to your
+// keystore.properties file, in the rootProject folder.
+def keystorePropertiesFileWifiDoc = rootProject.file("../../Keystore/wifidoc-keystore.properties")
+
+// Initialize a new Properties() object called keystorePropertiesWifiDoc.
+def keystorePropertiesWifiDoc = new Properties()
+
+
+// Load your keystore.properties file into the keystorePropertiesWifiDoc object.
+keystorePropertiesWifiDoc.load(new FileInputStream(keystorePropertiesFileWifiDoc))
+
 android {
     compileSdkVersion 25
     buildToolsVersion "25.0.3"
@@ -12,8 +24,17 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
     }
+    signingConfigs {
+        wifidoc_config {
+            keyAlias keystorePropertiesWifiDoc['keyAlias']
+            keyPassword keystorePropertiesWifiDoc['keyPassword']
+            storeFile file(keystorePropertiesWifiDoc['storeFile'])
+            storePassword keystorePropertiesWifiDoc['storePassword']
+        }
+    }
     buildTypes {
         release {
+            signingConfig signingConfigs.wifidoc_config
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

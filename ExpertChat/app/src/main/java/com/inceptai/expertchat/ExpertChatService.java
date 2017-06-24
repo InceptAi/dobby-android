@@ -411,7 +411,7 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
         String body = data.get("bodyText");
 
         Intent intent = new Intent(context, MainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         intent.putExtra(Utils.NOTIFICATION_USER_UUID, fromUuid);
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
