@@ -241,8 +241,9 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
 
         final NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         final NotificationCompat.Builder builder = buildNotification(context, data, title);
-        notificationManager.notify(lastNotificationId, builder.build());
-        userData.lastNotificationId = lastNotificationId;
+        int notificationId = fromUuid.hashCode();
+        notificationManager.notify(notificationId, builder.build());
+        userData.lastNotificationId = notificationId;
         lastNotificationId ++;
 
         String pushId = data.get(NOTIF_PUSHID_KEY);
