@@ -46,7 +46,6 @@ public class ExpertChat {
         utcTimestampMs = System.currentTimeMillis();
     }
 
-
     private void computeTimestamp() {
         Date date = new Date();
         timestamp = date.toString();

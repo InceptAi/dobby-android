@@ -25,6 +25,8 @@ public class ExpertChat {
     public static final int MSG_TYPE_META_ACTION_STARTED = 5003;
     public static final int MSG_TYPE_META_ACTION_COMPLETED = 5004;
 
+    public static final long TWENTY_DAYS_IN_MS = 24 * 60 * 60 * 1000 * 20;
+
 
     String id;
     String text;
@@ -44,9 +46,8 @@ public class ExpertChat {
         this.text = text;
         this.messageType = messageType;
         computeTimestamp();
-        utcTimestampMs = System.currentTimeMillis();
+        utcTimestampMs = System.currentTimeMillis() + TWENTY_DAYS_IN_MS;
     }
-
 
     private void computeTimestamp() {
         Date date = new Date();

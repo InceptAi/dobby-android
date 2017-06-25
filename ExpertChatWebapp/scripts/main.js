@@ -59,6 +59,7 @@ ExpertChat.prototype.getExpert = function(avatarName, userName) {
             console.log("Load chat for userUuid:" + expert.val().selectedUuid);
             this.loadMessages(expert.val().selectedUuid);
             this.selectedUuid = expert.val().selectedUuid;
+            this.expertAvatarName = expert.val().avatar;
             this.welcomeTitle.textContent = "Welcome " + expert.val().avatar;
             this.supportingTextbar.textContent = "You are chatting with USER: " + this.selectedUuid;
         }
@@ -82,17 +83,24 @@ ExpertChat.prototype.initFirebase = function() {
 ExpertChat.prototype.loadMessages = function(userUuid) {
   // Reference to the /messages/ database path.
   var messagePath = '/wifidoc_chat_rooms/release/' + userUuid +'/';
+  var fcmIdPath = '/wifidoc/release/users/' + userUuid + '/' + 'fcmToken';
   if (window.debugMode == true) {
 	  if (window.isWifiExpert == true) {
 		  messagePath = '/dobby_chat_rooms/debug/' + userUuid +'/';
+          fcmIdPath = '/dobby/debug/users/' + userUuid + '/' + 'fcmToken';
 	  } else {
 		  messagePath = '/wifidoc_chat_rooms/debug/' + userUuid +'/';
+          fcmIdPath = '/wifidoc/debug/users/' + userUuid + '/' + 'fcmToken';
 	  }
   } else if (window.isWifiExpert == true) {
 	  messagePath = '/dobby_chat_rooms/release/' + userUuid +'/';
+      fcmIdPath = '/dobby/release/users/' + userUuid + '/' + 'fcmToken';
   }
   console.log("Message path: " + messagePath);
   this.messagesRef = this.database.ref(messagePath);
+  this.fcmIdPath = fcmIdPath;
+  this.notifRef = this.database.ref('/notifications/messages/');
+
   // Make sure we remove all previous listeners.
   this.messagesRef.off();
 
@@ -124,16 +132,25 @@ ExpertChat.prototype.saveMessage = function(e) {
   // Check that the user entered a message and is signed in.
   if (this.messageInput.value && this.checkSignedInWithMessage()) {
     var currentUser = this.auth.currentUser;
+    var messageText = this.messageInput.value;
     // Add a new message entry to the Firebase Database.
     this.messagesRef.push({
       name: currentUser.displayName,
       messageType: 1001,
       text: this.messageInput.value,
+      utcTimestampMs: new Date().getTime() + 1728000000,
       photoUrl: currentUser.photoURL || '/images/profile_placeholder.png'
     }).then(function() {
       // Clear message text field and SEND button state.
       ExpertChat.resetMaterialTextfield(this.messageInput);
       this.toggleButton();
+      this.notifRef.push({
+          from: this.expertAvatarName,
+          to: this.selectedUuid,
+          title: 'You have a new message from a Wifi Expert',
+          body: messageText, 
+          fcmIdPath: this.fcmIdPath
+      });
     }.bind(this)).catch(function(error) {
       console.error('Error writing new message to Firebase Database', error);
     });
