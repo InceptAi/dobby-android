@@ -104,7 +104,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     ActionDatabaseWriter actionDatabaseWriter;
 
     public interface ResponseCallback {
-        void showResponse(String text);
+        void showBotResponseToUser(String text);
         void showRtGraph(RtDataSource<Float, Integer> rtDataSource);
         void observeBandwidth(BandwidthObserver observer);
         void cancelTests();
@@ -586,7 +586,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     private void showMessageToUser(String messageToShow) {
         if (responseCallback != null && messageToShow != null && ! messageToShow.equals(Utils.EMPTY_STRING)) {
             DobbyLog.v("Showing to user message: " + messageToShow);
-            responseCallback.showResponse(messageToShow);
+            responseCallback.showBotResponseToUser(messageToShow);
         }
     }
 

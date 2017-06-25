@@ -64,7 +64,7 @@ public class MainActivity extends AppCompatActivity
 
     private static final int PERMISSION_COARSE_LOCATION_REQUEST_CODE = 101;
     private static final int SPEECH_RECOGNITION_REQUEST_CODE = 102;
-    private static final boolean ENABLE_HISTORY = false;
+    private static final boolean ENABLE_HISTORY = true;
 
     private static final String PREF_FIRST_CHAT = "first_dobby_expert_chat";
     private static final String PREF_CHAT_IN_EXPERT_MODE = "dobby_in_expert_mode";
@@ -121,7 +121,7 @@ public class MainActivity extends AppCompatActivity
         //TODO change messaging accordingly
         expertChatService = ExpertChatService.get();
         //TODO: Check do we need this
-        expertChatService.setCallback(this);
+        //expertChatService.setCallback(this);
         //fetchChatMessages();
 
         dobbyAi.setResponseCallback(this);
@@ -174,7 +174,6 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void setupChatFragment() {
-        //chatFragment = new ChatFragment();
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.replace(R.id.placeholder_fl,
@@ -184,8 +183,8 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void fetchChatMessages() {
+        expertChatService.setCallback(this);
         if (!expertChatService.isListenerConnected()) {
-            //recyclerViewAdapter.clear();
             expertChatService.fetchChatMessages();
         }
     }
@@ -255,20 +254,17 @@ public class MainActivity extends AppCompatActivity
 
     // From DobbyAi.ResponseCallback interface.
     @Override
-    public void showResponse(String text) {
-        DobbyLog.v("In showResponse of MainActivity: text: " + text);
-        if (chatFragment != null) {
-            chatFragment.showResponse(text);
-        }
+    public void showBotResponseToUser(String text) {
+        DobbyLog.v("MainActivity:showBotResponseToUser text: " + text);
         pushBotChatMessage(text);
     }
 
     @Override
     public void showStatus(String text) {
         DobbyLog.v("In showStatus of MainActivity: text: " + text);
-        if (chatFragment != null) {
-            chatFragment.showStatus(text);
-        }
+//        if (chatFragment != null) {
+//            chatFragment.showStatus(text);
+//        }
         pushBotChatMessage(text);
     }
 
@@ -400,17 +396,27 @@ public class MainActivity extends AppCompatActivity
         }
 
         expertChatIdsDisplayed.add(expertChat.getId());
+        String messageReceived = expertChat.getText();
+        DobbyLog.v("MainActivity:FirebaseMessage recvd from firebase: " + messageReceived);
+
+        if (chatFragment == null) {
+            DobbyLog.v("chat fragment is null, so not displaying mesg");
+            return;
+        }
 
         switch (expertChat.getMessageType()) {
             case ExpertChat.MSG_TYPE_EXPERT_TEXT:
-                chatFragment.showExpertChatMessage(expertChat.getText());
+                chatFragment.showExpertChatMessage(messageReceived);
+                DobbyLog.v("MainActivity:FirebaseMessage added mesg to ExpertChat");
                 saveExpertChatStarted();
                 break;
             case ExpertChat.MSG_TYPE_BOT_TEXT:
-                chatFragment.showResponse(expertChat.getText());
+                DobbyLog.v("MainActivity:FirebaseMessage added mesg to Bot chat");
+                chatFragment.showBotResponse(messageReceived);
                 break;
             case ExpertChat.MSG_TYPE_USER_TEXT:
-                chatFragment.addUserChat(expertChat.getText());
+                DobbyLog.v("MainActivity:FirebaseMessage added mesg to User chat");
+                chatFragment.showUserResponse(messageReceived);
                 break;
         }
     }
@@ -441,8 +447,8 @@ public class MainActivity extends AppCompatActivity
         }
         currentEtaSeconds = newEtaSeconds;
         expertIsPresent = isPresent;
-        if (chatFragment != null && showInChat) {
-            chatFragment.showResponse(message);
+        if (showInChat) {
+            showBotResponseToUser(message);
         }
         dobbyAi.updatedEtaAvailable(currentEtaSeconds);
     }
@@ -499,8 +505,6 @@ public class MainActivity extends AppCompatActivity
             return true;
         }
         return false;
-        //return Boolean.valueOf(Utils.readSharedSetting(this,
-         //       PREF_CHAT_IN_EXPERT_MODE, Utils.FALSE_STRING));
     }
 
     private void pushUserChatMessage(String text, boolean shouldShowToExpert) {
@@ -551,7 +555,7 @@ public class MainActivity extends AppCompatActivity
     protected void onResume() {
         super.onResume();
         expertChatService.setCallback(this);
-        fetchChatMessages();
+        //fetchChatMessages();
         processIntent(getIntent());
         expertChatService.sendUserEnteredMetaMessage();
         expertChatService.disableNotifications();
@@ -597,10 +601,12 @@ public class MainActivity extends AppCompatActivity
         DobbyLog.v("MainActivity:onRecyclerViewReady");
         showLocationPermissionRequest();
         updateExpertIndicator();
+        fetchChatMessages();
     }
 
     @Override
-    public void onFirstTimeCreated() {
+    public void onFirstTimeResumed() {
+        DobbyLog.v("MainActivity:onFirstTimeResumed");
         if (dobbyAi != null) {
             dobbyAi.sendWelcomeEvent();
         }

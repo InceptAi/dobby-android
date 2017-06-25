@@ -88,6 +88,8 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     private static final int MSG_SHOW_EXPERT_CHAT = 11;
     private static final int MSG_SHOW_EXPERT_INDICATOR = 12;
     private static final int MSG_HIDE_EXPERT_INDICATOR = 13;
+    private static final int MSG_SHOW_USER_CHAT = 14;
+
 
     private static final int BW_TEST_INITIATED = 200;
     private static final int BW_CONFIG_FETCHED = 201;
@@ -96,7 +98,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     private static final int BW_SERVER_INFO_FETCHED = 204;
     private static final int BW_BEST_SERVER_DETERMINED = 205;
     private static final int BW_IDLE = 207;
-    private static final int DELAY_FOR_DOBBY_MESSAGES_MS = 10;
+    private static final int DELAY_FOR_DOBBY_MESSAGES_MS = 0;
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -148,7 +150,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         void onMicPressed();
         void onRecyclerViewReady();
         void onFragmentDetached();
-        void onFirstTimeCreated();
+        void onFirstTimeResumed();
         void onFragmentAttached();
     }
 
@@ -259,14 +261,10 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        if (mListener != null) {
-            mListener.onRecyclerViewReady();
-        }
-
         if (createdFirstTime) {
             dobbyAnalytics.wifiExpertFragmentEntered();
             if (mListener != null) {
-                mListener.onFirstTimeCreated();
+                mListener.onFirstTimeResumed();
             }
         }
     }
@@ -317,6 +315,9 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     @Override
     public void onResume() {
         DobbyLog.v("CF: In onResume");
+        if (mListener != null) {
+            mListener.onRecyclerViewReady();
+        }
         super.onResume();
     }
 
@@ -359,7 +360,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         if (suggestion != null) {
             Message.obtain(handler, MSG_SHOW_DETAILED_SUGGESTIONS, suggestion).sendToTarget();
         } else {
-            showResponse(getString(R.string.detailed_suggestion_not_available));
+            showBotResponse(getString(R.string.detailed_suggestion_not_available));
         }
     }
 
@@ -413,8 +414,8 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         //Message.obtain(handler, MSG_SHOW_BW_GAUGE, observer).sendToTarget();
     }
 
-    public void showResponse(final String text) {
-        DobbyLog.v("ChatF: showResponse text " + text);
+    public void showBotResponse(final String text) {
+        DobbyLog.v("ChatF: showBotResponse text " + text);
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -423,6 +424,18 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         }, DELAY_FOR_DOBBY_MESSAGES_MS);
         //Message.obtain(handler, MSG_SHOW_DOBBY_CHAT, text).sendToTarget();
     }
+
+    public void showUserResponse(final String text) {
+        DobbyLog.v("ChatF: showUserResponse text " + text);
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                Message.obtain(handler, MSG_SHOW_USER_CHAT, text).sendToTarget();
+            }
+        }, DELAY_FOR_DOBBY_MESSAGES_MS);
+        //Message.obtain(handler, MSG_SHOW_DOBBY_CHAT, text).sendToTarget();
+    }
+
 
     //No delay for following
     public void showRtGraph(RtDataSource<Float, Integer> rtDataSource) {
@@ -461,6 +474,12 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
                 DobbyLog.v("In handleMessage for DobbyChat show status");
                 String status = (String) msg.obj;
                 addDobbyChat(status, true);
+                break;
+            case MSG_SHOW_USER_CHAT:
+                // Add to the recycler view.
+                DobbyLog.v("In handleMessage for DobbyChat");
+                String userText = (String) msg.obj;
+                addUserChat(userText);
                 break;
             case MSG_SHOW_EXPERT_CHAT:
                 // Add to the recycler view.
@@ -526,7 +545,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     }
 
     public void addSpokenText(String userText) {
-        addUserChat(userText);
+        //addUserChat(userText);
         if (textToSpeech != null) {
             useVoiceOutput = true;
         }
@@ -603,7 +622,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     }
 
     public void showStatus(String message) {
-        DobbyLog.v("ChatF: showResponse text " + message);
+        DobbyLog.v("ChatF: showStatus text " + message);
         Message.obtain(handler, MSG_SHOW_STATUS, message).sendToTarget();
     }
 
@@ -708,7 +727,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         if (text.equals(Utils.EMPTY_STRING)) {
             return;
         }
-        addUserChat(text);
+        //addUserChat(text);
         useVoiceOutput = false;
         // Parent activity callback.
         if (mListener != null) {

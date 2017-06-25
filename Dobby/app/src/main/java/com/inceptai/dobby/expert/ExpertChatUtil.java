@@ -23,6 +23,7 @@ public class ExpertChatUtil {
     public static boolean isDisplayableMessageType(ExpertChat expertChat) {
         return (expertChat.getMessageType() == ExpertChat.MSG_TYPE_GENERAL_MESSAGE ||
                 expertChat.getMessageType() == ExpertChat.MSG_TYPE_USER_TEXT ||
-                expertChat.getMessageType() == ExpertChat.MSG_TYPE_EXPERT_TEXT);
+                expertChat.getMessageType() == ExpertChat.MSG_TYPE_EXPERT_TEXT ||
+                expertChat.getMessageType() == ExpertChat.MSG_TYPE_BOT_TEXT);
     }
 }

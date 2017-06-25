@@ -222,7 +222,7 @@ public class ApiAiClient implements AIListener {
                 //Handle the case when user exited in expert mode.
                 actionToReturn = new Action("Hi there,  I can help you if you have questions about " +
                         "your network. You can say things like \"run tests\" or  " +
-                        "or \"why is my internet slow\" etc. You can also contact a real Wifi expert for your problem by saying \"Contact expert\" ",
+                        "or \"why is my internet slow\" etc. You can also contact a real Wifi expert for your problem by saying \"Contact expert\" ts: " + System.currentTimeMillis(),
                         Action.ActionType.ACTION_TYPE_WELCOME);
             } else if (event.equals(APIAI_SHORT_SUGGESTION_SHOWN_EVENT)) {
                 actionToReturn = new Action("Do you want more details on this analysis ?",
