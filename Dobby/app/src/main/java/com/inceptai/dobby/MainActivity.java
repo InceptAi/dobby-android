@@ -96,6 +96,31 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         ((DobbyApplication) getApplication()).getProdComponent().inject(this);
         super.onCreate(savedInstanceState);
+        /**
+         * Look at this: https://stackoverflow.com/questions/19545889/app-restarts-rather-than-resumes
+         * Ensure the application resumes whatever task the user was performing the last time
+         * they opened the app from the launcher. It would be preferable to configure this
+         * behavior in  AndroidMananifest.xml activity settings, but those settings cause drastic
+         * undesirable changes to the way the app opens: singleTask closes ALL other activities
+         * in the task every time and alwaysRetainTaskState doesn't cover this case, incredibly.
+         *
+         * The problem happens when the user first installs and opens the app from
+         * the play store or sideloaded apk (not via ADB). On this first run, if the user opens
+         * activity B from activity A, presses 'home' and then navigates back to the app via the
+         * launcher, they'd expect to see activity B. Instead they're shown activity A.
+         *
+         * The best solution is to close this activity if it isn't the task root.
+         *
+         */
+
+        if (!isTaskRoot()
+                && getIntent().hasCategory(Intent.CATEGORY_LAUNCHER)
+                && getIntent().getAction() != null
+                && getIntent().getAction().equals(Intent.ACTION_MAIN)) {
+
+            finish();
+            return;
+        }
 
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -183,10 +208,13 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void fetchChatMessages() {
+        DobbyLog.v("MainActivity: start fetching");
         expertChatService.setCallback(this);
         if (!expertChatService.isListenerConnected()) {
+            DobbyLog.v("MainActivity: listener connected, fetching messages");
             expertChatService.fetchChatMessages();
         }
+        DobbyLog.v("MainActivity: end fetching");
     }
 
     @Override
@@ -602,6 +630,7 @@ public class MainActivity extends AppCompatActivity
         showLocationPermissionRequest();
         updateExpertIndicator();
         fetchChatMessages();
+
     }
 
     @Override

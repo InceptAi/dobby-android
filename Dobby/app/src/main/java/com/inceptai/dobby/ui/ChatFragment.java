@@ -261,7 +261,11 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+        if (mListener != null) {
+            mListener.onRecyclerViewReady();
+        }
         if (createdFirstTime) {
+            createdFirstTime = false;
             dobbyAnalytics.wifiExpertFragmentEntered();
             if (mListener != null) {
                 mListener.onFirstTimeResumed();
@@ -315,9 +319,6 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     @Override
     public void onResume() {
         DobbyLog.v("CF: In onResume");
-        if (mListener != null) {
-            mListener.onRecyclerViewReady();
-        }
         super.onResume();
     }
 
