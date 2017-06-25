@@ -17,6 +17,7 @@ import android.widget.ImageView;
 
 import com.google.common.net.InetAddresses;
 import com.google.gson.Gson;
+import com.inceptai.dobby.BuildConfig;
 import com.inceptai.dobby.speedtest.BandwidthTestCodes;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -54,7 +55,7 @@ public class Utils {
     public static final String ZERO_POINT_ZERO = "0.0";
     public static final String WIFIDOC_FLAVOR = "wifidoc";
     public static final String DOBBY_FLAVOR = "dobby";
-    public static final String PREFERENCES_FILE = "wifi_tester_settings";
+    public static final String PREFERENCES_FILE = BuildConfig.FLAVOR + "_" + BuildConfig.BUILD_TYPE + "_settings";
     public static final String USER_UUID = "userUuid";
     public static final String PREF_EXPERT_CHAT_TIMESTAMP_MS = "ExpertChatTs";
 
@@ -62,6 +63,7 @@ public class Utils {
     private static final int CONNECTION_TIMEOUT_MS = 5000;
     public static final String UNKNOWN_LATENCY_STRING = "--";
     private static final int MAX_SSID_LENGTH = 30;
+
 
     private static Random random = new Random();
 
