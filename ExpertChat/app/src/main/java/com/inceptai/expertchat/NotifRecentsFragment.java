@@ -131,7 +131,7 @@ public class NotifRecentsFragment extends Fragment {
     }
 
     private void fetchUsers() {
-        List<UserData> allUsers = UserDataBackend.fetchUsers();
+        List<UserData> allUsers = UserDataBackend.fetchNotifRecents();
         for (UserData userData : allUsers) {
             if (userData.appFlavor != null && userData.appFlavor.equals(Utils.DOBBY_FLAVOR)) {
                 if (userData.buildType != null && userData.buildType.equals(Utils.BUILD_TYPE_DEBUG)) {

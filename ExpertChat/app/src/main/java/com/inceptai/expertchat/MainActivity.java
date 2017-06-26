@@ -135,6 +135,7 @@ public class MainActivity extends AppCompatActivity
             service.goOnline();
         }
         if (respondToNotification) {
+            clearFrameLayout();
             showChatFragment();
             selectedUserId = service.getSelectedUserId();
             navigationView.setCheckedItem(R.id.nav_user_chat);
@@ -309,6 +310,7 @@ public class MainActivity extends AppCompatActivity
         selectedUserId = userId;
         Utils.saveSharedSetting(this, Utils.SELECTED_USER_UUID, selectedUserId);
         ExpertChatService.fetchInstance(this.getApplicationContext()).setSelectedUserId(selectedUserId);
+        clearFrameLayout();
         showChatFragment();
         navigationView.setCheckedItem(R.id.nav_user_chat);
     }
