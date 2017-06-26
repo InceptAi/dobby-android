@@ -212,7 +212,7 @@ public class ApiAiClient implements AIListener {
                 //Default fallback
                 actionToReturn = new Action("I'm sorry, I don't support that yet. " +
                         "You can say things like \"Run speed test\", \"why is my wifi slow\". You can also " +
-                        "just say \"Contact expert\" to connect to a Wifi expert who can help with your problem",
+                        "just say \"Contact expert\" to registerToEventBusListener to a Wifi expert who can help with your problem",
                         Action.ActionType.ACTION_TYPE_DEFAULT_FALLBACK);
             }
         } else if (event != null && ! event.equals(Utils.EMPTY_STRING)) {
@@ -222,7 +222,7 @@ public class ApiAiClient implements AIListener {
                 //Handle the case when user exited in expert mode.
                 actionToReturn = new Action("Hi there,  I can help you if you have questions about " +
                         "your network. You can say things like \"run tests\" or  " +
-                        "or \"why is my internet slow\" etc. You can also contact a real Wifi expert for your problem by saying \"Contact expert\" ts: " + System.currentTimeMillis(),
+                        "or \"why is my internet slow\" etc. You can also contact a real Wifi expert for your problem by saying \"Contact expert\" ",
                         Action.ActionType.ACTION_TYPE_WELCOME);
             } else if (event.equals(APIAI_SHORT_SUGGESTION_SHOWN_EVENT)) {
                 actionToReturn = new Action("Do you want more details on this analysis ?",
@@ -232,8 +232,8 @@ public class ApiAiClient implements AIListener {
             } else if (event.equals(APIAI_WIFI_ANALYSIS_SHOWN_EVENT)) {
                 actionToReturn = new Action("Do you want to run detailed tests to see why we are offline ?",
                         Action.ActionType.ACTION_TYPE_ASK_FOR_BW_TESTS);
-            } else if (event.equals(APIAI_ACTION_RUN_TESTS_FOR_EXPERT)) {
-                actionToReturn = new Action("I will run some tests for you right and contact an expert with the results.",
+            } else if (event.equals(APIAI_RUN_TESTS_FOR_EXPERT_EVENT)) {
+                actionToReturn = new Action("I will run some tests for you right now and contact an expert with the results.",
                         Action.ActionType.ACTION_TYPE_RUN_TESTS_FOR_EXPERT);
             } else if (event.equals(APIAI_WELCOME_AND_RESUME_EXPERT_EVENT)) {
                 actionToReturn = new Action("Hi, welcome back. You can ask me any question about your network. Do you want to resume your chat with the Wifi experts ?",

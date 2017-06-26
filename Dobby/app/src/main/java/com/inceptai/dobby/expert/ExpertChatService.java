@@ -130,7 +130,7 @@ public class ExpertChatService implements
         DobbyLog.i("Using chat room ID: " + chatRoomPath);
         isChatEmpty = true;
         currentEtaSeconds = ETA_PRESENT;
-        //Being called in connect from the activity onStart.
+        //Being called in registerToEventBusListener from the activity onStart.
         //eventBus.registerListener(this);
     }
 
@@ -243,7 +243,7 @@ public class ExpertChatService implements
         }
     }
 
-    public void connect() {
+    public void registerToEventBusListener() {
         eventBus.registerListener(this);
     }
 

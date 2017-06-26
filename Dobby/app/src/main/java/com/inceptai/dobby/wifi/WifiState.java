@@ -21,6 +21,7 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
+import static android.R.id.list;
 import static android.net.NetworkInfo.DetailedState.CAPTIVE_PORTAL_CHECK;
 import static android.net.NetworkInfo.DetailedState.OBTAINING_IPADDR;
 import static android.net.NetworkInfo.DetailedState.VERIFYING_POOR_LINK;
@@ -182,10 +183,11 @@ public class WifiState {
     private Utils.PercentileStats getStatsForDetailedState(NetworkInfo.DetailedState detailedState) {
         final long TIME_INTERVAL_FOR_DETAILED_STATS_MS = 15 * 60 * 1000;
         List<Double> duration = new ArrayList<>();
-        List<WifiStateInfo> list = detailedWifiStateStats.get(detailedState);
-        if (list == null) {
+        if (detailedWifiStateStats == null || detailedWifiStateStats.get(detailedState) == null) {
             return new Utils.PercentileStats();
         }
+
+        List<WifiStateInfo> list = detailedWifiStateStats.get(detailedState);
         for (WifiStateInfo wifiStateInfo: list) {
             if ((System.currentTimeMillis() - wifiStateInfo.endTimestampMs) < TIME_INTERVAL_FOR_DETAILED_STATS_MS) {
                 duration.add((double)(wifiStateInfo.endTimestampMs - wifiStateInfo.startTimestampMs));

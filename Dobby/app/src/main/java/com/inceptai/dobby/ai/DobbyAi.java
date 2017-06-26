@@ -338,7 +338,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 }
                 break;
             case ACTION_TYPE_USER_ASKS_FOR_HUMAN_EXPERT:
-                String messageToShow = "Sure, I will contact a person with Wifi Expertise who can look at your problem. ";
+                String messageToShow = "Sure, I will contact a person with Wifi expertise who can look at your problem. ";
                 showMessageToUser(messageToShow);
                 if (lastSuggestion != null) {
                     //User has already run a test and now needs help -- contact the expert
@@ -457,6 +457,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             DobbyLog.w("Ignoring text query for Wifi doc version :" + text);
         }
         if (responseCallback != null) {
+            DobbyLog.v("DobbyAi: onUserMessageAvailable with text " + text);
             responseCallback.onUserMessageAvailable(text, chatInExpertMode);
         }
     }

@@ -264,13 +264,6 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         if (mListener != null) {
             mListener.onRecyclerViewReady();
         }
-        if (createdFirstTime) {
-            createdFirstTime = false;
-            dobbyAnalytics.wifiExpertFragmentEntered();
-            if (mListener != null) {
-                mListener.onFirstTimeResumed();
-            }
-        }
     }
 
     @Override
@@ -320,6 +313,13 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     public void onResume() {
         DobbyLog.v("CF: In onResume");
         super.onResume();
+        if (createdFirstTime) {
+            createdFirstTime = false;
+            dobbyAnalytics.wifiExpertFragmentEntered();
+            if (mListener != null) {
+                mListener.onFirstTimeResumed();
+            }
+        }
     }
 
     @Override
@@ -449,8 +449,14 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         Message.obtain(handler, MSG_SHOW_USER_ACTION_BUTTONS, userResponseTypes).sendToTarget();
     }
 
-    public void showExpertChatMessage(String text) {
-        Message.obtain(handler, MSG_SHOW_EXPERT_CHAT, text).sendToTarget();
+    public void showExpertChatMessage(final String text) {
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                Message.obtain(handler, MSG_SHOW_EXPERT_CHAT, text).sendToTarget();
+            }
+        }, DELAY_FOR_DOBBY_MESSAGES_MS);
+        //Message.obtain(handler, MSG_SHOW_EXPERT_CHAT, text).sendToTarget();
     }
 
 
@@ -516,7 +522,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
                     showNetworkResultsCardView(overallNetworkInfo.getWifiGrade(),
                             overallNetworkInfo.getIsp(), overallNetworkInfo.getIp());
                 }
-                addDobbyChat(overallNetworkInfo.getWifiGrade().userReadableInterpretation(), false);
+                //addDobbyChat(overallNetworkInfo.getWifiGrade().userReadableInterpretation(), false);
                 break;
             case MSG_SHOW_DETAILED_SUGGESTIONS:
                 SuggestionCreator.Suggestion suggestionToShow = (SuggestionCreator.Suggestion) msg.obj;

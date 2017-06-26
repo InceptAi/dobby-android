@@ -584,7 +584,7 @@ public class DataInterpreter {
                     sb.append("You are currently not connected to any wifi network. If your phone is not connecting, try running full tests and we can diagnose why that could be ?");
                     break;
                 case ConnectivityAnalyzer.WifiConnectivityMode.OFF:
-                    sb.append("Your wifi is currently switched off. Try turing it on from the settings and we can run some speed tests to see how much bandwidth you are getting.");
+                    sb.append("Your wifi is currently switched OFF. Try turning it ON from the settings and we can run some speed tests to see how much bandwidth you are getting.");
                     break;
             }
             return sb.toString();

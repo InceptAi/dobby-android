@@ -312,7 +312,7 @@ public class SuggestionCreator {
                 break; //find a good explanation
             case Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE:
                 baseMessage = "Your wifi on your phone seems to be in a bad state, " +
-                        "since it is not able to connect to your wireless router. " +
+                        "since it is not able to registerToEventBusListener to your wireless router. " +
                         "Try turning it off/on and see if that helps. ";
                 break;
             case Condition.WIFI_INTERFACE_ON_PHONE_TURNED_OFF:
@@ -324,7 +324,7 @@ public class SuggestionCreator {
             case Condition.WIFI_LINK_ASSOCIATION_ISSUE:
                 baseMessage = "Your phone is unable to get on your wifi network. This could be either " +
                         "due to wifi router or your phone being in a bad state. Try turning your " +
-                        "phone's wifi off/on and if it still doesn't connect, then reboot your router.";
+                        "phone's wifi off/on and if it still doesn't registerToEventBusListener, then reboot your router.";
                 break;
             case Condition.WIFI_LINK_AUTH_ISSUE:
                 baseMessage =  "Your phone is unable to get on your wifi network due to some authentication " +
@@ -342,7 +342,7 @@ public class SuggestionCreator {
                 baseMessage = getRouterFaultString(params);
                 if (baseMessage.equals(Utils.EMPTY_STRING)) {
                     baseMessage = "Your router may be in a bad state, try rebooting it and it should put " +
-                            "the router in a good state so you can connect to it.  ";
+                            "the router in a good state so you can registerToEventBusListener to it.  ";
                 }
                 break;
             case Condition.ISP_INTERNET_DOWN:
@@ -450,7 +450,7 @@ public class SuggestionCreator {
             return "It seems like your phone is having trouble staying connected to the wifi network. " +
                     "It connects for short periods of time and then disconnects quickly." +
                     " If you think you should be connected, try rebooting the router (if possible) " +
-                    "and hopefully it will bring your router in a good state so you can connect. ";
+                    "and hopefully it will bring your router in a good state so you can registerToEventBusListener. ";
         }
 
         String issuesString = "Your phone is not currently connected to any Wifi network. ";
@@ -459,7 +459,7 @@ public class SuggestionCreator {
                 issuesString += "Specifically, it is unable to get an IP address from your wifi router. ";
                 break;
             case WifiState.WifiLinkMode.HANGING_ON_SCANNING:
-                issuesString += "Specifically, it is unable to find your wireless router to connect. " +
+                issuesString += "Specifically, it is unable to find your wireless router to registerToEventBusListener. " +
                         "Make sure the router is plugged in. ";
                 break;
             case WifiState.WifiLinkMode.HANGING_ON_AUTHENTICATING:
@@ -467,13 +467,13 @@ public class SuggestionCreator {
                         "issue. Make sure you have the right password. ";
                 break;
             case WifiState.WifiLinkMode.CONNECTING:
-                issuesString += "It is trying to connect to your wifi network but is not yet successful. ";
+                issuesString += "It is trying to registerToEventBusListener to your wifi network but is not yet successful. ";
                 break;
             case WifiState.WifiLinkMode.DISCONNECTED:
                 break;
         }
         issuesString += " If you think you should be connected, try rebooting the router (if possible) " +
-                "and hopefully it will bring the router in a good state so you can connect to it ";
+                "and hopefully it will bring the router in a good state so you can registerToEventBusListener to it ";
         return issuesString;
     }
 
@@ -491,12 +491,12 @@ public class SuggestionCreator {
                     (params.httpGrade.hasValidData() && DataInterpreter.isPoorOrAbysmal(params.httpGrade.httpDownloadLatencyMetric))) {
                 return "You are connected to the router, but your link is poor (" +
                         String.format("%.2f", params.pingGrade.routerLatencyMs) + " ms), " +
-                        "and you can't connect to Internet. This could be because of an issue with the router or you are behind a captive portal which requires sign-in (mostly public hotspots). " +
+                        "and you can't registerToEventBusListener to Internet. This could be because of an issue with the router or you are behind a captive portal which requires sign-in (mostly public hotspots). " +
                         "If this issue is at home, Try rebooting the wifi router. ";
                 } else if ((params.pingGrade.hasValidData() && DataInterpreter.isNonFunctional(params.pingGrade.routerLatencyMetric)) ||
                         (params.httpGrade.hasValidData() && DataInterpreter.isNonFunctional(params.httpGrade.httpDownloadLatencyMetric))) {
-                    return "We can't connect to Internet. This could be because of an issue with the router or you are behind a captive portal which requires sign-in (mostly public hotspots). " +
-                            "If this issue is at home, try rebooting the wifi router and it should put the router in a good state so you can connect to it. ";
+                    return "We can't registerToEventBusListener to Internet. This could be because of an issue with the router or you are behind a captive portal which requires sign-in (mostly public hotspots). " +
+                            "If this issue is at home, try rebooting the wifi router and it should put the router in a good state so you can registerToEventBusListener to it. ";
                 }
             case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_ONLINE:
                 if ((params.pingGrade.hasValidData() && DataInterpreter.isGoodOrExcellentOrAverage(params.pingGrade.routerLatencyMetric)) ||
@@ -510,7 +510,7 @@ public class SuggestionCreator {
                 } else if ((params.pingGrade.hasValidData() && DataInterpreter.isNonFunctional(params.pingGrade.routerLatencyMetric)) ||
                         (params.httpGrade.hasValidData() && DataInterpreter.isNonFunctional(params.httpGrade.httpDownloadLatencyMetric))) {
                     return "We can't reach your wifi router, maybe it is intermittently available. This could be because of an issue with the router. " +
-                            "If possible, try rebooting it and and it should put the router in a good state so you can connect to it.  ";
+                            "If possible, try rebooting it and and it should put the router in a good state so you can registerToEventBusListener to it.  ";
                 }
             case ConnectivityAnalyzer.WifiConnectivityMode.UNKNOWN:
             case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_UNKNOWN:
@@ -525,7 +525,7 @@ public class SuggestionCreator {
                 } else if ((params.pingGrade.hasValidData() && DataInterpreter.isNonFunctional(params.pingGrade.routerLatencyMetric)) ||
                         (params.httpGrade.hasValidData() && DataInterpreter.isNonFunctional(params.httpGrade.httpDownloadLatencyMetric))) {
                     return "We can't reach your wifi router, maybe it is intermittently available. This could be because of an issue with the router. " +
-                            "If possible, try rebooting it and it should put the router in a good state so you can connect to it.  ";
+                            "If possible, try rebooting it and it should put the router in a good state so you can registerToEventBusListener to it.  ";
                 }
         }
         return Utils.EMPTY_STRING;
@@ -588,7 +588,7 @@ public class SuggestionCreator {
                 baseMessage = getRouterFaultString(params);
                 if (baseMessage.equals(Utils.EMPTY_STRING)) {
                     baseMessage = "Your router may be in a bad state, try rebooting it and it should put " +
-                            "the router in a good state so you can connect to it.  ";                }
+                            "the router in a good state so you can registerToEventBusListener to it.  ";                }
                 break;
             case Condition.ISP_INTERNET_DOWN:
                 baseMessage =  "Looks like your Internet service is down. ";
@@ -687,7 +687,7 @@ public class SuggestionCreator {
             case Condition.WIFI_LINK_DHCP_ISSUE:
             case Condition.WIFI_LINK_ASSOCIATION_ISSUE:
                 baseMessage = "Your phone is unable to get on your wifi network. Try turning your " +
-                        "phone's wifi off/on and if it still doesn't connect, then reboot your router.";
+                        "phone's wifi off/on and if it still doesn't registerToEventBusListener, then reboot your router.";
                 break;
             case Condition.WIFI_LINK_AUTH_ISSUE:
                 baseMessage =  "Your phone is unable to get on your wifi network due to some authentication " +
@@ -703,7 +703,7 @@ public class SuggestionCreator {
                 baseMessage = getRouterFaultString(params);
                 if (baseMessage.equals(Utils.EMPTY_STRING)) {
                     baseMessage = "Your router may be in a bad state, try rebooting it and it should put " +
-                            "the router in a good state so you can connect to it.  ";                }
+                            "the router in a good state so you can registerToEventBusListener to it.  ";                }
                 break;
             case Condition.ISP_INTERNET_DOWN:
                 baseMessage =  "Looks like your Internet service is down. " +

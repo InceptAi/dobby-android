@@ -270,7 +270,7 @@ public class ExpertChatActivity extends AppCompatActivity implements
 
     @Override
     protected void onStart() {
-        expertChatService.connect();
+        expertChatService.registerToEventBusListener();
         super.onStart();
     }
 

@@ -23,6 +23,8 @@ public class ExpertChat {
     public static final int MSG_TYPE_META_USER_ENTERED = 5002;
     public static final int MSG_TYPE_META_ACTION_STARTED = 5003;
     public static final int MSG_TYPE_META_ACTION_COMPLETED = 5004;
+    public static final int MSG_TYPE_META_SEND_MESSAGE_TO_EXPERT_FOR_HELP = 5005;
+
 
 
     String id;
