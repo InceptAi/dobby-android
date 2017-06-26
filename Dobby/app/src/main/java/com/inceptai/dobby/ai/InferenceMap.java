@@ -310,6 +310,7 @@ public class InferenceMap {
             //Router has average latency to respond to ping
             conditions.include(Condition.WIFI_CHANNEL_CONGESTION, 0.2);
             conditions.include(Condition.WIFI_CHANNEL_BAD_SIGNAL, 0.8);
+            conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.3);
             if (DataInterpreter.isNonFunctional(pingGrade.dnsServerLatencyMetric)) {
                 conditions.include(Condition.DNS_UNREACHABLE, 0.8);
                 conditions.include(Condition.CABLE_MODEM_FAULT, 0.2);
