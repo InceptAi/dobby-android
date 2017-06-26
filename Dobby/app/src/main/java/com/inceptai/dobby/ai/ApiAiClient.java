@@ -212,7 +212,7 @@ public class ApiAiClient implements AIListener {
                 //Default fallback
                 actionToReturn = new Action("I'm sorry, I don't support that yet. " +
                         "You can say things like \"Run speed test\", \"why is my wifi slow\". You can also " +
-                        "just say \"Contact expert\" to registerToEventBusListener to a Wifi expert who can help with your problem",
+                        "just say \"Contact expert\" and I can connect you to a Wifi expert who can help with your problem",
                         Action.ActionType.ACTION_TYPE_DEFAULT_FALLBACK);
             }
         } else if (event != null && ! event.equals(Utils.EMPTY_STRING)) {
