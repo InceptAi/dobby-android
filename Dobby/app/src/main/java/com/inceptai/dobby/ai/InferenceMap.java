@@ -174,8 +174,8 @@ public class InferenceMap {
         if (DataInterpreter.isGoodOrExcellent(allWifiMetrics) &&
                 wifiGrade.wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_ONLINE &&
                 wifiGrade.wifiLinkMode == WifiState.WifiLinkMode.NO_PROBLEM_DEFAULT_STATE) {
-            //conditions.exclude(WIFI_CONDITIONS);
-            conditions.exclude(ROUTER_CONDITIONS);
+            conditions.exclude(WIFI_CONDITIONS);
+            //conditions.exclude(ROUTER_CONDITIONS);
             return conditions;
         }
 
@@ -258,17 +258,6 @@ public class InferenceMap {
             conditions.include(Condition.ROUTER_SOFTWARE_FAULT, 0.8);
             conditions.include(Condition.WIFI_INTERFACE_ON_PHONE_IN_BAD_STATE, 0.2);
         }
-
-        /*
-        //Based on wifi problem mode
-        if (wifiGradeJson.wifiLinkMode == WifiState.WifiLinkMode.FREQUENT_DISCONNECTIONS) {
-            conditions.include(Condition.WIFI_LINK_ASSOCIATION_ISSUE, 1.0);
-        } else if (wifiGradeJson.wifiLinkMode == WifiState.WifiLinkMode.HANGING_ON_AUTHENTICATING) {
-            conditions.include(Condition.WIFI_LINK_AUTH_ISSUE, 1.0);
-        } else if (wifiGradeJson.wifiLinkMode == WifiState.WifiLinkMode.HANGING_ON_DHCP) {
-            conditions.include(Condition.WIFI_LINK_DHCP_ISSUE, 1.0);
-        }
-        */
 
         return conditions;
     }
