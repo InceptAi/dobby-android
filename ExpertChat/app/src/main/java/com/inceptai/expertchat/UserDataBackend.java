@@ -63,6 +63,10 @@ public class UserDataBackend {
         return SQLite.select().from(UserData.class).queryList();
     }
 
+    public static List<UserData> fetchNotifRecents() {
+        return SQLite.select().from(UserData.class).where(UserData_Table.interactionType.notEq(UserData.INTERACTION_UNKNOWN)).queryList();
+    }
+
     public static ListenableFuture<UserData> computeUserAppFlavorAndBuild(UserData userData) {
         String userUuid = userData.getUserUuid();
         if (userUuid == null || userUuid.isEmpty()) {
