@@ -489,7 +489,7 @@ public class SuggestionCreator {
                             "If this issue is at home, try rebooting the router to see if it works. ";
                 } else  if ((params.pingGrade.hasValidData() && DataInterpreter.isPoorOrAbysmal(params.pingGrade.routerLatencyMetric)) ||
                     (params.httpGrade.hasValidData() && DataInterpreter.isPoorOrAbysmal(params.httpGrade.httpDownloadLatencyMetric))) {
-                return "You are connected to the router, but your link is poor (" +
+                    return "You are connected to the router, but your link is poor (" +
                         String.format("%.2f", params.pingGrade.routerLatencyMs) + " ms), " +
                         "and you can't connect to Internet. This could be because of an issue with the router or you are behind a captive portal which requires sign-in (mostly public hotspots). " +
                         "If this issue is at home, Try rebooting the wifi router. ";
