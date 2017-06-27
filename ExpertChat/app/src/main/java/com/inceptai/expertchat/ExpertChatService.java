@@ -283,8 +283,8 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
     }
 
     private String getFcmIdPathForUser(String userUuid) {
-        String userRoot = flavor + "/" + buildType + "/" + "users/";
-        return userRoot + "/" + userUuid + "/" + FCM_KEY;
+        UserData userData = UserDataBackend.createOrFetchUser(userUuid);
+        return userData.getFcmPath();
     }
 
     private void checkPendingFcmSaveOperation() {
