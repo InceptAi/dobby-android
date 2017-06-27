@@ -93,7 +93,6 @@ public class MainActivity extends AppCompatActivity
     private Set<String> expertChatIdsDisplayed;
     private boolean isTaskRoot = true;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         ((DobbyApplication) getApplication()).getProdComponent().inject(this);
@@ -453,7 +452,9 @@ public class MainActivity extends AppCompatActivity
             case ExpertChat.MSG_TYPE_USER_TEXT:
                 DobbyLog.v("MainActivity:FirebaseMessage added mesg to User chat");
                 chatFragment.showUserResponse(messageReceived);
-                showStatus(getString(R.string.agent_is_typing));
+                if (!dobbyAi.getIsChatInExpertMode()) {
+                    showStatus(getString(R.string.agent_is_typing));
+                }
                 break;
         }
     }
