@@ -242,7 +242,10 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                     shortSuggestionShown = true;
                     if (responseCallback != null) {
                         DataInterpreter.BandwidthGrade lastBandwidthGrade = lastSuggestion.suggestionCreatorParams.bandwidthGrade;
-                        responseCallback.showBandwidthViewCard(lastBandwidthGrade);
+                        if (!DataInterpreter.isUnknown(lastBandwidthGrade.getDownloadBandwidthMetric()) ||
+                                !DataInterpreter.isUnknown(lastBandwidthGrade.getDownloadBandwidthMetric())) {
+                            responseCallback.showBandwidthViewCard(lastBandwidthGrade);
+                        }
                     }
                     showMessageToUser(lastSuggestion.getTitle());
                     dobbyAnalytics.wifiExpertShowShortSuggestion(lastSuggestion.getTitle());
@@ -439,6 +442,12 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     }
 
     public void sendQuery(String text, boolean isButtonActionText ) {
+
+        if (responseCallback != null) {
+            DobbyLog.v("DobbyAi: onUserMessageAvailable with text " + text);
+            responseCallback.onUserMessageAvailable(text, chatInExpertMode);
+        }
+
         if (useApiAi) {
             if (!chatInExpertMode || isButtonActionText) {
                 if (networkLayer.isWifiOnline()) {
@@ -456,13 +465,10 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         } else {
             DobbyLog.w("Ignoring text query for Wifi doc version :" + text);
         }
-        if (responseCallback != null) {
-            DobbyLog.v("DobbyAi: onUserMessageAvailable with text " + text);
-            responseCallback.onUserMessageAvailable(text, chatInExpertMode);
-        }
+
     }
 
-    private void contactExpert() {
+    public void contactExpert() {
         Action actionToTake = new Action(Utils.EMPTY_STRING, ACTION_TYPE_CONTACT_HUMAN_EXPERT);
         takeAction(actionToTake);
     }
@@ -481,12 +487,15 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
 
     public void sendWelcomeEvent() {
         if (useApiAi) {
-            if (resumedWithExpertMode) {
-                //apiAiClient.resetContexts();
-                apiAiClient.sendTextQuery(null, ApiAiClient.APIAI_WELCOME_AND_RESUME_EXPERT_EVENT, getLastAction(), this);
-            } else {
+            if (!chatInExpertMode) {
                 apiAiClient.processTextQueryOffline(null, ApiAiClient.APIAI_WELCOME_EVENT, getLastAction(), this);
             }
+//            if (resumedWithExpertMode) {
+//                //apiAiClient.resetContexts();
+//                apiAiClient.sendTextQuery(null, ApiAiClient.APIAI_WELCOME_AND_RESUME_EXPERT_EVENT, getLastAction(), this);
+//            } else {
+//                apiAiClient.processTextQueryOffline(null, ApiAiClient.APIAI_WELCOME_EVENT, getLastAction(), this);
+//            }
         } else {
             DobbyLog.w("Ignoring events for Wifi doc version :" + ApiAiClient.APIAI_WELCOME_EVENT);
         }

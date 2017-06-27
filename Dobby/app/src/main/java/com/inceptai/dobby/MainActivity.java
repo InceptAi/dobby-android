@@ -91,6 +91,7 @@ public class MainActivity extends AppCompatActivity
     private long currentEtaSeconds;
     private long sessionStartedTimestamp;
     private Set<String> expertChatIdsDisplayed;
+    private boolean isTaskRoot = true;
 
 
     @Override
@@ -118,8 +119,9 @@ public class MainActivity extends AppCompatActivity
                 && getIntent().hasCategory(Intent.CATEGORY_LAUNCHER)
                 && getIntent().getAction() != null
                 && getIntent().getAction().equals(Intent.ACTION_MAIN)) {
-
+            isTaskRoot = false;
             finish();
+            DobbyLog.v("Finishing since this is not root task");
             return;
         }
 
@@ -149,22 +151,21 @@ public class MainActivity extends AppCompatActivity
         //TODO: Check do we need this
         //expertChatService.setCallback(this);
         //fetchChatMessages();
-
-        dobbyAi.setResponseCallback(this);
-        dobbyAi.initChatToBotState(); //Resets booleans indicating which mode of expert are we in
-        //Don't do resume stuff for now
-//        if (checkSharedPrefForExpertModeResume()) {
-//            dobbyAi.setChatResumedInExpertMode();
-//        }
-
-        handler = new Handler(this);
-
-        setupChatFragment();
-        heartBeatManager.setDailyHeartBeat();
-
         currentEtaSeconds = ExpertChatService.ETA_OFFLINE;
         expertIsPresent = false;
         sessionStartedTimestamp = System.currentTimeMillis();
+
+        dobbyAi.setResponseCallback(this);
+        dobbyAi.initChatToBotState(); //Resets booleans indicating which mode of expert are we in
+
+        handler = new Handler(this);
+        setupChatFragment();
+        heartBeatManager.setDailyHeartBeat();
+
+        //Don't do resume stuff for now
+        if (checkSharedPrefForExpertModeResume()) {
+            dobbyAi.contactExpert();
+        }
 
     }
 
@@ -590,6 +591,7 @@ public class MainActivity extends AppCompatActivity
     protected void onResume() {
         super.onResume();
         //expertChatService.setCallback(this);
+        dobbyAi.setResponseCallback(this);
         fetchChatMessages();
         processIntent(getIntent());
         expertChatService.sendUserEnteredMetaMessage();
@@ -600,9 +602,11 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        expertChatService.unregisterChatCallback();
-        expertChatService.disconnect();
-        dobbyAi.cleanup();
+        if (isTaskRoot) {
+            expertChatService.unregisterChatCallback();
+            expertChatService.disconnect();
+            dobbyAi.cleanup();
+        }
     }
 
     @Override
