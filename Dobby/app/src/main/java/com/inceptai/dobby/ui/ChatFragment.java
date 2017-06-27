@@ -628,9 +628,15 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         }
     }
 
-    public void showStatus(String message) {
+    public void showStatus(final String message) {
         DobbyLog.v("ChatF: showStatus text " + message);
-        Message.obtain(handler, MSG_SHOW_STATUS, message).sendToTarget();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                Message.obtain(handler, MSG_SHOW_STATUS, message).sendToTarget();
+            }
+        }, DELAY_FOR_DOBBY_MESSAGES_MS);
+        //Message.obtain(handler, MSG_SHOW_STATUS, message).sendToTarget();
     }
 
     private void addExpertChatEntry(ExpertChat expertChat, boolean isStatusMessage) {

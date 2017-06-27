@@ -6,6 +6,7 @@ import android.app.AlarmManager;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Typeface;
 import android.net.wifi.ScanResult;
 import android.os.Build;
 import android.os.Bundle;
@@ -23,6 +24,8 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.SpannableString;
+import android.text.style.StyleSpan;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
@@ -71,7 +74,7 @@ public class MainActivity extends AppCompatActivity
     private static final String PREF_CHAT_IN_EXPERT_MODE = "dobby_in_expert_mode";
     private static final String EXPERT_MODE_INITIATED_TIMESTAMP = "expert_mode_start_ts";
     private static final long MAX_TIME_ELAPSED_FOR_RESUMING_EXPERT_MODE_MS = AlarmManager.INTERVAL_DAY;
-
+    private static final boolean ENABLE_AGENT_TYPING_FILLER = true;
 
 
 
@@ -292,11 +295,13 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void showStatus(String text) {
-        DobbyLog.v("In showStatus of MainActivity: text: " + text);
-//        if (chatFragment != null) {
-//            chatFragment.showStatus(text);
-//        }
-        pushBotChatMessage(text);
+        if (ENABLE_AGENT_TYPING_FILLER && chatFragment != null) {
+            SpannableString spanString = new SpannableString(text);
+            spanString.setSpan(new StyleSpan(Typeface.ITALIC), 0, spanString.length(), 0);
+            chatFragment.showStatus(spanString.toString());
+            DobbyLog.v("MainActivity:showStatus text: " + text);
+            //chatFragment.showStatus(text);
+        }
     }
 
     @Override
@@ -451,6 +456,7 @@ public class MainActivity extends AppCompatActivity
             case ExpertChat.MSG_TYPE_USER_TEXT:
                 DobbyLog.v("MainActivity:FirebaseMessage added mesg to User chat");
                 chatFragment.showUserResponse(messageReceived);
+                showStatus(getString(R.string.agent_is_typing));
                 break;
         }
     }

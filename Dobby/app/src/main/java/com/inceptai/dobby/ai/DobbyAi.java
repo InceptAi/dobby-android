@@ -364,7 +364,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 String expertContactMessage = "Contacting Wifi Expert and getting ETA now ...";
                 //showMessageToUser(expertContactMessage);
                 if (responseCallback != null) {
-                    responseCallback.showStatus(expertContactMessage);
+                    responseCallback.showBotResponseToUser(expertContactMessage);
                     responseCallback.contactExpertAndGetETA();
                 }
                 break;
