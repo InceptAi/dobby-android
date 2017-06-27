@@ -131,8 +131,11 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
         return flavor + CHAT_ROOM_SUFFIX + "/" + buildType + "/" + userUuid + "/";
     }
 
-    public String getPathForUserProfile(String userUuid) {
-        return flavor + "/" + buildType + "/" + USERS_BASE + "/" + userUuid + "/";
+    public String getPathForUserProfile(UserData userData) {
+        if (!userData.hasBuildTypeAndFlavor()) {
+            return EMPTY_STRING;
+        }
+        return userData.appFlavor + "/" + userData.buildType + "/" + USERS_BASE + "/" + userData.userUuid + "/";
     }
 
     public String getChatRoomBase() {
@@ -200,8 +203,9 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
     }
 
     public void setAssignedExpert() {
+        selectedUserData = UserDataBackend.createOrFetchUser(selectedUserId);
         if (avatar != null && !avatar.isEmpty()) {
-            FirebaseDatabase.getInstance().getReference().child(getPathForUserProfile(selectedUserId) + ASSIGNED_EXPERT_KEY).setValue(avatar);
+            FirebaseDatabase.getInstance().getReference().child(getPathForUserProfile(selectedUserData) + ASSIGNED_EXPERT_KEY).setValue(avatar);
         }
     }
 
