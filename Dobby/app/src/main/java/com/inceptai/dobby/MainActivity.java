@@ -6,7 +6,6 @@ import android.app.AlarmManager;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Typeface;
 import android.net.wifi.ScanResult;
 import android.os.Build;
 import android.os.Bundle;
@@ -24,8 +23,6 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.text.SpannableString;
-import android.text.style.StyleSpan;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
@@ -296,11 +293,11 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void showStatus(String text) {
         if (ENABLE_AGENT_TYPING_FILLER && chatFragment != null) {
-            SpannableString spanString = new SpannableString(text);
-            spanString.setSpan(new StyleSpan(Typeface.ITALIC), 0, spanString.length(), 0);
-            chatFragment.showStatus(spanString.toString());
+//            SpannableString spanString = new SpannableString(text);
+//            spanString.setSpan(new StyleSpan(Typeface.ITALIC), 0, spanString.length(), 0);
+//            chatFragment.showStatus(spanString.toString());
             DobbyLog.v("MainActivity:showStatus text: " + text);
-            //chatFragment.showStatus(text);
+            chatFragment.showStatus(text);
         }
     }
 
