@@ -69,10 +69,16 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
          *
          */
 
-        if (!isTaskRoot()
-                && getIntent().hasCategory(Intent.CATEGORY_LAUNCHER)
-                && getIntent().getAction() != null
-                && getIntent().getAction().equals(Intent.ACTION_MAIN)) {
+//        if (!isTaskRoot()
+//                && getIntent().hasCategory(Intent.CATEGORY_LAUNCHER)
+//                && getIntent().getAction() != null
+//                && getIntent().getAction().equals(Intent.ACTION_MAIN)) {
+//            finish();
+//            DobbyLog.v("Finishing since this is not root task");
+//            return;
+//        }
+
+        if (!isTaskRoot()) {
             finish();
             DobbyLog.v("Finishing since this is not root task");
             return;
