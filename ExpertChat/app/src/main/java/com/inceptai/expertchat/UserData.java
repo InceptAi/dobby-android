@@ -14,6 +14,7 @@ import static com.inceptai.expertchat.Utils.EMPTY_STRING;
 
 @Table(database = NotificationRecents.class)
 public class UserData extends BaseModel {
+    private static final String FCM_KEY = "fcmToken";
 
     public static final int INTERACTION_UNKNOWN = 1;
     public static final int USER_NOTIF_RESPONSE_PENDING = 5001;
@@ -89,5 +90,13 @@ public class UserData extends BaseModel {
 
     public boolean hasBuildTypeAndFlavor() {
         return buildType != null && !buildType.isEmpty() && appFlavor != null && !appFlavor.isEmpty();
+    }
+
+    public String getFcmPath() {
+        return getUserRoot() + "/" + userUuid + "/" + FCM_KEY;
+    }
+
+    public String getUserRoot() {
+        return  appFlavor + "/" + buildType + "/" + "users/";
     }
 }
