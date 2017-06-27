@@ -317,12 +317,11 @@ public class ConnectivityAnalyzer {
 
             case DobbyEvent.EventType.WIFI_CONNECTED:
             case DobbyEvent.EventType.DHCP_INFO_AVAILABLE:
-                //Should change mode to CONNECTED AND OFFLINE -- will transition to CONNECTED AND ONLINE OR CAPTIVE AFTER TEST
-                //wifiConnectivityMode = WifiConnectivityMode.ON_AND_DISCONNECTED;
-                scheduleWifiOnlineTest=true;
-                break;
-
             case DobbyEvent.EventType.WIFI_RSSI_CHANGED:
+                //Should change mode to CONNECTED AND OFFLINE -- will transition to CONNECTED AND ONLINE OR CAPTIVE AFTER TEST
+                if (wifiConnectivityMode == WifiConnectivityMode.ON_AND_DISCONNECTED) {
+                    wifiConnectivityMode = WifiConnectivityMode.CONNECTED_AND_OFFLINE;
+                }
                 scheduleWifiOnlineTest=true;
                 break;
 

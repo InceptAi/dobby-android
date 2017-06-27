@@ -574,7 +574,8 @@ public class DataInterpreter {
                     break;
                 case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_OFFLINE:
                     sb.append("You are connected to wifi network: " + getPrimaryApSsid() + " but we can't reach Internet through this network. " +
-                            "This could be an issue with the router or your Internet provider. We can run full tests to see whats going on ?");
+                            "This could be an issue with the router, your Internet provider or you could be behind a captive portal which requires sign-in for access. " +
+                            "We can run full tests to see whats going on ?");
                     break;
                 case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_UNKNOWN:
                     sb.append("You are connected via wifi network: " + getPrimaryApSsid() + ".");
