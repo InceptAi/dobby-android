@@ -328,7 +328,6 @@ public class ExpertChatService implements
         if (isWifiTester) {
             intent = new Intent(context, ExpertChatActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-
         } else {
             intent = new Intent(context, MainActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);

@@ -2,7 +2,6 @@ package com.inceptai.dobby.ui;
 
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -11,7 +10,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
-import android.widget.Toast;
 
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.DobbyThreadpool;
@@ -54,6 +52,32 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
     protected void onCreate(Bundle savedInstanceState) {
         ((DobbyApplication) getApplication()).getProdComponent().inject(this);
         super.onCreate(savedInstanceState);
+        /**
+         * Look at this: https://stackoverflow.com/questions/19545889/app-restarts-rather-than-resumes
+         * Ensure the application resumes whatever task the user was performing the last time
+         * they opened the app from the launcher. It would be preferable to configure this
+         * behavior in  AndroidMananifest.xml activity settings, but those settings cause drastic
+         * undesirable changes to the way the app opens: singleTask closes ALL other activities
+         * in the task every time and alwaysRetainTaskState doesn't cover this case, incredibly.
+         *
+         * The problem happens when the user first installs and opens the app from
+         * the play store or sideloaded apk (not via ADB). On this first run, if the user opens
+         * activity B from activity A, presses 'home' and then navigates back to the app via the
+         * launcher, they'd expect to see activity B. Instead they're shown activity A.
+         *
+         * The best solution is to close this activity if it isn't the task root.
+         *
+         */
+
+        if (!isTaskRoot()
+                && getIntent().hasCategory(Intent.CATEGORY_LAUNCHER)
+                && getIntent().getAction() != null
+                && getIntent().getAction().equals(Intent.ACTION_MAIN)) {
+            finish();
+            DobbyLog.v("Finishing since this is not root task");
+            return;
+        }
+
         handler = new Handler();
         setContentView(R.layout.activity_wifi_doc);
         setupMainFragment();
@@ -114,6 +138,11 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
         if (intent != null) {
             DobbyLog.e("intent: " + intent.getComponent());
         }
+    }
+
+    @Override
+    public void onBackPressed(){
+        moveTaskToBack(true);
     }
 
     @Override
