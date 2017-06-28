@@ -81,6 +81,10 @@ public class ExpertChat {
         return expertChat.messageType == MSG_TYPE_EXPERT_TEXT;
     }
 
+    public static boolean isBotChat(ExpertChat expertChat) {
+        return expertChat.messageType == MSG_TYPE_BOT_TEXT;
+    }
+
     public void setMessageType(int messageType) {
         this.messageType = messageType;
     }

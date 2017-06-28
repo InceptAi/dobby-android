@@ -286,15 +286,12 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void showBotResponseToUser(String text) {
         DobbyLog.v("MainActivity:showBotResponseToUser text: " + text);
-        pushBotChatMessage(text);
+        expertChatService.pushBotChatMessage(text);
     }
 
     @Override
     public void showStatus(String text) {
         if (ENABLE_AGENT_TYPING_FILLER && chatFragment != null) {
-//            SpannableString spanString = new SpannableString(text);
-//            spanString.setSpan(new StyleSpan(Typeface.ITALIC), 0, spanString.length(), 0);
-//            chatFragment.showStatus(spanString.toString());
             DobbyLog.v("MainActivity:showStatus text: " + text);
             chatFragment.showStatus(text);
         }
@@ -312,7 +309,7 @@ public class MainActivity extends AppCompatActivity
         if (chatFragment != null) {
             chatFragment.addOverallNetworkResultsCardView(wifiGrade, isp, ip);
         }
-        pushBotChatMessage(wifiGrade.userReadableInterpretation());
+        expertChatService.pushBotChatMessage(wifiGrade.userReadableInterpretation());
     }
 
     @Override
@@ -547,16 +544,7 @@ public class MainActivity extends AppCompatActivity
 
     private void pushUserChatMessage(String text, boolean shouldShowToExpert) {
         DobbyLog.v("MainActivity:Firebase Pushing user message " + text);
-        ExpertChat expertChat = new
-                ExpertChat(text, ExpertChat.MSG_TYPE_USER_TEXT);
-        expertChatService.pushUserChatMessage(expertChat, shouldShowToExpert);
-    }
-
-    private void pushBotChatMessage(String text) {
-        DobbyLog.v("MainActivity:Firebase Pushing bot message " + text);
-        ExpertChat expertChat = new
-                ExpertChat(text, ExpertChat.MSG_TYPE_BOT_TEXT);
-        expertChatService.pushBotChatMessage(expertChat);
+        expertChatService.pushUserChatMessage(text, shouldShowToExpert);
     }
 
     @TargetApi(Build.VERSION_CODES.M)

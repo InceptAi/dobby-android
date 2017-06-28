@@ -57,6 +57,7 @@ public class ExpertChatActivity extends AppCompatActivity implements
     private DobbyApplication dobbyApplication;
     private long currentEtaSeconds;
     private boolean isPresent;
+    private boolean chatInHumanMode;
 
     private Handler handler;
 
@@ -74,6 +75,7 @@ public class ExpertChatActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_expert_chat);
 
+        chatInHumanMode = false;
         handler = new Handler(this);
 
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
@@ -117,9 +119,7 @@ public class ExpertChatActivity extends AppCompatActivity implements
             @Override
             public void onClick(View view) {
                 // Send messages on click.
-                ExpertChat expertChat = new
-                        ExpertChat(mMessageEditText.getText().toString(), ExpertChat.MSG_TYPE_USER_TEXT);
-                expertChatService.pushUserChatMessage(expertChat, true);
+                processUserMessage(mMessageEditText.getText().toString());
                 mMessageEditText.setText("");
             }
         });
@@ -173,6 +173,13 @@ public class ExpertChatActivity extends AppCompatActivity implements
         }
     }
 
+    private void processUserMessage(String text) {
+        if (!chatInHumanMode) {
+            dobbyAi.sendQuery(text, true);
+        }
+    }
+
+
     private void fetchChatMessages() {
         expertChatService.setCallback(this);
         if (!expertChatService.isListenerConnected()) {
@@ -183,6 +190,10 @@ public class ExpertChatActivity extends AppCompatActivity implements
 
     @Override
     public void onMessageAvailable(ExpertChat expertChat) {
+        if (chatInHumanMode && expertChat.getMessageType() == ExpertChat.MSG_TYPE_BOT_TEXT) {
+            //Don't show bot messages when human is in control
+            return;
+        }
         Message.obtain(handler, MSG_UPDATE_CHAT, expertChat).sendToTarget();
         saveChatStarted();
     }
@@ -204,30 +215,26 @@ public class ExpertChatActivity extends AppCompatActivity implements
 
 
     //Dobby.AI response callbacks
-
-
     @Override
     public void showBotResponseToUser(String text) {
-
+        expertChatService.pushBotChatMessage(text);
     }
 
     @Override
     public void showRtGraph(RtDataSource<Float, Integer> rtDataSource) {
-
     }
 
     @Override
     public void observeBandwidth(BandwidthObserver observer) {
-
     }
 
     @Override
     public void cancelTests() {
-
     }
 
     @Override
     public void showUserActionOptions(List<Integer> userResponseTypes) {
+
 
     }
 
@@ -253,22 +260,21 @@ public class ExpertChatActivity extends AppCompatActivity implements
 
     @Override
     public void onUserMessageAvailable(String text, boolean sendMessageToExpert) {
-
+        expertChatService.pushUserChatMessage(text, sendMessageToExpert);
     }
 
     @Override
     public void showStatus(String text) {
-
     }
 
     @Override
     public void switchedToExpertMode() {
-
+        chatInHumanMode = true;
     }
 
     @Override
     public void switchedToBotMode() {
-
+        chatInHumanMode = false;
     }
 
     @Override
@@ -296,16 +302,6 @@ public class ExpertChatActivity extends AppCompatActivity implements
             addGeneralMessage(message);
         }
     }
-
-//    private String getEtaString(long newEtaSeconds, boolean isPresent) {
-//        String message = getResources().getString(R.string.expected_response_time_for_expert);
-//        if (!isPresent) {
-//            message += " Less than 12 hours.";
-//        } else {
-//            message += " Less than " + Utils.timeSecondsToString(newEtaSeconds);
-//        }
-//        return message;
-//    }
 
     private void addGeneralMessage(String generalMessage) {
         ExpertChat expertChat = new ExpertChat();
@@ -348,6 +344,8 @@ public class ExpertChatActivity extends AppCompatActivity implements
             dobbyAnalytics.sentMessageToExpert();
         } else if (expertChat.getMessageType() == ExpertChat.MSG_TYPE_EXPERT_TEXT) {
             dobbyAnalytics.receivedMessageFromExpert();
+        } else if (expertChat.getMessageType() == ExpertChat.MSG_TYPE_EXPERT_TEXT) {
+            dobbyAnalytics.receivedMessageFromBot();
         }
     }
 

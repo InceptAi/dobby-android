@@ -84,6 +84,7 @@ public class ExpertChatService implements
     private static final int GOOD_INFERENCING = 3007;
     private static final int BAD_INFERENCING = 3008;
     private static final int BETTER_INFERENCING_NEEDED = 3009;
+    private static final int SWITCH_TO_HUMAN_MODE = 3010;
 
 
     private static ExpertChatService INSTANCE;
@@ -314,6 +315,18 @@ public class ExpertChatService implements
         pushMetaChatMessage(ExpertChat.MSG_TYPE_META_USER_ENTERED);
     }
 
+    public void pushBotChatMessage(String text) {
+        ExpertChat expertChat = new
+                ExpertChat(text, ExpertChat.MSG_TYPE_BOT_TEXT);
+        pushBotChatMessage(expertChat);
+    }
+
+    public void pushUserChatMessage(String text, boolean shouldShowToExpert) {
+        ExpertChat expertChat = new
+                ExpertChat(text, ExpertChat.MSG_TYPE_USER_TEXT);
+        pushUserChatMessage(expertChat, shouldShowToExpert);
+    }
+
     private PendingIntent getPendingIntentForNotification(Context context, String source) {
         boolean isWifiTester = false;
 
@@ -508,6 +521,9 @@ public class ExpertChatService implements
             case ASK_FOR_FEEDBACK_ACTION:
                 dobbyAi.triggerFeedbackRequest();
                 break;
+            case SWITCH_TO_HUMAN_MODE:
+                dobbyAi.triggerSwitchToExpertMode();
+                break;
             case SWITCH_TO_BOT_MODE:
                 dobbyAi.triggerSwitchToBotMode();
                 break;
@@ -547,6 +563,8 @@ public class ExpertChatService implements
                     triggerDiagnosticAction(ASK_FOR_FEEDBACK_ACTION);
                 } else if (expertMessage.toLowerCase().contains("bot")) {
                     triggerDiagnosticAction(SWITCH_TO_BOT_MODE);
+                } else if (expertMessage.toLowerCase().contains("human")) {
+                    triggerDiagnosticAction(SWITCH_TO_HUMAN_MODE);
                 } else if (expertMessage.toLowerCase().contains("left") ||
                         expertMessage.toLowerCase().contains("early") ||
                         expertMessage.toLowerCase().contains("dropped")) {

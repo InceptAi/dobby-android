@@ -2,7 +2,6 @@ package com.inceptai.dobby.ui;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
-
 import android.support.v7.widget.RecyclerView.Adapter;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,10 +11,7 @@ import android.widget.TextView;
 
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.expert.ExpertChat;
-import com.inceptai.dobby.expert.ExpertData;
 import com.inceptai.dobby.utils.DobbyLog;
-
-import org.w3c.dom.Text;
 
 import java.util.List;
 
@@ -80,7 +76,7 @@ public class WifiDocExpertChatRecyclerViewAdapter extends Adapter<RecyclerView.V
             return;
         }
         ExpertChat expertChat = expertChatList.get(position);
-        if (ExpertChat.isExpertChat(expertChat)) {
+        if (ExpertChat.isExpertChat(expertChat) || ExpertChat.isBotChat(expertChat)) {
             viewHolder.fromUserLayout.setVisibility(View.GONE);
             viewHolder.fromExpertLayout.setVisibility(View.VISIBLE);
             viewHolder.expertChatTv.setText(expertChat.getText());

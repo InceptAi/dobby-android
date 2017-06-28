@@ -71,6 +71,8 @@ import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_WIFI_CHECK;
 public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.ActionListener {
     private static final boolean CLEAR_STATS_EVERY_TIME_USER_ASKS_TO_RUN_TESTS = true;
     private static final long MAX_ETA_TO_MARK_EXPERT_AS_LISTENING_SECONDS = 180;
+    private static final boolean USE_API_AI_FOR_WIFIDOC = true;
+
 
     private Context context;
     private DobbyThreadpool threadpool;
@@ -128,7 +130,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                    DobbyApplication dobbyApplication) {
         this.context = dobbyApplication.getApplicationContext();
         this.threadpool = threadpool;
-        useApiAi = DobbyApplication.isDobbyFlavor();
+        useApiAi = DobbyApplication.isDobbyFlavor() || (USE_API_AI_FOR_WIFIDOC && DobbyApplication.isWifiDocFlavor());
         inferenceEngine = new InferenceEngine(threadpool.getScheduledExecutorService(),
                 this, inferenceDatabaseWriter, failureDatabaseWriter, dobbyApplication);
         if (useApiAi) {
@@ -876,6 +878,9 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         setChatInBotMode();
     }
 
+    public void triggerSwitchToExpertMode() {
+        setChatInExpertMode();
+    }
 
     public void performAndRecordWifiAction() {
         final ComposableOperation wifiScan = wifiScanOperation();

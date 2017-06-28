@@ -63,6 +63,8 @@ public class DobbyAnalytics {
     private static final String EXPERT_CHAT_CONTINUE_BUTTON_CLICKED = "first_time_chat_continue";
     private static final String USER_SENT_MESSAGE_TO_EXPERT = "user_sent_msg_to_expert";
     private static final String USER_RECVD_MESSAGE_FROM_EXPERT = "user_got_msg_from_expert";
+    private static final String USER_RECVD_MESSAGE_FROM_BOT = "user_got_msg_from_bot";
+
 
     //Expert tagges events
     private static final String EXPERT_SAYS_ISSUE_RESOLVED = "expert_issue_resolved";
@@ -501,6 +503,12 @@ public class DobbyAnalytics {
         Bundle bundle = new Bundle();
         firebaseAnalytics.logEvent(USER_RECVD_MESSAGE_FROM_EXPERT, bundle);
     }
+
+    public void receivedMessageFromBot() {
+        Bundle bundle = new Bundle();
+        firebaseAnalytics.logEvent(USER_RECVD_MESSAGE_FROM_BOT, bundle);
+    }
+
 
     public void onBoardingFinishClicked() {
         Bundle bundle = new Bundle();

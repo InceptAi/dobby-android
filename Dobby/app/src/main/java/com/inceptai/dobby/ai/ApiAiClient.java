@@ -4,6 +4,7 @@ import android.content.Context;
 import android.support.annotation.Nullable;
 
 import com.google.common.base.Preconditions;
+import com.inceptai.dobby.BuildConfig;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
@@ -61,7 +62,7 @@ public class ApiAiClient implements AIListener {
     public static final String APIAI_ACTION_WELCOME_AND_ASK_USER_FOR_RESUMING_EXPERT_CHAT = "ask-user-for-resuming-expert-chat-action";
 
 
-    private static final String CLIENT_ACCESS_TOKEN = "81dbd5289ee74637bf582fc3112b7dcb";
+    //private static final String CLIENT_ACCESS_TOKEN = "81dbd5289ee74637bf582fc3112b7dcb";
     private AIConfiguration aiConfiguration;
     private Context context;
     private AIService aiService;
@@ -91,7 +92,7 @@ public class ApiAiClient implements AIListener {
      * Connects to a server using a client access token.
      */
     public void connect() {
-        aiConfiguration = new AIConfiguration(CLIENT_ACCESS_TOKEN,
+        aiConfiguration = new AIConfiguration(getClientAccessToken(),
                 AIConfiguration.SupportedLanguages.English,
                 AIConfiguration.RecognitionEngine.System);
         aiService = AIService.getService(context, aiConfiguration);
@@ -242,6 +243,14 @@ public class ApiAiClient implements AIListener {
         }
         DobbyLog.v("Sending action to listeners" + actionToReturn.getAction() + " with user response: " + actionToReturn.getUserResponse());
         listener.onResult(actionToReturn, null);
+    }
+
+    private String getClientAccessToken() {
+        if (BuildConfig.FLAVOR.equals(Utils.WIFIDOC_FLAVOR)) {
+            return "f18af744e7594b63851bd30b94b45fe6";
+        } else {
+            return "81dbd5289ee74637bf582fc3112b7dcb";
+        }
     }
 
     private void processResult(Result result, ResultListener listener) {
