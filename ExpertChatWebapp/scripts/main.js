@@ -144,13 +144,17 @@ ExpertChat.prototype.saveMessage = function(e) {
       // Clear message text field and SEND button state.
       ExpertChat.resetMaterialTextfield(this.messageInput);
       this.toggleButton();
-      this.notifRef.push({
-          from: this.expertAvatarName,
-          to: this.selectedUuid,
-          title: 'You have a new message from a Wifi Expert',
-          body: messageText, 
-          fcmIdPath: this.fcmIdPath
-      });
+	  if (!(messageText.substring(0,1) == "#")) {
+      	this.notifRef.push({
+          	from: this.expertAvatarName,
+          	to: this.selectedUuid,
+          	title: 'You have a new message from a Wifi Expert',
+          	body: messageText, 
+          	fcmIdPath: this.fcmIdPath
+      	});
+	  } else {
+      	console.log('Dropping notifications for command text ', messageText);
+	  }
     }.bind(this)).catch(function(error) {
       console.error('Error writing new message to Firebase Database', error);
     });
