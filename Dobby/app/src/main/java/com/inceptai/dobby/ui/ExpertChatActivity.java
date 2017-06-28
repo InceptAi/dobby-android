@@ -45,7 +45,6 @@ public class ExpertChatActivity extends AppCompatActivity implements
     private Button mSendButton;
     private TextView etaTextView;
 
-    private ExpertChatService expertChatService;
     private WifiDocExpertChatRecyclerViewAdapter recyclerViewAdapter;
     private DobbyApplication dobbyApplication;
     private long currentEtaSeconds;
@@ -55,6 +54,8 @@ public class ExpertChatActivity extends AppCompatActivity implements
 
     @Inject
     DobbyAnalytics dobbyAnalytics;
+    @Inject
+    ExpertChatService expertChatService;
 
     private boolean isFirstRun = false;
 
@@ -114,7 +115,6 @@ public class ExpertChatActivity extends AppCompatActivity implements
             }
         });
 
-        expertChatService = ExpertChatService.get();
 		//TODO: Check do we need this
         fetchChatMessages();
 

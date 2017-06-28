@@ -7,7 +7,6 @@ import android.util.Log;
 import com.inceptai.dobby.dagger.DaggerProdComponent;
 import com.inceptai.dobby.dagger.ProdComponent;
 import com.inceptai.dobby.dagger.ProdModule;
-import com.inceptai.dobby.expert.ExpertChatService;
 import com.inceptai.dobby.utils.EmulatorDetector;
 import com.inceptai.dobby.utils.Utils;
 
@@ -32,13 +31,12 @@ public class DobbyApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-
+        fetchUuid();
         setupDagger();
         Thread.UncaughtExceptionHandler handler = Thread.getDefaultUncaughtExceptionHandler();
         Log.i("Dobby", "DobbyApplication: Old handler:" + handler.getClass().getCanonicalName());
         // Thread.setDefaultUncaughtExceptionHandler(new DobbyThreadpool.DobbyUncaughtExceptionHandler(handler));
-        fetchUuid();
-        ExpertChatService instance = ExpertChatService.fetchInstance(userUuid.get(), prodComponent);
+        //ExpertChatService instance = ExpertChatService.fetchInstance(userUuid.get(), prodComponent);
     }
 
     private synchronized void fetchUuid() {

@@ -17,6 +17,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     @Inject
     DobbyAnalytics dobbyAnalytics;
+    @Inject
+    ExpertChatService expertChatService;
 
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
@@ -27,9 +29,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         // Also if you intend on generating your own notifications as a result of a received FCM
         // message, here is where that should be initiated.
         DobbyLog.i("From: " + remoteMessage.getFrom());
-        //ExpertChatService instance = ExpertChatService.fetchInstance(Utils.fetchUuid(getApplicationContext()));
-        ExpertChatService instance = ExpertChatService.get();
-        instance.showNotification(getApplicationContext(), remoteMessage.getData());
+        expertChatService.showNotification(getApplicationContext(), remoteMessage.getData());
         dobbyAnalytics.expertChatNotificationShown();
     }
 }

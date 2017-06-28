@@ -82,11 +82,11 @@ public class MainActivity extends AppCompatActivity
     @Inject DobbyEventBus eventBus;
     @Inject DobbyAnalytics dobbyAnalytics;
     @Inject HeartBeatManager heartBeatManager;
+    @Inject ExpertChatService expertChatService;
 
 
     private Handler handler;
     private ChatFragment chatFragment;
-    private ExpertChatService expertChatService;
     private boolean expertIsPresent = false;
     private long currentEtaSeconds;
     private long sessionStartedTimestamp;
@@ -144,12 +144,6 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
 
         expertChatIdsDisplayed = new HashSet<>();
-        //If chat was last saved in expert mode, we will start in expert mode.
-        //TODO change messaging accordingly
-        expertChatService = ExpertChatService.get();
-        //TODO: Check do we need this
-        //expertChatService.setCallback(this);
-        //fetchChatMessages();
         currentEtaSeconds = ExpertChatService.ETA_OFFLINE;
         expertIsPresent = false;
         sessionStartedTimestamp = System.currentTimeMillis();

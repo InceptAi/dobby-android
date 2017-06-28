@@ -5,6 +5,7 @@ import com.inceptai.dobby.NetworkLayer;
 import com.inceptai.dobby.expert.ExpertChatService;
 import com.inceptai.dobby.heartbeat.AlarmReceiver;
 import com.inceptai.dobby.heartbeat.DeviceBootReceiver;
+import com.inceptai.dobby.notifications.FirebaseIdService;
 import com.inceptai.dobby.notifications.MyFirebaseMessagingService;
 import com.inceptai.dobby.ui.ChatFragment;
 import com.inceptai.dobby.ui.DebugFragment;
@@ -55,5 +56,7 @@ public interface ProdComponent {
     void inject(MyFirebaseMessagingService expertChatService);
 
     void inject(ExpertChatService expertChatService);
+
+    void inject(FirebaseIdService firebaseIdService);
 
 }
