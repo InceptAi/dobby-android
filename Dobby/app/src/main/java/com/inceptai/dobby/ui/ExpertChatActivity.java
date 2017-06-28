@@ -18,11 +18,17 @@ import android.widget.TextView;
 import com.inceptai.dobby.DobbyAnalytics;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.R;
+import com.inceptai.dobby.ai.DataInterpreter;
+import com.inceptai.dobby.ai.DobbyAi;
+import com.inceptai.dobby.ai.RtDataSource;
+import com.inceptai.dobby.ai.SuggestionCreator;
 import com.inceptai.dobby.expert.ExpertChat;
 import com.inceptai.dobby.expert.ExpertChatService;
+import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.utils.Utils;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.inject.Inject;
 
@@ -30,6 +36,7 @@ import static com.inceptai.dobby.utils.Utils.EMPTY_STRING;
 
 public class ExpertChatActivity extends AppCompatActivity implements
         ExpertChatService.ChatCallback,
+        DobbyAi.ResponseCallback,
         Handler.Callback {
     public static final String CHAT_MESSAGES_CHILD = "expert_chat_rooms";
     private static final String PREF_FIRST_CHAT = "first_expert_chat";
@@ -55,6 +62,9 @@ public class ExpertChatActivity extends AppCompatActivity implements
 
     @Inject
     DobbyAnalytics dobbyAnalytics;
+    @Inject
+    DobbyAi dobbyAi;
+
 
     private boolean isFirstRun = false;
 
@@ -117,6 +127,9 @@ public class ExpertChatActivity extends AppCompatActivity implements
         expertChatService = ExpertChatService.get();
 		//TODO: Check do we need this
         fetchChatMessages();
+
+        dobbyAi.setResponseCallback(this);
+        dobbyAi.initChatToBotState(); //Resets booleans indicating which mode of expert are we in
 
         if (isFirstChat()) {
             isFirstRun = true;
@@ -187,6 +200,85 @@ public class ExpertChatActivity extends AppCompatActivity implements
     @Override
     public void onEtaUpdated(long newEtaSeconds, boolean isPresent) {
         updateEta(newEtaSeconds, isPresent, false);
+    }
+
+
+    //Dobby.AI response callbacks
+
+
+    @Override
+    public void showBotResponseToUser(String text) {
+
+    }
+
+    @Override
+    public void showRtGraph(RtDataSource<Float, Integer> rtDataSource) {
+
+    }
+
+    @Override
+    public void observeBandwidth(BandwidthObserver observer) {
+
+    }
+
+    @Override
+    public void cancelTests() {
+
+    }
+
+    @Override
+    public void showUserActionOptions(List<Integer> userResponseTypes) {
+
+    }
+
+    @Override
+    public void showBandwidthViewCard(DataInterpreter.BandwidthGrade bandwidthGrade) {
+
+    }
+
+    @Override
+    public void showNetworkInfoViewCard(DataInterpreter.WifiGrade wifiGrade, String isp, String ip) {
+
+    }
+
+    @Override
+    public void showDetailedSuggestions(SuggestionCreator.Suggestion suggestion) {
+
+    }
+
+    @Override
+    public void contactExpertAndGetETA() {
+
+    }
+
+    @Override
+    public void onUserMessageAvailable(String text, boolean sendMessageToExpert) {
+
+    }
+
+    @Override
+    public void showStatus(String text) {
+
+    }
+
+    @Override
+    public void switchedToExpertMode() {
+
+    }
+
+    @Override
+    public void switchedToBotMode() {
+
+    }
+
+    @Override
+    public void switchedToExpertIsListeningMode() {
+
+    }
+
+    @Override
+    public void userAskedForExpert() {
+
     }
 
     private void updateEta(long newEtaSeconds, boolean isPresent, boolean showInChat) {
