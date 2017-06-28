@@ -559,10 +559,10 @@ public class Utils {
         return builder.show();
     }
 
-    public static double computePercentileFromSortedList(List<Double> sortedList, int percentile) throws IllegalArgumentException {
+    public static double computePercentileFromSortedList(List<Double> sortedList, int percentile)  {
         int size = sortedList.size();
         if (size == 0) {
-            throw new IllegalArgumentException("List is empty");
+            return 0;
         }
         int index = (percentile * size) / 100;
         //special case for median
