@@ -1,6 +1,6 @@
 {
   "projects": {
     "expert-help": "dobbybackend",
-    "default": "dobbybackend"
+    "default": "dobbybackend",
   }
 }
