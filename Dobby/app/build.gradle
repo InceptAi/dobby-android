@@ -52,8 +52,8 @@ android {
         }
         dobby {
             applicationId "com.inceptai.wifiexpert"
-            versionCode 28
-            versionName "2.0.3-wifiexpert"
+            versionCode 29
+            versionName "2.0.4-wifiexpert"
         }
     }
     buildTypes {
