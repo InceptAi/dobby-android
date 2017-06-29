@@ -153,12 +153,6 @@ public class MainActivity extends AppCompatActivity
         handler = new Handler(this);
         setupChatFragment();
         heartBeatManager.setDailyHeartBeat();
-
-        //Don't do resume stuff for now
-        if (checkSharedPrefForExpertModeResume()) {
-            dobbyAi.contactExpert();
-        }
-
     }
 
     private ChatFragment getChatFragmentFromTag() {
@@ -313,6 +307,8 @@ public class MainActivity extends AppCompatActivity
         DobbyLog.v("In showUserActionOptions of MainActivity: responseTypes: " + userResponseTypes);
         if (chatFragment != null) {
             chatFragment.showUserActionOptions(userResponseTypes);
+        } else {
+            DobbyLog.v("Not drawing user actions since chat fragment is null");
         }
     }
 
@@ -656,6 +652,9 @@ public class MainActivity extends AppCompatActivity
                 }
             }, 500, TimeUnit.MILLISECONDS);
         }
+        if (checkSharedPrefForExpertModeResume()) {
+            dobbyAi.contactExpert();
+        }
     }
 
     @Override
@@ -671,6 +670,7 @@ public class MainActivity extends AppCompatActivity
         //Setting chat fragment here
         chatFragment = getChatFragmentFromTag();
         fetchChatMessages();
+        //Don't do resume stuff for now
     }
 
     @Override
