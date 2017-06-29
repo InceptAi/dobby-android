@@ -149,9 +149,9 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         void onUserQuery(String text, boolean isButtonActionText);
         void onMicPressed();
         void onRecyclerViewReady();
-        void onFragmentDetached();
+        void onFragmentGone();
         void onFirstTimeResumed();
-        void onFragmentAttached();
+        void onFragmentReady();
     }
 
     public ChatFragment() {
@@ -275,18 +275,12 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
             throw new RuntimeException(context.toString()
                     + " must implement OnFragmentInteractionListener");
         }
-        DobbyLog.v("Sending onFragmentAttached callback to listener");
-        mListener.onFragmentAttached();
     }
 
     @Override
     public void onDetach() {
         DobbyLog.v("In onDetach");
         super.onDetach();
-        if (mListener != null) {
-            DobbyLog.v("Sending onFragmentDetached callback to listener");
-            mListener.onFragmentDetached();
-        }
         //Cleanup text2speech
         textToSpeech.shutdown();
         mListener = null;
@@ -313,6 +307,10 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     public void onResume() {
         DobbyLog.v("CF: In onResume");
         super.onResume();
+        DobbyLog.v("Sending onFragmentReady callback to listener");
+        if (mListener != null) {
+            mListener.onFragmentReady();
+        }
         if (createdFirstTime) {
             createdFirstTime = false;
             dobbyAnalytics.wifiExpertFragmentEntered();
@@ -338,6 +336,10 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     public void onDestroyView() {
         DobbyLog.v("CF: In onDestroyView");
         super.onDestroyView();
+        if (mListener != null) {
+            DobbyLog.v("Sending onFragmentGone callback to listener");
+            mListener.onFragmentGone();
+        }
         createdFirstTime = false;
     }
 

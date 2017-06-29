@@ -589,6 +589,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
+        DobbyLog.v("MainActivity: onResume");
         //expertChatService.setCallback(this);
         dobbyAi.setResponseCallback(this);
         fetchChatMessages();
@@ -600,6 +601,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onDestroy() {
+        DobbyLog.v("MainActivity: onDestroy");
         super.onDestroy();
         if (isTaskRoot) {
             expertChatService.unregisterChatCallback();
@@ -610,15 +612,17 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onStop() {
+        DobbyLog.v("MainActivity: onStop");
+        super.onStop();
         expertChatService.sendUserLeftMetaMessage();
         expertChatService.enableNotifications();
-        super.onStop();
     }
 
     @Override
     protected void onStart() {
-        expertChatService.registerToEventBusListener();
         super.onStart();
+        DobbyLog.v("MainActivity: onStart");
+        expertChatService.registerToEventBusListener();
     }
 
     @Override
@@ -655,15 +659,15 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onFragmentDetached() {
-        DobbyLog.v("MainActivity:onFragmentDetached Setting chatFragment to null");
+    public void onFragmentGone() {
+        DobbyLog.v("MainActivity:onFragmentGone Setting chatFragment to null");
         //Setting chat fragment to null
         chatFragment = null;
     }
 
     @Override
-    public void onFragmentAttached() {
-        DobbyLog.v("MainActivity:onFragmentAttached Setting chatFragment based on tag");
+    public void onFragmentReady() {
+        DobbyLog.v("MainActivity:onFragmentReady Setting chatFragment based on tag");
         //Setting chat fragment here
         chatFragment = getChatFragmentFromTag();
         fetchChatMessages();
