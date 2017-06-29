@@ -144,7 +144,8 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
 
         expertChatIdsDisplayed = new HashSet<>();
-        currentEtaSeconds = ExpertChatService.ETA_OFFLINE;
+        //currentEtaSeconds = ExpertChatService.ETA_OFFLINE;
+        currentEtaSeconds = 0;
         expertIsPresent = false;
         sessionStartedTimestamp = System.currentTimeMillis();
 
@@ -357,11 +358,11 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void contactExpertAndGetETA() {
-        //Contact expert and show ETA to user
         //Showing ETA to user
-        updateEta(currentEtaSeconds, expertIsPresent, true);
+        if (currentEtaSeconds > 0) {
+            showBotResponseToUser(getEtaMessage());
+        }
         sendInitialMessageToExpert();
-        //Show a message showing trying to get expert
         updateExpertIndicator();
     }
 
@@ -460,16 +461,26 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onEtaUpdated(long newEtaSeconds, boolean isPresent) {
-        updateEta(newEtaSeconds, isPresent, false);
+        updateEta(newEtaSeconds, isPresent);
     }
 
     @Override
     public void onEtaAvailable(long newEtaSeconds, boolean isPresent) {
-        updateEta(newEtaSeconds, isPresent, false);
+        updateEta(newEtaSeconds, isPresent);
     }
 
+    private String getEtaMessage() {
+        String messagePrefix = getResources().getString(R.string.expected_response_time_for_expert);
+        String message;
+        if (!expertIsPresent || currentEtaSeconds > ExpertChatService.ETA_12HOURS) {
+            message = "Our experts are currently offline. You shall receive a response in about 12 hours.";
+        } else {
+            message = messagePrefix + " Less than " + Utils.timeSecondsToString(currentEtaSeconds);
+        }
+        return message;
+    }
 
-    private void updateEta(long newEtaSeconds, boolean isPresent, boolean showInChat) {
+    private void updateEta(long newEtaSeconds, boolean isPresent) {
         String messagePrefix = getResources().getString(R.string.expected_response_time_for_expert);
         String message = EMPTY_STRING;
         if (!isPresent || newEtaSeconds > ExpertChatService.ETA_12HOURS) {
@@ -479,9 +490,6 @@ public class MainActivity extends AppCompatActivity
         }
         currentEtaSeconds = newEtaSeconds;
         expertIsPresent = isPresent;
-        if (showInChat) {
-            showBotResponseToUser(message);
-        }
         dobbyAi.updatedEtaAvailable(currentEtaSeconds);
     }
 
