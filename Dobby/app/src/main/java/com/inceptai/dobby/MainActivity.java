@@ -54,8 +54,6 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
-import static com.inceptai.dobby.utils.Utils.EMPTY_STRING;
-
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
         DobbyAi.ResponseCallback,
@@ -360,7 +358,10 @@ public class MainActivity extends AppCompatActivity
     public void contactExpertAndGetETA() {
         //Showing ETA to user
         if (currentEtaSeconds > 0) {
-            showBotResponseToUser(getEtaMessage());
+            showStatus(getString(R.string.contacting_and_getting_eta));
+            showStatus(getEtaMessage());
+        } else {
+            showStatus(getString(R.string.continue_expert_chat));
         }
         sendInitialMessageToExpert();
         updateExpertIndicator();
@@ -481,19 +482,11 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void updateEta(long newEtaSeconds, boolean isPresent) {
-        String messagePrefix = getResources().getString(R.string.expected_response_time_for_expert);
-        String message = EMPTY_STRING;
-        if (!isPresent || newEtaSeconds > ExpertChatService.ETA_12HOURS) {
-            message = "Our experts are currently offline. You shall receive a response in about 12 hours.";
-        } else {
-            message = messagePrefix + " Less than " + Utils.timeSecondsToString(newEtaSeconds);
-        }
         currentEtaSeconds = newEtaSeconds;
         expertIsPresent = isPresent;
         dobbyAi.updatedEtaAvailable(currentEtaSeconds);
+        updateExpertIndicator();
     }
-
-
 
     public void sendEvent(String eventString) {
         if (dobbyAi != null) {
@@ -697,7 +690,11 @@ public class MainActivity extends AppCompatActivity
             if (dobbyAi.getIsExpertListening()) {
                 chatFragment.showExpertIndicatorWithText(getString(R.string.you_are_now_talking_to_human_expert));
             } else if (dobbyAi.getIsChatInExpertMode()){
-                chatFragment.showExpertIndicatorWithText(getString(R.string.contacting_human_expert));
+                if (currentEtaSeconds > 0) {
+                    chatFragment.showExpertIndicatorWithText(getEtaMessage());
+                } else {
+                    chatFragment.showExpertIndicatorWithText(getString(R.string.contacting_human_expert));
+                }
             } else if (dobbyAi.getUserAskedForExpertMode() && !dobbyAi.getIsChatInExpertMode()){
                 chatFragment.showExpertIndicatorWithText(getString(R.string.pre_human_contact_tests));
             } else {

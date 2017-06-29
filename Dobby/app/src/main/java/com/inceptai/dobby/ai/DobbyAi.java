@@ -361,10 +361,8 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 setChatInExpertMode();
                 //Fulfilled the request to contact expert, so setting to false.
                 userAskedForHumanExpert = false;
-                String expertContactMessage = "Contacting Wifi Expert and getting ETA now ...";
                 //showMessageToUser(expertContactMessage);
                 if (responseCallback != null) {
-                    responseCallback.showBotResponseToUser(expertContactMessage);
                     responseCallback.contactExpertAndGetETA();
                 }
                 break;

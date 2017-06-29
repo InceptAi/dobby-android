@@ -117,7 +117,9 @@
     <string name="location_permission_approval_title">Approval for the Location permission</string>
     <string name="you_are_now_talking_to_human_expert">You are now talking to a Human Expert !</string>
     <string name="contacting_human_expert">Contacted human expert, you can type any message to them &#8230;</string>
+    <string name="contacting_and_getting_eta">Contacting Wifi Expert and getting ETA now &#8230;</string>
     <string name="pre_human_contact_tests">Preparing reports to contact human expert &#8230;</string>
+    <string name="continue_expert_chat">Continuing expert chat &#8230;</string>
     <string name="agent_is_typing">Agent is typing &#8230;</string>
     <string name="talking_to_human_expert_with_response_time">Expert is listening in now, response time less than 2 mins &#8230;</string>
 </resources>
