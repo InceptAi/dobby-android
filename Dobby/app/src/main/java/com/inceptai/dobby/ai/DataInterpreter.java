@@ -511,6 +511,7 @@ public class DataInterpreter {
         @BandwidthTestCodes.ErrorCodes int errorCode = BandwidthTestCodes.ErrorCodes.ERROR_UNINITIAlIZED;
         List<ScanResult> scanResultList;
         HashMap<String, Utils.PercentileStats> detailedNetworkStateStats;
+        HashMap<Long, String> networkStateTransitions;
         private long updatedAtMs;
         private String connectivityModeString = Utils.EMPTY_STRING;
         private String linkModeString = Utils.EMPTY_STRING;
@@ -524,6 +525,7 @@ public class DataInterpreter {
             scanResultList = new ArrayList<>();
             wifiChannelOccupancyMetric = new HashMap<>();
             detailedNetworkStateStats = new HashMap<>();
+            networkStateTransitions = new HashMap<>();
         }
 
         public String toJson() {
@@ -920,6 +922,8 @@ public class DataInterpreter {
         wifiGrade.primaryApSignal = linkInfo.getRssi();
         wifiGrade.scanResultList = scanResultList;
         wifiGrade.detailedNetworkStateStats = wifiState.getDetailedNetworkStateStats();
+        wifiGrade.networkStateTransitions = wifiState.getWifiStateTransitionsList();
+
         //Compute metrics
         wifiGrade.primaryApChannelInterferingAps = numStrongInterferingAps;
         wifiGrade.primaryLinkChannelOccupancyMetric = getGradeLowerIsBetter(numStrongInterferingAps,

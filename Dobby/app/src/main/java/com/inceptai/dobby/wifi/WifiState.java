@@ -5,6 +5,7 @@ import android.net.wifi.ScanResult;
 import android.os.Build;
 import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
+import android.util.Pair;
 
 import com.google.gson.Gson;
 import com.inceptai.dobby.BuildConfig;
@@ -108,6 +109,8 @@ public class WifiState {
     private HashMap<NetworkInfo.DetailedState, List<WifiStateInfo>> detailedWifiStateStats;
     private HashMap<String, Integer> movingSignalAverage;
     private HashMap<String, Long> lastSeenSignalTimestamp;
+    private List<WifiStateInfo> wifiStateTransitions;
+
 
     @WifiLinkMode
     private int wifiProblemMode;
@@ -178,6 +181,14 @@ public class WifiState {
             detailedStats.put(NetworkInfo.DetailedState.CAPTIVE_PORTAL_CHECK.name(), getStatsForDetailedState(NetworkInfo.DetailedState.CAPTIVE_PORTAL_CHECK));
         }
         return detailedStats;
+    }
+
+    public HashMap<Long, String> getWifiStateTransitionsList() {
+        HashMap<Long, String> transitionsToReturn = new HashMap<>();
+        for (WifiStateInfo wifiStateInfo: wifiStateTransitions) {
+            transitionsToReturn.put(wifiStateInfo.startTimestampMs, wifiStateInfo.detailedState.name());
+        }
+        return transitionsToReturn;
     }
 
     private Utils.PercentileStats getStatsForDetailedState(NetworkInfo.DetailedState detailedState) {
@@ -341,6 +352,11 @@ public class WifiState {
             this.endTimestampMs = endTimestampMs;
         }
 
+        WifiStateInfo(NetworkInfo.DetailedState detailedState, long startTimestampMs) {
+            this.detailedState = detailedState;
+            this.startTimestampMs = startTimestampMs;
+        }
+
         String toJson() {
             Gson gson = new Gson();
             return gson.toJson(this);
@@ -357,6 +373,8 @@ public class WifiState {
         lastWifiStateTimestampMs = 0;
         movingSignalAverage = new HashMap<>();
         lastSeenSignalTimestamp = new HashMap<>();
+        wifiStateTransitions = new ArrayList<>();
+        wifiStateTransitions.add(new WifiStateInfo(lastWifiState, System.currentTimeMillis()));
     }
 
     void clearWifiConnectionInfo() {
@@ -436,6 +454,7 @@ public class WifiState {
     @WifiLinkMode
     synchronized int updateDetailedWifiStateInfo(NetworkInfo.DetailedState detailedWifiState, long timestampMs) {
         if (lastWifiState != detailedWifiState) {
+            wifiStateTransitions.add(new WifiStateInfo(detailedWifiState, System.currentTimeMillis()));
             if (lastWifiStateTimestampMs != 0) {
                 WifiStateInfo lastWifiStateInfo = new WifiStateInfo(lastWifiState,
                         lastWifiStateTimestampMs, timestampMs);
