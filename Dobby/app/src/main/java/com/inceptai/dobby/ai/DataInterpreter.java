@@ -355,6 +355,10 @@ public class DataInterpreter {
         @MetricType int alternativeDnsMetric = MetricType.UNKNOWN;
         String primaryDns;
         String alternativeDns;
+        String routerIp;
+        String ownIp;
+        String netmask;
+        int leaseDuration;
         double routerLatencyMs;
         double dnsServerLatencyMs;
         double externalServerLatencyMs;
@@ -749,6 +753,14 @@ public class DataInterpreter {
         PingGrade pingGrade = new PingGrade();
         pingGrade.errorCode = BandwidthTestCodes.ErrorCodes.NO_ERROR;
 
+        if (ipLayerInfo != null) {
+            pingGrade.ownIp = ipLayerInfo.ownIPAddress;
+            pingGrade.netmask = ipLayerInfo.netMask;
+            pingGrade.leaseDuration = ipLayerInfo.leaseDuration;
+            pingGrade.routerIp = ipLayerInfo.gateway;
+            pingGrade.primaryDns = ipLayerInfo.dns1;
+        }
+
         if (ipLayerInfo == null || ipLayerInfo.gateway == null || ipLayerInfo.gateway.equals("0.0.0.0")) {
             pingGrade.errorCode = BandwidthTestCodes.ErrorCodes.ERROR_DHCP_INFO_UNAVAILABLE;
             pingGrade.errorCodeString = BandwidthTestCodes.bandwidthTestErrorCodesToStrings(pingGrade.errorCode);
@@ -764,7 +776,6 @@ public class DataInterpreter {
         }
 
         //Get external server stats
-        pingGrade.primaryDns = ipLayerInfo.dns1;
         HashMap<String, PingStats> externalServerStats = new HashMap<>();
         if (ipLayerInfo.referenceExternalAddress1 != null) {
             externalServerStats.put(ipLayerInfo.referenceExternalAddress1,
