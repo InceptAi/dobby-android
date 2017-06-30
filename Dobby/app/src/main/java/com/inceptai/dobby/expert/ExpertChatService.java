@@ -285,25 +285,9 @@ public class ExpertChatService implements
         listenerConnected = true;
     }
 
-    public void pushUserChatMessage(ExpertChat expertChat, boolean shouldContactExpert) {
-        getChatReference().push().setValue(expertChat);
-        if (shouldContactExpert) {
-            if (assignedExpertUsername == null || assignedExpertUsername.isEmpty()) {
-                sendExpertNotificationToAll(expertChat);
-            } else {
-                sendExpertNotification(assignedExpertUsername, expertChat);
-            }
-        }
-    }
-
     public void pushMetaChatMessage(int metaMessageType) {
         ExpertChat expertChat = new ExpertChat();
         expertChat.setMessageType(metaMessageType);
-        getChatReference().push().setValue(expertChat);
-    }
-
-
-    public void pushBotChatMessage(ExpertChat expertChat) {
         getChatReference().push().setValue(expertChat);
     }
 
@@ -335,13 +319,34 @@ public class ExpertChatService implements
     public void pushBotChatMessage(String text) {
         ExpertChat expertChat = new
                 ExpertChat(text, ExpertChat.MSG_TYPE_BOT_TEXT);
-        pushBotChatMessage(expertChat);
+        getChatReference().push().setValue(expertChat);
     }
 
-    public void pushUserChatMessage(String text, boolean shouldShowToExpert) {
+    public void pushMiscChatMessageToExpert(ExpertChat expertChat) {
+        pushMessageToExpert(expertChat, true);
+        dobbyAnalytics.receivedActionFromUser();
+    }
+
+    public void pushUserChatMessage(String text, boolean isActionText, boolean shouldShowToExpert) {
         ExpertChat expertChat = new
                 ExpertChat(text, ExpertChat.MSG_TYPE_USER_TEXT);
-        pushUserChatMessage(expertChat, shouldShowToExpert);
+        if (isActionText) {
+            dobbyAnalytics.receivedActionFromUser();
+        } else {
+            dobbyAnalytics.receivedMessageFromUser();
+        }
+        pushMessageToExpert(expertChat, shouldShowToExpert);
+    }
+
+    private void pushMessageToExpert(ExpertChat expertChat, boolean shouldShowToExpert) {
+        getChatReference().push().setValue(expertChat);
+        if (shouldShowToExpert) {
+            if (assignedExpertUsername == null || assignedExpertUsername.isEmpty()) {
+                sendExpertNotificationToAll(expertChat);
+            } else {
+                sendExpertNotification(assignedExpertUsername, expertChat);
+            }
+        }
     }
 
     private PendingIntent getPendingIntentForNotification(Context context, String source) {

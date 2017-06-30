@@ -115,7 +115,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         void showNetworkInfoViewCard(DataInterpreter.WifiGrade wifiGrade, String isp, String ip);
         void showDetailedSuggestions(SuggestionCreator.Suggestion suggestion);
         void contactExpertAndGetETA();
-        void onUserMessageAvailable(String text, boolean sendMessageToExpert);
+        void onUserMessageAvailable(String text, boolean isActionText, boolean sendMessageToExpert);
         void showStatus(String text);
         void switchedToExpertMode();
         void switchedToBotMode();
@@ -447,7 +447,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
 
         if (responseCallback != null) {
             DobbyLog.v("DobbyAi: onUserMessageAvailable with text " + text);
-            responseCallback.onUserMessageAvailable(text, chatInExpertMode);
+            responseCallback.onUserMessageAvailable(text, isButtonActionText, chatInExpertMode);
         }
 
         if (useApiAi) {

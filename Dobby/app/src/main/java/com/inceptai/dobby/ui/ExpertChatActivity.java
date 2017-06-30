@@ -258,8 +258,8 @@ public class ExpertChatActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onUserMessageAvailable(String text, boolean sendMessageToExpert) {
-        expertChatService.pushUserChatMessage(text, sendMessageToExpert);
+    public void onUserMessageAvailable(String text, boolean isActionText, boolean sendMessageToExpert) {
+        expertChatService.pushUserChatMessage(text, isActionText, sendMessageToExpert);
     }
 
     @Override
@@ -340,7 +340,7 @@ public class ExpertChatActivity extends AppCompatActivity implements
         mMessageRecyclerView.smoothScrollToPosition(recyclerViewAdapter.getItemCount());
         progressBar.setVisibility(View.GONE);
         if (expertChat.getMessageType() == ExpertChat.MSG_TYPE_USER_TEXT) {
-            dobbyAnalytics.sentMessageToExpert();
+            dobbyAnalytics.receivedMessageFromUser();
         } else if (expertChat.getMessageType() == ExpertChat.MSG_TYPE_EXPERT_TEXT) {
             dobbyAnalytics.receivedMessageFromExpert();
         } else if (expertChat.getMessageType() == ExpertChat.MSG_TYPE_EXPERT_TEXT) {

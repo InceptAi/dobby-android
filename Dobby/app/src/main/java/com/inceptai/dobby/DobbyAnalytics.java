@@ -64,6 +64,7 @@ public class DobbyAnalytics {
     private static final String USER_SENT_MESSAGE_TO_EXPERT = "user_sent_msg_to_expert";
     private static final String USER_RECVD_MESSAGE_FROM_EXPERT = "user_got_msg_from_expert";
     private static final String USER_RECVD_MESSAGE_FROM_BOT = "user_got_msg_from_bot";
+    private static final String USER_SENT_ACTION = "user_sent_action";
 
 
     //Expert tagges events
@@ -483,9 +484,14 @@ public class DobbyAnalytics {
         firebaseAnalytics.logEvent(EXPERT_CHAT_NOTIFICATION_CONSUMED, bundle);
     }
 
-    public void sentMessageToExpert() {
+    public void receivedMessageFromUser() {
         Bundle bundle = new Bundle();
         firebaseAnalytics.logEvent(USER_SENT_MESSAGE_TO_EXPERT, bundle);
+    }
+
+    public void receivedActionFromUser() {
+        Bundle bundle = new Bundle();
+        firebaseAnalytics.logEvent(USER_SENT_ACTION, bundle);
     }
 
     public void showETAToUser(String text) {

@@ -31,7 +31,6 @@ import com.inceptai.dobby.ai.DataInterpreter;
 import com.inceptai.dobby.ai.RtDataSource;
 import com.inceptai.dobby.ai.SuggestionCreator;
 import com.inceptai.dobby.ai.UserResponse;
-import com.inceptai.dobby.expert.ExpertChat;
 import com.inceptai.dobby.model.BandwidthStats;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.speedtest.BandwidthTestCodes;
@@ -639,21 +638,6 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
             }
         }, DELAY_FOR_DOBBY_MESSAGES_MS);
         //Message.obtain(handler, MSG_SHOW_STATUS, message).sendToTarget();
-    }
-
-    private void addExpertChatEntry(ExpertChat expertChat, boolean isStatusMessage) {
-        //TODO: Move completely to expert chat service
-        String expertChatText = expertChat.getText();
-        ChatEntry chatEntry;
-        if (expertChat.getMessageType() == ExpertChat.MSG_TYPE_USER_TEXT) {
-            dobbyAnalytics.sentMessageToExpert();
-            //chatEntry = new ChatEntry(expertChatText.trim(), ChatEntry.USER_CHAT, isStatusMessage);
-        } else {
-            chatEntry = new ChatEntry(expertChatText.trim(), ChatEntry.EXPERT_CHAT, isStatusMessage);
-            recyclerViewAdapter.addEntryAtBottom(chatEntry);
-            chatRv.scrollToPosition(recyclerViewAdapter.getItemCount() - 1);
-            dobbyAnalytics.receivedMessageFromExpert();
-        }
     }
 
     private void addExpertChat(String expertChatText) {
