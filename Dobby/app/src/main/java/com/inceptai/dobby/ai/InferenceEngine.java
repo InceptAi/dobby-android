@@ -2,6 +2,7 @@ package com.inceptai.dobby.ai;
 
 import android.location.Location;
 import android.net.wifi.ScanResult;
+import android.net.wifi.WifiConfiguration;
 import android.support.annotation.IntDef;
 
 import com.inceptai.dobby.DobbyApplication;
@@ -126,9 +127,11 @@ public class InferenceEngine {
 
     synchronized public DataInterpreter.WifiGrade notifyWifiState(WifiState wifiState,
                                                                   List<ScanResult> scanResultList,
+                                                                  List<WifiConfiguration> wifiConfigurationList,
                                                                   @WifiState.WifiLinkMode int wifiLinkMode,
                                                                   @ConnectivityAnalyzer.WifiConnectivityMode int wifiConnectivityMode) {
-        DataInterpreter.WifiGrade wifiGrade = DataInterpreter.interpret(wifiState, scanResultList, wifiLinkMode, wifiConnectivityMode);
+        DataInterpreter.WifiGrade wifiGrade = DataInterpreter.interpret(wifiState, scanResultList,
+                wifiConfigurationList, wifiLinkMode, wifiConnectivityMode);
         metricsDb.updateWifiGrade(wifiGrade);
         PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(wifiGrade);
         currentConditions.mergeIn(conditions);
@@ -191,7 +194,7 @@ public class InferenceEngine {
         HashMap<String, String> phoneInfo = new HashMap<>();
         inferenceRecord.uid = dobbyApplication.getUserUuid();
         inferenceRecord.phoneInfo = dobbyApplication.getPhoneInfo();
-        inferenceRecord.appVersion = dobbyApplication.getAppVersion();
+        inferenceRecord.appVersion = DobbyApplication.getAppVersion();
 
         //Assign all the grades
         inferenceRecord.bandwidthGradeJson = suggestion.suggestionCreatorParams.bandwidthGrade.toJson();

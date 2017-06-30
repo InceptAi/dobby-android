@@ -363,10 +363,8 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 setChatInExpertMode();
                 //Fulfilled the request to contact expert, so setting to false.
                 userAskedForHumanExpert = false;
-                String expertContactMessage = "Contacting Wifi Expert and getting ETA now ...";
                 //showMessageToUser(expertContactMessage);
                 if (responseCallback != null) {
-                    responseCallback.showBotResponseToUser(expertContactMessage);
                     responseCallback.contactExpertAndGetETA();
                 }
                 break;
@@ -401,11 +399,13 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
 
     public void updatedEtaAvailable(long currentEtaSeconds) {
         if (chatInExpertMode && currentEtaSeconds <= MAX_ETA_TO_MARK_EXPERT_AS_LISTENING_SECONDS) {
+            DobbyLog.v("DobbyAi: setting isExpertListening to true");
             isExpertListening = true;
             if (responseCallback != null) {
                 responseCallback.switchedToExpertIsListeningMode();
             }
         } else {
+            DobbyLog.v("DobbyAi: setting isExpertListening to false");
             isExpertListening = false;
         }
     }
@@ -558,12 +558,16 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
 //                responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
 //                responseList.add(UserResponse.ResponseType.RUN_WIFI_TESTS);
                 break;
+            case ACTION_TYPE_CONTACT_HUMAN_EXPERT:
+                responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
+                break;
             case ACTION_TYPE_WELCOME:
             case ACTION_TYPE_NONE:
             case ACTION_TYPE_UNKNOWN:
             case ACTION_TYPE_DEFAULT_FALLBACK:
             case ACTION_TYPE_SHOW_LONG_SUGGESTION:
             case ACTION_TYPE_CANCEL_BANDWIDTH_TEST:
+            case ACTION_TYPE_SET_CHAT_TO_BOT_MODE:
             default:
                 responseList.add(UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS);
                 responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
@@ -576,9 +580,14 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 lastActionShownToUser != ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS) {
             responseList.add(UserResponse.ResponseType.SHOW_LAST_SUGGESTION_DETAILS);
         }
-        if (!responseList.contains(UserResponse.ResponseType.CANCEL) && !userAskedForHumanExpert && !chatInExpertMode) {
+
+        if (!responseList.contains(UserResponse.ResponseType.CANCEL) &&
+                !userAskedForHumanExpert &&
+                !chatInExpertMode &&
+                lastAction != ACTION_TYPE_CONTACT_HUMAN_EXPERT) {
             responseList.add(UserResponse.ResponseType.CONTACT_HUMAN_EXPERT);
         }
+
         //Special case since, chatInExpertMode is not properly yet
         if (!responseList.contains(UserResponse.ResponseType.CONTACT_HUMAN_EXPERT) && lastActionShownToUser == ACTION_TYPE_SET_CHAT_TO_BOT_MODE) {
             responseList.add(UserResponse.ResponseType.CONTACT_HUMAN_EXPERT);
@@ -592,6 +601,12 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 }
             }
         }
+
+        //Just an insurance that user will always have a button to press.
+        if (responseList.isEmpty()) {
+            responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
+        }
+
         return responseList;
     }
 
@@ -659,6 +674,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                     DataInterpreter.WifiGrade wifiGrade = inferenceEngine.notifyWifiState(
                             networkLayer.getWifiState(),
                             networkLayer.getLatestScanResult(),
+                            networkLayer.getConfiguredWifiNetworks(),
                             networkLayer.getWifiLinkMode(),
                             networkLayer.getCurrentConnectivityMode());
                     if (wifiGrade != null) {
@@ -902,6 +918,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                     DobbyLog.v("DobbyAI: Notifying wifi state ");
                     wifiGrade = DataInterpreter.interpret(networkLayer.getWifiState(),
                             networkLayer.getLatestScanResult(),
+                            networkLayer.getConfiguredWifiNetworks(),
                             networkLayer.getWifiLinkMode(),
                             networkLayer.getCurrentConnectivityMode());
                     writeActionRecord(null, wifiGrade, null, null);

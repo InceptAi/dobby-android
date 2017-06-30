@@ -132,14 +132,15 @@ public class SuggestionCreator {
     }
 
     private static String convertChannelFrequencyToString(int channelFrequency) {
-        int channelNumber = Utils.convertCenterFrequencyToChannelNumber(channelFrequency);
-        String channelString = Utils.EMPTY_STRING;
-        if (channelNumber > 0) {
-            channelString = Integer.toString(channelNumber);
-        } else {
-            channelString = Integer.toString(channelNumber);
-        }
-        return channelString;
+        return Integer.toString(channelFrequency);
+//        int channelNumber = Utils.convertCenterFrequencyToChannelNumber(channelFrequency);
+//        String channelString = Utils.EMPTY_STRING;
+//        if (channelNumber > 0) {
+//            channelString = Integer.toString(channelNumber);
+//        } else {
+//            channelString = Integer.toString(channelNumber);
+//        }
+//        return channelString;
     }
 
     static Suggestion get(HashMap<Integer, Double> conditionMap, SuggestionCreatorParams params) {

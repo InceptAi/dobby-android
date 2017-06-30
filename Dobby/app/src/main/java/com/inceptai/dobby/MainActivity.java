@@ -54,8 +54,6 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
-import static com.inceptai.dobby.utils.Utils.EMPTY_STRING;
-
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
         DobbyAi.ResponseCallback,
@@ -82,11 +80,11 @@ public class MainActivity extends AppCompatActivity
     @Inject DobbyEventBus eventBus;
     @Inject DobbyAnalytics dobbyAnalytics;
     @Inject HeartBeatManager heartBeatManager;
+    @Inject ExpertChatService expertChatService;
 
 
     private Handler handler;
     private ChatFragment chatFragment;
-    private ExpertChatService expertChatService;
     private boolean expertIsPresent = false;
     private long currentEtaSeconds;
     private long sessionStartedTimestamp;
@@ -144,13 +142,8 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
 
         expertChatIdsDisplayed = new HashSet<>();
-        //If chat was last saved in expert mode, we will start in expert mode.
-        //TODO change messaging accordingly
-        expertChatService = ExpertChatService.get();
-        //TODO: Check do we need this
-        //expertChatService.setCallback(this);
-        //fetchChatMessages();
-        currentEtaSeconds = ExpertChatService.ETA_OFFLINE;
+        //currentEtaSeconds = ExpertChatService.ETA_OFFLINE;
+        currentEtaSeconds = 0;
         expertIsPresent = false;
         sessionStartedTimestamp = System.currentTimeMillis();
 
@@ -160,12 +153,6 @@ public class MainActivity extends AppCompatActivity
         handler = new Handler(this);
         setupChatFragment();
         heartBeatManager.setDailyHeartBeat();
-
-        //Don't do resume stuff for now
-        if (checkSharedPrefForExpertModeResume()) {
-            dobbyAi.contactExpert();
-        }
-
     }
 
     private ChatFragment getChatFragmentFromTag() {
@@ -317,6 +304,8 @@ public class MainActivity extends AppCompatActivity
         DobbyLog.v("In showUserActionOptions of MainActivity: responseTypes: " + userResponseTypes);
         if (chatFragment != null) {
             chatFragment.showUserActionOptions(userResponseTypes);
+        } else {
+            DobbyLog.v("Not drawing user actions since chat fragment is null");
         }
     }
 
@@ -360,11 +349,14 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void contactExpertAndGetETA() {
-        //Contact expert and show ETA to user
         //Showing ETA to user
-        updateEta(currentEtaSeconds, expertIsPresent, true);
+        if (currentEtaSeconds > 0) {
+            showStatus(getString(R.string.contacting_and_getting_eta));
+            showStatus(getEtaMessage());
+        } else {
+            showStatus(getString(R.string.continue_expert_chat));
+        }
         sendInitialMessageToExpert();
-        //Show a message showing trying to get expert
         updateExpertIndicator();
     }
 
@@ -463,32 +455,31 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onEtaUpdated(long newEtaSeconds, boolean isPresent) {
-        updateEta(newEtaSeconds, isPresent, false);
+        updateEta(newEtaSeconds, isPresent);
     }
 
     @Override
     public void onEtaAvailable(long newEtaSeconds, boolean isPresent) {
-        updateEta(newEtaSeconds, isPresent, false);
+        updateEta(newEtaSeconds, isPresent);
     }
 
-
-    private void updateEta(long newEtaSeconds, boolean isPresent, boolean showInChat) {
+    private String getEtaMessage() {
         String messagePrefix = getResources().getString(R.string.expected_response_time_for_expert);
-        String message = EMPTY_STRING;
-        if (!isPresent || newEtaSeconds > ExpertChatService.ETA_12HOURS) {
+        String message;
+        if (!expertIsPresent || currentEtaSeconds > ExpertChatService.ETA_12HOURS) {
             message = "Our experts are currently offline. You shall receive a response in about 12 hours.";
         } else {
-            message = messagePrefix + " Less than " + Utils.timeSecondsToString(newEtaSeconds);
+            message = messagePrefix + " Less than " + Utils.timeSecondsToString(currentEtaSeconds);
         }
-        currentEtaSeconds = newEtaSeconds;
-        expertIsPresent = isPresent;
-        if (showInChat) {
-            showBotResponseToUser(message);
-        }
-        dobbyAi.updatedEtaAvailable(currentEtaSeconds);
+        return message;
     }
 
-
+    private void updateEta(long newEtaSeconds, boolean isPresent) {
+        currentEtaSeconds = newEtaSeconds;
+        expertIsPresent = isPresent;
+        dobbyAi.updatedEtaAvailable(currentEtaSeconds);
+        updateExpertIndicator();
+    }
 
     public void sendEvent(String eventString) {
         if (dobbyAi != null) {
@@ -582,6 +573,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
+        DobbyLog.v("MainActivity: onResume");
         //expertChatService.setCallback(this);
         dobbyAi.setResponseCallback(this);
         fetchChatMessages();
@@ -593,6 +585,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onDestroy() {
+        DobbyLog.v("MainActivity: onDestroy");
         super.onDestroy();
         if (isTaskRoot) {
             expertChatService.unregisterChatCallback();
@@ -603,15 +596,17 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onStop() {
+        DobbyLog.v("MainActivity: onStop");
+        super.onStop();
         expertChatService.sendUserLeftMetaMessage();
         expertChatService.enableNotifications();
-        super.onStop();
     }
 
     @Override
     protected void onStart() {
-        expertChatService.registerToEventBusListener();
         super.onStart();
+        DobbyLog.v("MainActivity: onStart");
+        expertChatService.registerToEventBusListener();
     }
 
     @Override
@@ -645,21 +640,25 @@ public class MainActivity extends AppCompatActivity
                 }
             }, 500, TimeUnit.MILLISECONDS);
         }
+        if (checkSharedPrefForExpertModeResume()) {
+            dobbyAi.contactExpert();
+        }
     }
 
     @Override
-    public void onFragmentDetached() {
-        DobbyLog.v("MainActivity:onFragmentDetached Setting chatFragment to null");
+    public void onFragmentGone() {
+        DobbyLog.v("MainActivity:onFragmentGone Setting chatFragment to null");
         //Setting chat fragment to null
         chatFragment = null;
     }
 
     @Override
-    public void onFragmentAttached() {
-        DobbyLog.v("MainActivity:onFragmentAttached Setting chatFragment based on tag");
+    public void onFragmentReady() {
+        DobbyLog.v("MainActivity:onFragmentReady Setting chatFragment based on tag");
         //Setting chat fragment here
         chatFragment = getChatFragmentFromTag();
         fetchChatMessages();
+        //Don't do resume stuff for now
     }
 
     @Override
@@ -683,7 +682,11 @@ public class MainActivity extends AppCompatActivity
             if (dobbyAi.getIsExpertListening()) {
                 chatFragment.showExpertIndicatorWithText(getString(R.string.you_are_now_talking_to_human_expert));
             } else if (dobbyAi.getIsChatInExpertMode()){
-                chatFragment.showExpertIndicatorWithText(getString(R.string.contacting_human_expert));
+                if (currentEtaSeconds > 0) {
+                    chatFragment.showExpertIndicatorWithText(getEtaMessage());
+                } else {
+                    chatFragment.showExpertIndicatorWithText(getString(R.string.contacting_human_expert));
+                }
             } else if (dobbyAi.getUserAskedForExpertMode() && !dobbyAi.getIsChatInExpertMode()){
                 chatFragment.showExpertIndicatorWithText(getString(R.string.pre_human_contact_tests));
             } else {

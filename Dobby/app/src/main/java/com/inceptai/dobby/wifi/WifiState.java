@@ -7,7 +7,6 @@ import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
 
 import com.google.gson.Gson;
-import com.inceptai.dobby.BuildConfig;
 import com.inceptai.dobby.model.DobbyWifiInfo;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
@@ -15,16 +14,11 @@ import com.inceptai.dobby.utils.Utils;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.inject.Inject;
-
-import static android.R.id.list;
-import static android.net.NetworkInfo.DetailedState.CAPTIVE_PORTAL_CHECK;
-import static android.net.NetworkInfo.DetailedState.OBTAINING_IPADDR;
-import static android.net.NetworkInfo.DetailedState.VERIFYING_POOR_LINK;
 
 /**
  * Created by vivek on 4/8/17.
@@ -108,6 +102,8 @@ public class WifiState {
     private HashMap<NetworkInfo.DetailedState, List<WifiStateInfo>> detailedWifiStateStats;
     private HashMap<String, Integer> movingSignalAverage;
     private HashMap<String, Long> lastSeenSignalTimestamp;
+    private List<WifiStateInfo> wifiStateTransitions;
+
 
     @WifiLinkMode
     private int wifiProblemMode;
@@ -178,6 +174,21 @@ public class WifiState {
             detailedStats.put(NetworkInfo.DetailedState.CAPTIVE_PORTAL_CHECK.name(), getStatsForDetailedState(NetworkInfo.DetailedState.CAPTIVE_PORTAL_CHECK));
         }
         return detailedStats;
+    }
+
+    public HashMap<Long, String> getWifiStateTransitionsList() {
+        HashMap<Long, String> transitionsToReturn = new HashMap<>();
+        //Sort the servers
+        Collections.sort(wifiStateTransitions, new Comparator<WifiStateInfo>() {
+            @Override
+            public int compare(WifiStateInfo w1, WifiStateInfo w2) {
+                return (int) (w1.startTimestampMs - w2.startTimestampMs);
+            }
+        });
+        for (WifiStateInfo wifiStateInfo: wifiStateTransitions) {
+            transitionsToReturn.put(wifiStateInfo.startTimestampMs, wifiStateInfo.detailedState.name());
+        }
+        return transitionsToReturn;
     }
 
     private Utils.PercentileStats getStatsForDetailedState(NetworkInfo.DetailedState detailedState) {
@@ -341,6 +352,11 @@ public class WifiState {
             this.endTimestampMs = endTimestampMs;
         }
 
+        WifiStateInfo(NetworkInfo.DetailedState detailedState, long startTimestampMs) {
+            this.detailedState = detailedState;
+            this.startTimestampMs = startTimestampMs;
+        }
+
         String toJson() {
             Gson gson = new Gson();
             return gson.toJson(this);
@@ -357,6 +373,8 @@ public class WifiState {
         lastWifiStateTimestampMs = 0;
         movingSignalAverage = new HashMap<>();
         lastSeenSignalTimestamp = new HashMap<>();
+        wifiStateTransitions = new ArrayList<>();
+        wifiStateTransitions.add(new WifiStateInfo(lastWifiState, System.currentTimeMillis()));
     }
 
     void clearWifiConnectionInfo() {
@@ -436,6 +454,7 @@ public class WifiState {
     @WifiLinkMode
     synchronized int updateDetailedWifiStateInfo(NetworkInfo.DetailedState detailedWifiState, long timestampMs) {
         if (lastWifiState != detailedWifiState) {
+            wifiStateTransitions.add(new WifiStateInfo(detailedWifiState, System.currentTimeMillis()));
             if (lastWifiStateTimestampMs != 0) {
                 WifiStateInfo lastWifiStateInfo = new WifiStateInfo(lastWifiState,
                         lastWifiStateTimestampMs, timestampMs);

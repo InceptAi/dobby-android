@@ -144,17 +144,8 @@ public class WifiExpertUITests {
         }
 
         if (initialAppLaunch) {
-            ViewInteraction textView = onView(
-                    allOf(withId(R.id.dobbyTextTv), withText(containsString("run tests")),
-                            childAtPosition(
-                                    allOf(withId(R.id.dobbyChatLayout),
-                                            childAtPosition(
-                                                    withId(R.id.chatRv),
-                                                    0)),
-                                    1),
-                            isDisplayed()));
-            textView.check(matches(withText(containsString("run tests"))));
-
+            ViewInteraction textView = onView(withIndex(withText(containsString("run tests")), 0));
+            textView.check(matches(isDisplayed()));
         }
     }
 

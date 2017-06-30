@@ -28,7 +28,6 @@ import com.inceptai.dobby.DobbyAnalytics;
 import com.inceptai.dobby.MainActivity;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.ai.DobbyAi;
-import com.inceptai.dobby.dagger.ProdComponent;
 import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.ui.ExpertChatActivity;
@@ -120,8 +119,8 @@ public class ExpertChatService implements
         void onEtaAvailable(long newEtaSeconds, boolean isPresent);
     }
 
-    private ExpertChatService(String userUuid, ProdComponent prodComponent) {
-        prodComponent.inject(this);
+    public ExpertChatService(String userUuid, DobbyAi dobbyAi,
+                              DobbyAnalytics dobbyAnalytics, DobbyEventBus dobbyEventBus) {
         this.userUuid = userUuid;
         this.chatRoomPath =  CHAT_ROOM_CHILD + "/" + userUuid;
         this.userTokenPath = USER_ROOT + "/" + userUuid + "/" + FCM_KEY;
@@ -131,20 +130,38 @@ public class ExpertChatService implements
         DobbyLog.i("Using chat room ID: " + chatRoomPath);
         isChatEmpty = true;
         currentEtaSeconds = ETA_PRESENT;
+        this.dobbyAi = dobbyAi;
+        this.dobbyAnalytics = dobbyAnalytics;
+        this.eventBus = dobbyEventBus;
         //Being called in registerToEventBusListener from the activity onStart.
         //eventBus.registerListener(this);
     }
 
-    public static ExpertChatService fetchInstance(String userUuid, ProdComponent prodComponent) {
-        if (INSTANCE == null) {
-            INSTANCE = new ExpertChatService(userUuid, prodComponent);
-        }
-        return INSTANCE;
-    }
-
-    public static ExpertChatService get() {
-        return INSTANCE;
-    }
+//    private ExpertChatService(String userUuid, ProdComponent prodComponent) {
+//        prodComponent.inject(this);
+//        this.userUuid = userUuid;
+//        this.chatRoomPath =  CHAT_ROOM_CHILD + "/" + userUuid;
+//        this.userTokenPath = USER_ROOT + "/" + userUuid + "/" + FCM_KEY;
+//        this.recentsUpdatePath = CHAT_ROOM_RECENTS + "/" + userUuid;
+//        this.assignedExpertUsernamePath = USER_ROOT + "/" + userUuid + "/" + ASSIGNED_EXPERT_KEY;
+//        expertList = new ArrayList<>();
+//        DobbyLog.i("Using chat room ID: " + chatRoomPath);
+//        isChatEmpty = true;
+//        currentEtaSeconds = ETA_PRESENT;
+//        //Being called in registerToEventBusListener from the activity onStart.
+//        //eventBus.registerListener(this);
+//    }
+//
+//    private static ExpertChatService fetchInstance(String userUuid, ProdComponent prodComponent) {
+//        if (INSTANCE == null) {
+//            INSTANCE = new ExpertChatService(userUuid, prodComponent);
+//        }
+//        return INSTANCE;
+//    }
+//
+//    public static ExpertChatService get() {
+//        return INSTANCE;
+//    }
 
     public void disableNotifications() {
         notificationsEnabled = false;

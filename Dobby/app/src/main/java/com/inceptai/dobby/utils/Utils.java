@@ -930,4 +930,15 @@ public class Utils {
                 || (Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic"))
                 || "google_sdk".equals(Build.PRODUCT);
     }
+
+    public static String getDeviceDetails() {
+        HashMap<String, String> phoneInfo = new HashMap<>();
+        phoneInfo.put("manufacturer", Build.MANUFACTURER);
+        phoneInfo.put("model", Build.MODEL);
+        phoneInfo.put("release", Build.VERSION.RELEASE);
+        phoneInfo.put("sdk", Integer.toString(Build.VERSION.SDK_INT));
+        phoneInfo.put("hardware", Build.HARDWARE);
+        phoneInfo.put("product", Build.PRODUCT);
+        return convertHashMapToJson(phoneInfo);
+    }
 }

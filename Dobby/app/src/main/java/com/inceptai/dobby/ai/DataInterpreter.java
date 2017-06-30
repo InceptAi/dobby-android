@@ -1,6 +1,7 @@
 package com.inceptai.dobby.ai;
 
 import android.net.wifi.ScanResult;
+import android.net.wifi.WifiConfiguration;
 import android.support.annotation.IntDef;
 
 import com.google.gson.ExclusionStrategy;
@@ -355,6 +356,10 @@ public class DataInterpreter {
         @MetricType int alternativeDnsMetric = MetricType.UNKNOWN;
         String primaryDns;
         String alternativeDns;
+        String routerIp;
+        String ownIp;
+        String netmask;
+        int leaseDuration;
         double routerLatencyMs;
         double dnsServerLatencyMs;
         double externalServerLatencyMs;
@@ -506,7 +511,9 @@ public class DataInterpreter {
         int linkSpeed;
         @BandwidthTestCodes.ErrorCodes int errorCode = BandwidthTestCodes.ErrorCodes.ERROR_UNINITIAlIZED;
         List<ScanResult> scanResultList;
+        List<WifiConfiguration> wifiConfigurationList;
         HashMap<String, Utils.PercentileStats> detailedNetworkStateStats;
+        HashMap<Long, String> networkStateTransitions;
         private long updatedAtMs;
         private String connectivityModeString = Utils.EMPTY_STRING;
         private String linkModeString = Utils.EMPTY_STRING;
@@ -520,6 +527,8 @@ public class DataInterpreter {
             scanResultList = new ArrayList<>();
             wifiChannelOccupancyMetric = new HashMap<>();
             detailedNetworkStateStats = new HashMap<>();
+            networkStateTransitions = new HashMap<>();
+            wifiConfigurationList = new ArrayList<>();
         }
 
         public String toJson() {
@@ -690,7 +699,7 @@ public class DataInterpreter {
             }
 
             public boolean shouldSkipField(FieldAttributes f) {
-                return (f.getDeclaringClass() == ScanResult.class && f.getName().equals("wifiSsid"));
+                return (f.getDeclaringClass() == ScanResult.class && (f.getName().equals("wifiSsid") || f.getName().equals("informationElements")));
             }
         }
 
@@ -749,6 +758,14 @@ public class DataInterpreter {
         PingGrade pingGrade = new PingGrade();
         pingGrade.errorCode = BandwidthTestCodes.ErrorCodes.NO_ERROR;
 
+        if (ipLayerInfo != null) {
+            pingGrade.ownIp = ipLayerInfo.ownIPAddress;
+            pingGrade.netmask = ipLayerInfo.netMask;
+            pingGrade.leaseDuration = ipLayerInfo.leaseDuration;
+            pingGrade.routerIp = ipLayerInfo.gateway;
+            pingGrade.primaryDns = ipLayerInfo.dns1;
+        }
+
         if (ipLayerInfo == null || ipLayerInfo.gateway == null || ipLayerInfo.gateway.equals("0.0.0.0")) {
             pingGrade.errorCode = BandwidthTestCodes.ErrorCodes.ERROR_DHCP_INFO_UNAVAILABLE;
             pingGrade.errorCodeString = BandwidthTestCodes.bandwidthTestErrorCodesToStrings(pingGrade.errorCode);
@@ -764,7 +781,6 @@ public class DataInterpreter {
         }
 
         //Get external server stats
-        pingGrade.primaryDns = ipLayerInfo.dns1;
         HashMap<String, PingStats> externalServerStats = new HashMap<>();
         if (ipLayerInfo.referenceExternalAddress1 != null) {
             externalServerStats.put(ipLayerInfo.referenceExternalAddress1,
@@ -866,6 +882,7 @@ public class DataInterpreter {
 
     public static WifiGrade interpret(WifiState wifiState,
                                       List<ScanResult> scanResultList,
+                                      List<WifiConfiguration> wifiConfigurationList,
                                       @WifiState.WifiLinkMode int wifiProblemMode,
                                       @ConnectivityAnalyzer.WifiConnectivityMode int wifiConnectivityMode) {
         WifiGrade wifiGrade = new WifiGrade();
@@ -908,7 +925,10 @@ public class DataInterpreter {
         wifiGrade.leastOccupiedChannelAps = minOccupancyAPs;
         wifiGrade.primaryApSignal = linkInfo.getRssi();
         wifiGrade.scanResultList = scanResultList;
+        wifiGrade.wifiConfigurationList = wifiConfigurationList;
         wifiGrade.detailedNetworkStateStats = wifiState.getDetailedNetworkStateStats();
+        wifiGrade.networkStateTransitions = wifiState.getWifiStateTransitionsList();
+
         //Compute metrics
         wifiGrade.primaryApChannelInterferingAps = numStrongInterferingAps;
         wifiGrade.primaryLinkChannelOccupancyMetric = getGradeLowerIsBetter(numStrongInterferingAps,

@@ -1,17 +1,14 @@
 package com.inceptai.dobby;
 
 import android.app.Application;
-import android.os.Build;
 import android.util.Log;
 
 import com.inceptai.dobby.dagger.DaggerProdComponent;
 import com.inceptai.dobby.dagger.ProdComponent;
 import com.inceptai.dobby.dagger.ProdModule;
-import com.inceptai.dobby.expert.ExpertChatService;
 import com.inceptai.dobby.utils.EmulatorDetector;
 import com.inceptai.dobby.utils.Utils;
 
-import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -32,13 +29,12 @@ public class DobbyApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-
+        fetchUuid();
         setupDagger();
         Thread.UncaughtExceptionHandler handler = Thread.getDefaultUncaughtExceptionHandler();
         Log.i("Dobby", "DobbyApplication: Old handler:" + handler.getClass().getCanonicalName());
         // Thread.setDefaultUncaughtExceptionHandler(new DobbyThreadpool.DobbyUncaughtExceptionHandler(handler));
-        fetchUuid();
-        ExpertChatService instance = ExpertChatService.fetchInstance(userUuid.get(), prodComponent);
+        //ExpertChatService instance = ExpertChatService.fetchInstance(userUuid.get(), prodComponent);
     }
 
     private synchronized void fetchUuid() {
@@ -72,10 +68,7 @@ public class DobbyApplication extends Application {
     }
 
     public String getPhoneInfo() {
-        HashMap<String, String> phoneInfo = new HashMap<>();
-        phoneInfo.put("manufacturer", Build.MANUFACTURER);
-        phoneInfo.put("model", Build.MODEL);
-        return Utils.convertHashMapToJson(phoneInfo);
+        return Utils.getDeviceDetails();
     }
 
     public boolean isRunningOnEmulator() {

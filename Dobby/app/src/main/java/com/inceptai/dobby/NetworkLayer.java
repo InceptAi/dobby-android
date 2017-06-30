@@ -5,6 +5,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.wifi.ScanResult;
+import android.net.wifi.WifiConfiguration;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -101,6 +102,7 @@ public class NetworkLayer implements LocationListener {
         DataInterpreter.WifiGrade wifiGrade = DataInterpreter.interpret(
                 getWifiState(),
                 getLatestScanResult(),
+                getConfiguredWifiNetworks(),
                 getWifiLinkMode(),
                 getCurrentConnectivityMode());
         return wifiGrade;
@@ -188,6 +190,10 @@ public class NetworkLayer implements LocationListener {
 
     public List<ScanResult> getLatestScanResult() {
         return getWifiAnalyzerInstance().getLatestWifiScan();
+    }
+
+    public List<WifiConfiguration> getConfiguredWifiNetworks() {
+        return getWifiAnalyzerInstance().getWifiConfiguration();
     }
 
     public synchronized BandwidthObserver startBandwidthTest(final @BandwidthTestCodes.TestMode int mode) {
