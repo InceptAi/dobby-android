@@ -672,6 +672,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                     DataInterpreter.WifiGrade wifiGrade = inferenceEngine.notifyWifiState(
                             networkLayer.getWifiState(),
                             networkLayer.getLatestScanResult(),
+                            networkLayer.getConfiguredWifiNetworks(),
                             networkLayer.getWifiLinkMode(),
                             networkLayer.getCurrentConnectivityMode());
                     if (wifiGrade != null) {
@@ -912,6 +913,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                     DobbyLog.v("DobbyAI: Notifying wifi state ");
                     wifiGrade = DataInterpreter.interpret(networkLayer.getWifiState(),
                             networkLayer.getLatestScanResult(),
+                            networkLayer.getConfiguredWifiNetworks(),
                             networkLayer.getWifiLinkMode(),
                             networkLayer.getCurrentConnectivityMode());
                     writeActionRecord(null, wifiGrade, null, null);

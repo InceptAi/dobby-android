@@ -1,6 +1,7 @@
 package com.inceptai.dobby.ai;
 
 import android.net.wifi.ScanResult;
+import android.net.wifi.WifiConfiguration;
 import android.support.annotation.IntDef;
 
 import com.google.gson.ExclusionStrategy;
@@ -510,6 +511,7 @@ public class DataInterpreter {
         int linkSpeed;
         @BandwidthTestCodes.ErrorCodes int errorCode = BandwidthTestCodes.ErrorCodes.ERROR_UNINITIAlIZED;
         List<ScanResult> scanResultList;
+        List<WifiConfiguration> wifiConfigurationList;
         HashMap<String, Utils.PercentileStats> detailedNetworkStateStats;
         HashMap<Long, String> networkStateTransitions;
         private long updatedAtMs;
@@ -526,6 +528,7 @@ public class DataInterpreter {
             wifiChannelOccupancyMetric = new HashMap<>();
             detailedNetworkStateStats = new HashMap<>();
             networkStateTransitions = new HashMap<>();
+            wifiConfigurationList = new ArrayList<>();
         }
 
         public String toJson() {
@@ -879,6 +882,7 @@ public class DataInterpreter {
 
     public static WifiGrade interpret(WifiState wifiState,
                                       List<ScanResult> scanResultList,
+                                      List<WifiConfiguration> wifiConfigurationList,
                                       @WifiState.WifiLinkMode int wifiProblemMode,
                                       @ConnectivityAnalyzer.WifiConnectivityMode int wifiConnectivityMode) {
         WifiGrade wifiGrade = new WifiGrade();
@@ -921,6 +925,7 @@ public class DataInterpreter {
         wifiGrade.leastOccupiedChannelAps = minOccupancyAPs;
         wifiGrade.primaryApSignal = linkInfo.getRssi();
         wifiGrade.scanResultList = scanResultList;
+        wifiGrade.wifiConfigurationList = wifiConfigurationList;
         wifiGrade.detailedNetworkStateStats = wifiState.getDetailedNetworkStateStats();
         wifiGrade.networkStateTransitions = wifiState.getWifiStateTransitionsList();
 

@@ -141,6 +141,10 @@ public class WifiAnalyzer {
     }
 
     public List<WifiConfiguration> getWifiConfiguration() {
+        List<WifiConfiguration> wifiConfigurationList = wifiManager.getConfiguredNetworks();
+        if (wifiConfigurationList == null) {
+            return new ArrayList<>();
+        }
         return wifiManager.getConfiguredNetworks();
     }
 
