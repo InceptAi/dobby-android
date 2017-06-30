@@ -191,7 +191,7 @@ public class InferenceEngine {
         HashMap<String, String> phoneInfo = new HashMap<>();
         inferenceRecord.uid = dobbyApplication.getUserUuid();
         inferenceRecord.phoneInfo = dobbyApplication.getPhoneInfo();
-        inferenceRecord.appVersion = dobbyApplication.getAppVersion();
+        inferenceRecord.appVersion = DobbyApplication.getAppVersion();
 
         //Assign all the grades
         inferenceRecord.bandwidthGradeJson = suggestion.suggestionCreatorParams.bandwidthGrade.toJson();

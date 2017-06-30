@@ -1,7 +1,6 @@
 package com.inceptai.dobby;
 
 import android.app.Application;
-import android.os.Build;
 import android.util.Log;
 
 import com.inceptai.dobby.dagger.DaggerProdComponent;
@@ -10,7 +9,6 @@ import com.inceptai.dobby.dagger.ProdModule;
 import com.inceptai.dobby.utils.EmulatorDetector;
 import com.inceptai.dobby.utils.Utils;
 
-import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -70,10 +68,7 @@ public class DobbyApplication extends Application {
     }
 
     public String getPhoneInfo() {
-        HashMap<String, String> phoneInfo = new HashMap<>();
-        phoneInfo.put("manufacturer", Build.MANUFACTURER);
-        phoneInfo.put("model", Build.MODEL);
-        return Utils.convertHashMapToJson(phoneInfo);
+        return Utils.getDeviceDetails();
     }
 
     public boolean isRunningOnEmulator() {
