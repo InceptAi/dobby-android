@@ -5,10 +5,8 @@ import android.net.wifi.ScanResult;
 import android.os.Build;
 import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
-import android.util.Pair;
 
 import com.google.gson.Gson;
-import com.inceptai.dobby.BuildConfig;
 import com.inceptai.dobby.model.DobbyWifiInfo;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
@@ -16,16 +14,11 @@ import com.inceptai.dobby.utils.Utils;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.inject.Inject;
-
-import static android.R.id.list;
-import static android.net.NetworkInfo.DetailedState.CAPTIVE_PORTAL_CHECK;
-import static android.net.NetworkInfo.DetailedState.OBTAINING_IPADDR;
-import static android.net.NetworkInfo.DetailedState.VERIFYING_POOR_LINK;
 
 /**
  * Created by vivek on 4/8/17.
@@ -185,6 +178,13 @@ public class WifiState {
 
     public HashMap<Long, String> getWifiStateTransitionsList() {
         HashMap<Long, String> transitionsToReturn = new HashMap<>();
+        //Sort the servers
+        Collections.sort(wifiStateTransitions, new Comparator<WifiStateInfo>() {
+            @Override
+            public int compare(WifiStateInfo w1, WifiStateInfo w2) {
+                return (int) (w1.startTimestampMs - w2.startTimestampMs);
+            }
+        });
         for (WifiStateInfo wifiStateInfo: wifiStateTransitions) {
             transitionsToReturn.put(wifiStateInfo.startTimestampMs, wifiStateInfo.detailedState.name());
         }

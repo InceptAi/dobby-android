@@ -696,7 +696,7 @@ public class DataInterpreter {
             }
 
             public boolean shouldSkipField(FieldAttributes f) {
-                return (f.getDeclaringClass() == ScanResult.class && f.getName().equals("wifiSsid"));
+                return (f.getDeclaringClass() == ScanResult.class && (f.getName().equals("wifiSsid") || f.getName().equals("informationElements")));
             }
         }
 
