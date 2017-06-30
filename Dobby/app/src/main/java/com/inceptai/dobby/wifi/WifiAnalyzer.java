@@ -7,6 +7,7 @@ import android.content.IntentFilter;
 import android.net.DhcpInfo;
 import android.net.NetworkInfo;
 import android.net.wifi.ScanResult;
+import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.support.annotation.Nullable;
@@ -137,6 +138,10 @@ public class WifiAnalyzer {
 
     public DhcpInfo getDhcpInfo() {
         return wifiManager.getDhcpInfo();
+    }
+
+    public List<WifiConfiguration> getWifiConfiguration() {
+        return wifiManager.getConfiguredNetworks();
     }
 
     public WifiState getWifiState() {
