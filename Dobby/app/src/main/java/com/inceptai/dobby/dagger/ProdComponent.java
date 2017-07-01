@@ -1,6 +1,6 @@
 package com.inceptai.dobby.dagger;
 
-import com.inceptai.dobby.InteractionManager;
+import com.inceptai.dobby.UserInteractionManager;
 import com.inceptai.dobby.MainActivity;
 import com.inceptai.dobby.NetworkLayer;
 import com.inceptai.dobby.expert.ExpertChatService;
@@ -60,7 +60,7 @@ public interface ProdComponent {
 
     void inject(FirebaseIdService firebaseIdService);
 
-    void inject(InteractionManager interactionManager);
+    void inject(UserInteractionManager userInteractionManager);
 
 
 }

@@ -25,7 +25,7 @@ import javax.inject.Inject;
  * Created by vivek on 6/30/17.
  */
 
-public class InteractionManager implements
+public class UserInteractionManager implements
         DobbyAi.ResponseCallback,
         ExpertChatService.ChatCallback {
 
@@ -48,7 +48,7 @@ public class InteractionManager implements
     @Inject DobbyApplication dobbyApplication;
     @Inject DobbyThreadpool dobbyThreadpool;
 
-    public InteractionManager(Context context, InteractionCallback interactionCallback) {
+    public UserInteractionManager(Context context, InteractionCallback interactionCallback) {
         ((DobbyApplication) context.getApplicationContext()).getProdComponent().inject(this);
         this.context = context;
         currentEtaSeconds = 0;

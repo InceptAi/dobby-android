@@ -12,7 +12,7 @@ import android.widget.Toast;
 
 import com.inceptai.dobby.DobbyAnalytics;
 import com.inceptai.dobby.DobbyApplication;
-import com.inceptai.dobby.InteractionManager;
+import com.inceptai.dobby.UserInteractionManager;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.ai.DataInterpreter;
 import com.inceptai.dobby.ai.SuggestionCreator;
@@ -27,10 +27,10 @@ import java.util.Locale;
 import javax.inject.Inject;
 
 public class ExpertChatActivity extends AppCompatActivity implements
-        InteractionManager.InteractionCallback,
+        UserInteractionManager.InteractionCallback,
         ChatFragment.OnFragmentInteractionListener {
     private static final int SPEECH_RECOGNITION_REQUEST_CODE = 102;
-    private InteractionManager interactionManager;
+    private UserInteractionManager userInteractionManager;
 
     @Inject
     DobbyAnalytics dobbyAnalytics;
@@ -43,8 +43,8 @@ public class ExpertChatActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_wifidoc_expert_chat);
         setupChatFragment();
-        interactionManager = new InteractionManager(getApplicationContext(), this);
-        if (interactionManager.isFirstChatAfterInstall()) {
+        userInteractionManager = new UserInteractionManager(getApplicationContext(), this);
+        if (userInteractionManager.isFirstChatAfterInstall()) {
             WifiDocDialogFragment fragment = WifiDocDialogFragment.forExpertOnBoarding();
             fragment.show(getSupportFragmentManager(), "Wifi Expert Chat");
             dobbyAnalytics.chatActivityEnteredFirstTime();
@@ -61,7 +61,7 @@ public class ExpertChatActivity extends AppCompatActivity implements
     @Override
     protected void onResume() {
         super.onResume();
-        interactionManager.onUserEnteredChat();
+        userInteractionManager.onUserEnteredChat();
         processIntent(getIntent());
     }
 
@@ -69,14 +69,14 @@ public class ExpertChatActivity extends AppCompatActivity implements
     @Override
     protected void onStop() {
         super.onStop();
-        interactionManager.onUserExitChat();
+        userInteractionManager.onUserExitChat();
     }
 
     @Override
     protected void onDestroy() {
         DobbyLog.v("MainActivity: onDestroy");
         super.onDestroy();
-        interactionManager.cleanup();
+        userInteractionManager.cleanup();
     }
 
 
@@ -180,7 +180,7 @@ public class ExpertChatActivity extends AppCompatActivity implements
     //From chatFragment onInteractionListener
     @Override
     public void onUserQuery(String text, boolean isButtonActionText) {
-        interactionManager.onUserQuery(text, isButtonActionText);
+        userInteractionManager.onUserQuery(text, isButtonActionText);
     }
 
     @Override
@@ -197,7 +197,7 @@ public class ExpertChatActivity extends AppCompatActivity implements
     @Override
     public void onFirstTimeResumed() {
         DobbyLog.v("MainActivity:onFirstTimeResumed");
-        interactionManager.onFirstTimeEnteredChat();
+        userInteractionManager.onFirstTimeEnteredChat();
     }
 
     @Override

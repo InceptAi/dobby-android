@@ -42,12 +42,12 @@ import javax.inject.Inject;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
         ChatFragment.OnFragmentInteractionListener,
-        InteractionManager.InteractionCallback {
+        UserInteractionManager.InteractionCallback {
 
     private static final int PERMISSION_COARSE_LOCATION_REQUEST_CODE = 101;
     private static final int SPEECH_RECOGNITION_REQUEST_CODE = 102;
 
-    private InteractionManager interactionManager;
+    private UserInteractionManager userInteractionManager;
     @Inject DobbyAnalytics dobbyAnalytics;
     @Inject HeartBeatManager heartBeatManager;
 
@@ -85,7 +85,7 @@ public class MainActivity extends AppCompatActivity
             return;
         }
 
-        interactionManager = new InteractionManager(getApplicationContext(), this);
+        userInteractionManager = new UserInteractionManager(getApplicationContext(), this);
         heartBeatManager.setDailyHeartBeat();
 
         setContentView(R.layout.activity_main);
@@ -260,7 +260,7 @@ public class MainActivity extends AppCompatActivity
     //From chatFragment onInteractionListener
     @Override
     public void onUserQuery(String text, boolean isButtonActionText) {
-        interactionManager.onUserQuery(text, isButtonActionText);
+        userInteractionManager.onUserQuery(text, isButtonActionText);
     }
 
 
@@ -318,7 +318,7 @@ public class MainActivity extends AppCompatActivity
     protected void onResume() {
         super.onResume();
         DobbyLog.v("MainActivity: onResume");
-        interactionManager.onUserEnteredChat();
+        userInteractionManager.onUserEnteredChat();
         processIntent(getIntent());
     }
 
@@ -328,7 +328,7 @@ public class MainActivity extends AppCompatActivity
         DobbyLog.v("MainActivity: onDestroy");
         super.onDestroy();
         if (isTaskRoot) {
-            interactionManager.cleanup();
+            userInteractionManager.cleanup();
         }
     }
 
@@ -336,7 +336,7 @@ public class MainActivity extends AppCompatActivity
     protected void onStop() {
         DobbyLog.v("MainActivity: onStop");
         super.onStop();
-        interactionManager.onUserExitChat();
+        userInteractionManager.onUserExitChat();
     }
 
     @Override
@@ -367,7 +367,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onFirstTimeResumed() {
         DobbyLog.v("MainActivity:onFirstTimeResumed");
-        interactionManager.onFirstTimeEnteredChat();
+        userInteractionManager.onFirstTimeEnteredChat();
     }
 
     @Override
