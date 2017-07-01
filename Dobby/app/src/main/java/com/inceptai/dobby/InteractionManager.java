@@ -31,11 +31,10 @@ public class InteractionManager implements
         DobbyAi.ResponseCallback,
         ExpertChatService.ChatCallback {
 
-    private static final String PREF_FIRST_CHAT = "first_dobby_expert_chat";
-    private static final String PREF_CHAT_IN_EXPERT_MODE = "dobby_in_expert_mode";
+    private static final String PREF_FIRST_CHAT = "first_expert_chat";
+    private static final String PREF_CHAT_IN_EXPERT_MODE = "wifidoc_in_expert_mode";
     private static final String EXPERT_MODE_INITIATED_TIMESTAMP = "expert_mode_start_ts";
     private static final long MAX_TIME_ELAPSED_FOR_RESUMING_EXPERT_MODE_MS = AlarmManager.INTERVAL_DAY;
-    private static final boolean ENABLE_AGENT_TYPING_FILLER = true;
     private static final long DELAY_BEFORE_WELCOME_MESSAGE_MS = 500;
 
 
@@ -89,11 +88,16 @@ public class InteractionManager implements
 
     //API calls
     public void setInteractionCallback(InteractionCallback interactionCallback) {
+        if (dobbyAi != null) {
+            dobbyAi.setResponseCallback(this);
+        }
         this.interactionCallback = interactionCallback;
     }
 
     public void onUserEnteredChat() {
+
         fetchChatMessages();
+        expertChatService.checkIn(context);
         expertChatService.registerToEventBusListener();
         expertChatService.sendUserEnteredMetaMessage();
         expertChatService.disableNotifications();
@@ -106,6 +110,7 @@ public class InteractionManager implements
     }
 
     public void cleanup() {
+        expertChatIdsDisplayed.clear();
         expertChatService.unregisterChatCallback();
         expertChatService.disconnect();
         dobbyAi.cleanup();
@@ -113,6 +118,10 @@ public class InteractionManager implements
 
     public void onUserQuery(String text, boolean isButtonActionText) {
         dobbyAi.sendQuery(text, isButtonActionText);
+    }
+
+    public void initChatToBotState() {
+        dobbyAi.initChatToBotState();
     }
 
     public void onFirstTimeEnteredChat() {
@@ -130,6 +139,10 @@ public class InteractionManager implements
         }
     }
 
+    public boolean isFirstChatAfterInstall() {
+        return Boolean.valueOf(Utils.readSharedSetting(context,
+                PREF_FIRST_CHAT, Utils.TRUE_STRING));
+    }
 
     //Expert chat service callback
     @Override
@@ -143,6 +156,10 @@ public class InteractionManager implements
         String messageReceived = expertChat.getText();
         DobbyLog.v("MainActivity:FirebaseMessage recvd from firebase: " + messageReceived);
 
+        if (expertChatService.isDisplayableMessage(expertChat)) {
+            saveExpertChatStarted();
+        }
+
         if (interactionCallback == null) {
             DobbyLog.v("callback is null, so ignoring message from firebase");
             return;
@@ -152,7 +169,6 @@ public class InteractionManager implements
             case ExpertChat.MSG_TYPE_EXPERT_TEXT:
                 interactionCallback.showExpertResponse(messageReceived);
                 DobbyLog.v("MainActivity:FirebaseMessage added mesg to ExpertChat");
-                saveExpertChatStarted();
                 break;
             case ExpertChat.MSG_TYPE_BOT_TEXT:
                 DobbyLog.v("MainActivity:FirebaseMessage added mesg to Bot chat");
@@ -268,9 +284,6 @@ public class InteractionManager implements
     public void switchedToExpertMode() {
         saveSwitchedToExpertMode();
         updateExpertIndicator();
-        if (expertChatService != null) {
-            expertChatService.checkIn(context);
-        }
     }
 
     @Override
@@ -330,10 +343,6 @@ public class InteractionManager implements
                 PREF_FIRST_CHAT, Utils.FALSE_STRING);
     }
 
-    private boolean isFirstChat() {
-        return Boolean.valueOf(Utils.readSharedSetting(context,
-                PREF_FIRST_CHAT, Utils.TRUE_STRING));
-    }
 
     private void saveSwitchedToBotMode() {
         Utils.saveSharedSetting(context,

@@ -137,32 +137,6 @@ public class ExpertChatService implements
         //eventBus.registerListener(this);
     }
 
-//    private ExpertChatService(String userUuid, ProdComponent prodComponent) {
-//        prodComponent.inject(this);
-//        this.userUuid = userUuid;
-//        this.chatRoomPath =  CHAT_ROOM_CHILD + "/" + userUuid;
-//        this.userTokenPath = USER_ROOT + "/" + userUuid + "/" + FCM_KEY;
-//        this.recentsUpdatePath = CHAT_ROOM_RECENTS + "/" + userUuid;
-//        this.assignedExpertUsernamePath = USER_ROOT + "/" + userUuid + "/" + ASSIGNED_EXPERT_KEY;
-//        expertList = new ArrayList<>();
-//        DobbyLog.i("Using chat room ID: " + chatRoomPath);
-//        isChatEmpty = true;
-//        currentEtaSeconds = ETA_PRESENT;
-//        //Being called in registerToEventBusListener from the activity onStart.
-//        //eventBus.registerListener(this);
-//    }
-//
-//    private static ExpertChatService fetchInstance(String userUuid, ProdComponent prodComponent) {
-//        if (INSTANCE == null) {
-//            INSTANCE = new ExpertChatService(userUuid, prodComponent);
-//        }
-//        return INSTANCE;
-//    }
-//
-//    public static ExpertChatService get() {
-//        return INSTANCE;
-//    }
-
     public void disableNotifications() {
         notificationsEnabled = false;
     }
@@ -211,6 +185,10 @@ public class ExpertChatService implements
 
     public void saveFcmToken(String token) {
         getFcmTokenReference().setValue(token);
+    }
+
+    public boolean isDisplayableMessage(ExpertChat expertChat) {
+        return ExpertChatUtil.isDisplayableMessageType(expertChat);
     }
 
     public void showNotification(Context context, Map<String, String> data) {

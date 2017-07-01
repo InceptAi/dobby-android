@@ -1,168 +1,238 @@
 package com.inceptai.dobby.ui;
 
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
+import android.speech.RecognizerIntent;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ProgressBar;
-import android.widget.TextView;
+import android.widget.Toast;
 
 import com.inceptai.dobby.DobbyAnalytics;
 import com.inceptai.dobby.DobbyApplication;
+import com.inceptai.dobby.InteractionManager;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.ai.DataInterpreter;
-import com.inceptai.dobby.ai.DobbyAi;
-import com.inceptai.dobby.ai.RtDataSource;
 import com.inceptai.dobby.ai.SuggestionCreator;
-import com.inceptai.dobby.expert.ExpertChat;
 import com.inceptai.dobby.expert.ExpertChatService;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
-import com.inceptai.dobby.utils.Utils;
+import com.inceptai.dobby.utils.DobbyLog;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import javax.inject.Inject;
 
-import static com.inceptai.dobby.utils.Utils.EMPTY_STRING;
-
 public class ExpertChatActivity extends AppCompatActivity implements
-        ExpertChatService.ChatCallback,
-        DobbyAi.ResponseCallback,
-        Handler.Callback {
-    public static final String CHAT_MESSAGES_CHILD = "expert_chat_rooms";
-    private static final String PREF_FIRST_CHAT = "first_expert_chat";
-
-
-    private static final int MSG_UPDATE_CHAT = 1001;
-    private static final int MSG_UPDATE_ETA = 1002;
-
-    private RecyclerView mMessageRecyclerView;
-    private LinearLayoutManager mLinearLayoutManager;
-    private ProgressBar progressBar;
-    private EditText mMessageEditText;
-    private Button mSendButton;
-    private TextView etaTextView;
-
-    private WifiDocExpertChatRecyclerViewAdapter recyclerViewAdapter;
-    private DobbyApplication dobbyApplication;
-    private long currentEtaSeconds;
-    private boolean isPresent;
-    private boolean chatInHumanMode;
-
-    private Handler handler;
+        InteractionManager.InteractionCallback,
+        ChatFragment.OnFragmentInteractionListener {
+    private static final int SPEECH_RECOGNITION_REQUEST_CODE = 102;
 
     @Inject
     DobbyAnalytics dobbyAnalytics;
     @Inject
-    DobbyAi dobbyAi;
-    @Inject
-    ExpertChatService expertChatService;
+    InteractionManager interactionManager;
 
-    private boolean isFirstRun = false;
+    private ChatFragment chatFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         ((DobbyApplication) getApplication()).getProdComponent().inject(this);
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_expert_chat);
+        setContentView(R.layout.activity_wifidoc_expert_chat);
+        setupChatFragment();
 
-        chatInHumanMode = false;
-        handler = new Handler(this);
+        interactionManager.setInteractionCallback(this);
+        interactionManager.initChatToBotState(); //Resets booleans indicating which mode of expert are we in
 
-        progressBar = (ProgressBar) findViewById(R.id.progressBar);
-        getSupportActionBar().setTitle(R.string.expert_chat_title);
-        mMessageRecyclerView = (RecyclerView) findViewById(R.id.messageRecyclerView);
-        mLinearLayoutManager = new LinearLayoutManager(this);
-        mLinearLayoutManager.setStackFromEnd(true);
-        mMessageRecyclerView.setLayoutManager(mLinearLayoutManager);
-
-        dobbyApplication = (DobbyApplication) getApplication();
-
-        recyclerViewAdapter = new WifiDocExpertChatRecyclerViewAdapter(this, new ArrayList<ExpertChat>());
-
-        mMessageRecyclerView.setLayoutManager(mLinearLayoutManager);
-        mMessageRecyclerView.setAdapter(recyclerViewAdapter);
-        etaTextView = (TextView) findViewById(R.id.eta_tv);
-        etaTextView.setVisibility(View.INVISIBLE);
-
-        mMessageEditText = (EditText) findViewById(R.id.messageEditText);
-        mMessageEditText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                if (charSequence.toString().trim().length() > 0) {
-                    mSendButton.setEnabled(true);
-                } else {
-                    mSendButton.setEnabled(false);
-                }
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-            }
-        });
-
-        mSendButton = (Button) findViewById(R.id.sendButton);
-        mSendButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                // Send messages on click.
-                processUserMessage(mMessageEditText.getText().toString());
-                mMessageEditText.setText("");
-            }
-        });
-
-		//TODO: Check do we need this
-        fetchChatMessages();
-
-        dobbyAi.setResponseCallback(this);
-        dobbyAi.initChatToBotState(); //Resets booleans indicating which mode of expert are we in
-
-        if (isFirstChat()) {
-            isFirstRun = true;
-            progressBar.setVisibility(View.GONE);
+        if (interactionManager.isFirstChatAfterInstall()) {
             WifiDocDialogFragment fragment = WifiDocDialogFragment.forExpertOnBoarding();
             fragment.show(getSupportFragmentManager(), "Wifi Expert Chat");
             dobbyAnalytics.chatActivityEnteredFirstTime();
         }
-        currentEtaSeconds = ExpertChatService.ETA_OFFLINE;
-        isPresent = false;
+    }
+
+
+    //Activity overrides
+    @Override
+    protected void onStart() {
+        super.onStart();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        fetchChatMessages();
+        interactionManager.onUserEnteredChat();
         processIntent(getIntent());
-        if (isFirstRun) {
-            addGeneralMessage("Welcome to Expert Chat !");
-            addGeneralMessage("Say hello to start the conversation.");
-        } else {
-            addGeneralMessage("Welcome back !");
-        }
-
-        // addGeneralMessage(getEtaString(currentEtaSeconds, isPresent));
-        expertChatService.sendUserEnteredMetaMessage();
-        expertChatService.disableNotifications();
-        expertChatService.checkIn(this);
     }
+
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        interactionManager.onUserExitChat();
+    }
+
+    @Override
+    protected void onDestroy() {
+        DobbyLog.v("MainActivity: onDestroy");
+        super.onDestroy();
+        interactionManager.cleanup();
+    }
+
+
 
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
+    }
+
+    //Interaction Manager callbacks
+
+    @Override
+    public void showBotResponse(String text) {
+        if (chatFragment != null) {
+            chatFragment.showBotResponse(text);
+        }
+    }
+
+    @Override
+    public void showUserResponse(String text) {
+        if (chatFragment != null) {
+            chatFragment.showUserResponse(text);
+        }
+
+    }
+
+    @Override
+    public void showExpertResponse(String text) {
+        if (chatFragment != null) {
+            chatFragment.showExpertChatMessage(text);
+        }
+    }
+
+    @Override
+    public void showStatusUpdate(String text) {
+        if (chatFragment != null) {
+            chatFragment.showStatus(text);
+        }
+    }
+
+    @Override
+    public void updateExpertIndicator(String text) {
+        if (chatFragment != null) {
+            chatFragment.showExpertIndicatorWithText(text);
+        }
+    }
+
+    @Override
+    public void hideExpertIndicator() {
+        if (chatFragment != null) {
+            chatFragment.hideExpertIndicator();
+        }
+    }
+
+    @Override
+    public void cancelTestsResponse() {
+        if (chatFragment != null) {
+            chatFragment.cancelTests();
+        }
+    }
+
+    @Override
+    public void showBandwidthViewCard(DataInterpreter.BandwidthGrade bandwidthGrade) {
+        if (chatFragment != null) {
+            chatFragment.addBandwidthResultsCardView(bandwidthGrade);
+        }
+    }
+
+    @Override
+    public void showNetworkInfoViewCard(DataInterpreter.WifiGrade wifiGrade, String isp, String ip) {
+        if (chatFragment != null) {
+            chatFragment.addOverallNetworkResultsCardView(wifiGrade, isp, ip);
+        }
+    }
+
+    @Override
+    public void showUserActionOptions(List<Integer> userResponseTypes) {
+        DobbyLog.v("In showUserActionOptions of MainActivity: responseTypes: " + userResponseTypes);
+        if (chatFragment != null) {
+            chatFragment.showUserActionOptions(userResponseTypes);
+        }
+    }
+
+    @Override
+    public void showDetailedSuggestions(SuggestionCreator.Suggestion suggestion) {
+        DobbyLog.v("In showDetailedSuggestions of MainActivity");
+        if (chatFragment != null) {
+            chatFragment.showDetailedSuggestionsView(suggestion);
+        }
+    }
+
+
+    @Override
+    public void observeBandwidth(BandwidthObserver observer) {
+        if (chatFragment != null) {
+            chatFragment.observeBandwidthNonUi(observer);
+        }
+    }
+
+    //From chatFragment onInteractionListener
+    @Override
+    public void onUserQuery(String text, boolean isButtonActionText) {
+        interactionManager.onUserQuery(text, isButtonActionText);
+    }
+
+    @Override
+    public void onMicPressed() {
+        listen();
+    }
+
+    @Override
+    public void onRecyclerViewReady() {
+        //Get the welcome message
+        DobbyLog.v("MainActivity:onRecyclerViewReady");
+    }
+
+    @Override
+    public void onFirstTimeResumed() {
+        DobbyLog.v("MainActivity:onFirstTimeResumed");
+        interactionManager.onFirstTimeEnteredChat();
+    }
+
+    @Override
+    public void onFragmentGone() {
+        DobbyLog.v("MainActivity:onFragmentGone Setting chatFragment to null");
+        //Setting chat fragment to null
+        chatFragment = null;
+    }
+
+    @Override
+    public void onFragmentReady() {
+        DobbyLog.v("MainActivity:onFragmentReady Setting chatFragment based on tag");
+        //Setting chat fragment here
+        chatFragment = getChatFragmentFromTag();
+        //Don't do resume stuff for now
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == SPEECH_RECOGNITION_REQUEST_CODE) {
+            if (resultCode == RESULT_OK && null != data) {
+                ArrayList<String> res = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                String inSpeech = res.get(0);
+                if (chatFragment != null) {
+                    chatFragment.addSpokenText(inSpeech);
+                }
+                onUserQuery(inSpeech, false);
+            }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
     }
 
     private void processIntent(Intent intent) {
@@ -172,204 +242,38 @@ public class ExpertChatActivity extends AppCompatActivity implements
         }
     }
 
-    private void processUserMessage(String text) {
-        if (!chatInHumanMode) {
-            dobbyAi.sendQuery(text, true);
-        }
+    //Private methods
+
+    private void setupChatFragment() {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.replace(R.id.placeholder_fl,
+                new ChatFragment(), ChatFragment.FRAGMENT_TAG);
+        //fragmentTransaction.addToBackStack(null);
+        fragmentTransaction.commit();
     }
 
-
-    private void fetchChatMessages() {
-        expertChatService.setCallback(this);
-        if (!expertChatService.isListenerConnected()) {
-            recyclerViewAdapter.clear();
-            expertChatService.fetchChatMessages();
-        }
-    }
-
-    @Override
-    public void onMessageAvailable(ExpertChat expertChat) {
-        if (chatInHumanMode && expertChat.getMessageType() == ExpertChat.MSG_TYPE_BOT_TEXT) {
-            //Don't show bot messages when human is in control
-            return;
-        }
-        Message.obtain(handler, MSG_UPDATE_CHAT, expertChat).sendToTarget();
-        saveChatStarted();
-    }
-
-    @Override
-    public void onNoHistoryAvailable() {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                progressBar.setVisibility(View.GONE);
+    private ChatFragment getChatFragmentFromTag() {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        if (fragmentManager != null) {
+            Fragment existingFragment = fragmentManager.findFragmentByTag(ChatFragment.FRAGMENT_TAG);
+            if (existingFragment != null) {
+                return (ChatFragment)existingFragment;
             }
-        });
-    }
-
-    @Override
-    public void onEtaUpdated(long newEtaSeconds, boolean isPresent) {
-        updateEta(newEtaSeconds, isPresent, false);
-    }
-
-
-    //Dobby.AI response callbacks
-    @Override
-    public void showBotResponseToUser(String text) {
-        expertChatService.pushBotChatMessage(text);
-    }
-
-    @Override
-    public void showRtGraph(RtDataSource<Float, Integer> rtDataSource) {
-    }
-
-    @Override
-    public void observeBandwidth(BandwidthObserver observer) {
-    }
-
-    @Override
-    public void cancelTests() {
-    }
-
-    @Override
-    public void showUserActionOptions(List<Integer> userResponseTypes) {
-
-
-    }
-
-    @Override
-    public void showBandwidthViewCard(DataInterpreter.BandwidthGrade bandwidthGrade) {
-
-    }
-
-    @Override
-    public void showNetworkInfoViewCard(DataInterpreter.WifiGrade wifiGrade, String isp, String ip) {
-
-    }
-
-    @Override
-    public void showDetailedSuggestions(SuggestionCreator.Suggestion suggestion) {
-
-    }
-
-    @Override
-    public void contactExpertAndGetETA() {
-
-    }
-
-    @Override
-    public void onUserMessageAvailable(String text, boolean isActionText, boolean sendMessageToExpert) {
-        expertChatService.pushUserChatMessage(text, isActionText, sendMessageToExpert);
-    }
-
-    @Override
-    public void showStatus(String text) {
-    }
-
-    @Override
-    public void switchedToExpertMode() {
-        chatInHumanMode = true;
-    }
-
-    @Override
-    public void switchedToBotMode() {
-        chatInHumanMode = false;
-    }
-
-    @Override
-    public void switchedToExpertIsListeningMode() {
-
-    }
-
-    @Override
-    public void userAskedForExpert() {
-
-    }
-
-    private void updateEta(long newEtaSeconds, boolean isPresent, boolean showInChat) {
-        String messagePrefix = getResources().getString(R.string.expected_response_time_for_expert);
-        String message = EMPTY_STRING;
-        if (!isPresent || newEtaSeconds > ExpertChatService.ETA_12HOURS) {
-            message = "Our experts are currently offline. You shall receive a response in about 12 hours.";
-        } else {
-            message = messagePrefix + " Less than " + Utils.timeSecondsToString(newEtaSeconds);
         }
-        currentEtaSeconds = newEtaSeconds;
-        this.isPresent = isPresent;
-        Message.obtain(handler, MSG_UPDATE_ETA, message).sendToTarget();
-        if (showInChat) {
-            addGeneralMessage(message);
+        return null;
+    }
+
+    private void listen() {
+        Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        i.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
+        i.putExtra(RecognizerIntent.EXTRA_PROMPT, "Say something");
+
+        try {
+            startActivityForResult(i, SPEECH_RECOGNITION_REQUEST_CODE);
+        } catch (ActivityNotFoundException a) {
+            Toast.makeText(ExpertChatActivity.this, "Your device doesn't support Speech Recognition", Toast.LENGTH_SHORT).show();
         }
-    }
-
-    private void addGeneralMessage(String generalMessage) {
-        ExpertChat expertChat = new ExpertChat();
-        expertChat.setMessageType(ExpertChat.MSG_TYPE_GENERAL_MESSAGE);
-        expertChat.setText(generalMessage);
-        Message.obtain(handler, MSG_UPDATE_CHAT, expertChat).sendToTarget();
-    }
-
-    @Override
-    public void onEtaAvailable(long newEtaSeconds, boolean isPresent) {
-        if (etaTextView != null && etaTextView.getVisibility() == View.INVISIBLE) {
-            updateEta(newEtaSeconds, isPresent, true /* show in chat */);
-        }
-    }
-
-    @Override
-    public boolean handleMessage(Message msg) {
-        switch (msg.what) {
-            case MSG_UPDATE_CHAT:
-                addChatEntry((ExpertChat) msg.obj);
-                return true;
-            case MSG_UPDATE_ETA:
-                showEta((String) msg.obj);
-                return true;
-        }
-        return false;
-    }
-
-    private void showEta(String message) {
-        etaTextView.setText(message);
-        etaTextView.setVisibility(View.VISIBLE);
-        dobbyAnalytics.showETAToUser(message);
-    }
-
-    private void addChatEntry(ExpertChat expertChat) {
-        recyclerViewAdapter.addChatEntry(expertChat);
-        mMessageRecyclerView.smoothScrollToPosition(recyclerViewAdapter.getItemCount());
-        progressBar.setVisibility(View.GONE);
-        if (expertChat.getMessageType() == ExpertChat.MSG_TYPE_USER_TEXT) {
-            dobbyAnalytics.receivedMessageFromUser();
-        } else if (expertChat.getMessageType() == ExpertChat.MSG_TYPE_EXPERT_TEXT) {
-            dobbyAnalytics.receivedMessageFromExpert();
-        } else if (expertChat.getMessageType() == ExpertChat.MSG_TYPE_EXPERT_TEXT) {
-            dobbyAnalytics.receivedMessageFromBot();
-        }
-    }
-
-    @Override
-    protected void onStop() {
-        expertChatService.sendUserLeftMetaMessage();
-        expertChatService.disconnect();
-        expertChatService.unregisterChatCallback();
-        expertChatService.enableNotifications();
-        super.onStop();
-    }
-
-    @Override
-    protected void onStart() {
-        expertChatService.registerToEventBusListener();
-        super.onStart();
-    }
-
-    private void saveChatStarted() {
-        Utils.saveSharedSetting(this,
-                PREF_FIRST_CHAT, Utils.FALSE_STRING);
-    }
-
-    private boolean isFirstChat() {
-        return Boolean.valueOf(Utils.readSharedSetting(this,
-                PREF_FIRST_CHAT, Utils.TRUE_STRING));
     }
 }
