@@ -57,7 +57,7 @@ public class ProdModule {
                                                        DobbyAi dobbyAi) {
 
         ExpertChatService expertChatService = new ExpertChatService(application.getUserUuid(),
-                dobbyAi, dobbyAnalytics, dobbyEventBus);
+                dobbyAnalytics, dobbyEventBus);
         application.getProdComponent().inject(expertChatService);
         return expertChatService;
     }

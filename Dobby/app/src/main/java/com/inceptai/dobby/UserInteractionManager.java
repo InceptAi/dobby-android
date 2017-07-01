@@ -3,10 +3,13 @@ package com.inceptai.dobby;
 import android.app.AlarmManager;
 import android.content.Context;
 
+import com.google.common.eventbus.Subscribe;
 import com.inceptai.dobby.ai.DataInterpreter;
 import com.inceptai.dobby.ai.DobbyAi;
 import com.inceptai.dobby.ai.RtDataSource;
 import com.inceptai.dobby.ai.SuggestionCreator;
+import com.inceptai.dobby.eventbus.DobbyEvent;
+import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.expert.ExpertChat;
 import com.inceptai.dobby.expert.ExpertChatService;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
@@ -46,6 +49,8 @@ public class UserInteractionManager implements
     @Inject DobbyAi dobbyAi;
     @Inject ExpertChatService expertChatService;
     @Inject DobbyThreadpool dobbyThreadpool;
+    @Inject
+    DobbyEventBus dobbyEventBus;
 
     public UserInteractionManager(Context context, InteractionCallback interactionCallback) {
         ((DobbyApplication) context.getApplicationContext()).getProdComponent().inject(this);
@@ -57,6 +62,7 @@ public class UserInteractionManager implements
         expertChatService.setCallback(this);
         dobbyAi.setResponseCallback(this);
         dobbyAi.initChatToBotState(); //Resets booleans indicating which mode of expert are we in
+        dobbyEventBus.registerListener(this);
     }
 
     public interface InteractionCallback {
@@ -95,6 +101,7 @@ public class UserInteractionManager implements
     }
 
     public void cleanup() {
+        dobbyEventBus.unregisterListener(this);
         expertChatIdsDisplayed.clear();
         expertChatService.unregisterChatCallback();
         expertChatService.disconnect();
@@ -287,6 +294,17 @@ public class UserInteractionManager implements
         updateExpertIndicator();
     }
 
+
+    @Override
+    public void expertActionStarted() {
+        expertChatService.sendActionStartedMessage();
+    }
+
+    @Override
+    public void expertActionCompleted() {
+        expertChatService.sendActionCompletedMessage();
+    }
+
     //Private methods
     private String getEtaMessage() {
         String messagePrefix = context.getResources().getString(R.string.expected_response_time_for_expert);
@@ -366,5 +384,11 @@ public class UserInteractionManager implements
         }
     }
 
-
+    //EventBus events
+    @Subscribe
+    public void listenToEventBus(DobbyEvent event) {
+        if (event.getEventType() == DobbyEvent.EventType.EXPERT_ASKED_FOR_ACTION) {
+            dobbyAi.parseMessageFromExpert((String) event.getPayload());
+        }
+    }
 }

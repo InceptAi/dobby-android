@@ -121,6 +121,8 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         void switchedToBotMode();
         void switchedToExpertIsListeningMode();
         void userAskedForExpert();
+        void expertActionStarted();
+        void expertActionCompleted();
     }
 
     @Inject
@@ -516,6 +518,14 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         responseCallback = null;
     }
 
+    public void parseMessageFromExpert(String expertMessage) {
+        if (expertMessage.startsWith("#")) {
+            parseExpertTextAndTakeActionIfNeeded(expertMessage);
+        }
+    }
+
+    //private methods
+
     private boolean isQueryRequestForHumanExpert(String text) {
         return (text.toLowerCase().contains("contact human"));
     }
@@ -850,6 +860,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
 
     public void performAndRecordPingAction() {
         final ComposableOperation ping = pingOperation();
+        sendCallbackForExpertActionStarted();
         //Clear the cache of results first
         clearCache();
         ping.getFuture().addListener(new Runnable() {
@@ -857,7 +868,6 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             public void run() {
                 DataInterpreter.PingGrade pingGrade = new DataInterpreter.PingGrade();
                 try {
-                    eventBus.postEvent(DobbyEvent.EventType.EXPERT_ACTION_STARTED);
                     OperationResult result = ping.getFuture().get();
                     DobbyLog.v("DobbyAI: Getting result for pingFuture");
                     HashMap<String, PingStats> payload = (HashMap<String, PingStats>) result.getPayload();
@@ -878,7 +888,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                     pingGrade = DataInterpreter.interpret(null, networkLayer.getIpLayerInfo());
                 } finally {
                     writeActionRecord(null, null, pingGrade, null);
-                    eventBus.postEvent(DobbyEvent.EventType.EXPERT_ACTION_STARTED);
+                    sendCallbackForExpertActionCompleted();
                 }
             }
         }, threadpool.getExecutor());
@@ -904,6 +914,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
 
     public void performAndRecordWifiAction() {
         final ComposableOperation wifiScan = wifiScanOperation();
+        sendCallbackForExpertActionStarted();
         //Clear the cache of results first
         clearCache();
         wifiScan.getFuture().addListener(new Runnable() {
@@ -911,7 +922,6 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             public void run() {
                 DataInterpreter.WifiGrade wifiGrade;
                 try {
-                    eventBus.postEvent(DobbyEvent.EventType.EXPERT_ACTION_STARTED);
                     OperationResult result = wifiScan.getFuture().get();
                     DobbyLog.v("DobbyAI: Setting the result for wifiscan");
                 }catch (Exception e) {
@@ -926,12 +936,27 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                             networkLayer.getWifiLinkMode(),
                             networkLayer.getCurrentConnectivityMode());
                     writeActionRecord(null, wifiGrade, null, null);
-                    eventBus.postEvent(DobbyEvent.EventType.EXPERT_ACTION_COMPLETED);
+                    sendCallbackForExpertActionCompleted();
                 }
             }
         }, threadpool.getExecutor());
         wifiScan.post();
     }
+
+    private void sendCallbackForExpertActionStarted() {
+        if (responseCallback != null) {
+            responseCallback.expertActionStarted();
+        }
+        //eventBus.postEvent(DobbyEvent.EventType.EXPERT_ACTION_STARTED);
+    }
+
+    private void sendCallbackForExpertActionCompleted() {
+        if (responseCallback != null) {
+            responseCallback.expertActionCompleted();
+        }
+        //eventBus.postEvent(DobbyEvent.EventType.EXPERT_ACTION_COMPLETED);
+    }
+
 
     private void writeActionRecord(@Nullable DataInterpreter.BandwidthGrade bandwidthGrade,
                                             @Nullable DataInterpreter.WifiGrade wifiGrade,
@@ -987,4 +1012,34 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     }
 
 
+
+    private void parseExpertTextAndTakeActionIfNeeded(String expertMessage) {
+        if (expertMessage.toLowerCase().contains("wifi")) {
+            performAndRecordWifiAction();
+        } else if (expertMessage.toLowerCase().contains("ping")) {
+            performAndRecordPingAction();
+        } else if (expertMessage.toLowerCase().contains("feedback")) {
+            triggerFeedbackRequest();
+        } else if (expertMessage.toLowerCase().contains("bot")) {
+            triggerSwitchToBotMode();
+        } else if (expertMessage.toLowerCase().contains("human")) {
+            triggerSwitchToExpertMode();
+        } else if (expertMessage.toLowerCase().contains("left") ||
+                expertMessage.toLowerCase().contains("early") ||
+                expertMessage.toLowerCase().contains("dropped")) {
+            dobbyAnalytics.setExpertSaysUserDroppedOff();
+        } else if (expertMessage.toLowerCase().contains("good")) {
+            dobbyAnalytics.setExpertSaysGoodInferencing();
+        } else if (expertMessage.toLowerCase().contains("bad")) {
+            dobbyAnalytics.setExpertSaysBadInferencing();
+        }  else if (expertMessage.toLowerCase().contains("unresolved") || expertMessage.toLowerCase().contains("unsolved")) {
+            dobbyAnalytics.setExpertSaysIssueUnResolved();
+        } else if (expertMessage.toLowerCase().contains("solved") || expertMessage.toLowerCase().contains("resolved")) {
+            dobbyAnalytics.setExpertSaysIssueResolved();
+        } else if (expertMessage.toLowerCase().contains("more") || expertMessage.toLowerCase().contains("data")) {
+            dobbyAnalytics.setExpertSaysMoreDataNeeded();
+        } else if (expertMessage.toLowerCase().contains("better")) {
+            dobbyAnalytics.setExpertSaysInferencingCanBeBetter();
+        }
+    }
 }

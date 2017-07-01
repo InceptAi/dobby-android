@@ -5,7 +5,6 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-import static com.inceptai.dobby.eventbus.DobbyEvent.EventType.EXPERT_ACTION_STARTED;
 import static com.inceptai.dobby.eventbus.DobbyEvent.EventType.NO_EVENT_RECEIVED;
 import static com.inceptai.dobby.eventbus.DobbyEvent.EventType.WIFI_STATE_CHANGED;
 
@@ -26,7 +25,7 @@ public class DobbyEvent {
             EventType.BANDWIDTH_TEST_STARTING, EventType.WIFI_SCAN_STARTING,
             EventType.PING_GRADE_AVAILABLE, EventType.GATEWAY_HTTP_GRADE_AVAILABLE, EventType.WIFI_GRADE_AVAILABLE,
             EventType.SUGGESTIONS_AVAILABLE, EventType.WIFI_INTERNET_CONNECTIVITY_CAPTIVE_PORTAL, EventType.BANDWIDTH_GRADE_AVAILABLE,
-            EventType.BANDWIDTH_TEST_FAILED_WIFI_OFFLINE, EventType.EXPERT_ACTION_STARTED, EventType.EXPERT_ACTION_COMPLETED})
+            EventType.BANDWIDTH_TEST_FAILED_WIFI_OFFLINE, EventType.EXPERT_ACTION_STARTED, EventType.EXPERT_ACTION_COMPLETED, EventType.EXPERT_ASKED_FOR_ACTION})
     public @interface EventType {
         //Unknown event type
         int NO_EVENT_RECEIVED = 0;
@@ -81,6 +80,7 @@ public class DobbyEvent {
         //Dobby AI action events
         int EXPERT_ACTION_STARTED = 101;
         int EXPERT_ACTION_COMPLETED = 102;
+        int EXPERT_ASKED_FOR_ACTION = 103;
     }
 
     @DobbyEvent.EventType

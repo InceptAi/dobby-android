@@ -15,7 +15,6 @@ import android.net.Uri;
 import android.support.v4.app.TaskStackBuilder;
 import android.support.v7.app.NotificationCompat;
 
-import com.google.common.eventbus.Subscribe;
 import com.google.firebase.crash.FirebaseCrash;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
@@ -27,7 +26,6 @@ import com.inceptai.dobby.BuildConfig;
 import com.inceptai.dobby.DobbyAnalytics;
 import com.inceptai.dobby.MainActivity;
 import com.inceptai.dobby.R;
-import com.inceptai.dobby.ai.DobbyAi;
 import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.ui.ExpertChatActivity;
@@ -101,7 +99,6 @@ public class ExpertChatService implements
     // TODO Use this field.
     private boolean isChatEmpty;
 
-    DobbyAi dobbyAi;
     DobbyEventBus eventBus;
     DobbyAnalytics dobbyAnalytics;
 
@@ -113,7 +110,6 @@ public class ExpertChatService implements
     }
 
     public ExpertChatService(String userUuid,
-                             DobbyAi dobbyAi,
                              DobbyAnalytics dobbyAnalytics,
                              DobbyEventBus dobbyEventBus) {
         this.userUuid = userUuid;
@@ -125,7 +121,6 @@ public class ExpertChatService implements
         DobbyLog.i("Using chat room ID: " + chatRoomPath);
         isChatEmpty = true;
         currentEtaSeconds = ETA_PRESENT;
-        this.dobbyAi = dobbyAi;
         this.dobbyAnalytics = dobbyAnalytics;
         this.eventBus = dobbyEventBus;
         //Being called in registerToEventBusListener from the activity onStart.
@@ -311,6 +306,15 @@ public class ExpertChatService implements
         pushMessageToExpert(expertChat, shouldShowToExpert);
     }
 
+
+    public void sendActionCompletedMessage() {
+        pushMetaChatMessage(ExpertChat.MSG_TYPE_META_ACTION_COMPLETED);
+    }
+
+    public void sendActionStartedMessage() {
+        pushMetaChatMessage(ExpertChat.MSG_TYPE_META_ACTION_STARTED);
+    }
+
     private void pushMessageToExpert(ExpertChat expertChat, boolean shouldShowToExpert) {
         getChatReference().push().setValue(expertChat);
         if (shouldShowToExpert) {
@@ -491,106 +495,24 @@ public class ExpertChatService implements
         }
     }
 
-    private void sendActionCompletedMessage() {
-        pushMetaChatMessage(ExpertChat.MSG_TYPE_META_ACTION_COMPLETED);
-    }
 
-    private void sendActionStartedMessage() {
-        pushMetaChatMessage(ExpertChat.MSG_TYPE_META_ACTION_STARTED);
-    }
-
-    private void triggerDiagnosticAction(final int actionToTrigger) {
-        switch (actionToTrigger) {
-            case WIFI_SCAN_ACTION:
-                dobbyAi.performAndRecordWifiAction();
-                return;
-            case PING_ACTION:
-                dobbyAi.performAndRecordPingAction();
-                return;
-            case HTTP_ACTION:
-                //no-op for now
-                return;
-            case ALL_TESTS:
-                //no-op for now
-                return;
-            case ASK_FOR_FEEDBACK_ACTION:
-                dobbyAi.triggerFeedbackRequest();
-                break;
-            case SWITCH_TO_HUMAN_MODE:
-                dobbyAi.triggerSwitchToExpertMode();
-                break;
-            case SWITCH_TO_BOT_MODE:
-                dobbyAi.triggerSwitchToBotMode();
-                break;
-            case USER_LEFT_EARLY:
-                dobbyAnalytics.setExpertSaysUserDroppedOff();
-                break;
-            case RESOLVED_USER_QUERY:
-                dobbyAnalytics.setExpertSaysIssueResolved();
-                break;
-            case UNRESOLVED_USER_QUERY:
-                dobbyAnalytics.setExpertSaysIssueUnResolved();
-                break;
-            case NEED_MORE_DATA:
-                dobbyAnalytics.setExpertSaysMoreDataNeeded();
-                break;
-            case GOOD_INFERENCING:
-                dobbyAnalytics.setExpertSaysGoodInferencing();
-                break;
-            case BAD_INFERENCING:
-                dobbyAnalytics.setExpertSaysBadInferencing();
-                break;
-            case BETTER_INFERENCING_NEEDED:
-                dobbyAnalytics.setExpertSaysInferencingCanBeBetter();
-                break;
-        }
-    }
-
-    private boolean parseExpertTextAndTakeActionIfNeeded(ExpertChat expertChat) {
+    private void parseExpertTextAndTakeActionIfNeeded(ExpertChat expertChat) {
         if (expertChat.getMessageType() == ExpertChat.MSG_TYPE_EXPERT_TEXT) {
             String expertMessage = expertChat.getText();
             if (expertMessage.startsWith("#")) {
-                if (expertMessage.toLowerCase().contains("wifi")) {
-                    triggerDiagnosticAction(WIFI_SCAN_ACTION);
-                } else if (expertMessage.toLowerCase().contains("ping")) {
-                    triggerDiagnosticAction(PING_ACTION);
-                } else if (expertMessage.toLowerCase().contains("feedback")) {
-                    triggerDiagnosticAction(ASK_FOR_FEEDBACK_ACTION);
-                } else if (expertMessage.toLowerCase().contains("bot")) {
-                    triggerDiagnosticAction(SWITCH_TO_BOT_MODE);
-                } else if (expertMessage.toLowerCase().contains("human")) {
-                    triggerDiagnosticAction(SWITCH_TO_HUMAN_MODE);
-                } else if (expertMessage.toLowerCase().contains("left") ||
-                        expertMessage.toLowerCase().contains("early") ||
-                        expertMessage.toLowerCase().contains("dropped")) {
-                    triggerDiagnosticAction(USER_LEFT_EARLY);
-                } else if (expertMessage.toLowerCase().contains("good")) {
-                    triggerDiagnosticAction(GOOD_INFERENCING);
-                } else if (expertMessage.toLowerCase().contains("bad")) {
-                    triggerDiagnosticAction(BAD_INFERENCING);
-                }  else if (expertMessage.toLowerCase().contains("unresolved") || expertMessage.toLowerCase().contains("unsolved")) {
-                    triggerDiagnosticAction(UNRESOLVED_USER_QUERY);
-                } else if (expertMessage.toLowerCase().contains("solved") || expertMessage.toLowerCase().contains("resolved")) {
-                    triggerDiagnosticAction(RESOLVED_USER_QUERY);
-                } else if (expertMessage.toLowerCase().contains("more") || expertMessage.toLowerCase().contains("data")) {
-                    triggerDiagnosticAction(NEED_MORE_DATA);
-                } else if (expertMessage.toLowerCase().contains("better")) {
-                    triggerDiagnosticAction(BETTER_INFERENCING_NEEDED);
-                }
-                return true;
+                eventBus.postEvent(DobbyEvent.EventType.EXPERT_ASKED_FOR_ACTION, expertMessage);
             }
         }
-        return false;
     }
 
     //EventBus events
-    @Subscribe
-    public void listenToEventBus(DobbyEvent event) {
-        if (event.getEventType() == DobbyEvent.EventType.EXPERT_ACTION_STARTED) {
-            sendActionStartedMessage();
-        } else if (event.getEventType() == DobbyEvent.EventType.EXPERT_ACTION_COMPLETED) {
-            sendActionCompletedMessage();
-        }
-    }
+//    @Subscribe
+//    public void listenToEventBus(DobbyEvent event) {
+//        if (event.getEventType() == DobbyEvent.EventType.EXPERT_ACTION_STARTED) {
+//            sendActionStartedMessage();
+//        } else if (event.getEventType() == DobbyEvent.EventType.EXPERT_ACTION_COMPLETED) {
+//            sendActionCompletedMessage();
+//        }
+//    }
 
 }
