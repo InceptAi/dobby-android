@@ -39,8 +39,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import javax.inject.Inject;
-
 import static android.support.v4.app.NotificationCompat.VISIBILITY_PUBLIC;
 
 /**
@@ -103,13 +101,8 @@ public class ExpertChatService implements
     // TODO Use this field.
     private boolean isChatEmpty;
 
-    @Inject
     DobbyAi dobbyAi;
-
-    @Inject
     DobbyEventBus eventBus;
-
-    @Inject
     DobbyAnalytics dobbyAnalytics;
 
     public interface ChatCallback {
@@ -119,8 +112,10 @@ public class ExpertChatService implements
         void onEtaAvailable(long newEtaSeconds, boolean isPresent);
     }
 
-    public ExpertChatService(String userUuid, DobbyAi dobbyAi,
-                              DobbyAnalytics dobbyAnalytics, DobbyEventBus dobbyEventBus) {
+    public ExpertChatService(String userUuid,
+                             DobbyAi dobbyAi,
+                             DobbyAnalytics dobbyAnalytics,
+                             DobbyEventBus dobbyEventBus) {
         this.userUuid = userUuid;
         this.chatRoomPath =  CHAT_ROOM_CHILD + "/" + userUuid;
         this.userTokenPath = USER_ROOT + "/" + userUuid + "/" + FCM_KEY;
