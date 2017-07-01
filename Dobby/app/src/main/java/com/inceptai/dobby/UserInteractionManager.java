@@ -45,7 +45,6 @@ public class UserInteractionManager implements
 
     @Inject DobbyAi dobbyAi;
     @Inject ExpertChatService expertChatService;
-    @Inject DobbyApplication dobbyApplication;
     @Inject DobbyThreadpool dobbyThreadpool;
 
     public UserInteractionManager(Context context, InteractionCallback interactionCallback) {
