@@ -81,7 +81,7 @@ public class BestServerSelector {
         Collections.sort(info.serverList, new Comparator<ServerInformation.ServerDetails>() {
             @Override
             public int compare(ServerInformation.ServerDetails d1, ServerInformation.ServerDetails d2) {
-                return (int) (d1.distance - d2.distance);
+                return Double.compare(d1.distance, d2.distance);
             }
         });
         //Take the top MAX_CLOSEST_SERVERS
