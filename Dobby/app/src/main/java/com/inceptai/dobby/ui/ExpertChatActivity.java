@@ -30,6 +30,7 @@ public class ExpertChatActivity extends AppCompatActivity implements
         UserInteractionManager.InteractionCallback,
         ChatFragment.OnFragmentInteractionListener {
     private static final int SPEECH_RECOGNITION_REQUEST_CODE = 102;
+    private static final boolean RESUME_WITH_SUGGESTION_IF_AVAILABLE = true;
     private UserInteractionManager userInteractionManager;
 
     @Inject
@@ -197,7 +198,7 @@ public class ExpertChatActivity extends AppCompatActivity implements
     @Override
     public void onFirstTimeResumed() {
         DobbyLog.v("MainActivity:onFirstTimeResumed");
-        userInteractionManager.onFirstTimeEnteredChat();
+        userInteractionManager.onFirstTimeResumedChat(RESUME_WITH_SUGGESTION_IF_AVAILABLE);
     }
 
     @Override

@@ -45,6 +45,7 @@ public class MainActivity extends AppCompatActivity
         UserInteractionManager.InteractionCallback {
 
     private static final int PERMISSION_COARSE_LOCATION_REQUEST_CODE = 101;
+    private static final boolean RESUME_WITH_SUGGESTION_IF_AVAILABLE = false;
     private static final int SPEECH_RECOGNITION_REQUEST_CODE = 102;
 
     private UserInteractionManager userInteractionManager;
@@ -367,7 +368,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onFirstTimeResumed() {
         DobbyLog.v("MainActivity:onFirstTimeResumed");
-        userInteractionManager.onFirstTimeEnteredChat();
+        userInteractionManager.onFirstTimeResumedChat(RESUME_WITH_SUGGESTION_IF_AVAILABLE);
     }
 
     @Override

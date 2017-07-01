@@ -110,13 +110,13 @@ public class UserInteractionManager implements
         dobbyAi.initChatToBotState();
     }
 
-    public void onFirstTimeEnteredChat() {
+    public void onFirstTimeResumedChat(final boolean resumeWithSuggestionIfAvailable) {
         DobbyLog.v("MainActivity:onFirstTimeResumed");
         if (dobbyAi != null) {
             scheduledExecutorService.schedule(new Runnable() {
                 @Override
                 public void run() {
-                    dobbyAi.sendWelcomeEvent();
+                    dobbyAi.sendWelcomeEvent(resumeWithSuggestionIfAvailable);
                 }
             }, DELAY_BEFORE_WELCOME_MESSAGE_MS, TimeUnit.MILLISECONDS);
         }

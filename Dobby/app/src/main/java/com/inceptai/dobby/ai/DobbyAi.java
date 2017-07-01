@@ -487,10 +487,14 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         }
     }
 
-    public void sendWelcomeEvent() {
+    public void sendWelcomeEvent(boolean resumeWithSuggestionIfPossible) {
         if (useApiAi) {
             if (!chatInExpertMode) {
-                apiAiClient.processTextQueryOffline(null, ApiAiClient.APIAI_WELCOME_EVENT, getLastAction(), this);
+                if (resumeWithSuggestionIfPossible && lastSuggestion != null) {
+                    takeAction(new Action(Utils.EMPTY_STRING, ACTION_TYPE_SHOW_SHORT_SUGGESTION));
+                } else {
+                    apiAiClient.processTextQueryOffline(null, ApiAiClient.APIAI_WELCOME_EVENT, getLastAction(), this);
+                }
             }
 //            if (resumedWithExpertMode) {
 //                //apiAiClient.resetContexts();
