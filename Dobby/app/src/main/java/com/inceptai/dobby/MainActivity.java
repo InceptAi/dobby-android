@@ -47,9 +47,9 @@ public class MainActivity extends AppCompatActivity
     private static final int PERMISSION_COARSE_LOCATION_REQUEST_CODE = 101;
     private static final int SPEECH_RECOGNITION_REQUEST_CODE = 102;
 
+    private InteractionManager interactionManager;
     @Inject DobbyAnalytics dobbyAnalytics;
     @Inject HeartBeatManager heartBeatManager;
-    @Inject InteractionManager interactionManager;
 
     private ChatFragment chatFragment;
     private boolean isTaskRoot = true;
@@ -85,6 +85,9 @@ public class MainActivity extends AppCompatActivity
             return;
         }
 
+        interactionManager = new InteractionManager(getApplicationContext(), this);
+        heartBeatManager.setDailyHeartBeat();
+
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -103,10 +106,7 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         setupChatFragment();
-        interactionManager.setInteractionCallback(this);
-        //TODO: Do we need this ?
-        interactionManager.initChatToBotState();
-        heartBeatManager.setDailyHeartBeat();
+
     }
 
     private ChatFragment getChatFragmentFromTag() {
@@ -118,27 +118,6 @@ public class MainActivity extends AppCompatActivity
             }
         }
         return null;
-    }
-
-    private Fragment setupFragment(Class fragmentClass, String tag) {
-
-        // Insert the fragment by replacing any existing fragment
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        Fragment existingFragment = fragmentManager.findFragmentByTag(tag);
-        if (existingFragment == null) {
-            try {
-                existingFragment = (Fragment) fragmentClass.newInstance();
-            } catch (Exception e) {
-                DobbyLog.e("Unable to create fragment: " + fragmentClass.getCanonicalName());
-                return null;
-            }
-        }
-        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.replace(R.id.placeholder_fl,
-                existingFragment, tag);
-        //fragmentTransaction.addToBackStack(null);
-        fragmentTransaction.commit();
-        return existingFragment;
     }
 
     private void setupChatFragment() {

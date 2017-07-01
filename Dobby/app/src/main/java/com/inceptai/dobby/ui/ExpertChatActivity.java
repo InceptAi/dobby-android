@@ -30,11 +30,10 @@ public class ExpertChatActivity extends AppCompatActivity implements
         InteractionManager.InteractionCallback,
         ChatFragment.OnFragmentInteractionListener {
     private static final int SPEECH_RECOGNITION_REQUEST_CODE = 102;
+    private InteractionManager interactionManager;
 
     @Inject
     DobbyAnalytics dobbyAnalytics;
-    @Inject
-    InteractionManager interactionManager;
 
     private ChatFragment chatFragment;
 
@@ -44,10 +43,7 @@ public class ExpertChatActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_wifidoc_expert_chat);
         setupChatFragment();
-
-        interactionManager.setInteractionCallback(this);
-        interactionManager.initChatToBotState(); //Resets booleans indicating which mode of expert are we in
-
+        interactionManager = new InteractionManager(getApplicationContext(), this);
         if (interactionManager.isFirstChatAfterInstall()) {
             WifiDocDialogFragment fragment = WifiDocDialogFragment.forExpertOnBoarding();
             fragment.show(getSupportFragmentManager(), "Wifi Expert Chat");

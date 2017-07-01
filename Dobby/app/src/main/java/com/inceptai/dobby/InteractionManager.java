@@ -20,13 +20,11 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 
 /**
  * Created by vivek on 6/30/17.
  */
 
-@Singleton
 public class InteractionManager implements
         DobbyAi.ResponseCallback,
         ExpertChatService.ChatCallback {
@@ -44,26 +42,22 @@ public class InteractionManager implements
     private boolean expertIsPresent = false;
     private ScheduledExecutorService scheduledExecutorService;
     private Set<String> expertChatIdsDisplayed;
-    private DobbyAi dobbyAi;
-    private ExpertChatService expertChatService;
-    private DobbyAnalytics dobbyAnalytics;
 
-    @Inject
-    public InteractionManager(DobbyApplication dobbyApplication, DobbyThreadpool dobbyThreadpool,
-                              DobbyAi dobbyAi, ExpertChatService expertChatService,
-                              DobbyAnalytics dobbyAnalytics) {
+    @Inject DobbyAi dobbyAi;
+    @Inject ExpertChatService expertChatService;
+    @Inject DobbyApplication dobbyApplication;
+    @Inject DobbyThreadpool dobbyThreadpool;
+
+    public InteractionManager(Context context, InteractionCallback interactionCallback) {
+        ((DobbyApplication) context.getApplicationContext()).getProdComponent().inject(this);
+        this.context = context;
         currentEtaSeconds = 0;
-        context = dobbyApplication.getApplicationContext();
         scheduledExecutorService = dobbyThreadpool.getScheduledExecutorService();
         expertChatIdsDisplayed = new HashSet<>();
-
-        this.dobbyAi = dobbyAi;
-        this.dobbyAi.setResponseCallback(this);
-        this.dobbyAi.initChatToBotState(); //Resets booleans indicating which mode of expert are we in
-
-        this.expertChatService = expertChatService;
-        this.dobbyAnalytics = dobbyAnalytics;
-        //fetch chat messages ?
+        this.interactionCallback = interactionCallback;
+        expertChatService.setCallback(this);
+        dobbyAi.setResponseCallback(this);
+        dobbyAi.initChatToBotState(); //Resets booleans indicating which mode of expert are we in
     }
 
     public interface InteractionCallback {
@@ -87,15 +81,7 @@ public class InteractionManager implements
     }
 
     //API calls
-    public void setInteractionCallback(InteractionCallback interactionCallback) {
-        if (dobbyAi != null) {
-            dobbyAi.setResponseCallback(this);
-        }
-        this.interactionCallback = interactionCallback;
-    }
-
     public void onUserEnteredChat() {
-
         fetchChatMessages();
         expertChatService.checkIn(context);
         expertChatService.registerToEventBusListener();
