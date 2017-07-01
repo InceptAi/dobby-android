@@ -46,9 +46,12 @@ public class UserInteractionManager implements
     private ScheduledExecutorService scheduledExecutorService;
     private Set<String> expertChatIdsDisplayed;
 
-    @Inject DobbyAi dobbyAi;
-    @Inject ExpertChatService expertChatService;
-    @Inject DobbyThreadpool dobbyThreadpool;
+    @Inject
+    DobbyAi dobbyAi;
+    @Inject
+    ExpertChatService expertChatService;
+    @Inject
+    DobbyThreadpool dobbyThreadpool;
     @Inject
     DobbyEventBus dobbyEventBus;
 

@@ -4,7 +4,6 @@ import com.inceptai.dobby.DobbyAnalytics;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.NetworkLayer;
-import com.inceptai.dobby.ai.DobbyAi;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.expert.ExpertChatService;
 
@@ -53,8 +52,7 @@ public class ProdModule {
     @Provides
     public ExpertChatService providesExpertChatService(DobbyApplication application,
                                                        DobbyAnalytics dobbyAnalytics,
-                                                       DobbyEventBus dobbyEventBus,
-                                                       DobbyAi dobbyAi) {
+                                                       DobbyEventBus dobbyEventBus) {
 
         ExpertChatService expertChatService = new ExpertChatService(application.getUserUuid(),
                 dobbyAnalytics, dobbyEventBus);
