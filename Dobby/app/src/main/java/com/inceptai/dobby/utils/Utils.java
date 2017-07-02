@@ -941,4 +941,20 @@ public class Utils {
         phoneInfo.put("product", Build.PRODUCT);
         return convertHashMapToJson(phoneInfo);
     }
+
+    public static String getWifiManufacturer(String mac) {
+        final int dataLengthToReadMs = 500;
+        final int connectionTimeOutMs = 1000;
+        final int readTimeOutMs = 1000;
+        final String macToVendorUrl = "http://api.macvendors.com/" + mac;
+        String manufacturer = Utils.EMPTY_STRING;
+        try {
+            manufacturer = Utils.getDataFromUrlWithTimeouts(macToVendorUrl, dataLengthToReadMs,
+                    readTimeOutMs, connectionTimeOutMs);
+        } catch (IOException e) {
+            DobbyLog.v("Exception while getting manufacturer");
+        }
+        return manufacturer;
+    }
+
 }

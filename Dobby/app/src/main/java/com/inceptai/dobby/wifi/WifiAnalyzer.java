@@ -198,7 +198,7 @@ public class WifiAnalyzer {
                     try {
                         List<ScanResult> wifiList = wifiManager.getScanResults();
                         combinedScanResult.addAll(wifiList);
-                        printScanResults(wifiList);
+                        //printScanResults(wifiList);
                     } catch (SecurityException e) {
                         DobbyLog.e("Security exception while getting scan results: " + e);
                         setWifiScanFuture(combinedScanResult);
@@ -299,7 +299,7 @@ public class WifiAnalyzer {
             info = wifiManager.getConnectionInfo();
         }
         //Convert to DobbyWifiInfo
-        DobbyWifiInfo dobbyWifiInfo = new DobbyWifiInfo(info);;
+        DobbyWifiInfo dobbyWifiInfo = new DobbyWifiInfo(info);
         wifiState.updateWifiStats(dobbyWifiInfo, null);
     }
 
