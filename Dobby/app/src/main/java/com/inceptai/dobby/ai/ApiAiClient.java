@@ -174,7 +174,7 @@ public class ApiAiClient implements AIListener {
                 } else if (lastAction == ACTION_TYPE_ASK_FOR_RESUMING_EXPERT_CHAT) {
                     actionToReturn = new Action("No worries, I can help you if you have questions about " +
                             "your network. You can say things like \"run tests\" or  " +
-                            "or \"why is my wifi slow\" etc. You can also contact a real Wifi expert for your problem by saying \"Contact expert\"" ,
+                            "or \"why is my wifi slow\" etc." ,
                             Action.ActionType.ACTION_TYPE_SET_CHAT_TO_BOT_MODE);
                 } else {
                         actionToReturn = new Action("No worries, I am cancelling the tests. " +
@@ -212,8 +212,7 @@ public class ApiAiClient implements AIListener {
             } else {
                 //Default fallback
                 actionToReturn = new Action("I'm sorry, I don't support that yet. " +
-                        "You can say things like \"Run speed test\", \"why is my wifi slow\". You can also " +
-                        "just say \"Contact expert\" and I can connect you to a Wifi expert who can help with your problem",
+                        "You can say things like \"Run speed test\", \"why is my wifi slow\".",
                         Action.ActionType.ACTION_TYPE_DEFAULT_FALLBACK);
             }
         } else if (event != null && ! event.equals(Utils.EMPTY_STRING)) {
@@ -223,7 +222,7 @@ public class ApiAiClient implements AIListener {
                 //Handle the case when user exited in expert mode.
                 actionToReturn = new Action("Hi there,  I can help you if you have questions about " +
                         "your network. You can say things like \"run tests\" or  " +
-                        "or \"why is my internet slow\" etc. You can also contact a real Wifi expert for your problem by saying \"Contact expert\" ",
+                        "or \"why is my internet slow\" etc.",
                         Action.ActionType.ACTION_TYPE_WELCOME);
             } else if (event.equals(APIAI_SHORT_SUGGESTION_SHOWN_EVENT)) {
                 actionToReturn = new Action("Do you want more details on this analysis ?",

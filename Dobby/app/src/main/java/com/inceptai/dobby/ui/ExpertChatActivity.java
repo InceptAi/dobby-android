@@ -31,6 +31,9 @@ public class ExpertChatActivity extends AppCompatActivity implements
         ChatFragment.OnFragmentInteractionListener {
     private static final int SPEECH_RECOGNITION_REQUEST_CODE = 102;
     private static final boolean RESUME_WITH_SUGGESTION_IF_AVAILABLE = true;
+    private static final boolean SHOW_CONTACT_HUMAN_BUTTON = false;
+    private static final long BOT_MESSAGE_DELAY_MS = 500;
+
     private UserInteractionManager userInteractionManager;
 
     @Inject
@@ -44,7 +47,7 @@ public class ExpertChatActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_wifidoc_expert_chat);
         setupChatFragment();
-        userInteractionManager = new UserInteractionManager(getApplicationContext(), this);
+        userInteractionManager = new UserInteractionManager(getApplicationContext(), this, SHOW_CONTACT_HUMAN_BUTTON);
         if (userInteractionManager.isFirstChatAfterInstall()) {
             WifiDocDialogFragment fragment = WifiDocDialogFragment.forExpertOnBoarding();
             fragment.show(getSupportFragmentManager(), "Wifi Expert Chat");
@@ -120,10 +123,19 @@ public class ExpertChatActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void updateExpertIndicator(String text) {
+    public void showFillerTypingMessage(String text) {
         if (chatFragment != null) {
-            chatFragment.showExpertIndicatorWithText(text);
+            DobbyLog.v("Sending filler message with no delay");
+            chatFragment.showStatus(text, 0);
         }
+    }
+
+    @Override
+    public void updateExpertIndicator(String text) {
+        //No expert indicator for now.
+//        if (chatFragment != null) {
+//            chatFragment.showExpertIndicatorWithText(text);
+//        }
     }
 
     @Override
@@ -213,6 +225,9 @@ public class ExpertChatActivity extends AppCompatActivity implements
         DobbyLog.v("MainActivity:onFragmentReady Setting chatFragment based on tag");
         //Setting chat fragment here
         chatFragment = getChatFragmentFromTag();
+        if (chatFragment != null) {
+            chatFragment.setBotMessageDelay(BOT_MESSAGE_DELAY_MS);
+        }
         //Don't do resume stuff for now
     }
 

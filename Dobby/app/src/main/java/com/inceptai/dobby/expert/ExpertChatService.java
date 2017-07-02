@@ -291,11 +291,11 @@ public class ExpertChatService implements
     }
 
     public void pushMiscChatMessageToExpert(ExpertChat expertChat) {
-        pushMessageToExpert(expertChat, true);
+        pushMessageToExpert(expertChat);
         dobbyAnalytics.receivedActionFromUser();
     }
 
-    public void pushUserChatMessage(String text, boolean isActionText, boolean shouldShowToExpert) {
+    public void pushUserChatMessage(String text, boolean isActionText) {
         ExpertChat expertChat = new
                 ExpertChat(text, ExpertChat.MSG_TYPE_USER_TEXT);
         if (isActionText) {
@@ -303,7 +303,7 @@ public class ExpertChatService implements
         } else {
             dobbyAnalytics.receivedMessageFromUser();
         }
-        pushMessageToExpert(expertChat, shouldShowToExpert);
+        pushMessageToExpert(expertChat);
     }
 
 
@@ -315,14 +315,12 @@ public class ExpertChatService implements
         pushMetaChatMessage(ExpertChat.MSG_TYPE_META_ACTION_STARTED);
     }
 
-    private void pushMessageToExpert(ExpertChat expertChat, boolean shouldShowToExpert) {
+    private void pushMessageToExpert(ExpertChat expertChat) {
         getChatReference().push().setValue(expertChat);
-        if (shouldShowToExpert) {
-            if (assignedExpertUsername == null || assignedExpertUsername.isEmpty()) {
-                sendExpertNotificationToAll(expertChat);
-            } else {
-                sendExpertNotification(assignedExpertUsername, expertChat);
-            }
+        if (assignedExpertUsername == null || assignedExpertUsername.isEmpty()) {
+            sendExpertNotificationToAll(expertChat);
+        } else {
+            sendExpertNotification(assignedExpertUsername, expertChat);
         }
     }
 
@@ -499,7 +497,7 @@ public class ExpertChatService implements
     private void parseExpertTextAndTakeActionIfNeeded(ExpertChat expertChat) {
         if (expertChat.getMessageType() == ExpertChat.MSG_TYPE_EXPERT_TEXT) {
             String expertMessage = expertChat.getText();
-            if (expertMessage.startsWith("#")) {
+            if (expertMessage.startsWith(ExpertChat.SPECIAL_MESSAGE_PREFIX)) {
                 eventBus.postEvent(DobbyEvent.EventType.EXPERT_ASKED_FOR_ACTION, expertMessage);
             }
         }

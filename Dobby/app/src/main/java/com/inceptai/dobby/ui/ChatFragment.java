@@ -97,9 +97,10 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     private static final int BW_SERVER_INFO_FETCHED = 204;
     private static final int BW_BEST_SERVER_DETERMINED = 205;
     private static final int BW_IDLE = 207;
-    private static final int DELAY_FOR_DOBBY_MESSAGES_MS = 0;
 
     // TODO: Rename and change types of parameters
+    private long botMessageDelay = 0;
+    private long lastBotMessageScheduledAt = 0;
     private String mParam1;
     private String mParam2;
 
@@ -342,6 +343,10 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         createdFirstTime = false;
     }
 
+    public void setBotMessageDelay(long botMessageDelay) {
+        this.botMessageDelay = botMessageDelay;
+    }
+
     public void showExpertIndicatorWithText(String text) {
         Message.obtain(handler, MSG_SHOW_EXPERT_INDICATOR, text).sendToTarget();
     }
@@ -391,7 +396,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
             public void run() {
                 Message.obtain(handler, MSG_SHOW_BANDWIDTH_RESULT_CARDVIEW, bandwidthGrade).sendToTarget();
             }
-        }, DELAY_FOR_DOBBY_MESSAGES_MS);
+        }, botMessageDelay);
         //Message.obtain(handler, MSG_SHOW_BANDWIDTH_RESULT_CARDVIEW, bandwidthGrade).sendToTarget();
     }
 
@@ -402,7 +407,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
             public void run() {
                 Message.obtain(handler, MSG_SHOW_OVERALL_NETWORK_STATUS, new OverallNetworkInfo(wifiGrade, ispName, externalIp)).sendToTarget();
             }
-        }, DELAY_FOR_DOBBY_MESSAGES_MS);
+        }, botMessageDelay);
         //Message.obtain(handler, MSG_SHOW_OVERALL_NETWORK_STATUS, new OverallNetworkInfo(wifiGrade, ispName, externalIp)).sendToTarget();
     }
 
@@ -412,18 +417,25 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
             public void run() {
                 Message.obtain(handler, MSG_SHOW_BW_GAUGE, observer).sendToTarget();
             }
-        }, DELAY_FOR_DOBBY_MESSAGES_MS);
+        }, botMessageDelay);
         //Message.obtain(handler, MSG_SHOW_BW_GAUGE, observer).sendToTarget();
     }
 
     public void showBotResponse(final String text) {
         DobbyLog.v("ChatF: showBotResponse text " + text);
+        showStatus(getString(R.string.agent_is_typing), 0);
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 Message.obtain(handler, MSG_SHOW_DOBBY_CHAT, text).sendToTarget();
             }
-        }, DELAY_FOR_DOBBY_MESSAGES_MS);
+        }, botMessageDelay);
+//        handler.postDelayed(new Runnable() {
+//            @Override
+//            public void run() {
+//                Message.obtain(handler, MSG_SHOW_DOBBY_CHAT, text).sendToTarget();
+//            }
+//        }, computeDelayForNextBotMessage());
         //Message.obtain(handler, MSG_SHOW_DOBBY_CHAT, text).sendToTarget();
     }
 
@@ -434,7 +446,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
             public void run() {
                 Message.obtain(handler, MSG_SHOW_USER_CHAT, text).sendToTarget();
             }
-        }, DELAY_FOR_DOBBY_MESSAGES_MS);
+        }, botMessageDelay);
         //Message.obtain(handler, MSG_SHOW_DOBBY_CHAT, text).sendToTarget();
     }
 
@@ -444,10 +456,16 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         Message.obtain(handler, MSG_SHOW_RT_GRAPH, rtDataSource).sendToTarget();
     }
 
-    public void showUserActionOptions(List<Integer> userResponseTypes) {
+    public void showUserActionOptions(final List<Integer> userResponseTypes) {
         DobbyLog.v("In showUserActionOptions of CF: responseTypes: " + userResponseTypes);
         //Show all the buttons programatically and tie the response to send the user query
-        Message.obtain(handler, MSG_SHOW_USER_ACTION_BUTTONS, userResponseTypes).sendToTarget();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                Message.obtain(handler, MSG_SHOW_USER_ACTION_BUTTONS, userResponseTypes).sendToTarget();
+            }
+        }, botMessageDelay);
+        //Message.obtain(handler, MSG_SHOW_USER_ACTION_BUTTONS, userResponseTypes).sendToTarget();
     }
 
     public void showExpertChatMessage(final String text) {
@@ -456,7 +474,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
             public void run() {
                 Message.obtain(handler, MSG_SHOW_EXPERT_CHAT, text).sendToTarget();
             }
-        }, DELAY_FOR_DOBBY_MESSAGES_MS);
+        }, botMessageDelay);
         //Message.obtain(handler, MSG_SHOW_EXPERT_CHAT, text).sendToTarget();
     }
 
@@ -559,6 +577,18 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         }
     }
 
+    private long computeDelayForNextBotMessage() {
+        long currentSystemTimeInMillis = System.currentTimeMillis();
+        long delay = 0;
+        if (currentSystemTimeInMillis < lastBotMessageScheduledAt) {
+            delay = (lastBotMessageScheduledAt - currentSystemTimeInMillis) + botMessageDelay;
+        } else {
+            delay = botMessageDelay;
+        }
+        lastBotMessageScheduledAt = currentSystemTimeInMillis + delay;
+        return delay;
+    }
+
     private void showBandwidthResultsCardView(double uploadMbps, double downloadMbps) {
         ChatEntry chatEntry = new ChatEntry(Utils.EMPTY_STRING, ChatEntry.BW_RESULTS_GAUGE_CARDVIEW);
         chatEntry.setBandwidthResults(uploadMbps, downloadMbps);
@@ -629,15 +659,19 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         }
     }
 
-    public void showStatus(final String message) {
+    public void showStatus(final String message, long delay) {
         DobbyLog.v("ChatF: showStatus text " + message);
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 Message.obtain(handler, MSG_SHOW_STATUS, message).sendToTarget();
             }
-        }, DELAY_FOR_DOBBY_MESSAGES_MS);
+        }, delay);
         //Message.obtain(handler, MSG_SHOW_STATUS, message).sendToTarget();
+    }
+
+    public void showStatus(final String message) {
+        showStatus(message, botMessageDelay);
     }
 
     private void addExpertChat(String expertChatText) {

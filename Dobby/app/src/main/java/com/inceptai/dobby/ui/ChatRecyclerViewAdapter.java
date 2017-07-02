@@ -11,6 +11,7 @@ import com.inceptai.dobby.R;
 import com.inceptai.dobby.utils.DobbyLog;
 
 import java.util.List;
+
 /**
  * Created by arunesh on 3/28/17.
  */
@@ -33,7 +34,7 @@ public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
 
     public void addEntryAtBottom(ChatEntry entry) {
         ChatEntry lastChatEntry = null;
-        if (entryList.size() > 1) {
+        if (entryList.size() >= 1) {
             lastChatEntry = entryList.get(entryList.size() - 1);
         }
         if (lastChatEntry != null && lastChatEntry.isTestStatusMessage()) {
@@ -170,7 +171,11 @@ public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
 
     @Override
     public void onViewRecycled(RecyclerView.ViewHolder holder) {
+        super.onViewRecycled(holder);
         int position = holder.getAdapterPosition();
+        if (position == RecyclerView.NO_POSITION) {
+            return;
+        }
         ChatEntry entry = entryList.get(position);
         if (entry != null && entry.getEntryType() == ChatEntry.RT_GRAPH) {
             // Special logic to unbind this view from its data source.
@@ -178,6 +183,5 @@ public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
                 ((RtGraphViewHolder) holder).unlinkDataSource();
             }
         }
-        super.onViewRecycled(holder);
      }
 }

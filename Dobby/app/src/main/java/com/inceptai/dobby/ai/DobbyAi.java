@@ -16,6 +16,7 @@ import com.inceptai.dobby.database.FailureDatabaseWriter;
 import com.inceptai.dobby.database.InferenceDatabaseWriter;
 import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
+import com.inceptai.dobby.expert.ExpertChat;
 import com.inceptai.dobby.model.PingStats;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.speedtest.BandwidthResult;
@@ -25,7 +26,6 @@ import com.inceptai.dobby.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -90,7 +90,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     private boolean userAskedForHumanExpert = false;
     private boolean chatInExpertMode = false;
     private boolean isExpertListening = false;
-    private boolean resumedWithExpertMode = false;
+    private boolean showContactHumanButton = true;
 
 
 
@@ -115,7 +115,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         void showNetworkInfoViewCard(DataInterpreter.WifiGrade wifiGrade, String isp, String ip);
         void showDetailedSuggestions(SuggestionCreator.Suggestion suggestion);
         void contactExpertAndGetETA();
-        void onUserMessageAvailable(String text, boolean isActionText, boolean sendMessageToExpert);
+        void onUserMessageAvailable(String text, boolean isActionText);
         void showStatus(String text);
         void switchedToExpertMode();
         void switchedToBotMode();
@@ -156,6 +156,14 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         this.responseCallback = responseCallback;
     }
 
+    public boolean isShowContactHumanButton() {
+        return showContactHumanButton;
+    }
+
+    public void setShowContactHumanButton(boolean showContactHumanButton) {
+        this.showContactHumanButton = showContactHumanButton;
+    }
+
     @Override
     public void onResult(final Action action, @Nullable final Result result) {
         // Thread switch (to release any Api.Ai threads).
@@ -178,7 +186,6 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         userAskedForHumanExpert = false;
         chatInExpertMode = false;
         isExpertListening = false;
-        resumedWithExpertMode = false;
     }
     
     public boolean getIsExpertListening() {
@@ -203,11 +210,6 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         DobbyLog.v("In takeAction with action: " + action.getAction() + " and user resp: " + action.getUserResponse());
         setLastAction(action.getAction());
         showMessageToUser(action.getUserResponse());
-
-        //Suppress non-action messages from bot when the expert is talking to the user.
-        //if (!(chatInExpertMode && Action.isNonEssentialAction(action))) {
-        //    showMessageToUser(action.getUserResponse());
-        //}
 
         if (responseCallback != null) {
             responseCallback.showUserActionOptions(getPotentialUserResponses(lastAction));
@@ -360,12 +362,8 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 }
                 break;
             case ACTION_TYPE_CONTACT_HUMAN_EXPERT:
-                //We are here and we have the results. Now tell the user ETA and next steps.
-                //chatInExpertMode = true;
                 setChatInExpertMode();
-                //Fulfilled the request to contact expert, so setting to false.
                 userAskedForHumanExpert = false;
-                //showMessageToUser(expertContactMessage);
                 if (responseCallback != null) {
                     responseCallback.contactExpertAndGetETA();
                 }
@@ -412,10 +410,6 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         }
     }
 
-    public void setChatResumedInExpertMode() {
-         resumedWithExpertMode = true;
-    }
-
     public void setChatInExpertMode() {
         chatInExpertMode = true;
         if (responseCallback != null) {
@@ -449,7 +443,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
 
         if (responseCallback != null) {
             DobbyLog.v("DobbyAi: onUserMessageAvailable with text " + text);
-            responseCallback.onUserMessageAvailable(text, isButtonActionText, chatInExpertMode);
+            responseCallback.onUserMessageAvailable(text, isButtonActionText);
         }
 
         if (useApiAi) {
@@ -489,15 +483,20 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         }
     }
 
-    public void sendWelcomeEvent(boolean resumeWithSuggestionIfPossible) {
+    public void sendWelcomeEvent(boolean resumeWithSuggestionIfPossible, boolean resumedWithExpertMode) {
         if (useApiAi) {
-            if (!chatInExpertMode) {
-                if (resumeWithSuggestionIfPossible && lastSuggestion != null) {
+            if (resumeWithSuggestionIfPossible) {
+                if (lastSuggestion != null) {
                     takeAction(new Action(Utils.EMPTY_STRING, ACTION_TYPE_SHOW_SHORT_SUGGESTION));
-                } else {
+                } else if (!resumedWithExpertMode){
+                    apiAiClient.processTextQueryOffline(null, ApiAiClient.APIAI_WELCOME_EVENT, getLastAction(), this);
+                }
+            } else {
+                if (!chatInExpertMode) {
                     apiAiClient.processTextQueryOffline(null, ApiAiClient.APIAI_WELCOME_EVENT, getLastAction(), this);
                 }
             }
+
 //            if (resumedWithExpertMode) {
 //                //apiAiClient.resetContexts();
 //                apiAiClient.sendTextQuery(null, ApiAiClient.APIAI_WELCOME_AND_RESUME_EXPERT_EVENT, getLastAction(), this);
@@ -519,7 +518,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     }
 
     public void parseMessageFromExpert(String expertMessage) {
-        if (expertMessage.startsWith("#")) {
+        if (expertMessage.startsWith(ExpertChat.SPECIAL_MESSAGE_PREFIX)) {
             parseExpertTextAndTakeActionIfNeeded(expertMessage);
         }
     }
@@ -573,7 +572,9 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
 //                responseList.add(UserResponse.ResponseType.RUN_WIFI_TESTS);
                 break;
             case ACTION_TYPE_CONTACT_HUMAN_EXPERT:
+                responseList.add(UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS);
                 responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
+                responseList.add(UserResponse.ResponseType.RUN_WIFI_TESTS);
                 break;
             case ACTION_TYPE_WELCOME:
             case ACTION_TYPE_NONE:
@@ -595,26 +596,28 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             responseList.add(UserResponse.ResponseType.SHOW_LAST_SUGGESTION_DETAILS);
         }
 
-        if (!responseList.contains(UserResponse.ResponseType.CANCEL) &&
-                !userAskedForHumanExpert &&
-                !chatInExpertMode &&
-                lastAction != ACTION_TYPE_CONTACT_HUMAN_EXPERT) {
-            responseList.add(UserResponse.ResponseType.CONTACT_HUMAN_EXPERT);
-        }
-
-        //Special case since, chatInExpertMode is not properly yet
-        if (!responseList.contains(UserResponse.ResponseType.CONTACT_HUMAN_EXPERT) && lastActionShownToUser == ACTION_TYPE_SET_CHAT_TO_BOT_MODE) {
-            responseList.add(UserResponse.ResponseType.CONTACT_HUMAN_EXPERT);
-        }
-
-        if (userAskedForHumanExpert || chatInExpertMode) {
-            for (Iterator<Integer> iter = responseList.listIterator(); iter.hasNext(); ) {
-                Integer responseType = iter.next();
-                if (responseType == UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS || responseType == UserResponse.ResponseType.RUN_WIFI_TESTS) {
-                    iter.remove();
-                }
+        if (isShowContactHumanButton()) {
+            if (!responseList.contains(UserResponse.ResponseType.CANCEL) &&
+                    !userAskedForHumanExpert &&
+                    !chatInExpertMode &&
+                    lastAction != ACTION_TYPE_CONTACT_HUMAN_EXPERT) {
+                responseList.add(UserResponse.ResponseType.CONTACT_HUMAN_EXPERT);
+            }
+            //Special case since, chatInExpertMode is not properly yet
+            if (!responseList.contains(UserResponse.ResponseType.CONTACT_HUMAN_EXPERT) && lastActionShownToUser == ACTION_TYPE_SET_CHAT_TO_BOT_MODE) {
+                responseList.add(UserResponse.ResponseType.CONTACT_HUMAN_EXPERT);
             }
         }
+
+        //Don't exclude actions for now.
+//        if (userAskedForHumanExpert || chatInExpertMode) {
+//            for (Iterator<Integer> iter = responseList.listIterator(); iter.hasNext(); ) {
+//                Integer responseType = iter.next();
+//                if (responseType == UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS || responseType == UserResponse.ResponseType.RUN_WIFI_TESTS) {
+//                    iter.remove();
+//                }
+//            }
+//        }
 
         //Just an insurance that user will always have a button to press.
         if (responseList.isEmpty()) {

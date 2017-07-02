@@ -47,6 +47,10 @@ public class MainActivity extends AppCompatActivity
     private static final int PERMISSION_COARSE_LOCATION_REQUEST_CODE = 101;
     private static final boolean RESUME_WITH_SUGGESTION_IF_AVAILABLE = false;
     private static final int SPEECH_RECOGNITION_REQUEST_CODE = 102;
+    private static final long BOT_MESSAGE_DELAY_MS = 750;
+
+    private static final boolean SHOW_CONTACT_HUMAN_BUTTON = true;
+
 
     private UserInteractionManager userInteractionManager;
     @Inject DobbyAnalytics dobbyAnalytics;
@@ -86,7 +90,7 @@ public class MainActivity extends AppCompatActivity
             return;
         }
 
-        userInteractionManager = new UserInteractionManager(getApplicationContext(), this);
+        userInteractionManager = new UserInteractionManager(getApplicationContext(), this, SHOW_CONTACT_HUMAN_BUTTON);
         heartBeatManager.setDailyHeartBeat();
 
         setContentView(R.layout.activity_main);
@@ -257,6 +261,12 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    @Override
+    public void showFillerTypingMessage(String text) {
+        if (chatFragment != null) {
+            chatFragment.showStatus(text, 0);
+        }
+    }
 
     //From chatFragment onInteractionListener
     @Override
@@ -383,6 +393,9 @@ public class MainActivity extends AppCompatActivity
         DobbyLog.v("MainActivity:onFragmentReady Setting chatFragment based on tag");
         //Setting chat fragment here
         chatFragment = getChatFragmentFromTag();
+        if (chatFragment != null) {
+            chatFragment.setBotMessageDelay(BOT_MESSAGE_DELAY_MS);
+        }
         //Don't do resume stuff for now
     }
 

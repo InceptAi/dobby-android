@@ -55,7 +55,7 @@ public class UserInteractionManager implements
     @Inject
     DobbyEventBus dobbyEventBus;
 
-    public UserInteractionManager(Context context, InteractionCallback interactionCallback) {
+    public UserInteractionManager(Context context, InteractionCallback interactionCallback, boolean showContactHumanAction) {
         ((DobbyApplication) context.getApplicationContext()).getProdComponent().inject(this);
         this.context = context;
         currentEtaSeconds = 0;
@@ -65,6 +65,7 @@ public class UserInteractionManager implements
         expertChatService.setCallback(this);
         dobbyAi.setResponseCallback(this);
         dobbyAi.initChatToBotState(); //Resets booleans indicating which mode of expert are we in
+        dobbyAi.setShowContactHumanButton(showContactHumanAction);
         dobbyEventBus.registerListener(this);
     }
 
@@ -74,6 +75,8 @@ public class UserInteractionManager implements
         void showUserResponse(String text);
         void showExpertResponse(String text);
         void showStatusUpdate(String text);
+        void showFillerTypingMessage(String text);
+
 
         //Show user action options
         void showUserActionOptions(List<Integer> userResponseTypes);
@@ -120,17 +123,18 @@ public class UserInteractionManager implements
     }
 
     public void onFirstTimeResumedChat(final boolean resumeWithSuggestionIfAvailable) {
+        final boolean resumingInExpertMode = checkSharedPrefForExpertModeResume();
         DobbyLog.v("MainActivity:onFirstTimeResumed");
         if (dobbyAi != null) {
             scheduledExecutorService.schedule(new Runnable() {
                 @Override
                 public void run() {
-                    dobbyAi.sendWelcomeEvent(resumeWithSuggestionIfAvailable);
+                    dobbyAi.sendWelcomeEvent(resumeWithSuggestionIfAvailable, resumingInExpertMode);
                 }
             }, DELAY_BEFORE_WELCOME_MESSAGE_MS, TimeUnit.MILLISECONDS);
-        }
-        if (checkSharedPrefForExpertModeResume()) {
-            dobbyAi.contactExpert();
+            if (resumingInExpertMode) {
+                dobbyAi.contactExpert();
+            }
         }
     }
 
@@ -163,6 +167,8 @@ public class UserInteractionManager implements
         switch (expertChat.getMessageType()) {
             case ExpertChat.MSG_TYPE_EXPERT_TEXT:
                 interactionCallback.showExpertResponse(messageReceived);
+                //Set to expert mode on the first message received from expert
+                dobbyAi.setChatInExpertMode();
                 DobbyLog.v("MainActivity:FirebaseMessage added mesg to ExpertChat");
                 break;
             case ExpertChat.MSG_TYPE_BOT_TEXT:
@@ -172,9 +178,10 @@ public class UserInteractionManager implements
             case ExpertChat.MSG_TYPE_USER_TEXT:
                 DobbyLog.v("MainActivity:FirebaseMessage added mesg to User chat");
                 interactionCallback.showUserResponse(messageReceived);
-                if (!dobbyAi.getIsChatInExpertMode()) {
-                    interactionCallback.showStatusUpdate(context.getString(R.string.agent_is_typing));
-                }
+//                if (!dobbyAi.getIsChatInExpertMode()) {
+//                    DobbyLog.v("Sending filler message");
+//                    interactionCallback.showFillerTypingMessage(context.getString(R.string.agent_is_typing));
+//                }
                 break;
         }
     }
@@ -263,9 +270,9 @@ public class UserInteractionManager implements
     }
 
     @Override
-    public void onUserMessageAvailable(String text, boolean isButtonText, boolean sendMessageToExpert) {
-        DobbyLog.v("Pushing out user message " + text + " send to expert " + (sendMessageToExpert ? Utils.TRUE_STRING : Utils.FALSE_STRING));
-        expertChatService.pushUserChatMessage(text, isButtonText, sendMessageToExpert);
+    public void onUserMessageAvailable(String text, boolean isButtonText) {
+        DobbyLog.v("Pushing out user message " + text);
+        expertChatService.pushUserChatMessage(text, isButtonText);
     }
 
     @Override
