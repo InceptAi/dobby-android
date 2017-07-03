@@ -47,12 +47,12 @@ android {
     productFlavors {
         wifidoc {
             applicationId  "com.inceptai.dobby.wifidoc"
-            versionCode 34
+            versionCode 35
             versionName "2.0.0-wifitester-chat"
         }
         dobby {
             applicationId "com.inceptai.wifiexpert"
-            versionCode 33
+            versionCode 34
             versionName "2.0.5-wifiexpert"
         }
     }
@@ -60,8 +60,8 @@ android {
         release {
             productFlavors.wifidoc.signingConfig signingConfigs.wifidoc_config
             productFlavors.dobby.signingConfig signingConfigs.wifiexpert_config
-            minifyEnabled false
-            useProguard false
+            minifyEnabled true
+            useProguard true
             shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

@@ -28,11 +28,49 @@
 #-keep public class com.inceptai.** {
 #  public protected *;
 #}
-#-keep class com.inceptai.** { *; }
-#-keep class com.google.** { *; }
 #-keep class com.apache.logging.** { *; }
-#-keep class fr.bmartel.** { *; }
-#-keep class javax.** { *; }
-#-keep class ai.api.** { *; }
-#-keep class commons-io.** { *; }
+
+-dontshrink
+-dontoptimize
+-dontpreverify
+-dontskipnonpubliclibraryclasses
+-verbose
+
+-dontwarn javax.management.**
+-dontwarn java.lang.management.**
+-dontwarn org.apache.log4j.**
+-dontwarn org.apache.commons.logging.**
+-dontwarn org.slf4j.**
+-dontwarn org.json.*
+
+-keep class com.inceptai.** { *; }
+-keep class com.google.common.** { *; }
+-keep class fr.bmartel.** { *; }
+-keep class javax.** { *; }
+-keep class ai.api.** { *; }
+-keep class commons-io.** { *; }
 #-keep class java.** { *; }
+
+
+
+-keepclasseswithmembernames class * {
+    native <methods>;
+}
+
+-keepclasseswithmembernames class * {
+    public <init>(android.content.Context, android.util.AttributeSet);
+}
+
+-keepclasseswithmembernames class * {
+    public <init>(android.content.Context, android.util.AttributeSet, int);
+}
+
+-keepclassmembers enum * {
+    public static **[] values();
+    public static ** valueOf(java.lang.String);
+}
+
+
+-keep class * implements android.os.Parcelable {
+  public static final android.os.Parcelable$Creator *;
+}
