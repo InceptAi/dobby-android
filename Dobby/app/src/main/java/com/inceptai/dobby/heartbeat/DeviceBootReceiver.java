@@ -18,6 +18,9 @@ public class DeviceBootReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
+        if (!(context.getApplicationContext() instanceof  DobbyApplication)) {
+            return;
+        }
         ((DobbyApplication) context.getApplicationContext()).getProdComponent().inject(this);
         if (intent.getAction().equals("android.intent.action.BOOT_COMPLETED")) {
             heartBeatManager.setAlarm(context);
