@@ -185,8 +185,13 @@ public class WifiState {
                 return (int) (w1.startTimestampMs - w2.startTimestampMs);
             }
         });
+        long lastStartTs = 0;
+        if (wifiStateTransitions.size() > 0) {
+            lastStartTs = wifiStateTransitions.get(0).startTimestampMs;
+        }
         for (WifiStateInfo wifiStateInfo: wifiStateTransitions) {
-            transitionsToReturn.put(wifiStateInfo.startTimestampMs, wifiStateInfo.detailedState.name());
+            transitionsToReturn.put(wifiStateInfo.startTimestampMs - lastStartTs, wifiStateInfo.detailedState.name());
+            lastStartTs = wifiStateInfo.startTimestampMs;
         }
         return transitionsToReturn;
     }
