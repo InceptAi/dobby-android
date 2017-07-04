@@ -6,10 +6,10 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.google.common.util.concurrent.ListenableFuture;
-import com.inceptai.dobby.DobbyAnalytics;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.NetworkLayer;
+import com.inceptai.dobby.analytics.DobbyAnalytics;
 import com.inceptai.dobby.database.ActionDatabaseWriter;
 import com.inceptai.dobby.database.ActionRecord;
 import com.inceptai.dobby.database.FailureDatabaseWriter;

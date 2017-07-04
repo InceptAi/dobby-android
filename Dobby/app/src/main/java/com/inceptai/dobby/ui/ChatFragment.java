@@ -24,13 +24,13 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.inceptai.dobby.DobbyAnalytics;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.ai.DataInterpreter;
 import com.inceptai.dobby.ai.RtDataSource;
 import com.inceptai.dobby.ai.SuggestionCreator;
 import com.inceptai.dobby.ai.UserResponse;
+import com.inceptai.dobby.analytics.DobbyAnalytics;
 import com.inceptai.dobby.model.BandwidthStats;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.speedtest.BandwidthTestCodes;
@@ -678,7 +678,6 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         ChatEntry chatEntry = new ChatEntry(expertChatText.trim(), ChatEntry.EXPERT_CHAT, false);
         recyclerViewAdapter.addEntryAtBottom(chatEntry);
         chatRv.scrollToPosition(recyclerViewAdapter.getItemCount() - 1);
-        dobbyAnalytics.receivedMessageFromExpert();
     }
 
 

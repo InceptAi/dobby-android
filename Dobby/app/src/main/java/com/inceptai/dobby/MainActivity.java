@@ -25,6 +25,7 @@ import android.widget.Toast;
 
 import com.inceptai.dobby.ai.DataInterpreter;
 import com.inceptai.dobby.ai.SuggestionCreator;
+import com.inceptai.dobby.analytics.DobbyAnalytics;
 import com.inceptai.dobby.expert.ExpertChatService;
 import com.inceptai.dobby.heartbeat.HeartBeatManager;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
@@ -53,7 +54,8 @@ public class MainActivity extends AppCompatActivity
 
 
     private UserInteractionManager userInteractionManager;
-    @Inject DobbyAnalytics dobbyAnalytics;
+    @Inject
+    DobbyAnalytics dobbyAnalytics;
     @Inject HeartBeatManager heartBeatManager;
 
     private ChatFragment chatFragment;

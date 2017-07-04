@@ -10,12 +10,12 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
 
-import com.inceptai.dobby.DobbyAnalytics;
 import com.inceptai.dobby.DobbyApplication;
-import com.inceptai.dobby.UserInteractionManager;
 import com.inceptai.dobby.R;
+import com.inceptai.dobby.UserInteractionManager;
 import com.inceptai.dobby.ai.DataInterpreter;
 import com.inceptai.dobby.ai.SuggestionCreator;
+import com.inceptai.dobby.analytics.DobbyAnalytics;
 import com.inceptai.dobby.expert.ExpertChatService;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.utils.DobbyLog;
@@ -51,7 +51,6 @@ public class ExpertChatActivity extends AppCompatActivity implements
         if (userInteractionManager.isFirstChatAfterInstall()) {
             WifiDocDialogFragment fragment = WifiDocDialogFragment.forExpertOnBoarding();
             fragment.show(getSupportFragmentManager(), "Wifi Expert Chat");
-            dobbyAnalytics.chatActivityEnteredFirstTime();
         }
     }
 
@@ -78,12 +77,10 @@ public class ExpertChatActivity extends AppCompatActivity implements
 
     @Override
     protected void onDestroy() {
-        DobbyLog.v("MainActivity: onDestroy");
+        DobbyLog.v("ExpertChatActivity: onDestroy");
         super.onDestroy();
         userInteractionManager.cleanup();
     }
-
-
 
     @Override
     protected void onNewIntent(Intent intent) {

@@ -2,6 +2,7 @@ package com.inceptai.dobby.expert;
 
 
 public class ExpertChatUtil {
+    private static final long TWENTY_MINS_IN_MS = 20 * 60 * 1000L;
 
     private ExpertChatUtil() {}
 
@@ -25,5 +26,13 @@ public class ExpertChatUtil {
                 expertChat.getMessageType() == ExpertChat.MSG_TYPE_USER_TEXT ||
                 expertChat.getMessageType() == ExpertChat.MSG_TYPE_EXPERT_TEXT ||
                 expertChat.getMessageType() == ExpertChat.MSG_TYPE_BOT_TEXT);
+    }
+
+    public static boolean isMessageFresh(ExpertChat expertChat, long lastChatNumberProcessed) {
+        return(expertChat.getChatNumber() > lastChatNumberProcessed);
+    }
+
+    public static boolean isChatInHumanMode(long lastHumanMessageTimestampMs) {
+        return (System.currentTimeMillis() - lastHumanMessageTimestampMs < TWENTY_MINS_IN_MS);
     }
 }

@@ -57,7 +57,6 @@ public class Utils {
     public static final String DOBBY_FLAVOR = "dobby";
     public static final String PREFERENCES_FILE = BuildConfig.FLAVOR + "_" + BuildConfig.BUILD_TYPE + "_settings";
     public static final String USER_UUID = "userUuid";
-    public static final String PREF_EXPERT_CHAT_TIMESTAMP_MS = "ExpertChatTs";
 
     private static final int READ_TIMEOUT_MS = 5000;
     private static final int CONNECTION_TIMEOUT_MS = 5000;

@@ -20,7 +20,7 @@ import javax.inject.Singleton;
  * Provides an API for logging analytics events.
  */
 @Singleton
-public class NewDobbyAnalytics extends ExpertChatAnalytics {
+public class DobbyAnalytics extends ExpertChatAnalytics {
     private static final String RUN_TESTS_ITEM = "run_tests";
     private static final String BRIEF_SUGGESTIONS_ITEM = "brief_suggestions";
 
@@ -63,12 +63,7 @@ public class NewDobbyAnalytics extends ExpertChatAnalytics {
     private static final String WIFI_EXPERT_CANCEL_BANDWIDTH_TEST_BUTTON_CLICKED = "expert_cancel_tests";
     private static final String WIFI_EXPERT_CONTACT_EXPERT_BUTTON_CLICKED = "contact_expert_clicked";
 
-    private static final String EXPERT_CHAT_ACTIVITY_ENTERED_FIRST_TIME = "expert_chat_first_time";
     private static final String EXPERT_CHAT_CONTINUE_BUTTON_CLICKED = "first_time_chat_continue";
-    private static final String USER_SENT_MESSAGE_TO_EXPERT = "user_sent_msg_to_expert";
-    private static final String USER_RECVD_MESSAGE_FROM_EXPERT = "user_got_msg_from_expert";
-    private static final String USER_RECVD_MESSAGE_FROM_BOT = "user_got_msg_from_bot";
-    private static final String USER_SENT_ACTION = "user_sent_action";
 
 
     //Expert tagges events
@@ -146,8 +141,9 @@ public class NewDobbyAnalytics extends ExpertChatAnalytics {
     private DobbyAnalyticsBackend dobbyAnalyticsBackend;
 
     @Inject
-    NewDobbyAnalytics(DobbyApplication dobbyApplication, DobbyAnalyticsBackend dobbyAnalyticsBackend) {
+    DobbyAnalytics(DobbyApplication dobbyApplication, DobbyAnalyticsBackend dobbyAnalyticsBackend) {
         super(dobbyAnalyticsBackend);
+        this.dobbyAnalyticsBackend = dobbyAnalyticsBackend;
         if (dobbyApplication.isRunningOnEmulator()) {
             dobbyAnalyticsBackend.setUserProperty("isRunningOnEmulator", Utils.TRUE_STRING);
         } else {
@@ -475,47 +471,11 @@ public class NewDobbyAnalytics extends ExpertChatAnalytics {
         dobbyAnalyticsBackend.logEvent(SHARE_RESULT_BUTTON_CLICKED, bundle);
     }
 
-    public void expertChatNotificationShown() {
-        Bundle bundle = new Bundle();
-        dobbyAnalyticsBackend.logEvent(EXPERT_CHAT_NOTIFICATION_SHOWN, bundle);
-    }
-
-    public void expertChatNotificationConsumed() {
-        Bundle bundle = new Bundle();
-        dobbyAnalyticsBackend.logEvent(EXPERT_CHAT_NOTIFICATION_CONSUMED, bundle);
-    }
-
-    public void receivedMessageFromUser() {
-        Bundle bundle = new Bundle();
-        dobbyAnalyticsBackend.logEvent(USER_SENT_MESSAGE_TO_EXPERT, bundle);
-    }
-
-    public void receivedActionFromUser() {
-        Bundle bundle = new Bundle();
-        dobbyAnalyticsBackend.logEvent(USER_SENT_ACTION, bundle);
-    }
-
     public void showETAToUser(String text) {
         Bundle bundle = new Bundle();
         bundle.putString(PARAM_ETA, text);
         dobbyAnalyticsBackend.logEvent(SHOW_ETA_TO_USER, bundle);
     }
-
-    public void chatActivityEnteredFirstTime() {
-        Bundle bundle = new Bundle();
-        dobbyAnalyticsBackend.logEvent(EXPERT_CHAT_ACTIVITY_ENTERED_FIRST_TIME, bundle);
-    }
-
-    public void receivedMessageFromExpert() {
-        Bundle bundle = new Bundle();
-        dobbyAnalyticsBackend.logEvent(USER_RECVD_MESSAGE_FROM_EXPERT, bundle);
-    }
-
-    public void receivedMessageFromBot() {
-        Bundle bundle = new Bundle();
-        dobbyAnalyticsBackend.logEvent(USER_RECVD_MESSAGE_FROM_BOT, bundle);
-    }
-
 
     public void onBoardingFinishClicked() {
         Bundle bundle = new Bundle();

@@ -39,7 +39,7 @@ import com.inceptai.dobby.R;
 import com.inceptai.dobby.RemoteConfig;
 import com.inceptai.dobby.ai.DataInterpreter;
 import com.inceptai.dobby.ai.SuggestionCreator;
-import com.inceptai.dobby.analytics.NewDobbyAnalytics;
+import com.inceptai.dobby.analytics.DobbyAnalytics;
 import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.heartbeat.HeartBeatManager;
@@ -167,7 +167,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private DataInterpreter.WifiGrade wifiGrade;
 
     @Inject
-    NewDobbyAnalytics dobbyAnalytics;
+    DobbyAnalytics dobbyAnalytics;
 
     @Inject
     RemoteConfig remoteConfig;
@@ -221,7 +221,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         // requestPermissions();
         uiStateVisibilityChanges(view);
         dobbyAnalytics.wifiDocFragmentEntered();
-        dobbyAnalytics.o
+        dobbyAnalytics.userEnteredApp();
         return view;
     }
 
