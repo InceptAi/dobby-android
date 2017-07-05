@@ -48,7 +48,7 @@ local.properties
 .classpath
 .settings/
 .loadpath
-
+ActionService/.idea/**
 # External tool builders
 .externalToolBuilders/
 
