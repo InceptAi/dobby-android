@@ -46,6 +46,7 @@ public class UserInteractionManager implements
     private ScheduledExecutorService scheduledExecutorService;
     private Set<String> expertChatIdsDisplayed;
     private boolean explicitHumanContactMode;
+    private boolean historyAvailable;
 
     @Inject
     DobbyAi dobbyAi;
@@ -72,6 +73,7 @@ public class UserInteractionManager implements
         dobbyAi.initChatToBotState(); //Resets booleans indicating which mode of expert are we in
         dobbyAi.setShowContactHumanButton(showContactHumanAction);
         dobbyEventBus.registerListener(this);
+        this.historyAvailable = false;
     }
 
     public interface InteractionCallback {
@@ -146,6 +148,12 @@ public class UserInteractionManager implements
                                         final boolean resumeWithWelcomeMessage) {
         final boolean resumingInExpertMode = checkSharedPrefForExpertModeResume();
         DobbyLog.v("MainActivity:onFirstTimeResumed");
+        final long delayForWelcomeMessage;
+        if (historyAvailable) {
+            delayForWelcomeMessage = 2 * DELAY_BEFORE_WELCOME_MESSAGE_MS;
+        } else {
+            delayForWelcomeMessage = DELAY_BEFORE_WELCOME_MESSAGE_MS;
+        }
         if (dobbyAi != null) {
             if (resumeWithSuggestionIfAvailable) {
                 scheduledExecutorService.schedule(new Runnable() {
@@ -153,21 +161,21 @@ public class UserInteractionManager implements
                     public void run() {
                         dobbyAi.startUserInteractionWithShortSuggestion(resumingInExpertMode);
                     }
-                }, DELAY_BEFORE_WELCOME_MESSAGE_MS, TimeUnit.MILLISECONDS);
+                }, delayForWelcomeMessage, TimeUnit.MILLISECONDS);
             } else if (resumeWithWifiCheck) {
                 scheduledExecutorService.schedule(new Runnable() {
                     @Override
                     public void run() {
                         dobbyAi.startUserInteractionWithWifiCheck(resumingInExpertMode);
                     }
-                }, DELAY_BEFORE_WELCOME_MESSAGE_MS, TimeUnit.MILLISECONDS);
+                }, delayForWelcomeMessage, TimeUnit.MILLISECONDS);
             } else if (resumeWithWelcomeMessage) {
                 scheduledExecutorService.schedule(new Runnable() {
                     @Override
                     public void run() {
                         dobbyAi.startUserInteractionWithWelcome(resumingInExpertMode);
                     }
-                }, DELAY_BEFORE_WELCOME_MESSAGE_MS, TimeUnit.MILLISECONDS);
+                }, delayForWelcomeMessage, TimeUnit.MILLISECONDS);
             }
             if (resumingInExpertMode) {
                 dobbyAi.contactExpert();
@@ -217,7 +225,7 @@ public class UserInteractionManager implements
 
     @Override
     public void onNoHistoryAvailable() {
-
+        historyAvailable = true;
     }
 
     @Override

@@ -644,10 +644,14 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 //initialize interaction with action
                 switch (initialAction) {
                     case ACTION_TYPE_SHOW_SHORT_SUGGESTION:
-                        if (lastSuggestion != null) {
-                            takeAction(new Action(Utils.EMPTY_STRING, ACTION_TYPE_SHOW_SHORT_SUGGESTION));
-                        } else if (!resumedWithExpertMode) {
-                            apiAiClient.processTextQueryOffline(null, ApiAiClient.APIAI_WELCOME_EVENT, getLastAction(), this);
+                        if (!resumedWithExpertMode) {
+                            if (lastSuggestion != null) {
+                                takeAction(new Action(Utils.EMPTY_STRING, ACTION_TYPE_SHOW_SHORT_SUGGESTION));
+                            } else {
+                                apiAiClient.processTextQueryOffline(null, ApiAiClient.APIAI_WELCOME_EVENT, getLastAction(), this);
+                            }
+                        } else {
+                            //Resumed with expert mode -- don't do anything yet.
                         }
                         break;
                     case ACTION_TYPE_WIFI_CHECK:

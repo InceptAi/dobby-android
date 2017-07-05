@@ -31,7 +31,7 @@ public class ExpertChatActivity extends AppCompatActivity implements
         ChatFragment.OnFragmentInteractionListener {
     private static final int SPEECH_RECOGNITION_REQUEST_CODE = 102;
     private static final boolean SHOW_CONTACT_HUMAN_BUTTON = false;
-    private static final long BOT_MESSAGE_DELAY_MS = 500;
+    private static final long BOT_MESSAGE_DELAY_MS = 200;
 
     private UserInteractionManager userInteractionManager;
 
