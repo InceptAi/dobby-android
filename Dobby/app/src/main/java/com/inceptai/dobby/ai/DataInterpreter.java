@@ -866,7 +866,7 @@ public class DataInterpreter {
         HttpGrade httpGrade = new HttpGrade();
         httpGrade.errorCode = BandwidthTestCodes.ErrorCodes.NO_ERROR;
         httpGrade.errorCodeString = BandwidthTestCodes.bandwidthTestErrorCodesToStrings(httpGrade.errorCode);
-        if (httpRouterStats == null) {
+        if (httpRouterStats == null || httpRouterStats.ipAddress.equals("0.0.0.0")) {
             httpGrade.errorCode = BandwidthTestCodes.ErrorCodes.ERROR_DHCP_INFO_UNAVAILABLE;
             httpGrade.errorCodeString = BandwidthTestCodes.bandwidthTestErrorCodesToStrings(httpGrade.errorCode);
             return httpGrade;

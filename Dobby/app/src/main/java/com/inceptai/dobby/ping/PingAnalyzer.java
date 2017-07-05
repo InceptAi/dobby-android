@@ -304,7 +304,7 @@ public class PingAnalyzer {
     private PingStats performGatewayDownloadTest() {
         DobbyLog.v("PA: Starting download latency tests");
         if (ipLayerInfo == null || ipLayerInfo.gateway == null || ipLayerInfo.gateway.equals("0.0.0.0")) {
-            return null;
+            return new PingStats("0.0.0.0");
         }
         PingStats downloadLatencyStats = new PingStats(ipLayerInfo.gateway);
         String gatewayURLToDownload = "http://" + ipLayerInfo.gateway;
