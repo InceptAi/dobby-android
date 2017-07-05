@@ -45,6 +45,7 @@ public class UserInteractionManager implements
     private boolean expertIsPresent = false;
     private ScheduledExecutorService scheduledExecutorService;
     private Set<String> expertChatIdsDisplayed;
+    private boolean explicitHumanContactMode;
 
     @Inject
     DobbyAi dobbyAi;
@@ -57,6 +58,7 @@ public class UserInteractionManager implements
     @Inject
     DobbyAnalytics dobbyAnalytics;
 
+
     public UserInteractionManager(Context context, InteractionCallback interactionCallback, boolean showContactHumanAction) {
         ((DobbyApplication) context.getApplicationContext()).getProdComponent().inject(this);
         this.context = context;
@@ -64,6 +66,7 @@ public class UserInteractionManager implements
         scheduledExecutorService = dobbyThreadpool.getScheduledExecutorService();
         expertChatIdsDisplayed = new HashSet<>();
         this.interactionCallback = interactionCallback;
+        this.explicitHumanContactMode = showContactHumanAction;
         expertChatService.setCallback(this);
         dobbyAi.setResponseCallback(this);
         dobbyAi.initChatToBotState(); //Resets booleans indicating which mode of expert are we in
@@ -166,6 +169,7 @@ public class UserInteractionManager implements
                 interactionCallback.showExpertResponse(messageReceived);
                 //Set to expert mode on the first message received from expert
                 if (expertChat.isMessageFresh()) {
+                    DobbyLog.v("UserInteractionManager: coming in fresh expert message, set chat to expert");
                     dobbyAi.setChatInExpertMode();
                 }
                 DobbyLog.v("MainActivity:FirebaseMessage added mesg to ExpertChat");

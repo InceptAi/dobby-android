@@ -48,7 +48,7 @@ public class MainActivity extends AppCompatActivity
     private static final int PERMISSION_COARSE_LOCATION_REQUEST_CODE = 101;
     private static final boolean RESUME_WITH_SUGGESTION_IF_AVAILABLE = false;
     private static final int SPEECH_RECOGNITION_REQUEST_CODE = 102;
-    private static final long BOT_MESSAGE_DELAY_MS = 750;
+    private static final long BOT_MESSAGE_DELAY_MS = 500;
 
     private static final boolean SHOW_CONTACT_HUMAN_BUTTON = true;
 

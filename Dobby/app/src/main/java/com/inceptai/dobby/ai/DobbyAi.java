@@ -362,9 +362,10 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 }
                 break;
             case ACTION_TYPE_CONTACT_HUMAN_EXPERT:
-                setChatInExpertMode();
+                chatInExpertMode = true;
                 userAskedForHumanExpert = false;
                 if (responseCallback != null) {
+                    responseCallback.switchedToExpertMode();
                     responseCallback.contactExpertAndGetETA();
                 }
                 break;
@@ -411,15 +412,20 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     }
 
     public void setChatInExpertMode() {
-        chatInExpertMode = true;
-        if (responseCallback != null) {
-            responseCallback.switchedToExpertMode();
+        if (!chatInExpertMode) {
+            DobbyLog.v("DobbyAi: Setting chatInExpertMode");
+            chatInExpertMode = true;
+            if (responseCallback != null) {
+                responseCallback.showUserActionOptions(getPotentialUserResponses(lastAction));
+                responseCallback.switchedToExpertMode();
+            }
         }
     }
 
     public void setChatInBotMode() {
         initChatToBotState();
         if (responseCallback != null) {
+            //responseCallback.showUserActionOptions(getPotentialUserResponses(lastAction));
             responseCallback.switchedToBotMode();
         }
     }
@@ -911,10 +917,6 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         setChatInBotMode();
     }
 
-    public void triggerSwitchToExpertMode() {
-        setChatInExpertMode();
-    }
-
     public void performAndRecordWifiAction() {
         final ComposableOperation wifiScan = wifiScanOperation();
         sendCallbackForExpertActionStarted();
@@ -1026,7 +1028,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         } else if (expertMessage.toLowerCase().contains("bot")) {
             triggerSwitchToBotMode();
         } else if (expertMessage.toLowerCase().contains("human")) {
-            triggerSwitchToExpertMode();
+            setChatInExpertMode();
         } else if (expertMessage.toLowerCase().contains("left") ||
                 expertMessage.toLowerCase().contains("early") ||
                 expertMessage.toLowerCase().contains("dropped")) {
