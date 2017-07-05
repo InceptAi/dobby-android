@@ -318,6 +318,10 @@ public class UserInteractionManager implements
         return expertChatService.isFirstChatAfterInstall();
     }
 
+    public void notificationConsumed() {
+        expertChatService.onNotificationConsumed();
+    }
+
     //Private methods
     private String getEtaMessage() {
         String messagePrefix = context.getResources().getString(R.string.expected_response_time_for_expert);

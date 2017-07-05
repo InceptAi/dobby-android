@@ -89,7 +89,6 @@ public class ExpertChatService implements
 
 
     //Analytics fields
-    private long userFirstActiveAtMs;
     private long userFirstEnteredIntoChatAtMs;
     private long expertLastMessagedUserAtMs;
     private long userLastActionAtMs;
@@ -525,11 +524,25 @@ public class ExpertChatService implements
 
     }
 
+
+    @Override
+    public void onDataChange(DataSnapshot dataSnapshot) {
+        if (dataSnapshot == null || dataSnapshot.getValue() == null) {
+            if (chatCallback != null) {
+                chatCallback.onNoHistoryAvailable();
+            }
+        }
+    }
+
     public void saveState() {
         saveLastChatNumber();
         saveLastDisplayedChatNumber();
         saveUserFirstEnteredAtTs();
         saveLastExpertMessageTs();
+    }
+
+    public void onNotificationConsumed() {
+        dobbyAnalytics.expertChatNotificationConsumed();
     }
 
     private static ExpertChat parse(DataSnapshot dataSnapshot) {
@@ -570,14 +583,6 @@ public class ExpertChatService implements
         }
     }
 
-    @Override
-    public void onDataChange(DataSnapshot dataSnapshot) {
-        if (dataSnapshot == null || dataSnapshot.getValue() == null) {
-            if (chatCallback != null) {
-                chatCallback.onNoHistoryAvailable();
-            }
-        }
-    }
 
     private void parseExpertTextAndTakeActionIfNeeded(ExpertChat expertChat) {
         if (expertChat.getMessageType() == ExpertChat.MSG_TYPE_EXPERT_TEXT) {
@@ -591,13 +596,13 @@ public class ExpertChatService implements
 
     private void logExpertResponseTime() {
         long currentTimeInMillis = System.currentTimeMillis();
-        if (currentTimeInMillis - userFirstActiveAtMs > 60 * 1000) {
+        if (currentTimeInMillis - userFirstEnteredIntoChatAtMs < 60 * 1000) {
             dobbyAnalytics.expertEnteredChatWithin1MinOfFirstUserMessage();
-        } else if (currentTimeInMillis - userFirstActiveAtMs > 5 * 60 * 1000) {
+        } else if (currentTimeInMillis - userFirstEnteredIntoChatAtMs < 5 * 60 * 1000) {
             dobbyAnalytics.expertEnteredChatWithin5MinOfFirstUserMessage();
-        } else if (currentTimeInMillis - userFirstActiveAtMs > 30 * 60 * 1000) {
+        } else if (currentTimeInMillis - userFirstEnteredIntoChatAtMs < 30 * 60 * 1000) {
             dobbyAnalytics.expertEnteredChatWithin30MinOfFirstUserMessage();
-        } else if (currentTimeInMillis - userFirstActiveAtMs > 12 * 60 * 60 * 1000) {
+        } else if (currentTimeInMillis - userFirstEnteredIntoChatAtMs < 12 * 60 * 60 * 1000) {
             dobbyAnalytics.expertEnteredChatWithin12HourOfFirstUserMessage();
         }
     }
@@ -615,8 +620,8 @@ public class ExpertChatService implements
             dobbyAnalytics.expertSentMessageToUser();
         } else if (expertChat.getMessageType() == ExpertChat.MSG_TYPE_USER_TEXT) {
 
-            if (userFirstActiveAtMs == 0) { //First time
-                userFirstActiveAtMs = System.currentTimeMillis();
+            if (userFirstEnteredIntoChatAtMs == 0) { //First time
+                userFirstEnteredIntoChatAtMs = System.currentTimeMillis();
                 saveUserFirstEnteredAtTs();
             }
 

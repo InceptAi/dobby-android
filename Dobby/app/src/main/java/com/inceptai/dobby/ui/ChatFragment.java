@@ -423,7 +423,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
 
     public void showBotResponse(final String text) {
         DobbyLog.v("ChatF: showBotResponse text " + text);
-        showStatus(getString(R.string.agent_is_typing), 0);
+        //showStatus(getString(R.string.agent_is_typing), 0);
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {

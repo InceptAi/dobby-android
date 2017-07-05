@@ -247,7 +247,7 @@ public class ExpertChatActivity extends AppCompatActivity implements
     private void processIntent(Intent intent) {
         String notifSource = intent.getStringExtra(ExpertChatService.INTENT_NOTIF_SOURCE);
         if (notifSource != null) {
-            dobbyAnalytics.expertChatNotificationConsumed();
+            userInteractionManager.notificationConsumed();
         }
     }
 
