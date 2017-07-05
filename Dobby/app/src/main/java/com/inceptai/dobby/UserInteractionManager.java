@@ -435,9 +435,15 @@ public class UserInteractionManager implements
 
     //EventBus events
     @Subscribe
-    public void listenToEventBus(DobbyEvent event) {
+    public void listenToEventBus(final DobbyEvent event) {
         if (event.getEventType() == DobbyEvent.EventType.EXPERT_ASKED_FOR_ACTION) {
-            dobbyAi.parseMessageFromExpert((String) event.getPayload());
+            //Switching thread so we don't block the event bus
+            scheduledExecutorService.schedule(new Runnable() {
+                @Override
+                public void run() {
+                    dobbyAi.parseMessageFromExpert((String) event.getPayload());
+                }
+            }, 0, TimeUnit.MILLISECONDS);
         }
     }
 }
