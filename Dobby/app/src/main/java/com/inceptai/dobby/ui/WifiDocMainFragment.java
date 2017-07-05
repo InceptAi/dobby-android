@@ -844,7 +844,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
     private void showSuggestionsUi() {
         if (currentSuggestion == null || bottomDialog == null) {
-            Toast.makeText(getContext(), "Unable to show suggestions.", Toast.LENGTH_SHORT).show();
+            if (currentSuggestion == null) {
+                Toast.makeText(getContext(), "Unable to show suggestions.", Toast.LENGTH_SHORT).show();
+            }
             return;
         }
         String suggestions = currentSuggestion.getTitle();
