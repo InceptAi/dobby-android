@@ -129,16 +129,46 @@ public class UserInteractionManager implements
         dobbyAi.initChatToBotState();
     }
 
-    public void onFirstTimeResumedChat(final boolean resumeWithSuggestionIfAvailable) {
+    public void resumeChatWithShortSuggestion() {
+        onFirstTimeResumedChat(true, false, false);
+    }
+
+    public void resumeChatWithWifiCheck() {
+        onFirstTimeResumedChat(false, true, false);
+    }
+
+    public void resumeChatWithWelcomeMessage() {
+        onFirstTimeResumedChat(false, false, true);
+    }
+
+    private void onFirstTimeResumedChat(final boolean resumeWithSuggestionIfAvailable,
+                                        final boolean resumeWithWifiCheck,
+                                        final boolean resumeWithWelcomeMessage) {
         final boolean resumingInExpertMode = checkSharedPrefForExpertModeResume();
         DobbyLog.v("MainActivity:onFirstTimeResumed");
         if (dobbyAi != null) {
-            scheduledExecutorService.schedule(new Runnable() {
-                @Override
-                public void run() {
-                    dobbyAi.sendWelcomeEvent(resumeWithSuggestionIfAvailable, resumingInExpertMode);
-                }
-            }, DELAY_BEFORE_WELCOME_MESSAGE_MS, TimeUnit.MILLISECONDS);
+            if (resumeWithSuggestionIfAvailable) {
+                scheduledExecutorService.schedule(new Runnable() {
+                    @Override
+                    public void run() {
+                        dobbyAi.startUserInteractionWithShortSuggestion(resumingInExpertMode);
+                    }
+                }, DELAY_BEFORE_WELCOME_MESSAGE_MS, TimeUnit.MILLISECONDS);
+            } else if (resumeWithWifiCheck) {
+                scheduledExecutorService.schedule(new Runnable() {
+                    @Override
+                    public void run() {
+                        dobbyAi.startUserInteractionWithWifiCheck(resumingInExpertMode);
+                    }
+                }, DELAY_BEFORE_WELCOME_MESSAGE_MS, TimeUnit.MILLISECONDS);
+            } else if (resumeWithWelcomeMessage) {
+                scheduledExecutorService.schedule(new Runnable() {
+                    @Override
+                    public void run() {
+                        dobbyAi.startUserInteractionWithWelcome(resumingInExpertMode);
+                    }
+                }, DELAY_BEFORE_WELCOME_MESSAGE_MS, TimeUnit.MILLISECONDS);
+            }
             if (resumingInExpertMode) {
                 dobbyAi.contactExpert();
             }

@@ -502,16 +502,21 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                     apiAiClient.processTextQueryOffline(null, ApiAiClient.APIAI_WELCOME_EVENT, getLastAction(), this);
                 }
             }
-
-//            if (resumedWithExpertMode) {
-//                //apiAiClient.resetContexts();
-//                apiAiClient.sendTextQuery(null, ApiAiClient.APIAI_WELCOME_AND_RESUME_EXPERT_EVENT, getLastAction(), this);
-//            } else {
-//                apiAiClient.processTextQueryOffline(null, ApiAiClient.APIAI_WELCOME_EVENT, getLastAction(), this);
-//            }
         } else {
             DobbyLog.w("Ignoring events for Wifi doc version :" + ApiAiClient.APIAI_WELCOME_EVENT);
         }
+    }
+
+    public void startUserInteractionWithShortSuggestion(boolean resumedWithExpertMode) {
+        initializeUserInteraction(ACTION_TYPE_SHOW_SHORT_SUGGESTION, Utils.EMPTY_STRING, resumedWithExpertMode);
+    }
+
+    public void startUserInteractionWithWelcome(boolean resumedWithExpertMode) {
+        initializeUserInteraction(ACTION_TYPE_NONE, ApiAiClient.APIAI_WELCOME_EVENT, resumedWithExpertMode);
+    }
+
+    public void startUserInteractionWithWifiCheck(boolean resumedWithExpertMode) {
+        initializeUserInteraction(ACTION_TYPE_WIFI_CHECK, Utils.EMPTY_STRING, resumedWithExpertMode);
     }
 
     public void cleanup() {
@@ -632,6 +637,46 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
 
         return responseList;
     }
+
+    private void initializeUserInteraction(int initialAction, String initialEvent, boolean resumedWithExpertMode) {
+        if (useApiAi) {
+            if (initialAction != ACTION_TYPE_NONE) {
+                //initialize interaction with action
+                switch (initialAction) {
+                    case ACTION_TYPE_SHOW_SHORT_SUGGESTION:
+                        if (lastSuggestion != null) {
+                            takeAction(new Action(Utils.EMPTY_STRING, ACTION_TYPE_SHOW_SHORT_SUGGESTION));
+                        } else if (!resumedWithExpertMode) {
+                            apiAiClient.processTextQueryOffline(null, ApiAiClient.APIAI_WELCOME_EVENT, getLastAction(), this);
+                        }
+                        break;
+                    case ACTION_TYPE_WIFI_CHECK:
+                        if (!resumedWithExpertMode) {
+                            takeAction(new Action(Utils.EMPTY_STRING, ACTION_TYPE_WIFI_CHECK));
+                        }
+                        break;
+                    default:
+                        DobbyLog.v("DobbyAI error: should never come here");
+                        break;
+                }
+            } else if (!initialEvent.equals(Utils.EMPTY_STRING)){
+                //initialize interaction with action
+                switch (initialEvent) {
+                    case ApiAiClient.APIAI_WELCOME_EVENT:
+                        if (!resumedWithExpertMode) {
+                            apiAiClient.processTextQueryOffline(null, ApiAiClient.APIAI_WELCOME_EVENT, getLastAction(), this);
+                        }
+                        break;
+                    default:
+                        DobbyLog.v("DobbyAI error: should never come here");
+                        break;
+                }
+            }
+        } else {
+            DobbyLog.w("Ignoring events for Wifi doc version :" + ApiAiClient.APIAI_WELCOME_EVENT);
+        }
+    }
+
 
     private void showMessageToUser(String messageToShow) {
         if (responseCallback != null && messageToShow != null && ! messageToShow.equals(Utils.EMPTY_STRING)) {

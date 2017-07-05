@@ -380,7 +380,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onFirstTimeResumed() {
         DobbyLog.v("MainActivity:onFirstTimeResumed");
-        userInteractionManager.onFirstTimeResumedChat(RESUME_WITH_SUGGESTION_IF_AVAILABLE);
+        userInteractionManager.resumeChatWithWifiCheck();
     }
 
     @Override
