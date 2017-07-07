@@ -6,6 +6,9 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import com.inceptai.actionlibrary.ActionLibrary;
+import com.inceptai.actionlibrary.ActionResult;
+import com.inceptai.actionlibrary.FutureAction;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.NetworkLayer;
@@ -78,6 +81,9 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     private DobbyThreadpool threadpool;
     private ApiAiClient apiAiClient;
 
+    //FutureAction lib
+    private ActionLibrary actionLibrary;
+
     @Nullable private ResponseCallback responseCallback;
     private InferenceEngine inferenceEngine;
     private boolean useApiAi = false; // We do not use ApiAi for the WifiDoc app.
@@ -138,9 +144,11 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         if (useApiAi) {
             initApiAiClient();
         }
+        actionLibrary = new ActionLibrary(this.context);
         repeatBwWifiPingAction = new AtomicBoolean(false);
         lastAction = ACTION_TYPE_UNKNOWN;
         initChatToBotState();
+        turnWifiOn();
     }
 
     @Action.ActionType
@@ -174,7 +182,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             }
         });
         if (result != null) {
-            DobbyLog.i("Got response Action: " + result.toString());
+            DobbyLog.i("Got response FutureAction: " + result.toString());
         }
     }
 
@@ -203,7 +211,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     /**
      * Implements the action returned by the InferenceEngine.
      *
-     * @param action Action to be taken.
+     * @param action FutureAction to be taken.
      */
     @Override
     public void takeAction(Action action) {
@@ -393,7 +401,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
                 setChatInBotMode();
                 break;
             default:
-                DobbyLog.i("Unknown Action");
+                DobbyLog.i("Unknown FutureAction");
                 break;
         }
     }
@@ -1094,6 +1102,43 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             dobbyAnalytics.setExpertSaysMoreDataNeeded();
         } else if (expertMessage.toLowerCase().contains("better")) {
             dobbyAnalytics.setExpertSaysInferencingCanBeBetter();
+        } else if (expertMessage.toLowerCase().contains("wifioff")) {
+            turnWifiOff();
         }
     }
+
+    private void turnWifiOff() {
+        final FutureAction wifiOff = actionLibrary.turnWifiOff(10);
+        wifiOff.getFuture().addListener(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    ActionResult result = wifiOff.getFuture().get();
+                    DobbyLog.v("DobbyAI: Got the result for wifi off " + result.getErrorString());
+                }catch (Exception e) {
+                    e.printStackTrace(System.out);
+                    DobbyLog.w("Exception getting wifi results: " + e.getStackTrace().toString());
+                }
+            }
+        }, threadpool.getExecutor());
+    }
+
+    private void turnWifiOn() {
+        final FutureAction wifiOn = actionLibrary.turnWifiOn(10);
+        wifiOn.getFuture().addListener(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    ActionResult result = wifiOn.getFuture().get();
+                    DobbyLog.v("DobbyAI: Got the result for wifi on " + result.getErrorString());
+                }catch (Exception e) {
+                    e.printStackTrace(System.out);
+                    DobbyLog.w("Exception getting wifi results: " + e.getStackTrace().toString());
+                    //Informing inference engine of the error.
+                }
+            }
+        }, threadpool.getExecutor());
+    }
+
+
 }

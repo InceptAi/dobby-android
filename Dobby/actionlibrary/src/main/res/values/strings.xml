@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">ActionLibrary</string>
+    <string name="turn_wifi_on">Turn Wifi On</string>
+    <string name="turn_wifi_off">Turn Wifi Off</string>
+    <string name="disconnect_from_current_wifi">Disconnect Current Wifi </string>
+    <string name="connect_to_best_wifi">Connect To Best Wifi</string>
+    <string name="reconnect_to_same_wifi">Reconnect To Same Wifi</string>
+    <string name="forget_current_wifi">Forget Current Wifi</string>
+    <string name="disable_current_wifi">Disable Future Connections To Current Wifi</string>
+</resources>
