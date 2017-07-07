@@ -6,12 +6,11 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.google.common.util.concurrent.ListenableFuture;
-import com.inceptai.actionlibrary.ActionLibrary;
 import com.inceptai.actionlibrary.ActionResult;
-import com.inceptai.actionlibrary.actions.FutureAction;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.NetworkLayer;
+import com.inceptai.dobby.actions.ActionTaker;
 import com.inceptai.dobby.analytics.DobbyAnalytics;
 import com.inceptai.dobby.database.ActionDatabaseWriter;
 import com.inceptai.dobby.database.ActionRecord;
@@ -71,7 +70,8 @@ import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_WIFI_CHECK;
  */
 
 @Singleton
-public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.ActionListener {
+public class DobbyAi implements ApiAiClient.ResultListener,
+        ActionTaker.ActionCallback, InferenceEngine.ActionListener {
     private static final boolean CLEAR_STATS_EVERY_TIME_USER_ASKS_TO_RUN_TESTS = true;
     private static final long MAX_ETA_TO_MARK_EXPERT_AS_LISTENING_SECONDS = 180;
     private static final boolean USE_API_AI_FOR_WIFIDOC = true;
@@ -80,9 +80,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     private Context context;
     private DobbyThreadpool threadpool;
     private ApiAiClient apiAiClient;
-
-    //FutureAction lib
-    private ActionLibrary actionLibrary;
+    private ActionTaker actionTaker;
 
     @Nullable private ResponseCallback responseCallback;
     private InferenceEngine inferenceEngine;
@@ -111,6 +109,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     @Inject
     ActionDatabaseWriter actionDatabaseWriter;
 
+
     public interface ResponseCallback {
         void showBotResponseToUser(String text);
         void showRtGraph(RtDataSource<Float, Integer> rtDataSource);
@@ -135,7 +134,8 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
     public DobbyAi(DobbyThreadpool threadpool,
                    InferenceDatabaseWriter inferenceDatabaseWriter,
                    FailureDatabaseWriter failureDatabaseWriter,
-                   DobbyApplication dobbyApplication) {
+                   DobbyApplication dobbyApplication,
+                   ActionTaker actionTaker) {
         this.context = dobbyApplication.getApplicationContext();
         this.threadpool = threadpool;
         useApiAi = DobbyApplication.isDobbyFlavor() || (USE_API_AI_FOR_WIFIDOC && DobbyApplication.isWifiDocFlavor());
@@ -144,11 +144,11 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         if (useApiAi) {
             initApiAiClient();
         }
-        actionLibrary = new ActionLibrary(this.context);
         repeatBwWifiPingAction = new AtomicBoolean(false);
         lastAction = ACTION_TYPE_UNKNOWN;
         initChatToBotState();
-        toggleWifi();
+        this.actionTaker = actionTaker;
+        this.actionTaker.setActionCallback(this);
     }
 
     @Action.ActionType
@@ -542,8 +542,24 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         }
     }
 
-    //private methods
+    @Override
+    public void actionStarted(String actionName) {
+        if (responseCallback != null) {
+            DobbyLog.v("DobbyAi: action: " + actionName + " started");
+            responseCallback.expertActionStarted();
+        }
+    }
 
+    @Override
+    public void actionCompleted(String actionName, ActionResult actionResult) {
+        if (responseCallback != null) {
+            DobbyLog.v("DobbyAi: action: " + actionName + " resultCode " + actionResult.getStatusString());
+            responseCallback.expertActionCompleted();
+        }
+
+    }
+
+    //private methods
     private boolean isQueryRequestForHumanExpert(String text) {
         return (text.toLowerCase().contains("contact human"));
     }
@@ -1073,10 +1089,8 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         actionDatabaseWriter.writeActionToDatabase(actionRecord);
     }
 
-
-
     private void parseExpertTextAndTakeActionIfNeeded(String expertMessage) {
-        if (expertMessage.toLowerCase().contains("wifi")) {
+        if (expertMessage.toLowerCase().contains("wifiscan")) {
             performAndRecordWifiAction();
         } else if (expertMessage.toLowerCase().contains("ping")) {
             performAndRecordPingAction();
@@ -1094,67 +1108,29 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
             dobbyAnalytics.setExpertSaysGoodInferencing();
         } else if (expertMessage.toLowerCase().contains("bad")) {
             dobbyAnalytics.setExpertSaysBadInferencing();
-        }  else if (expertMessage.toLowerCase().contains("unresolved") || expertMessage.toLowerCase().contains("unsolved")) {
+        }  else if (expertMessage.toLowerCase().contains("unresolved") ||
+                expertMessage.toLowerCase().contains("unsolved")) {
             dobbyAnalytics.setExpertSaysIssueUnResolved();
-        } else if (expertMessage.toLowerCase().contains("solved") || expertMessage.toLowerCase().contains("resolved")) {
+        } else if (expertMessage.toLowerCase().contains("solved") ||
+                expertMessage.toLowerCase().contains("resolved")) {
             dobbyAnalytics.setExpertSaysIssueResolved();
-        } else if (expertMessage.toLowerCase().contains("more") || expertMessage.toLowerCase().contains("data")) {
+        } else if (expertMessage.toLowerCase().contains("more") ||
+                expertMessage.toLowerCase().contains("data")) {
             dobbyAnalytics.setExpertSaysMoreDataNeeded();
         } else if (expertMessage.toLowerCase().contains("better")) {
             dobbyAnalytics.setExpertSaysInferencingCanBeBetter();
-        } else if (expertMessage.toLowerCase().contains("wifioff")) {
-            turnWifiOff();
+        } else if (expertMessage.toLowerCase().contains("wifioff") ||
+                (expertMessage.toLowerCase().contains("wifi") &&
+                        expertMessage.toLowerCase().contains("off"))) {
+            actionTaker.turnWifiOff();
+        } else if (expertMessage.toLowerCase().contains("wifion") ||
+                (expertMessage.toLowerCase().contains("wifi") &&
+                        expertMessage.toLowerCase().contains("on"))) {
+            actionTaker.turnWifiOn();
+        } else if (expertMessage.toLowerCase().contains("wifitoggle") ||
+                (expertMessage.toLowerCase().contains("wifi") &&
+                        expertMessage.toLowerCase().contains("toggle"))) {
+            actionTaker.toggleWifi();
         }
     }
-
-    private void turnWifiOff() {
-        final FutureAction wifiOff = actionLibrary.turnWifiOff(10);
-        wifiOff.getFuture().addListener(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    ActionResult result = wifiOff.getFuture().get();
-                    DobbyLog.v("DobbyAI: Got the result for wifi off " + result.getErrorString());
-                }catch (Exception e) {
-                    e.printStackTrace(System.out);
-                    DobbyLog.w("Exception getting wifi results: " + e.getStackTrace().toString());
-                }
-            }
-        }, threadpool.getExecutor());
-    }
-
-    private void turnWifiOn() {
-        final FutureAction wifiOn = actionLibrary.turnWifiOn(10);
-        wifiOn.getFuture().addListener(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    ActionResult result = wifiOn.getFuture().get();
-                    DobbyLog.v("DobbyAI: Got the result for wifi on " + result.getErrorString());
-                }catch (Exception e) {
-                    e.printStackTrace(System.out);
-                    DobbyLog.w("Exception getting wifi results: " + e.getStackTrace().toString());
-                    //Informing inference engine of the error.
-                }
-            }
-        }, threadpool.getExecutor());
-    }
-
-    private void toggleWifi() {
-        final FutureAction toggleWifi = actionLibrary.toggleWifi(10);
-        toggleWifi.getFuture().addListener(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    ActionResult result = toggleWifi.getFuture().get();
-                    DobbyLog.v("DobbyAI: Got the result for wifi toggle " + result.getErrorString());
-                }catch (Exception e) {
-                    e.printStackTrace(System.out);
-                    DobbyLog.w("Exception getting wifi results: " + e.getStackTrace().toString());
-                    //Informing inference engine of the error.
-                }
-            }
-        }, threadpool.getExecutor());
-    }
-
 }

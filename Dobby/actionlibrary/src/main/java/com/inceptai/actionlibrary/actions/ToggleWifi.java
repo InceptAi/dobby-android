@@ -29,7 +29,7 @@ public class ToggleWifi extends FutureAction {
     }
 
     @Override
-    protected String getName() {
+    public String getName() {
         return context.getString(R.string.toggle_wifi_off_and_on);
     }
 

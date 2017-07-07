@@ -25,7 +25,7 @@ public class TurnWifiOff extends FutureAction {
     }
 
     @Override
-    protected String getName() {
+    public String getName() {
         return context.getString(R.string.turn_wifi_off);
     }
 

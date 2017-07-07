@@ -3,6 +3,7 @@ package com.inceptai.dobby.dagger;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.NetworkLayer;
+import com.inceptai.dobby.actions.ActionTaker;
 import com.inceptai.dobby.analytics.DobbyAnalytics;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.expert.ExpertChatService;
@@ -60,5 +61,14 @@ public class ProdModule {
                 dobbyEventBus);
         application.getProdComponent().inject(expertChatService);
         return expertChatService;
+    }
+
+    @Singleton
+    @Provides
+    public ActionTaker providesActionTaker(DobbyApplication application,
+                                           DobbyThreadpool dobbyThreadpool) {
+        ActionTaker actionTaker = new ActionTaker(application.getApplicationContext(), dobbyThreadpool);
+        application.getProdComponent().inject(actionTaker);
+        return actionTaker;
     }
 }

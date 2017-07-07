@@ -241,7 +241,8 @@ public class WifiController {
     private void printScanResults(List<ScanResult> scanResultList) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < scanResultList.size(); i++) {
-            sb.append(new Integer(i + 1).toString() + ".");
+            sb.append(Integer.toString(i + 1));
+            sb.append(".");
             sb.append((scanResultList.get(i)).toString());
             sb.append("\\n");
         }

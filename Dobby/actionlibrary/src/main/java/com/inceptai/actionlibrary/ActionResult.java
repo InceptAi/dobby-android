@@ -15,15 +15,21 @@ import java.lang.annotation.RetentionPolicy;
  */
 public class ActionResult {
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({ActionResultCodes.SUCCESS, ActionResultCodes.IN_PROGRESS,
+    @IntDef({ActionResultCodes.SUCCESS,
+            ActionResultCodes.IN_PROGRESS,
             ActionResultCodes.FAILED_TO_START,
-            ActionResultCodes.TIMED_OUT, ActionResultCodes.GENERAL_ERROR})
+            ActionResultCodes.TIMED_OUT,
+            ActionResultCodes.GENERAL_ERROR,
+            ActionResultCodes.EXCEPTION,
+            ActionResultCodes.UNKNOWN})
     public @interface ActionResultCodes {
         int SUCCESS = 0;
         int IN_PROGRESS = 1;
         int FAILED_TO_START = 2;
         int TIMED_OUT = 3;
         int GENERAL_ERROR = 4;
+        int EXCEPTION = 5;
+        int UNKNOWN = 100;
     }
 
     public static String actionResultCodeToString(@ActionResultCodes int code) {
@@ -38,23 +44,30 @@ public class ActionResult {
                 return "TIMED_OUT";
             case ActionResultCodes.GENERAL_ERROR:
                 return "GENERAL_ERROR";
+            case ActionResultCodes.EXCEPTION:
+                return "EXCEPTION";
             default:
                 return "UNKNOWN";
         }
     }
 
     private @ActionResultCodes int status;
-    private String errorString;
+    private String statusString;
     private Object payload;
 
-    public ActionResult(int status, String errorString) {
+    public ActionResult(@ActionResultCodes  int status) {
         this.status = status;
-        this.errorString = errorString;
+        this.statusString = ActionResult.actionResultCodeToString(status);
     }
 
-    public ActionResult(int status, String errorString, Object payload) {
+    public ActionResult(@ActionResultCodes  int status, String statusString) {
         this.status = status;
-        this.errorString = errorString;
+        this.statusString = statusString;
+    }
+
+    public ActionResult(@ActionResultCodes int status, String statusString, Object payload) {
+        this.status = status;
+        this.statusString = statusString;
         this.payload = payload;
     }
 
@@ -70,8 +83,8 @@ public class ActionResult {
         return status;
     }
 
-    public String getErrorString() {
-        return errorString;
+    public String getStatusString() {
+        return statusString;
     }
 
 }

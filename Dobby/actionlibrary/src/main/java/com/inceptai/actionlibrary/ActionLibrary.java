@@ -20,7 +20,7 @@ public class ActionLibrary {
     public ActionLibrary(Context context) {
         this.context = context;
         actionThreadPool = new ActionThreadPool();
-        networkLayer = NetworkLayer.getInstance(context, actionThreadPool);
+        networkLayer = new NetworkLayer(context, actionThreadPool);
     }
 
     public FutureAction turnWifiOn(long timeOut) {

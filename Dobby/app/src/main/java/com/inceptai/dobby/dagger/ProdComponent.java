@@ -1,8 +1,10 @@
 package com.inceptai.dobby.dagger;
 
-import com.inceptai.dobby.UserInteractionManager;
 import com.inceptai.dobby.MainActivity;
 import com.inceptai.dobby.NetworkLayer;
+import com.inceptai.dobby.UserInteractionManager;
+import com.inceptai.dobby.actions.ActionTaker;
+import com.inceptai.dobby.ai.DobbyAi;
 import com.inceptai.dobby.expert.ExpertChatService;
 import com.inceptai.dobby.heartbeat.AlarmReceiver;
 import com.inceptai.dobby.heartbeat.DeviceBootReceiver;
@@ -62,5 +64,7 @@ public interface ProdComponent {
 
     void inject(UserInteractionManager userInteractionManager);
 
+    void inject(ActionTaker actionTaker);
 
+    void inject(DobbyAi dobbyAi);
 }

@@ -13,9 +13,10 @@ import com.inceptai.actionlibrary.utils.ActionLog;
 
 import java.util.concurrent.ExecutionException;
 
+import static com.inceptai.actionlibrary.ActionResult.ActionResultCodes.EXCEPTION;
 import static com.inceptai.actionlibrary.ActionResult.ActionResultCodes.FAILED_TO_START;
-import static com.inceptai.actionlibrary.ActionResult.ActionResultCodes.GENERAL_ERROR;
 import static com.inceptai.actionlibrary.ActionResult.ActionResultCodes.SUCCESS;
+
 
 /**
  * Created by vivek on 7/5/17.
@@ -43,7 +44,7 @@ public abstract class FutureAction {
 
     public abstract void post();
 
-    protected abstract String getName();
+    public abstract String getName();
 
     public void uponCompletion(FutureAction futureAction) {
         uponCompletion = futureAction;
@@ -63,8 +64,8 @@ public abstract class FutureAction {
                     setResult(new ActionResult(SUCCESS, ActionResult.actionResultCodeToString(SUCCESS), future.get()));
                 } catch (InterruptedException | ExecutionException e) {
                     Log.w("", "Exception getting result for:" + getName() +
-                            " e = " + e.getStackTrace().toString());
-                    setResult(new ActionResult(GENERAL_ERROR, e.getStackTrace().toString()));
+                            " e = " + e.toString());
+                    setResult(new ActionResult(EXCEPTION, e.toString()));
                 }
             }
         }, threadpool.getExecutor());

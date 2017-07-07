@@ -2,7 +2,6 @@ package com.inceptai.actionlibrary.NetworkLayer;
 
 import android.content.Context;
 import android.net.wifi.ScanResult;
-import android.support.annotation.Nullable;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.actionlibrary.ActionThreadPool;
@@ -19,27 +18,12 @@ public class NetworkLayer {
     private Context context;
     private ActionThreadPool threadpool;
     private WifiController wifiController;
-    private static NetworkLayer NETWORK_LAYER_INSTANCE = null;
 
     // Use Dagger to get a singleton instance of this class.
-    private NetworkLayer(Context context, ActionThreadPool threadpool) {
+    public NetworkLayer(Context context, ActionThreadPool threadpool) {
         this.context = context;
         this.threadpool = threadpool;
         this.wifiController = WifiController.create(context, threadpool);
-    }
-
-    /**
-     * Factory constructor to create an instance
-     *
-     * @param context Application context.
-     * @return Instance of WifiAnalyzer or null on error.
-     */
-    @Nullable
-    public static NetworkLayer getInstance(Context context, ActionThreadPool threadpool) {
-        if (NETWORK_LAYER_INSTANCE == null) {
-            NETWORK_LAYER_INSTANCE = new NetworkLayer(context, threadpool);
-        }
-        return NETWORK_LAYER_INSTANCE;
     }
 
     public ListenableFuture<List<ScanResult>> wifiScan() {
