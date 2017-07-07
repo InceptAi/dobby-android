@@ -1119,18 +1119,31 @@ public class DobbyAi implements ApiAiClient.ResultListener,
             dobbyAnalytics.setExpertSaysMoreDataNeeded();
         } else if (expertMessage.toLowerCase().contains("better")) {
             dobbyAnalytics.setExpertSaysInferencingCanBeBetter();
-        } else if (expertMessage.toLowerCase().contains("wifioff") ||
-                (expertMessage.toLowerCase().contains("wifi") &&
-                        expertMessage.toLowerCase().contains("off"))) {
+        } else if (expertMessage.toLowerCase().contains("wifioff")) {
             actionTaker.turnWifiOff();
-        } else if (expertMessage.toLowerCase().contains("wifion") ||
-                (expertMessage.toLowerCase().contains("wifi") &&
-                        expertMessage.toLowerCase().contains("on"))) {
+        } else if (expertMessage.toLowerCase().contains("wifion")) {
             actionTaker.turnWifiOn();
-        } else if (expertMessage.toLowerCase().contains("wifitoggle") ||
-                (expertMessage.toLowerCase().contains("wifi") &&
-                        expertMessage.toLowerCase().contains("toggle"))) {
+        } else if (expertMessage.toLowerCase().contains("wifitoggle")) {
             actionTaker.toggleWifi();
+        } else if (expertMessage.toLowerCase().contains("wifidisconnect")) {
+            actionTaker.disconnect();
+        } else if (expertMessage.toLowerCase().contains("wifireset")) {
+            actionTaker.resetConnection();
+        } else if (expertMessage.toLowerCase().contains("wificonfigured") &&
+                !expertMessage.toLowerCase().contains("best")) {
+            actionTaker.getConfiguredNetworks();
+        } else if (expertMessage.toLowerCase().contains("wificonfigured") &&
+                expertMessage.toLowerCase().contains("best")) {
+            actionTaker.getBestConfiguredNetwork();
+        } else if (expertMessage.toLowerCase().contains("check5ghz")) {
+            actionTaker.checkIf5GHzSupported();
+        } else if (expertMessage.toLowerCase().contains("wificonnect")) {
+            actionTaker.connectToBestWifi();
+            //actionTaker.connectWithWifiNetwork(15);
+        } else if (expertMessage.toLowerCase().contains("wifinearby")) {
+            actionTaker.getNearbyWifiNetworks();
+        } else if (expertMessage.toLowerCase().contains("wifidhcp")) {
+            actionTaker.getDhcpInfo();
         }
     }
 }

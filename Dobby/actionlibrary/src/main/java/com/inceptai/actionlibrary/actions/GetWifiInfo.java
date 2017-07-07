@@ -13,20 +13,20 @@ import com.inceptai.actionlibrary.R;
  * Created by vivek on 7/5/17.
  */
 
-public class TurnWifiOff extends FutureAction {
+public class GetWifiInfo extends FutureAction {
 
-    public TurnWifiOff(Context context, ActionThreadPool threadpool, NetworkActionLayer networkActionLayer, long timeOut) {
+    public GetWifiInfo(Context context, ActionThreadPool threadpool, NetworkActionLayer networkActionLayer, long timeOut) {
         super(context, threadpool, networkActionLayer, timeOut);
     }
 
     @Override
     public void post() {
-        setFuture(networkActionLayer.turnWifiOff());
+        setFuture(networkActionLayer.getWifiInfo());
     }
 
     @Override
     public String getName() {
-        return context.getString(R.string.turn_wifi_off);
+        return context.getString(R.string.get_wifi_info);
     }
 
     @Override

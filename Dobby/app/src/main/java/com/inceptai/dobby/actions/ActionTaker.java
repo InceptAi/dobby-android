@@ -49,6 +49,56 @@ public class ActionTaker {
         processResultsWhenAvailable(toggleWifi);
     }
 
+    public void checkIf5GHzSupported() {
+        final FutureAction check5GHz = actionLibrary.checkIf5GHzSupported(ACTION_TIMEOUT_MS);
+        processResultsWhenAvailable(check5GHz);
+    }
+
+    public void disconnect() {
+        FutureAction disconnectAction = actionLibrary.disconnect(ACTION_TIMEOUT_MS);
+        processResultsWhenAvailable(disconnectAction);
+    }
+
+    public void connectWithWifiNetwork(int networkId) {
+        FutureAction connectAction = actionLibrary.connectWithWifiNetwork(networkId, ACTION_TIMEOUT_MS);
+        processResultsWhenAvailable(connectAction);
+    }
+
+    public void forgetWifiNetwork(int networkId) {
+        FutureAction forgetWifiNetworkAction = actionLibrary.forgetWifiNetwork(networkId, ACTION_TIMEOUT_MS);
+        processResultsWhenAvailable(forgetWifiNetworkAction);
+    }
+
+    public void getBestConfiguredNetwork() {
+        FutureAction getBestNetwork = actionLibrary.getBestConfiguredNetwork(ACTION_TIMEOUT_MS);
+        processResultsWhenAvailable(getBestNetwork);
+    }
+
+    public void getConfiguredNetworks() {
+        FutureAction getConfiguredNetworksAction = actionLibrary.getConfiguredNetworks(ACTION_TIMEOUT_MS);
+        processResultsWhenAvailable(getConfiguredNetworksAction);
+    }
+
+    public void getDhcpInfo() {
+        FutureAction getDhcpInfoAction = actionLibrary.getDhcpInfo(ACTION_TIMEOUT_MS);
+        processResultsWhenAvailable(getDhcpInfoAction);
+    }
+
+    public void getNearbyWifiNetworks() {
+        FutureAction nearbyWifiNetworksAction = actionLibrary.getNearbyWifiNetworks(ACTION_TIMEOUT_MS);
+        processResultsWhenAvailable(nearbyWifiNetworksAction);
+    }
+
+    public void connectToBestWifi() {
+        FutureAction connectToBestWifiAction = actionLibrary.connectToBestWifi(ACTION_TIMEOUT_MS);
+        processResultsWhenAvailable(connectToBestWifiAction);
+    }
+
+    public void resetConnection() {
+        FutureAction resetConnectionAction = actionLibrary.resetConnection(ACTION_TIMEOUT_MS);
+        processResultsWhenAvailable(resetConnectionAction);
+    }
+
     private void sendCallbackForActionStarted(FutureAction action) {
         if (actionCallback != null) {
             actionCallback.actionStarted(action.getName());

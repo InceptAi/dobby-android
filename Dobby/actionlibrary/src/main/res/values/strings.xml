@@ -5,7 +5,17 @@
     <string name="toggle_wifi_off_and_on">Toggle Wifi Off and On</string>
     <string name="disconnect_from_current_wifi">Disconnect Current Wifi </string>
     <string name="connect_to_best_wifi">Connect To Best Wifi</string>
-    <string name="reconnect_to_same_wifi">Reconnect To Same Wifi</string>
-    <string name="forget_current_wifi">Forget Current Wifi</string>
-    <string name="disable_current_wifi">Disable Future Connections To Current Wifi</string>
+    <string name="connect_to_active_wifi">Connect To Active Wifi</string>
+    <string name="connect_to_given_wifi">Connect To Given Wifi</string>
+    <string name="reset_connection_to_current_wifi">Reset Connection To Active Wifi</string>
+    <string name="forget_active_wifi">Forget Current Wifi</string>
+    <string name="disable_active_wifi">Disable Future Connections To Current Wifi</string>
+    <string name="get_configured_wifi_networks">Get List of Configured Wifi Networks</string>
+    <string name="get_best_wifi_network_to_connect">Get Best Wifi Network To Connect</string>
+    <string name="get_nearby_wifi_networks">Get Nearby Wifi Networks</string>
+    <string name="get_dhcp_info">Get DHCP Info</string>
+    <string name="get_wifi_info">Get Current Link Info</string>
+    <string name="check_5GHz_supported">Check 5GHz supported</string>
+    <string name="repair_wifi_network">Repair Wifi Network</string>
+
 </resources>

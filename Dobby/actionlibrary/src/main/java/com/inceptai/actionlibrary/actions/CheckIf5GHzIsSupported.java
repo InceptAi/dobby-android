@@ -13,20 +13,20 @@ import com.inceptai.actionlibrary.R;
  * Created by vivek on 7/5/17.
  */
 
-public class TurnWifiOff extends FutureAction {
+public class CheckIf5GHzIsSupported extends FutureAction {
 
-    public TurnWifiOff(Context context, ActionThreadPool threadpool, NetworkActionLayer networkActionLayer, long timeOut) {
+    public CheckIf5GHzIsSupported(Context context, ActionThreadPool threadpool, NetworkActionLayer networkActionLayer, long timeOut) {
         super(context, threadpool, networkActionLayer, timeOut);
     }
 
     @Override
     public void post() {
-        setFuture(networkActionLayer.turnWifiOff());
+        setFuture(networkActionLayer.checkIf5GHzSupported());
     }
 
     @Override
     public String getName() {
-        return context.getString(R.string.turn_wifi_off);
+        return context.getString(R.string.check_5GHz_supported);
     }
 
     @Override

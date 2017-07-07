@@ -5,9 +5,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.DhcpInfo;
+import android.net.NetworkInfo;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.support.annotation.Nullable;
 
 import com.google.common.base.Preconditions;
@@ -31,17 +34,25 @@ public class WifiController {
 
     // Store application context to prevent leaks and crashes from an activity going out of scope.
     protected Context context;
-    protected WifiReceiver wifiScanReceiver = new WifiReceiver();
-    protected WifiReceiver wifiStateReceiver = new WifiReceiver();
-    protected int wifiReceiverState = WIFI_RECEIVER_UNREGISTERED;
-    protected WifiManager wifiManager;
     protected ActionThreadPool threadpool;
-    protected List<ScanResult> combinedScanResult;
+
+    private WifiReceiver wifiScanReceiver = new WifiReceiver();
+    private WifiReceiver wifiStateReceiver = new WifiReceiver();
+    private int wifiReceiverState = WIFI_RECEIVER_UNREGISTERED;
+    private WifiManager wifiManager;
+    private List<ScanResult> combinedScanResult;
+    private boolean wifiConnected;
 
     //All the future variables live here
-    protected SettableFuture<List<ScanResult>> wifiScanFuture;
-    protected SettableFuture<Boolean> turnWifiOffFuture;
-    protected SettableFuture<Boolean> turnWifiOnFuture;
+    private SettableFuture<List<ScanResult>> wifiScanFuture;
+    private SettableFuture<Boolean> turnWifiOffFuture;
+    private SettableFuture<Boolean> turnWifiOnFuture;
+    private SettableFuture<Boolean> reAssociateCurrentWifiFuture;
+    private SettableFuture<Boolean> disconnectCurrentWifiFuture;
+    private SettableFuture<Boolean> forgetWifiFuture;
+    private SettableFuture<Boolean> connectWithWifiFuture;
+    private SettableFuture<List<WifiConfiguration>> wifiConfigurationFuture;
+
 
     private WifiController(Context context, ActionThreadPool threadpool, WifiManager wifiManager) {
         Preconditions.checkNotNull(context);
@@ -50,7 +61,8 @@ public class WifiController {
         this.wifiManager = wifiManager;
         this.threadpool = threadpool;
         combinedScanResult = new ArrayList<>();
-        initializeWifiState();
+        wifiConnected = false;
+        registerWifiStateReceiver();
     }
 
     /**
@@ -110,6 +122,69 @@ public class WifiController {
 
 
     /**
+     * @return An instance of a {@link ListenableFuture<Boolean>} or null on immediate failure.
+     */
+    public ListenableFuture<Boolean> reAssociateWithCurrentWifi() {
+        if (reAssociateCurrentWifiFuture != null && !reAssociateCurrentWifiFuture.isDone()) {
+            return reAssociateCurrentWifiFuture;
+        }
+        reAssociateCurrentWifiFuture = SettableFuture.create();
+        if (wifiConnected) {
+            wifiManager.disconnect();
+        }
+        wifiManager.reassociate();
+        return reAssociateCurrentWifiFuture;
+    }
+
+    /**
+     * @return An instance of a {@link ListenableFuture<Boolean>} or null on immediate failure.
+     */
+    public ListenableFuture<Boolean> forgetNetwork(int networkId) {
+        if (forgetWifiFuture != null && !forgetWifiFuture.isDone()) {
+            //WifiScan in progress, just return the current future.
+            return forgetWifiFuture;
+        }
+        forgetWifiFuture = SettableFuture.create();
+        forgetWifiFuture.set(wifiManager.removeNetwork(networkId));
+        return forgetWifiFuture;
+    }
+
+    /**
+     * @return An instance of a {@link ListenableFuture<Boolean>} or null on immediate failure.
+     */
+    public ListenableFuture<Boolean> disconnectFromCurrentWifi() {
+        if (disconnectCurrentWifiFuture != null && !disconnectCurrentWifiFuture.isDone()) {
+            return disconnectCurrentWifiFuture;
+        }
+        disconnectCurrentWifiFuture = SettableFuture.create();
+        if (wifiConnected) {
+            //Disconnected
+            wifiManager.disconnect();
+            //Set the result when state changes
+        } else {
+            //Wifi is already disconnected, so return true
+            disconnectCurrentWifiFuture.set(true);
+        }
+        return disconnectCurrentWifiFuture;
+    }
+
+
+    /**
+     * @return An instance of a {@link ListenableFuture<Boolean>} or null on immediate failure.
+     */
+    public ListenableFuture<Boolean> connectWithWifiNetwork(int networkId) {
+        if (connectWithWifiFuture != null && !connectWithWifiFuture.isDone()) {
+            return connectWithWifiFuture;
+        }
+        connectWithWifiFuture = SettableFuture.create();
+        if (wifiConnected) {
+            wifiManager.disconnect();
+        }
+        wifiManager.enableNetwork(networkId, true);
+        return connectWithWifiFuture;
+    }
+
+    /**
          * @return An instance of a {@link ListenableFuture<List<ScanResult>>} or null on immediate failure.
      */
     public ListenableFuture<List<ScanResult>> startWifiScan() {
@@ -135,17 +210,39 @@ public class WifiController {
         return null;
     }
 
-    public DhcpInfo getDhcpInfo() {
-        return wifiManager.getDhcpInfo();
+
+    public ListenableFuture<List<WifiConfiguration>> getWifiConfiguration() {
+        if (wifiConfigurationFuture != null && !wifiConfigurationFuture.isDone()) {
+            //WifiScan in progress, just return the current future.
+            return wifiConfigurationFuture;
+        }
+        wifiConfigurationFuture = SettableFuture.create();
+        wifiConfigurationFuture.set(wifiManager.getConfiguredNetworks());
+        return wifiConfigurationFuture;
     }
 
-    public List<WifiConfiguration> getWifiConfiguration() {
-        List<WifiConfiguration> wifiConfigurationList = wifiManager.getConfiguredNetworks();
-        if (wifiConfigurationList == null) {
-            return new ArrayList<>();
-        }
-        return wifiManager.getConfiguredNetworks();
+    public ListenableFuture<DhcpInfo> getDhcpInfo() {
+        SettableFuture<DhcpInfo> dhcpInfoSettableFuture = SettableFuture.create();
+        dhcpInfoSettableFuture.set(wifiManager.getDhcpInfo());
+        return dhcpInfoSettableFuture;
     }
+
+    public ListenableFuture<WifiInfo> getWifiInfo() {
+        SettableFuture<WifiInfo> wifiInfoSettableFuture = SettableFuture.create();
+        wifiInfoSettableFuture.set(wifiManager.getConnectionInfo());
+        return wifiInfoSettableFuture;
+    }
+
+    public ListenableFuture<Boolean> check5GHzSupported() {
+        SettableFuture<Boolean> check5GHzSettableFuture = SettableFuture.create();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            check5GHzSettableFuture.set(wifiManager.is5GHzBandSupported());
+        } else {
+            check5GHzSettableFuture.set(null);
+        }
+        return check5GHzSettableFuture;
+    }
+
 
     public void cleanup() {
         unregisterScanReceiver();
@@ -154,11 +251,6 @@ public class WifiController {
 
 
     //Private calls
-    private void initializeWifiState() {
-        Preconditions.checkNotNull(wifiManager);
-        registerWifiStateReceiver();
-    }
-
     private void registerScanReceiver() {
         context.registerReceiver(wifiScanReceiver,
                 new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
@@ -169,7 +261,7 @@ public class WifiController {
         try {
             context.unregisterReceiver(wifiScanReceiver);
         } catch (IllegalArgumentException e) {
-            ActionLog.v("Exception while unregistering wifi receiver: " + e);
+            ActionLog.v("Exception while un-registering wifi receiver: " + e);
         }
         wifiReceiverState = WIFI_RECEIVER_UNREGISTERED;
     }
@@ -184,7 +276,7 @@ public class WifiController {
             currentScans = 0;
         }
 
-        synchronized public void onScanReceive() {
+        public void onScanReceive() {
             currentScans++;
             final boolean doScanAgain = (currentScans < MIN_WIFI_SCANS_NEEDED);
             threadpool.submit(new Runnable() {
@@ -257,7 +349,6 @@ public class WifiController {
     }
 
     private void updateWifiScanResults() {
-        StringBuilder sb = new StringBuilder();
         setWifiScanFuture(combinedScanResult);
         /*
         if (wifiList.size() == 0) {
@@ -290,16 +381,17 @@ public class WifiController {
 
 
     //Listening for WiFi intents
-    synchronized private void processWifiStateRelatedIntents(Intent intent) {
+    private void processWifiStateRelatedIntents(Intent intent) {
         final String action = intent.getAction();
         switch (action) {
             case WifiManager.WIFI_STATE_CHANGED_ACTION:
                 processWifiStateChanged(intent);
                 break;
             case WifiManager.NETWORK_STATE_CHANGED_ACTION:
+                processNetworkStateChangedIntent(intent);
                 break;
             case WifiManager.RSSI_CHANGED_ACTION:
-                int updatedSignal = intent.getIntExtra(WifiManager.EXTRA_NEW_RSSI, 0);
+                //int updatedSignal = intent.getIntExtra(WifiManager.EXTRA_NEW_RSSI, 0);
                 if (TRIGGER_WIFI_SCAN_ON_RSSI_CHANGE) {
                     //Reissue wifi scan to correctly compute contention since the signal has changed significantly
                     //Force a wifi scan
@@ -309,6 +401,35 @@ public class WifiController {
         }
     }
 
+
+    private void processNetworkStateChangedIntent(Intent intent) {
+        final NetworkInfo networkInfo = intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
+        if (networkInfo != null) {
+            NetworkInfo.DetailedState detailedWifiState = networkInfo.getDetailedState();
+            boolean wasConnected = wifiConnected;
+            wifiConnected = networkInfo.isConnected();
+            //If no longer connected, clear the connection info
+            if (!wifiConnected) {
+                //Set disconnect future
+                if (disconnectCurrentWifiFuture != null) {
+                    disconnectCurrentWifiFuture.set(true);
+                }
+            }
+            if (wifiConnected) {
+                //Re-associate does not trigger a disconnect -- do a disconnect and then reconnect.
+                if (reAssociateCurrentWifiFuture != null) {
+                    reAssociateCurrentWifiFuture.set(true);
+                }
+                //Set reconnect / re-associate / connect future
+                if (connectWithWifiFuture != null) {
+                    connectWithWifiFuture.set(true);
+                }
+            }
+            if (wifiConnected && !wasConnected) {
+                WifiInfo info = (WifiInfo) intent.getParcelableExtra(WifiManager.EXTRA_WIFI_INFO);
+            }
+        }
+    }
 
     private void processWifiStateChanged(Intent intent) {
         int wifiState = intent.getIntExtra(WifiManager.EXTRA_WIFI_STATE, WifiManager.WIFI_STATE_UNKNOWN);

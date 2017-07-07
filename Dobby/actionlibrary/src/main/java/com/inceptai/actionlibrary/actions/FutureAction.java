@@ -8,7 +8,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import com.inceptai.actionlibrary.ActionResult;
 import com.inceptai.actionlibrary.ActionThreadPool;
-import com.inceptai.actionlibrary.NetworkLayer.NetworkLayer;
+import com.inceptai.actionlibrary.NetworkLayer.NetworkActionLayer;
 import com.inceptai.actionlibrary.utils.ActionLog;
 
 import java.util.concurrent.ExecutionException;
@@ -26,19 +26,19 @@ import static com.inceptai.actionlibrary.ActionResult.ActionResultCodes.SUCCESS;
 
 public abstract class FutureAction {
     private static final String TAG = "ActionService";
-    ActionThreadPool threadpool;
+    ActionThreadPool actionThreadPool;
     private FutureAction uponCompletion;
     private SettableFuture<ActionResult> settableFuture;
     long timeOut;
     Context context;
-    NetworkLayer networkLayer;
+    NetworkActionLayer networkActionLayer;
 
-    FutureAction(Context context, ActionThreadPool threadpool, NetworkLayer networkLayer, long timeOut) {
+    FutureAction(Context context, ActionThreadPool actionThreadPool, NetworkActionLayer networkActionLayer, long timeOut) {
         this.context = context;
-        this.threadpool = threadpool;
+        this.actionThreadPool = actionThreadPool;
         this.timeOut = timeOut;
         settableFuture = SettableFuture.create();
-        this.networkLayer = networkLayer;
+        this.networkActionLayer = networkActionLayer;
         addCompletionWork();
     }
 
@@ -68,7 +68,7 @@ public abstract class FutureAction {
                     setResult(new ActionResult(EXCEPTION, e.toString()));
                 }
             }
-        }, threadpool.getExecutor());
+        }, actionThreadPool.getExecutor());
     }
 
     protected void setResult(ActionResult result) {
@@ -88,7 +88,7 @@ public abstract class FutureAction {
                     uponCompletion.post();
                 }
             }
-        }, threadpool.getExecutor());
+        }, actionThreadPool.getExecutor());
     }
 
     public SettableFuture<ActionResult> getSettableFuture() {

@@ -65,6 +65,12 @@ public class ActionResult {
         this.statusString = statusString;
     }
 
+    public ActionResult(@ActionResultCodes  int status, Object payload) {
+        this.status = status;
+        this.statusString = ActionResult.actionResultCodeToString(status);
+        this.payload = payload;
+    }
+
     public ActionResult(@ActionResultCodes int status, String statusString, Object payload) {
         this.status = status;
         this.statusString = statusString;

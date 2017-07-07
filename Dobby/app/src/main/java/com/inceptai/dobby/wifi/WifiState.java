@@ -178,7 +178,6 @@ public class WifiState {
 
     public HashMap<Long, String> getWifiStateTransitionsList() {
         HashMap<Long, String> transitionsToReturn = new HashMap<>();
-        //Sort the servers
         Collections.sort(wifiStateTransitions, new Comparator<WifiStateInfo>() {
             @Override
             public int compare(WifiStateInfo w1, WifiStateInfo w2) {
