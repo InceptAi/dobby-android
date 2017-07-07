@@ -8,7 +8,7 @@ import android.util.Log;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.actionlibrary.ActionLibrary;
 import com.inceptai.actionlibrary.ActionResult;
-import com.inceptai.actionlibrary.FutureAction;
+import com.inceptai.actionlibrary.actions.FutureAction;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.NetworkLayer;
@@ -148,7 +148,7 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         repeatBwWifiPingAction = new AtomicBoolean(false);
         lastAction = ACTION_TYPE_UNKNOWN;
         initChatToBotState();
-        turnWifiOn();
+        toggleWifi();
     }
 
     @Action.ActionType
@@ -1140,5 +1140,21 @@ public class DobbyAi implements ApiAiClient.ResultListener, InferenceEngine.Acti
         }, threadpool.getExecutor());
     }
 
+    private void toggleWifi() {
+        final FutureAction toggleWifi = actionLibrary.toggleWifi(10);
+        toggleWifi.getFuture().addListener(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    ActionResult result = toggleWifi.getFuture().get();
+                    DobbyLog.v("DobbyAI: Got the result for wifi toggle " + result.getErrorString());
+                }catch (Exception e) {
+                    e.printStackTrace(System.out);
+                    DobbyLog.w("Exception getting wifi results: " + e.getStackTrace().toString());
+                    //Informing inference engine of the error.
+                }
+            }
+        }, threadpool.getExecutor());
+    }
 
 }

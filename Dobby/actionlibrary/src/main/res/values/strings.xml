@@ -2,6 +2,7 @@
     <string name="app_name">ActionLibrary</string>
     <string name="turn_wifi_on">Turn Wifi On</string>
     <string name="turn_wifi_off">Turn Wifi Off</string>
+    <string name="toggle_wifi_off_and_on">Toggle Wifi Off and On</string>
     <string name="disconnect_from_current_wifi">Disconnect Current Wifi </string>
     <string name="connect_to_best_wifi">Connect To Best Wifi</string>
     <string name="reconnect_to_same_wifi">Reconnect To Same Wifi</string>

@@ -1,10 +1,13 @@
-package com.inceptai.actionlibrary;
+package com.inceptai.actionlibrary.actions;
 
 import android.content.Context;
 import android.support.annotation.Nullable;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import com.inceptai.actionlibrary.ActionResult;
+import com.inceptai.actionlibrary.ActionThreadPool;
 import com.inceptai.actionlibrary.NetworkLayer.NetworkLayer;
+import com.inceptai.actionlibrary.R;
 
 /**
  * Created by vivek on 7/5/17.
@@ -12,7 +15,7 @@ import com.inceptai.actionlibrary.NetworkLayer.NetworkLayer;
 
 public class TurnWifiOn extends FutureAction {
 
-    TurnWifiOn(Context context, ActionThreadPool threadpool, NetworkLayer networkLayer, long timeOut) {
+    public TurnWifiOn(Context context, ActionThreadPool threadpool, NetworkLayer networkLayer, long timeOut) {
         super(context, threadpool, networkLayer, timeOut);
     }
 
