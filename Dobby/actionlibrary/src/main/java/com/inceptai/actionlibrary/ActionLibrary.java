@@ -13,6 +13,8 @@ import com.inceptai.actionlibrary.actions.GetBestConfiguredNetwork;
 import com.inceptai.actionlibrary.actions.GetConfiguredNetworks;
 import com.inceptai.actionlibrary.actions.GetDHCPInfo;
 import com.inceptai.actionlibrary.actions.GetNearbyWifiNetworks;
+import com.inceptai.actionlibrary.actions.GetWifiInfo;
+import com.inceptai.actionlibrary.actions.RepairWifiNetwork;
 import com.inceptai.actionlibrary.actions.ResetConnectionWithCurrentWifi;
 import com.inceptai.actionlibrary.actions.ToggleWifi;
 import com.inceptai.actionlibrary.actions.TurnWifiOff;
@@ -93,6 +95,12 @@ public class ActionLibrary {
         return futureAction;
     }
 
+    public FutureAction getWifiInfo(long timeOut) {
+        FutureAction futureAction = new GetWifiInfo(context, actionThreadPool, networkActionLayer, timeOut);
+        futureAction.post();
+        return futureAction;
+    }
+
     public FutureAction getNearbyWifiNetworks(long timeOut) {
         FutureAction futureAction = new GetNearbyWifiNetworks(context, actionThreadPool, networkActionLayer, timeOut);
         futureAction.post();
@@ -107,6 +115,12 @@ public class ActionLibrary {
 
     public FutureAction resetConnection(long timeOut) {
         FutureAction futureAction = new ResetConnectionWithCurrentWifi(context, actionThreadPool, networkActionLayer, timeOut);
+        futureAction.post();
+        return futureAction;
+    }
+
+    public FutureAction repairWifiNetwork(long timeOut) {
+        FutureAction futureAction = new RepairWifiNetwork(context, actionThreadPool, networkActionLayer, timeOut);
         futureAction.post();
         return futureAction;
     }

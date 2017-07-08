@@ -84,6 +84,11 @@ public class ActionTaker {
         processResultsWhenAvailable(getDhcpInfoAction);
     }
 
+    public void getWifiInfo() {
+        FutureAction getWifiInfoAction = actionLibrary.getWifiInfo(ACTION_TIMEOUT_MS);
+        processResultsWhenAvailable(getWifiInfoAction);
+    }
+
     public void getNearbyWifiNetworks() {
         FutureAction nearbyWifiNetworksAction = actionLibrary.getNearbyWifiNetworks(ACTION_TIMEOUT_MS);
         processResultsWhenAvailable(nearbyWifiNetworksAction);
@@ -97,6 +102,11 @@ public class ActionTaker {
     public void resetConnection() {
         FutureAction resetConnectionAction = actionLibrary.resetConnection(ACTION_TIMEOUT_MS);
         processResultsWhenAvailable(resetConnectionAction);
+    }
+
+    public void repairConnection() {
+        FutureAction repairWifiNetworkAction = actionLibrary.repairWifiNetwork(ACTION_TIMEOUT_MS);
+        processResultsWhenAvailable(repairWifiNetworkAction);
     }
 
     private void sendCallbackForActionStarted(FutureAction action) {

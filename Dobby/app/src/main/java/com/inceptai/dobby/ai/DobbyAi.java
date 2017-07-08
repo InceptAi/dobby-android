@@ -1139,11 +1139,14 @@ public class DobbyAi implements ApiAiClient.ResultListener,
             actionTaker.checkIf5GHzSupported();
         } else if (expertMessage.toLowerCase().contains("wificonnect")) {
             actionTaker.connectToBestWifi();
-            //actionTaker.connectWithWifiNetwork(15);
         } else if (expertMessage.toLowerCase().contains("wifinearby")) {
             actionTaker.getNearbyWifiNetworks();
         } else if (expertMessage.toLowerCase().contains("wifidhcp")) {
             actionTaker.getDhcpInfo();
+        } else if (expertMessage.toLowerCase().contains("wifiinfo")) {
+            actionTaker.getWifiInfo();
+        } else if (expertMessage.toLowerCase().contains("wifirepair")) {
+            actionTaker.repairConnection();
         }
     }
 }

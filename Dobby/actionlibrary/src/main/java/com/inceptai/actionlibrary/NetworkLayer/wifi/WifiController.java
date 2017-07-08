@@ -132,7 +132,7 @@ public class WifiController {
         if (wifiConnected) {
             wifiManager.disconnect();
         }
-        wifiManager.reassociate();
+        wifiManager.reconnect();
         return reAssociateCurrentWifiFuture;
     }
 
