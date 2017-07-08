@@ -15,8 +15,8 @@ import com.inceptai.actionlibrary.R;
 
 public class ToggleWifi extends FutureAction {
 
-    public ToggleWifi(Context context, ActionThreadPool threadpool, NetworkActionLayer networkActionLayer, long actionTimeOutMs) {
-        super(context, threadpool, networkActionLayer, actionTimeOutMs);
+    public ToggleWifi(Context context, ActionThreadPool actionThreadPool, NetworkActionLayer networkActionLayer, long actionTimeOutMs) {
+        super(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
     }
 
     @Override

@@ -15,8 +15,8 @@ import com.inceptai.actionlibrary.R;
 
 public class TurnWifiOff extends FutureAction {
 
-    public TurnWifiOff(Context context, ActionThreadPool threadpool, NetworkActionLayer networkActionLayer, long actionTimeOutMs) {
-        super(context, threadpool, networkActionLayer, actionTimeOutMs);
+    public TurnWifiOff(Context context, ActionThreadPool actionThreadPool, NetworkActionLayer networkActionLayer, long actionTimeOutMs) {
+        super(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
     }
 
     @Override
