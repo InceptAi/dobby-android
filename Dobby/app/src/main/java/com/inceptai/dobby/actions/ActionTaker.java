@@ -109,6 +109,12 @@ public class ActionTaker {
         processResultsWhenAvailable(repairWifiNetworkAction);
     }
 
+
+    public void performConnectivityTest() {
+        FutureAction connectivityTestAction = actionLibrary.performConnectivityTest(ACTION_TIMEOUT_MS);
+        processResultsWhenAvailable(connectivityTestAction);
+    }
+
     private void sendCallbackForActionStarted(FutureAction action) {
         if (actionCallback != null) {
             actionCallback.actionStarted(action.getName());

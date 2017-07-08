@@ -19,10 +19,12 @@ import java.util.List;
 
 public class NetworkActionLayer {
     private WifiController wifiController;
+    private ConnectivityTester connectivityTester;
 
     // Use Dagger to get a singleton instance of this class.
-    public NetworkActionLayer(Context context, ActionThreadPool threadpool) {
-        this.wifiController = WifiController.create(context, threadpool);
+    public NetworkActionLayer(Context context, ActionThreadPool actionThreadPool) {
+        this.wifiController = WifiController.create(context, actionThreadPool);
+        this.connectivityTester = ConnectivityTester.create(context, actionThreadPool);
     }
 
     public ListenableFuture<List<ScanResult>> getNearbyWifiNetworks() {
@@ -99,6 +101,13 @@ public class NetworkActionLayer {
     public ListenableFuture<Boolean> connectWifiNetwork(int networkId) {
         if (wifiController != null) {
             return wifiController.connectWithWifiNetwork(networkId);
+        }
+        return null;
+    }
+
+    public ListenableFuture<Integer> connectivityTest(boolean onlyOnActiveNetwork) {
+        if (connectivityTester != null) {
+            return connectivityTester.connectivityTest();
         }
         return null;
     }

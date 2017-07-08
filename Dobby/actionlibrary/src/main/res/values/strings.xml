@@ -17,5 +17,6 @@
     <string name="get_wifi_info">Get Current Link Info</string>
     <string name="check_5GHz_supported">Check 5GHz supported</string>
     <string name="repair_wifi_network">Repair Wifi Network</string>
+    <string name="perform_connectivity_test">Perform Connectivity Test</string>
 
 </resources>

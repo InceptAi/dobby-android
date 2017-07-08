@@ -1147,6 +1147,8 @@ public class DobbyAi implements ApiAiClient.ResultListener,
             actionTaker.getWifiInfo();
         } else if (expertMessage.toLowerCase().contains("wifirepair")) {
             actionTaker.repairConnection();
+        } else if (expertMessage.toLowerCase().contains("connectivitytest")) {
+            actionTaker.performConnectivityTest();
         }
     }
 }
