@@ -867,7 +867,7 @@ public class DataInterpreter {
         HttpGrade httpGrade = new HttpGrade();
         httpGrade.errorCode = BandwidthTestCodes.ErrorCodes.NO_ERROR;
         httpGrade.errorCodeString = BandwidthTestCodes.bandwidthTestErrorCodesToStrings(httpGrade.errorCode);
-        if (httpRouterStats == null) {
+        if (httpRouterStats == null || httpRouterStats.ipAddress.equals("0.0.0.0")) {
             httpGrade.errorCode = BandwidthTestCodes.ErrorCodes.ERROR_DHCP_INFO_UNAVAILABLE;
             httpGrade.errorCodeString = BandwidthTestCodes.bandwidthTestErrorCodesToStrings(httpGrade.errorCode);
             return httpGrade;
@@ -906,15 +906,16 @@ public class DataInterpreter {
         int leastOccupiedChannel = linkInfo.getFrequency(); // current ap channel
         int minOccupancyAPs = numStrongInterferingAps;
         for (WifiState.ChannelInfo channelInfo: wifiChannelInfo.values()) {
-            int occupancy = 0;
             if (channelInfo != null) {
-                occupancy = channelInfo.getNumberOfInterferingAPs();
+                int occupancy = channelInfo.getNumberOfInterferingAPs();
+                if (occupancy < minOccupancyAPs) {
+                    leastOccupiedChannel = channelInfo.channelFrequency;
+                    minOccupancyAPs = occupancy;
+                }
+                if (occupancy > 0) {
+                    wifiGrade.wifiChannelOccupancyMetric.put(channelInfo.channelFrequency, occupancy);
+                }
             }
-            if (occupancy < minOccupancyAPs) {
-                leastOccupiedChannel = channelInfo.channelFrequency;
-                minOccupancyAPs = occupancy;
-            }
-            wifiGrade.wifiChannelOccupancyMetric.put(channelInfo.channelFrequency, occupancy);
         }
 
         wifiGrade.linkSpeed = linkInfo.getLinkSpeed();
@@ -927,7 +928,7 @@ public class DataInterpreter {
         wifiGrade.primaryApSignal = linkInfo.getRssi();
         wifiGrade.scanResultList = scanResultList;
         wifiGrade.wifiConfigurationList = wifiConfigurationList;
-        wifiGrade.detailedNetworkStateStats = wifiState.getDetailedNetworkStateStats();
+        //wifiGrade.detailedNetworkStateStats = wifiState.getDetailedNetworkStateStats();
         wifiGrade.networkStateTransitions = wifiState.getWifiStateTransitionsList();
 
         //Compute metrics
@@ -952,6 +953,8 @@ public class DataInterpreter {
         //wifiGrade.getPrimaryApMake = Utils.getWifiManufacturer(wifiGrade.primaryApBSSID);
         return wifiGrade;
     }
+
+
 
     @BandwidthTestCodes.ErrorCodes
     private static int getWifiErrorCode(@ConnectivityAnalyzer.WifiConnectivityMode int wifiConnectivityMode) {

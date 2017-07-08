@@ -34,12 +34,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.common.eventbus.Subscribe;
-import com.inceptai.dobby.DobbyAnalytics;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.RemoteConfig;
 import com.inceptai.dobby.ai.DataInterpreter;
 import com.inceptai.dobby.ai.SuggestionCreator;
+import com.inceptai.dobby.analytics.DobbyAnalytics;
 import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.heartbeat.HeartBeatManager;
@@ -221,6 +221,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         // requestPermissions();
         uiStateVisibilityChanges(view);
         dobbyAnalytics.wifiDocFragmentEntered();
+        dobbyAnalytics.userEnteredApp();
         return view;
     }
 
@@ -843,7 +844,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
     private void showSuggestionsUi() {
         if (currentSuggestion == null || bottomDialog == null) {
-            Toast.makeText(getContext(), "Unable to show suggestions.", Toast.LENGTH_SHORT).show();
+            if (currentSuggestion == null) {
+                Toast.makeText(getContext(), "Unable to show suggestions.", Toast.LENGTH_SHORT).show();
+            }
             return;
         }
         String suggestions = currentSuggestion.getTitle();

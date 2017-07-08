@@ -355,12 +355,22 @@ public class SuggestionCreator {
                 }
                 break;
             case Condition.ISP_INTERNET_SLOW:
-                baseMessage = "Looks like your Internet service could be slow at the moment. " +
-                        "You are getting about " + String.format("%.2f", params.bandwidthGrade.getDownloadBandwidth()) + " Mbps download and " +
-                        String.format("%.2f", params.bandwidthGrade.getUploadBandwidth()) + " Mbps upload. If these speeds seem low as per your " +
-                        "contract, you should reach out to " + params.bandwidthGrade.isp + " and see why you are getting such low speeds. " +
-                        "You should tell them that your wifi network latency is low but the " +
-                        "latency to access Internet is high.";
+                if (DataInterpreter.isNonFunctional(params.bandwidthGrade.getDownloadBandwidthMetric()) &&
+                        DataInterpreter.isNonFunctional(params.bandwidthGrade.getUploadBandwidthMetric())) {
+                    baseMessage =  "Looks like your Internet service is down. " +
+                            "We are unable to reach external servers for any bandwidth testing.";
+                    if (!params.bandwidthGrade.isp.equals(Utils.EMPTY_STRING)) {
+                        conditionalMessage = "You should contact " + params.bandwidthGrade.isp + " to see if they know about any issues " +
+                                "in your area";
+                    }
+                } else {
+                    baseMessage = "Looks like your Internet service could be slow at the moment. " +
+                            "You are getting about " + String.format("%.2f", params.bandwidthGrade.getDownloadBandwidth()) + " Mbps download and " +
+                            String.format("%.2f", params.bandwidthGrade.getUploadBandwidth()) + " Mbps upload. If these speeds seem low as per your " +
+                            "contract, you should reach out to " + params.bandwidthGrade.isp + " and see why you are getting such low speeds. " +
+                            "You should tell them that your wifi network latency is low but the " +
+                            "latency to access Internet is high.";
+                }
                 break;
             case Condition.ISP_INTERNET_SLOW_DOWNLOAD:
                 baseMessage = "Looks like your Internet download speed is slow " +

@@ -22,6 +22,9 @@ public class AlarmReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
+        if (!(context.getApplicationContext() instanceof  DobbyApplication)) {
+            return;
+        }
         ((DobbyApplication) context.getApplicationContext()).getProdComponent().inject(this);
         final String action = intent.getAction();
         if (action.equals(HeartBeatManager.DAILY_HEARTBEAT_INTENT)) {

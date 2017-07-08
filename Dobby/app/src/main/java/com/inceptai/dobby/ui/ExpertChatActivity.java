@@ -10,12 +10,12 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
 
-import com.inceptai.dobby.DobbyAnalytics;
 import com.inceptai.dobby.DobbyApplication;
-import com.inceptai.dobby.UserInteractionManager;
 import com.inceptai.dobby.R;
+import com.inceptai.dobby.UserInteractionManager;
 import com.inceptai.dobby.ai.DataInterpreter;
 import com.inceptai.dobby.ai.SuggestionCreator;
+import com.inceptai.dobby.analytics.DobbyAnalytics;
 import com.inceptai.dobby.expert.ExpertChatService;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.utils.DobbyLog;
@@ -30,7 +30,9 @@ public class ExpertChatActivity extends AppCompatActivity implements
         UserInteractionManager.InteractionCallback,
         ChatFragment.OnFragmentInteractionListener {
     private static final int SPEECH_RECOGNITION_REQUEST_CODE = 102;
-    private static final boolean RESUME_WITH_SUGGESTION_IF_AVAILABLE = true;
+    private static final boolean SHOW_CONTACT_HUMAN_BUTTON = false;
+    private static final long BOT_MESSAGE_DELAY_MS = 200;
+
     private UserInteractionManager userInteractionManager;
 
     @Inject
@@ -44,11 +46,10 @@ public class ExpertChatActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_wifidoc_expert_chat);
         setupChatFragment();
-        userInteractionManager = new UserInteractionManager(getApplicationContext(), this);
+        userInteractionManager = new UserInteractionManager(getApplicationContext(), this, SHOW_CONTACT_HUMAN_BUTTON);
         if (userInteractionManager.isFirstChatAfterInstall()) {
             WifiDocDialogFragment fragment = WifiDocDialogFragment.forExpertOnBoarding();
             fragment.show(getSupportFragmentManager(), "Wifi Expert Chat");
-            dobbyAnalytics.chatActivityEnteredFirstTime();
         }
     }
 
@@ -75,12 +76,10 @@ public class ExpertChatActivity extends AppCompatActivity implements
 
     @Override
     protected void onDestroy() {
-        DobbyLog.v("MainActivity: onDestroy");
+        DobbyLog.v("ExpertChatActivity: onDestroy");
         super.onDestroy();
         userInteractionManager.cleanup();
     }
-
-
 
     @Override
     protected void onNewIntent(Intent intent) {
@@ -120,10 +119,19 @@ public class ExpertChatActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void updateExpertIndicator(String text) {
+    public void showFillerTypingMessage(String text) {
         if (chatFragment != null) {
-            chatFragment.showExpertIndicatorWithText(text);
+            DobbyLog.v("Sending filler message with no delay");
+            chatFragment.showStatus(text, 0);
         }
+    }
+
+    @Override
+    public void updateExpertIndicator(String text) {
+        //No expert indicator for now.
+//        if (chatFragment != null) {
+//            chatFragment.showExpertIndicatorWithText(text);
+//        }
     }
 
     @Override
@@ -198,7 +206,7 @@ public class ExpertChatActivity extends AppCompatActivity implements
     @Override
     public void onFirstTimeResumed() {
         DobbyLog.v("MainActivity:onFirstTimeResumed");
-        userInteractionManager.onFirstTimeResumedChat(RESUME_WITH_SUGGESTION_IF_AVAILABLE);
+        userInteractionManager.resumeChatWithShortSuggestion();
     }
 
     @Override
@@ -213,6 +221,9 @@ public class ExpertChatActivity extends AppCompatActivity implements
         DobbyLog.v("MainActivity:onFragmentReady Setting chatFragment based on tag");
         //Setting chat fragment here
         chatFragment = getChatFragmentFromTag();
+        if (chatFragment != null) {
+            chatFragment.setBotMessageDelay(BOT_MESSAGE_DELAY_MS);
+        }
         //Don't do resume stuff for now
     }
 
@@ -235,7 +246,7 @@ public class ExpertChatActivity extends AppCompatActivity implements
     private void processIntent(Intent intent) {
         String notifSource = intent.getStringExtra(ExpertChatService.INTENT_NOTIF_SOURCE);
         if (notifSource != null) {
-            dobbyAnalytics.expertChatNotificationConsumed();
+            userInteractionManager.notificationConsumed();
         }
     }
 

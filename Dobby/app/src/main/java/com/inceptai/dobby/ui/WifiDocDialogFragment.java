@@ -21,13 +21,12 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import com.inceptai.dobby.BuildConfig;
-import com.inceptai.dobby.DobbyAnalytics;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.MainActivity;
 import com.inceptai.dobby.R;
+import com.inceptai.dobby.analytics.DobbyAnalytics;
 import com.inceptai.dobby.database.FeedbackDatabaseWriter;
 import com.inceptai.dobby.database.FeedbackRecord;
-import com.inceptai.dobby.utils.Utils;
 
 import java.util.ArrayList;
 

@@ -18,9 +18,9 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 
-import com.inceptai.dobby.DobbyAnalytics;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.R;
+import com.inceptai.dobby.analytics.DobbyAnalytics;
 import com.inceptai.dobby.utils.Utils;
 
 import javax.inject.Inject;

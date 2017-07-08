@@ -256,7 +256,7 @@ public class ConnectivityAnalyzer {
     }
 
     @ConnectivityAnalyzer.WifiConnectivityMode
-    synchronized public int getWifiConnectivityMode() {
+    public int getWifiConnectivityMode() {
         return wifiConnectivityMode;
     }
 
@@ -264,21 +264,18 @@ public class ConnectivityAnalyzer {
         wifiConnectivityMode = mode;
     }
 
-    synchronized public boolean isWifiOnline() {
+    public boolean isWifiOnline() {
         return (wifiConnectivityMode == CONNECTED_AND_ONLINE);
     }
 
-    synchronized public boolean isWifiInCaptivePortal() {
-        return (wifiConnectivityMode == WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL);
-    }
 
-    synchronized public boolean isWifiDisconnected() {
+    public boolean isWifiDisconnected() {
         return (wifiConnectivityMode == WifiConnectivityMode.OFF ||
                 wifiConnectivityMode == WifiConnectivityMode.ON_AND_DISCONNECTED) ;
     }
 
 
-    synchronized public boolean isWifiOff() {
+    public boolean isWifiOff() {
         return (wifiConnectivityMode == WifiConnectivityMode.OFF) ;
     }
 
@@ -342,6 +339,9 @@ public class ConnectivityAnalyzer {
         DobbyLog.v("WifiConnectivity Mode is " + wifiConnectivityMode);
     }
 
+    private boolean isWifiInCaptivePortal() {
+        return (wifiConnectivityMode == WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL);
+    }
 
     @TargetApi(Build.VERSION_CODES.N)
     private class ConnectivityAnalyzerNetworkCallback extends ConnectivityManager.NetworkCallback {

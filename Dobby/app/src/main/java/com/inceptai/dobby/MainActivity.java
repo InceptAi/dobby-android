@@ -25,6 +25,7 @@ import android.widget.Toast;
 
 import com.inceptai.dobby.ai.DataInterpreter;
 import com.inceptai.dobby.ai.SuggestionCreator;
+import com.inceptai.dobby.analytics.DobbyAnalytics;
 import com.inceptai.dobby.expert.ExpertChatService;
 import com.inceptai.dobby.heartbeat.HeartBeatManager;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
@@ -47,9 +48,14 @@ public class MainActivity extends AppCompatActivity
     private static final int PERMISSION_COARSE_LOCATION_REQUEST_CODE = 101;
     private static final boolean RESUME_WITH_SUGGESTION_IF_AVAILABLE = false;
     private static final int SPEECH_RECOGNITION_REQUEST_CODE = 102;
+    private static final long BOT_MESSAGE_DELAY_MS = 500;
+
+    private static final boolean SHOW_CONTACT_HUMAN_BUTTON = true;
+
 
     private UserInteractionManager userInteractionManager;
-    @Inject DobbyAnalytics dobbyAnalytics;
+    @Inject
+    DobbyAnalytics dobbyAnalytics;
     @Inject HeartBeatManager heartBeatManager;
 
     private ChatFragment chatFragment;
@@ -86,7 +92,7 @@ public class MainActivity extends AppCompatActivity
             return;
         }
 
-        userInteractionManager = new UserInteractionManager(getApplicationContext(), this);
+        userInteractionManager = new UserInteractionManager(getApplicationContext(), this, SHOW_CONTACT_HUMAN_BUTTON);
         heartBeatManager.setDailyHeartBeat();
 
         setContentView(R.layout.activity_main);
@@ -257,6 +263,12 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    @Override
+    public void showFillerTypingMessage(String text) {
+        if (chatFragment != null) {
+            chatFragment.showStatus(text, 0);
+        }
+    }
 
     //From chatFragment onInteractionListener
     @Override
@@ -279,7 +291,7 @@ public class MainActivity extends AppCompatActivity
     private void processIntent(Intent intent) {
         String notifSource = intent.getStringExtra(ExpertChatService.INTENT_NOTIF_SOURCE);
         if (notifSource != null) {
-            dobbyAnalytics.expertChatNotificationConsumed();
+            userInteractionManager.notificationConsumed();
         }
     }
 
@@ -368,7 +380,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onFirstTimeResumed() {
         DobbyLog.v("MainActivity:onFirstTimeResumed");
-        userInteractionManager.onFirstTimeResumedChat(RESUME_WITH_SUGGESTION_IF_AVAILABLE);
+        userInteractionManager.resumeChatWithWifiCheck();
     }
 
     @Override
@@ -383,6 +395,9 @@ public class MainActivity extends AppCompatActivity
         DobbyLog.v("MainActivity:onFragmentReady Setting chatFragment based on tag");
         //Setting chat fragment here
         chatFragment = getChatFragmentFromTag();
+        if (chatFragment != null) {
+            chatFragment.setBotMessageDelay(BOT_MESSAGE_DELAY_MS);
+        }
         //Don't do resume stuff for now
     }
 
