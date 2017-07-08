@@ -16,8 +16,8 @@ import com.inceptai.actionlibrary.R;
 public class ConnectWithGivenWifiNetwork extends FutureAction {
     private int networkId;
 
-    public ConnectWithGivenWifiNetwork(Context context, ActionThreadPool threadpool, NetworkActionLayer networkActionLayer, long timeOut, int networkId) {
-        super(context, threadpool, networkActionLayer, timeOut);
+    public ConnectWithGivenWifiNetwork(Context context, ActionThreadPool threadpool, NetworkActionLayer networkActionLayer, long actionTimeOutMs, int networkId) {
+        super(context, threadpool, networkActionLayer, actionTimeOutMs);
         this.networkId = networkId;
     }
 

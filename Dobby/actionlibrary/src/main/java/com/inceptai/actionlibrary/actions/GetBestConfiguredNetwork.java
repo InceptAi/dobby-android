@@ -27,14 +27,14 @@ public class GetBestConfiguredNetwork extends FutureAction {
     private List<WifiConfiguration> wifiConfigurationList;
     private WifiConfiguration bestAvailableWifiConfiguration;
 
-    public GetBestConfiguredNetwork(Context context, ActionThreadPool actionThreadPool, NetworkActionLayer networkActionLayer, long timeOut) {
-        super(context, actionThreadPool, networkActionLayer, timeOut);
+    public GetBestConfiguredNetwork(Context context, ActionThreadPool actionThreadPool, NetworkActionLayer networkActionLayer, long actionTimeOutMs) {
+        super(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
     }
 
     @Override
     public void post() {
-        final FutureAction getConfiguredNetworkListAction = new GetConfiguredNetworks(context, actionThreadPool, networkActionLayer, timeOut);
-        final FutureAction getNearbyNetworksAction = new GetNearbyWifiNetworks(context, actionThreadPool, networkActionLayer, timeOut);
+        final FutureAction getConfiguredNetworkListAction = new GetConfiguredNetworks(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
+        final FutureAction getNearbyNetworksAction = new GetNearbyWifiNetworks(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
 
         getConfiguredNetworkListAction.getFuture().addListener(new Runnable() {
             @Override

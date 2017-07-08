@@ -15,8 +15,8 @@ import com.inceptai.actionlibrary.R;
 
 public class GetConfiguredNetworks extends FutureAction {
 
-    public GetConfiguredNetworks(Context context, ActionThreadPool threadpool, NetworkActionLayer networkActionLayer, long timeOut) {
-        super(context, threadpool, networkActionLayer, timeOut);
+    public GetConfiguredNetworks(Context context, ActionThreadPool threadpool, NetworkActionLayer networkActionLayer, long actionTimeOutMs) {
+        super(context, threadpool, networkActionLayer, actionTimeOutMs);
     }
 
     @Override

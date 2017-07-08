@@ -15,8 +15,8 @@ import com.inceptai.actionlibrary.R;
 
 public class DisconnectFromCurrentWifi extends FutureAction {
 
-    public DisconnectFromCurrentWifi(Context context, ActionThreadPool threadpool, NetworkActionLayer networkActionLayer, long timeOut) {
-        super(context, threadpool, networkActionLayer, timeOut);
+    public DisconnectFromCurrentWifi(Context context, ActionThreadPool threadpool, NetworkActionLayer networkActionLayer, long actionTimeOutMs) {
+        super(context, threadpool, networkActionLayer, actionTimeOutMs);
     }
 
     @Override

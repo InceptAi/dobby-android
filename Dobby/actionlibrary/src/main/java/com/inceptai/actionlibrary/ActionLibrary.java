@@ -35,92 +35,92 @@ public class ActionLibrary {
         networkActionLayer = new NetworkActionLayer(context, actionThreadPool);
     }
 
-    public FutureAction turnWifiOn(long timeOut) {
-        FutureAction futureAction = new TurnWifiOn(context, actionThreadPool, networkActionLayer, timeOut);
+    public FutureAction turnWifiOn(long actionTimeOutMs) {
+        FutureAction futureAction = new TurnWifiOn(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
         futureAction.post();
         return futureAction;
     }
 
-    public FutureAction turnWifiOff(long timeOut) {
-        FutureAction futureAction = new TurnWifiOff(context, actionThreadPool, networkActionLayer, timeOut);
+    public FutureAction turnWifiOff(long actionTimeOutMs) {
+        FutureAction futureAction = new TurnWifiOff(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
         futureAction.post();
         return futureAction;
     }
 
-    public FutureAction toggleWifi(long timeOut) {
-        FutureAction futureAction = new ToggleWifi(context, actionThreadPool, networkActionLayer, timeOut);
+    public FutureAction toggleWifi(long actionTimeOutMs) {
+        FutureAction futureAction = new ToggleWifi(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
         futureAction.post();
         return futureAction;
     }
 
-    public FutureAction checkIf5GHzSupported(long timeOut) {
-        FutureAction futureAction = new CheckIf5GHzIsSupported(context, actionThreadPool, networkActionLayer, timeOut);
+    public FutureAction checkIf5GHzSupported(long actionTimeOutMs) {
+        FutureAction futureAction = new CheckIf5GHzIsSupported(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
         futureAction.post();
         return futureAction;
     }
 
-    public FutureAction disconnect(long timeOut) {
-        FutureAction futureAction = new DisconnectFromCurrentWifi(context, actionThreadPool, networkActionLayer, timeOut);
+    public FutureAction disconnect(long actionTimeOutMs) {
+        FutureAction futureAction = new DisconnectFromCurrentWifi(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
         futureAction.post();
         return futureAction;
     }
 
-    public FutureAction connectWithWifiNetwork(int networkId, long timeOut) {
-        FutureAction futureAction = new ConnectWithGivenWifiNetwork(context, actionThreadPool, networkActionLayer, timeOut, networkId);
+    public FutureAction connectWithWifiNetwork(int networkId, long actionTimeOutMs) {
+        FutureAction futureAction = new ConnectWithGivenWifiNetwork(context, actionThreadPool, networkActionLayer, actionTimeOutMs, networkId);
         futureAction.post();
         return futureAction;
     }
 
-    public FutureAction forgetWifiNetwork(int networkId, long timeOut) {
-        FutureAction futureAction = new ForgetWifiNetwork(context, actionThreadPool, networkActionLayer, timeOut, networkId);
+    public FutureAction forgetWifiNetwork(int networkId, long actionTimeOutMs) {
+        FutureAction futureAction = new ForgetWifiNetwork(context, actionThreadPool, networkActionLayer, actionTimeOutMs, networkId);
         futureAction.post();
         return futureAction;
     }
 
-    public FutureAction getBestConfiguredNetwork(long timeOut) {
-        FutureAction futureAction = new GetBestConfiguredNetwork(context, actionThreadPool, networkActionLayer, timeOut);
+    public FutureAction getBestConfiguredNetwork(long actionTimeOutMs) {
+        FutureAction futureAction = new GetBestConfiguredNetwork(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
         futureAction.post();
         return futureAction;
     }
 
-    public FutureAction getConfiguredNetworks(long timeOut) {
-        FutureAction futureAction = new GetConfiguredNetworks(context, actionThreadPool, networkActionLayer, timeOut);
+    public FutureAction getConfiguredNetworks(long actionTimeOutMs) {
+        FutureAction futureAction = new GetConfiguredNetworks(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
         futureAction.post();
         return futureAction;
     }
 
-    public FutureAction getDhcpInfo(long timeOut) {
-        FutureAction futureAction = new GetDHCPInfo(context, actionThreadPool, networkActionLayer, timeOut);
+    public FutureAction getDhcpInfo(long actionTimeOutMs) {
+        FutureAction futureAction = new GetDHCPInfo(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
         futureAction.post();
         return futureAction;
     }
 
-    public FutureAction getWifiInfo(long timeOut) {
-        FutureAction futureAction = new GetWifiInfo(context, actionThreadPool, networkActionLayer, timeOut);
+    public FutureAction getWifiInfo(long actionTimeOutMs) {
+        FutureAction futureAction = new GetWifiInfo(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
         futureAction.post();
         return futureAction;
     }
 
-    public FutureAction getNearbyWifiNetworks(long timeOut) {
-        FutureAction futureAction = new GetNearbyWifiNetworks(context, actionThreadPool, networkActionLayer, timeOut);
+    public FutureAction getNearbyWifiNetworks(long actionTimeOutMs) {
+        FutureAction futureAction = new GetNearbyWifiNetworks(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
         futureAction.post();
         return futureAction;
     }
 
-    public FutureAction connectToBestWifi(long timeOut) {
-        FutureAction futureAction = new ConnectToBestConfiguredNetworkIfAvailable(context, actionThreadPool, networkActionLayer, timeOut);
+    public FutureAction connectToBestWifi(long actionTimeOutMs) {
+        FutureAction futureAction = new ConnectToBestConfiguredNetworkIfAvailable(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
         futureAction.post();
         return futureAction;
     }
 
-    public FutureAction resetConnection(long timeOut) {
-        FutureAction futureAction = new ResetConnectionWithCurrentWifi(context, actionThreadPool, networkActionLayer, timeOut);
+    public FutureAction resetConnection(long actionTimeOutMs) {
+        FutureAction futureAction = new ResetConnectionWithCurrentWifi(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
         futureAction.post();
         return futureAction;
     }
 
-    public FutureAction repairWifiNetwork(long timeOut) {
-        FutureAction futureAction = new RepairWifiNetwork(context, actionThreadPool, networkActionLayer, timeOut);
+    public FutureAction repairWifiNetwork(long actionTimeOutMs) {
+        FutureAction futureAction = new RepairWifiNetwork(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
         futureAction.post();
         return futureAction;
     }

@@ -15,8 +15,8 @@ import com.inceptai.actionlibrary.R;
 
 public class GetWifiInfo extends FutureAction {
 
-    public GetWifiInfo(Context context, ActionThreadPool threadpool, NetworkActionLayer networkActionLayer, long timeOut) {
-        super(context, threadpool, networkActionLayer, timeOut);
+    public GetWifiInfo(Context context, ActionThreadPool threadpool, NetworkActionLayer networkActionLayer, long actionTimeOutMs) {
+        super(context, threadpool, networkActionLayer, actionTimeOutMs);
     }
 
     @Override

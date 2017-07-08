@@ -20,13 +20,13 @@ import java.util.concurrent.ExecutionException;
 public class ConnectToBestConfiguredNetworkIfAvailable extends FutureAction {
     private WifiConfiguration bestAvailableWifiConfiguration;
 
-    public ConnectToBestConfiguredNetworkIfAvailable(Context context, ActionThreadPool threadpool, NetworkActionLayer networkActionLayer, long timeOut) {
-        super(context, threadpool, networkActionLayer, timeOut);
+    public ConnectToBestConfiguredNetworkIfAvailable(Context context, ActionThreadPool threadpool, NetworkActionLayer networkActionLayer, long actionTimeOutMs) {
+        super(context, threadpool, networkActionLayer, actionTimeOutMs);
     }
 
     @Override
     public void post() {
-        final FutureAction getBestConfiguredNetworkAction = new GetBestConfiguredNetwork(context, actionThreadPool, networkActionLayer, timeOut);
+        final FutureAction getBestConfiguredNetworkAction = new GetBestConfiguredNetwork(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
         getBestConfiguredNetworkAction.getFuture().addListener(new Runnable() {
             @Override
             public void run() {
@@ -38,7 +38,7 @@ public class ConnectToBestConfiguredNetworkIfAvailable extends FutureAction {
                     }
                     if (bestAvailableWifiConfiguration != null) {
                         final FutureAction connectToBestNetworkAction = new ConnectWithGivenWifiNetwork(context,
-                                actionThreadPool, networkActionLayer, timeOut, bestAvailableWifiConfiguration.networkId);
+                                actionThreadPool, networkActionLayer, actionTimeOutMs, bestAvailableWifiConfiguration.networkId);
                         setFuture(connectToBestNetworkAction.getFuture());
                         connectToBestNetworkAction.post();
                     } else {
@@ -85,7 +85,7 @@ public class ConnectToBestConfiguredNetworkIfAvailable extends FutureAction {
         }
         if (bestAvailableWifiConfiguration != null) {
             final FutureAction connectToBestNetworkAction = new ConnectWithGivenWifiNetwork(context,
-                    actionThreadPool, networkActionLayer, timeOut, bestAvailableWifiConfiguration.networkId);
+                    actionThreadPool, networkActionLayer, actionTimeOutMs, bestAvailableWifiConfiguration.networkId);
             setFuture(connectToBestNetworkAction.getFuture());
             connectToBestNetworkAction.post();
         } else {

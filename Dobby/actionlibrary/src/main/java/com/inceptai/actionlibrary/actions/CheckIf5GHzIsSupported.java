@@ -15,8 +15,8 @@ import com.inceptai.actionlibrary.R;
 
 public class CheckIf5GHzIsSupported extends FutureAction {
 
-    public CheckIf5GHzIsSupported(Context context, ActionThreadPool threadpool, NetworkActionLayer networkActionLayer, long timeOut) {
-        super(context, threadpool, networkActionLayer, timeOut);
+    public CheckIf5GHzIsSupported(Context context, ActionThreadPool threadpool, NetworkActionLayer networkActionLayer, long actionTimeOutMs) {
+        super(context, threadpool, networkActionLayer, actionTimeOutMs);
     }
 
     @Override

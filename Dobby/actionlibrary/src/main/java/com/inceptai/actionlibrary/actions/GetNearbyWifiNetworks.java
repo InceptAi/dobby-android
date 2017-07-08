@@ -15,8 +15,8 @@ import com.inceptai.actionlibrary.R;
 
 public class GetNearbyWifiNetworks extends FutureAction {
 
-    public GetNearbyWifiNetworks(Context context, ActionThreadPool threadpool, NetworkActionLayer networkActionLayer, long timeOut) {
-        super(context, threadpool, networkActionLayer, timeOut);
+    public GetNearbyWifiNetworks(Context context, ActionThreadPool threadpool, NetworkActionLayer networkActionLayer, long actionTimeOutMs) {
+        super(context, threadpool, networkActionLayer, actionTimeOutMs);
     }
 
     @Override

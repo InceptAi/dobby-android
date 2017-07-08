@@ -15,8 +15,8 @@ import com.inceptai.actionlibrary.R;
 
 public class ResetConnectionWithCurrentWifi extends FutureAction {
 
-    public ResetConnectionWithCurrentWifi(Context context, ActionThreadPool threadPool, NetworkActionLayer networkActionLayer, long timeOut) {
-        super(context, threadPool, networkActionLayer, timeOut);
+    public ResetConnectionWithCurrentWifi(Context context, ActionThreadPool threadPool, NetworkActionLayer networkActionLayer, long actionTimeOutMs) {
+        super(context, threadPool, networkActionLayer, actionTimeOutMs);
     }
 
     @Override

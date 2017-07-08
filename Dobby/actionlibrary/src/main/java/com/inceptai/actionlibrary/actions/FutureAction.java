@@ -12,6 +12,8 @@ import com.inceptai.actionlibrary.NetworkLayer.NetworkActionLayer;
 import com.inceptai.actionlibrary.utils.ActionLog;
 
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import static com.inceptai.actionlibrary.ActionResult.ActionResultCodes.EXCEPTION;
 import static com.inceptai.actionlibrary.ActionResult.ActionResultCodes.FAILED_TO_START;
@@ -29,14 +31,14 @@ public abstract class FutureAction {
     ActionThreadPool actionThreadPool;
     private FutureAction uponCompletion;
     private SettableFuture<ActionResult> settableFuture;
-    long timeOut;
+    long actionTimeOutMs;
     Context context;
     NetworkActionLayer networkActionLayer;
 
-    FutureAction(Context context, ActionThreadPool actionThreadPool, NetworkActionLayer networkActionLayer, long timeOut) {
+    FutureAction(Context context, ActionThreadPool actionThreadPool, NetworkActionLayer networkActionLayer, long actionTimeOutMs) {
         this.context = context;
         this.actionThreadPool = actionThreadPool;
-        this.timeOut = timeOut;
+        this.actionTimeOutMs = actionTimeOutMs;
         settableFuture = SettableFuture.create();
         this.networkActionLayer = networkActionLayer;
         addCompletionWork();
@@ -56,6 +58,15 @@ public abstract class FutureAction {
                     ActionResult.actionResultCodeToString(FAILED_TO_START)));
             return;
         }
+
+        final ScheduledFuture<?> timeOutFuture = actionThreadPool.getScheduledExecutorService().schedule(new Runnable() {
+            @Override
+            public void run() {
+                ActionLog.v("FutureAction: timeout for action " + getName());
+                setResult(new ActionResult(ActionResult.ActionResultCodes.TIMED_OUT));
+            }
+        }, actionTimeOutMs, TimeUnit.MILLISECONDS);
+
         future.addListener(new Runnable() {
             @Override
             public void run() {
@@ -66,6 +77,8 @@ public abstract class FutureAction {
                     Log.w("", "Exception getting result for:" + getName() +
                             " e = " + e.toString());
                     setResult(new ActionResult(EXCEPTION, e.toString()));
+                } finally {
+                    timeOutFuture.cancel(true);
                 }
             }
         }, actionThreadPool.getExecutor());

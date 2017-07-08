@@ -14,7 +14,7 @@ import com.inceptai.dobby.utils.DobbyLog;
  */
 
 public class ActionTaker {
-    private static long ACTION_TIMEOUT_MS = 1000;
+    private static long ACTION_TIMEOUT_MS = 10000; //10sec timeout
     private ActionLibrary actionLibrary;
     private DobbyThreadpool threadpool;
     private ActionCallback actionCallback;

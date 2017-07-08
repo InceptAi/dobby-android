@@ -15,15 +15,15 @@ import com.inceptai.actionlibrary.R;
 
 public class RepairWifiNetwork extends FutureAction {
 
-    public RepairWifiNetwork(Context context, ActionThreadPool threadpool, NetworkActionLayer networkActionLayer, long timeOut) {
-        super(context, threadpool, networkActionLayer, timeOut);
+    public RepairWifiNetwork(Context context, ActionThreadPool threadpool, NetworkActionLayer networkActionLayer, long actionTimeOutMs) {
+        super(context, threadpool, networkActionLayer, actionTimeOutMs);
     }
 
     @Override
     public void post() {
-        FutureAction toggleWifiAction = new ToggleWifi(context, actionThreadPool, networkActionLayer, timeOut);
-        FutureAction connectToBestWifiNetwork = new ConnectToBestConfiguredNetworkIfAvailable(context, actionThreadPool, networkActionLayer, timeOut);
-        FutureAction getWifiInfoAction = new GetWifiInfo(context, actionThreadPool, networkActionLayer, timeOut);
+        FutureAction toggleWifiAction = new ToggleWifi(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
+        FutureAction connectToBestWifiNetwork = new ConnectToBestConfiguredNetworkIfAvailable(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
+        FutureAction getWifiInfoAction = new GetWifiInfo(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
         toggleWifiAction.uponCompletion(connectToBestWifiNetwork);
         connectToBestWifiNetwork.uponCompletion(getWifiInfoAction);
         setFuture(getWifiInfoAction.getSettableFuture());

@@ -15,14 +15,14 @@ import com.inceptai.actionlibrary.R;
 
 public class ToggleWifi extends FutureAction {
 
-    public ToggleWifi(Context context, ActionThreadPool threadpool, NetworkActionLayer networkActionLayer, long timeOut) {
-        super(context, threadpool, networkActionLayer, timeOut);
+    public ToggleWifi(Context context, ActionThreadPool threadpool, NetworkActionLayer networkActionLayer, long actionTimeOutMs) {
+        super(context, threadpool, networkActionLayer, actionTimeOutMs);
     }
 
     @Override
     public void post() {
-        FutureAction turnWifiOff = new TurnWifiOff(context, actionThreadPool, networkActionLayer, timeOut);
-        FutureAction turnWifiOn = new TurnWifiOn(context, actionThreadPool, networkActionLayer, timeOut);
+        FutureAction turnWifiOff = new TurnWifiOff(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
+        FutureAction turnWifiOn = new TurnWifiOn(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
         turnWifiOff.uponCompletion(turnWifiOn);
         setFuture(turnWifiOn.getSettableFuture());
         turnWifiOff.post();
