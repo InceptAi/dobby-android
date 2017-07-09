@@ -14,7 +14,7 @@ import com.inceptai.actionlibrary.R;
  */
 
 public class PerformConnectivityTest extends FutureAction {
-    private final boolean PERFORM_TEST_ONLY_ON_ACTIVE_NETWORK = true;
+    private final boolean PERFORM_TEST_ONLY_ON_ACTIVE_NETWORK = false;
     public PerformConnectivityTest(Context context, ActionThreadPool actionThreadPool, NetworkActionLayer networkActionLayer, long actionTimeOutMs) {
         super(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
     }

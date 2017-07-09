@@ -8,6 +8,9 @@ import com.inceptai.actionlibrary.ActionResult;
 import com.inceptai.actionlibrary.ActionThreadPool;
 import com.inceptai.actionlibrary.NetworkLayer.NetworkActionLayer;
 import com.inceptai.actionlibrary.R;
+import com.inceptai.actionlibrary.utils.ActionLog;
+
+import java.util.concurrent.ExecutionException;
 
 /**
  * Created by vivek on 7/5/17.
@@ -21,10 +24,24 @@ public class ToggleWifi extends FutureAction {
 
     @Override
     public void post() {
-        FutureAction turnWifiOff = new TurnWifiOff(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
-        FutureAction turnWifiOn = new TurnWifiOn(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
+        final FutureAction turnWifiOff = new TurnWifiOff(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
+        final FutureAction turnWifiOn = new TurnWifiOn(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
         turnWifiOff.uponCompletion(turnWifiOn);
-        setFuture(turnWifiOn.getSettableFuture());
+        //setFuture(turnWifiOn.getFuture());
+        turnWifiOn.getFuture().addListener(new Runnable() {
+            @Override
+            public void run() {
+                ActionResult actionResult = null;
+                try {
+                    actionResult = turnWifiOn.getFuture().get();
+                    setResult(actionResult);
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace(System.out);
+                    ActionLog.w("ActionTaker: Exception getting wifi results: " + e.toString());
+                    setResult(new ActionResult(ActionResult.ActionResultCodes.EXCEPTION, e.toString()));
+                }
+            }
+        }, actionThreadPool.getExecutor());
         turnWifiOff.post();
     }
 

@@ -1,23 +1,28 @@
 package com.inceptai.dobby.actions;
 
 import android.content.Context;
+import android.net.wifi.WifiInfo;
 import android.support.annotation.Nullable;
 
 import com.inceptai.actionlibrary.ActionLibrary;
 import com.inceptai.actionlibrary.ActionResult;
+import com.inceptai.actionlibrary.NetworkLayer.ConnectivityTester;
 import com.inceptai.actionlibrary.actions.FutureAction;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.utils.DobbyLog;
+
+import static com.inceptai.actionlibrary.ActionResult.ActionResultCodes.SUCCESS;
 
 /**
  * Created by vivek on 7/6/17.
  */
 
 public class ActionTaker {
-    private static long ACTION_TIMEOUT_MS = 10000; //10sec timeout
+    private static long ACTION_TIMEOUT_MS = 1000000; //10sec timeout
     private ActionLibrary actionLibrary;
     private DobbyThreadpool threadpool;
     private ActionCallback actionCallback;
+    private WifiInfo wifiInfoAfterRepair;
 
 
     public interface ActionCallback {
@@ -104,15 +109,50 @@ public class ActionTaker {
         processResultsWhenAvailable(resetConnectionAction);
     }
 
-    public void repairConnection() {
-        FutureAction repairWifiNetworkAction = actionLibrary.repairWifiNetwork(ACTION_TIMEOUT_MS);
-        processResultsWhenAvailable(repairWifiNetworkAction);
-    }
-
-
     public void performConnectivityTest() {
         FutureAction connectivityTestAction = actionLibrary.performConnectivityTest(ACTION_TIMEOUT_MS);
         processResultsWhenAvailable(connectivityTestAction);
+    }
+
+    public void repairConnection() {
+        final FutureAction repairWifiNetworkAction = actionLibrary.repairWifiNetwork(ACTION_TIMEOUT_MS);
+        sendCallbackForActionStarted(repairWifiNetworkAction);
+        wifiInfoAfterRepair = null;
+        repairWifiNetworkAction.getFuture().addListener(new Runnable() {
+            @Override
+            public void run() {
+                ActionResult repairResult = null;
+                ActionResult wifiInfoResult = null;
+                ActionResult resultToReturn = null;
+                int modeAfterRepair = ConnectivityTester.WifiConnectivityMode.UNKNOWN;
+                try {
+                    repairResult = repairWifiNetworkAction.getFuture().get();
+                    if (repairResult != null && repairResult.getStatus() == SUCCESS) {
+                        modeAfterRepair = (Integer) repairResult.getPayload();
+                        final FutureAction getWifiInfo = actionLibrary.getWifiInfo(ACTION_TIMEOUT_MS);
+                        wifiInfoResult = getWifiInfo.getFuture().get();
+                        if (modeAfterRepair == ConnectivityTester.WifiConnectivityMode.CONNECTED_AND_ONLINE) {
+                            //Repair successful -- get wifi info and show it to the user
+                            resultToReturn = new ActionResult(ActionResult.ActionResultCodes.SUCCESS,
+                                    "Repaired !", wifiInfoResult.getPayload());
+                        } else {
+                            resultToReturn = new ActionResult(ActionResult.ActionResultCodes.GENERAL_ERROR,
+                                    "Toggled and connected, but unable to put wifi in connected mode: mode found " +
+                                            ConnectivityTester.connectivityModeToString(modeAfterRepair), wifiInfoResult.getPayload());
+                        }
+                    } else {
+                        resultToReturn = new ActionResult(repairResult.getStatus(),
+                                "Unable to toggle and connect: error " + repairResult.getStatusString(), null);
+                    }
+                    DobbyLog.v("ActionTaker: Got the result for  " + repairWifiNetworkAction.getName() + " result " + repairResult.getStatusString());
+                } catch (Exception e) {
+                    e.printStackTrace(System.out);
+                    DobbyLog.w("ActionTaker: Exception getting wifi results: " + e.toString());
+                } finally {
+                    sendCallbackForActionCompleted(repairWifiNetworkAction, resultToReturn);
+                }
+            }
+        }, threadpool.getExecutor());
     }
 
     private void sendCallbackForActionStarted(FutureAction action) {

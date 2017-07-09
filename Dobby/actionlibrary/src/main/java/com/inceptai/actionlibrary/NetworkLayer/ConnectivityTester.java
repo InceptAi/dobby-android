@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.net.HttpURLConnection;
+import java.util.concurrent.TimeUnit;
 
 import static android.os.Build.VERSION_CODES.LOLLIPOP;
 import static com.inceptai.actionlibrary.NetworkLayer.ConnectivityTester.WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL;
@@ -42,6 +43,8 @@ public class ConnectivityTester {
     private static String URL_FOR_CONNECTIVITY_AND_PORTAL_TEST = "http://clients3.google.com/generate_204";
     private static final int PORTAL_TEST_READ_TIMEOUT_MS = 3000;
     private static final int PORTAL_TEST_CONNECTION_TIMEOUT_MS = 3000;
+    private static int GAP_BETWEEN_CONNECTIVITY_CHECKS_MS = 300;
+    private static int MAX_RESCHEDULING_CONNECTIVITY_TESTS = 5;
 
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({CONNECTED_AND_ONLINE, CONNECTED_AND_CAPTIVE_PORTAL,
@@ -107,15 +110,19 @@ public class ConnectivityTester {
         threadpool.getExecutorService().submit(new Runnable() {
             @Override
             public void run() {
-                performConnectivityTest(onlyOnActiveNetwork, isWifiConnected);
+                performConnectivityTest(onlyOnActiveNetwork, isWifiConnected, MAX_RESCHEDULING_CONNECTIVITY_TESTS);
             }
         });
         return connectivityCheckFuture;
     }
 
-    private void performConnectivityTest(boolean onlyOnActiveNetwork, boolean isWifiConnected) {
+    private void performConnectivityTest(boolean onlyOnActiveNetwork,
+                                         boolean isWifiConnected,
+                                         int rescheduleCount) {
         @WifiConnectivityMode int mode = UNKNOWN;
+        ActionLog.v("In ConnectivityTester: performConnectivityTest " + rescheduleCount);
         if (getIsWifiActive()) {
+            ActionLog.v("In ConnectivityTester: performConnectivityTest wifi is active " + rescheduleCount);
             mode = testUrl();
         } else if (!onlyOnActiveNetwork && isWifiConnected){
             //Active network is not wifi but we are connected -- split by api levels
@@ -125,11 +132,26 @@ public class ConnectivityTester {
                 mode = forceTestOverWifiPreLollipop();
             }
         }
+        if (mode != CONNECTED_AND_ONLINE && rescheduleCount > 0) {
+            rescheduleConnectivityTest(onlyOnActiveNetwork, isWifiConnected, rescheduleCount);
+            return;
+        }
         connectivityCheckFuture.set(mode);
     }
 
+    private void rescheduleConnectivityTest(final boolean onlyOnActiveNetwork,
+                                            final boolean isWifiConnected,
+                                            final int scheduleCount) {
+        threadpool.getExecutorServiceForNetworkLayer().schedule(new Runnable() {
+            @Override
+            public void run() {
+                ActionLog.v("ConnectivityTester: Scheduled " + scheduleCount);
+                performConnectivityTest(onlyOnActiveNetwork, isWifiConnected, scheduleCount - 1);
+            }
+        }, GAP_BETWEEN_CONNECTIVITY_CHECKS_MS, TimeUnit.MILLISECONDS);
+    }
 
-    private static String connectivityModeToString(@WifiConnectivityMode int mode) {
+    public static String connectivityModeToString(@WifiConnectivityMode int mode) {
         switch (mode) {
             case CONNECTED_AND_ONLINE:
                 return "CONNECTED_AND_ONLINE";

@@ -11,6 +11,7 @@ import com.inceptai.actionlibrary.ActionThreadPool;
 import com.inceptai.actionlibrary.NetworkLayer.NetworkActionLayer;
 import com.inceptai.actionlibrary.utils.ActionLog;
 
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -62,8 +63,13 @@ public abstract class FutureAction {
         final ScheduledFuture<?> timeOutFuture = actionThreadPool.getScheduledExecutorService().schedule(new Runnable() {
             @Override
             public void run() {
-                ActionLog.v("FutureAction: timeout for action " + getName());
-                setResult(new ActionResult(ActionResult.ActionResultCodes.TIMED_OUT));
+                try {
+                    ActionLog.v("FutureAction: timeout for action " + getName());
+                    setResult(new ActionResult(ActionResult.ActionResultCodes.TIMED_OUT));
+                    future.cancel(true);
+                } catch (CancellationException e) {
+                    ActionLog.v("Exception while cancelling task.");
+                }
             }
         }, actionTimeOutMs, TimeUnit.MILLISECONDS);
 
