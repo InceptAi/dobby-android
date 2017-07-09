@@ -502,6 +502,7 @@ public class DataInterpreter {
         @MetricType int primaryLinkChannelOccupancyMetric = MetricType.UNKNOWN;
         @ConnectivityAnalyzer.WifiConnectivityMode int wifiConnectivityMode = ConnectivityAnalyzer.WifiConnectivityMode.UNKNOWN;
         @WifiState.WifiLinkMode int wifiLinkMode = WifiState.WifiLinkMode.UNKNOWN;
+        String primaryApBSSID;
         String primaryApSsid;
         int primaryApChannel;
         int leastOccupiedChannel;
@@ -947,6 +948,9 @@ public class DataInterpreter {
         wifiGrade.primaryApSignalString = DataInterpreter.metricTypeToString(wifiGrade.primaryApSignalMetric);
         wifiGrade.primaryChannelOccupancyString = DataInterpreter.metricTypeToString(wifiGrade.primaryLinkChannelOccupancyMetric);
         wifiGrade.linkSpeedString = DataInterpreter.metricTypeToString(wifiGrade.primaryApLinkSpeedMetric);
+        wifiGrade.primaryApBSSID = linkInfo.getBSSID();
+        //Needs a network call -- put it in python script
+        //wifiGrade.getPrimaryApMake = Utils.getWifiManufacturer(wifiGrade.primaryApBSSID);
         return wifiGrade;
     }
 
