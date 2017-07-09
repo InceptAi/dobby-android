@@ -107,9 +107,16 @@ public class NetworkActionLayer {
 
     public ListenableFuture<Integer> connectivityTest(boolean onlyOnActiveNetwork) {
         if (connectivityTester != null) {
-            return connectivityTester.connectivityTest();
+            return connectivityTester.connectivityTest(onlyOnActiveNetwork, isWifiConnected());
         }
         return null;
+    }
+
+    private boolean isWifiConnected() {
+        if (wifiController != null) {
+            return wifiController.isWifiConnected();
+        }
+        return false;
     }
 
     public void cleanup() {}

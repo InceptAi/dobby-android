@@ -99,7 +99,7 @@ public class ConnectivityTester {
         return null;
     }
 
-    ListenableFuture<Integer> connectivityTest(final boolean onlyOnActiveNetwork) {
+    ListenableFuture<Integer> connectivityTest(final boolean onlyOnActiveNetwork, final boolean isWifiConnected) {
         if (connectivityCheckFuture != null && !connectivityCheckFuture.isDone()) {
             return connectivityCheckFuture;
         }
@@ -107,18 +107,18 @@ public class ConnectivityTester {
         threadpool.getExecutorService().submit(new Runnable() {
             @Override
             public void run() {
-                performConnectivityTest(onlyOnActiveNetwork);
+                performConnectivityTest(onlyOnActiveNetwork, isWifiConnected);
             }
         });
         return connectivityCheckFuture;
     }
 
-    private void performConnectivityTest(boolean onlyOnActiveNetwork) {
+    private void performConnectivityTest(boolean onlyOnActiveNetwork, boolean isWifiConnected) {
         @WifiConnectivityMode int mode = UNKNOWN;
         if (getIsWifiActive()) {
             mode = testUrl();
-        } else if (onlyOnActiveNetwork){
-            //Active network is not wifi -- split by api levels
+        } else if (!onlyOnActiveNetwork && isWifiConnected){
+            //Active network is not wifi but we are connected -- split by api levels
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 mode = forceTestOverWifiPostLollipop();
             } else {

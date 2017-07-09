@@ -42,6 +42,7 @@ public class WifiController {
     private WifiManager wifiManager;
     private List<ScanResult> combinedScanResult;
     private boolean wifiConnected;
+    private NetworkInfo.DetailedState lastDetailedState;
 
     //All the future variables live here
     private SettableFuture<List<ScanResult>> wifiScanFuture;
@@ -63,6 +64,7 @@ public class WifiController {
         combinedScanResult = new ArrayList<>();
         wifiConnected = false;
         registerWifiStateReceiver();
+        lastDetailedState = NetworkInfo.DetailedState.IDLE;
     }
 
     /**
@@ -249,6 +251,9 @@ public class WifiController {
         unregisterWifiStateReceiver();
     }
 
+    public boolean isWifiConnected() {
+        return isWifiEnabled() && lastDetailedState == NetworkInfo.DetailedState.CONNECTED;
+    }
 
     //Private calls
     private void registerScanReceiver() {
@@ -363,6 +368,11 @@ public class WifiController {
         */
     }
 
+    private boolean isWifiEnabled() {
+        return wifiManager.getWifiState() == WifiManager.WIFI_STATE_ENABLED;
+    }
+
+
     private void registerWifiStateReceiver() {
         IntentFilter wifiStateIntentFilter = new IntentFilter();
         wifiStateIntentFilter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
@@ -405,7 +415,7 @@ public class WifiController {
     private void processNetworkStateChangedIntent(Intent intent) {
         final NetworkInfo networkInfo = intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
         if (networkInfo != null) {
-            NetworkInfo.DetailedState detailedWifiState = networkInfo.getDetailedState();
+            lastDetailedState = networkInfo.getDetailedState();
             boolean wasConnected = wifiConnected;
             wifiConnected = networkInfo.isConnected();
             //If no longer connected, clear the connection info
