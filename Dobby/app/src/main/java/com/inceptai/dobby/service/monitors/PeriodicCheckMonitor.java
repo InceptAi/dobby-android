@@ -35,19 +35,9 @@ public class PeriodicCheckMonitor {
         periodicCheckReceiver = new PeriodicCheckReceiver();
     }
 
-    public void registerCallback(PeriodicCheckCallback periodicCheckCallback) {
-        this.periodicCheckCallback = periodicCheckCallback;
-        registerReceiver();
-    }
 
-    public void unRegisterCallback() {
-        this.periodicCheckCallback = null;
-        if (periodicCheckReceiverRegistered) {
-            unregisterReceiver();
-        }
-    }
-
-    public void enableCheck(long waitBeforeCheck) {
+    public void enableCheck(long waitBeforeCheck, PeriodicCheckCallback periodicCheckCallback) {
+        registerCallback(periodicCheckCallback);
         if (!ServiceAlarm.alarmExists(context, intent)) {
             ServiceAlarm.addAlarm(context,
                     waitBeforeCheck, true, PERIODIC_CHECK_INTERVAL_MS, pendingIntent);
@@ -55,11 +45,23 @@ public class PeriodicCheckMonitor {
     }
 
     public void disableCheck() {
+        unRegisterCallback();
         ServiceAlarm.unsetAlarm(context, pendingIntent);
     }
 
     //Private calls
-    //Discover the public methods -- do we need any
+    private void registerCallback(PeriodicCheckCallback periodicCheckCallback) {
+        this.periodicCheckCallback = periodicCheckCallback;
+        registerReceiver();
+    }
+
+    private void unRegisterCallback() {
+        this.periodicCheckCallback = null;
+        if (periodicCheckReceiverRegistered) {
+            unregisterReceiver();
+        }
+    }
+
     private void registerReceiver() {
         IntentFilter intentFilter =  getIntentFilter();
         context.registerReceiver(periodicCheckReceiver, intentFilter);
