@@ -7,7 +7,6 @@ import android.support.annotation.Nullable;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.actionlibrary.ActionResult;
-import com.inceptai.actionlibrary.ActionThreadPool;
 import com.inceptai.actionlibrary.NetworkLayer.NetworkActionLayer;
 import com.inceptai.actionlibrary.R;
 import com.inceptai.actionlibrary.utils.ActionLog;
@@ -16,6 +15,8 @@ import com.inceptai.actionlibrary.utils.ActionUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * Created by vivek on 7/5/17.
@@ -27,14 +28,18 @@ public class GetBestConfiguredNetwork extends FutureAction {
     private List<WifiConfiguration> wifiConfigurationList;
     private WifiConfiguration bestAvailableWifiConfiguration;
 
-    public GetBestConfiguredNetwork(Context context, ActionThreadPool actionThreadPool, NetworkActionLayer networkActionLayer, long actionTimeOutMs) {
-        super(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
+    public GetBestConfiguredNetwork(Context context,
+                                    Executor executor,
+                                    ScheduledExecutorService scheduledExecutorService,
+                                    NetworkActionLayer networkActionLayer,
+                                    long actionTimeOutMs) {
+        super(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
     }
 
     @Override
     public void post() {
-        final FutureAction getConfiguredNetworkListAction = new GetConfiguredNetworks(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
-        final FutureAction getNearbyNetworksAction = new GetNearbyWifiNetworks(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
+        final FutureAction getConfiguredNetworkListAction = new GetConfiguredNetworks(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
+        final FutureAction getNearbyNetworksAction = new GetNearbyWifiNetworks(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
 
         getConfiguredNetworkListAction.getFuture().addListener(new Runnable() {
             @Override
@@ -48,7 +53,7 @@ public class GetBestConfiguredNetwork extends FutureAction {
                     setResult(new ActionResult(ActionResult.ActionResultCodes.EXCEPTION, e.toString()));
                 }
             }
-        }, actionThreadPool.getExecutor());
+        }, executor);
 
         getNearbyNetworksAction.getFuture().addListener(new Runnable() {
             @Override
@@ -62,7 +67,7 @@ public class GetBestConfiguredNetwork extends FutureAction {
                     setResult(new ActionResult(ActionResult.ActionResultCodes.EXCEPTION, e.toString()));
                 }
             }
-        }, actionThreadPool.getExecutor());
+        }, executor);
 
         getConfiguredNetworkListAction.post();
         getNearbyNetworksAction.post();

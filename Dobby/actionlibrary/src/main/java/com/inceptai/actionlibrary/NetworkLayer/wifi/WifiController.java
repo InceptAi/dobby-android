@@ -16,11 +16,11 @@ import android.support.annotation.Nullable;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
-import com.inceptai.actionlibrary.ActionThreadPool;
 import com.inceptai.actionlibrary.utils.ActionLog;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executor;
 
 /**
  * Class contains logic for scanning, computing contention and any other wifi-related diagnostics.
@@ -33,8 +33,8 @@ public class WifiController {
     private static final int MIN_WIFI_SCANS_NEEDED = 1;
 
     // Store application context to prevent leaks and crashes from an activity going out of scope.
-    protected Context context;
-    protected ActionThreadPool threadpool;
+    private Context context;
+    private Executor executor;
 
     private WifiReceiver wifiScanReceiver = new WifiReceiver();
     private WifiReceiver wifiStateReceiver = new WifiReceiver();
@@ -55,12 +55,12 @@ public class WifiController {
     private SettableFuture<List<WifiConfiguration>> wifiConfigurationFuture;
 
 
-    private WifiController(Context context, ActionThreadPool threadpool, WifiManager wifiManager) {
+    private WifiController(Context context, Executor executor, WifiManager wifiManager) {
         Preconditions.checkNotNull(context);
         Preconditions.checkNotNull(wifiManager);
         this.context = context;
+        this.executor = executor;
         this.wifiManager = wifiManager;
-        this.threadpool = threadpool;
         combinedScanResult = new ArrayList<>();
         wifiConnected = false;
         registerWifiStateReceiver();
@@ -74,10 +74,10 @@ public class WifiController {
      * @return Instance of WifiAnalyzer or null on error.
      */
     @Nullable
-    public static WifiController create(Context context, ActionThreadPool threadpool) {
+    public static WifiController create(Context context, Executor executor) {
         WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         if (wifiManager != null) {
-            return new WifiController(context.getApplicationContext(), threadpool, wifiManager);
+            return new WifiController(context.getApplicationContext(), executor, wifiManager);
         }
         return null;
     }
@@ -284,7 +284,7 @@ public class WifiController {
         public void onScanReceive() {
             currentScans++;
             final boolean doScanAgain = (currentScans < MIN_WIFI_SCANS_NEEDED);
-            threadpool.submit(new Runnable() {
+            executor.execute(new Runnable() {
                 @Override
                 public void run() {
                     try {
@@ -313,7 +313,7 @@ public class WifiController {
 
         public void onWifiStateChange(Intent intent) {
             final Intent intentToProcess = intent;
-            threadpool.submit(new Runnable() {
+            executor.execute(new Runnable() {
                 @Override
                 public void run() {
                     processWifiStateRelatedIntents(intentToProcess);

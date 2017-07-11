@@ -7,10 +7,11 @@ import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 
 import com.google.common.util.concurrent.ListenableFuture;
-import com.inceptai.actionlibrary.ActionThreadPool;
 import com.inceptai.actionlibrary.NetworkLayer.wifi.WifiController;
 
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * This class abstracts out the implementation details of all things 'network' related. The UI and
@@ -22,9 +23,9 @@ public class NetworkActionLayer {
     private ConnectivityTester connectivityTester;
 
     // Use Dagger to get a singleton instance of this class.
-    public NetworkActionLayer(Context context, ActionThreadPool actionThreadPool) {
-        this.wifiController = WifiController.create(context, actionThreadPool);
-        this.connectivityTester = ConnectivityTester.create(context, actionThreadPool);
+    public NetworkActionLayer(Context context, Executor executor, ScheduledExecutorService scheduledExecutorService) {
+        this.wifiController = WifiController.create(context, executor);
+        this.connectivityTester = ConnectivityTester.create(context, executor, scheduledExecutorService);
     }
 
     public ListenableFuture<List<ScanResult>> getNearbyWifiNetworks() {

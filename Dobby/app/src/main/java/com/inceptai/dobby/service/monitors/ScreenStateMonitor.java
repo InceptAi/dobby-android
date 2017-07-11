@@ -65,6 +65,7 @@ public class ScreenStateMonitor {
         }
     }
 
+
     //Discover the public methods -- do we need any
     private void registerReceiver() {
         IntentFilter intentFilter =  getIntentFilter();

@@ -1,4 +1,4 @@
-package com.inceptai.dobby.actions;
+package com.inceptai.dobby.service;
 
 import android.content.Context;
 import android.net.wifi.WifiInfo;
@@ -8,35 +8,42 @@ import com.inceptai.actionlibrary.ActionLibrary;
 import com.inceptai.actionlibrary.ActionResult;
 import com.inceptai.actionlibrary.NetworkLayer.ConnectivityTester;
 import com.inceptai.actionlibrary.actions.FutureAction;
-import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.utils.DobbyLog;
+
+import java.util.concurrent.Executor;
+import java.util.concurrent.ScheduledExecutorService;
 
 import static com.inceptai.actionlibrary.ActionResult.ActionResultCodes.SUCCESS;
 
 /**
- * Created by vivek on 7/6/17.
+ * Created by vivek on 7/10/17.
  */
 
-public class ActionTaker {
+public class ServiceActionTaker {
     private static long ACTION_TIMEOUT_MS = 1000000; //10sec timeout
     private ActionLibrary actionLibrary;
-    private DobbyThreadpool threadpool;
     private ActionCallback actionCallback;
     private WifiInfo wifiInfoAfterRepair;
-
+    private Executor executor;
+    private ScheduledExecutorService scheduledExecutorService;
 
     public interface ActionCallback {
         void actionStarted(String actionName);
         void actionCompleted(String actionName, ActionResult actionResult);
     }
 
-    public ActionTaker(Context applicationContext, DobbyThreadpool threadpool) {
-        this.threadpool = threadpool;
-        actionLibrary = new ActionLibrary(applicationContext, threadpool.getExecutor(), threadpool.getScheduledExecutorServiceForActions());
+    public ServiceActionTaker(Context applicationContext, Executor executor, ScheduledExecutorService scheduledExecutorService) {
+        this.executor = executor;
+        this.scheduledExecutorService = scheduledExecutorService;
+        actionLibrary = new ActionLibrary(applicationContext, executor, scheduledExecutorService);
     }
 
-    public void setActionCallback(ActionCallback actionCallback) {
+    public void registerCallback(ActionCallback actionCallback) {
         this.actionCallback = actionCallback;
+    }
+
+    public void unregisterCallback() {
+        this.actionCallback = null;
     }
 
     public void turnWifiOff() {
@@ -133,7 +140,7 @@ public class ActionTaker {
                         wifiInfoResult = getWifiInfo.getFuture().get();
                         if (modeAfterRepair == ConnectivityTester.WifiConnectivityMode.CONNECTED_AND_ONLINE) {
                             //Repair successful -- get wifi info and show it to the user
-                            resultToReturn = new ActionResult(ActionResult.ActionResultCodes.SUCCESS,
+                            resultToReturn = new ActionResult(SUCCESS,
                                     "Repaired !", wifiInfoResult.getPayload());
                         } else {
                             resultToReturn = new ActionResult(ActionResult.ActionResultCodes.GENERAL_ERROR,
@@ -152,7 +159,7 @@ public class ActionTaker {
                     sendCallbackForActionCompleted(repairWifiNetworkAction, resultToReturn);
                 }
             }
-        }, threadpool.getExecutor());
+        }, executor);
     }
 
     private void sendCallbackForActionStarted(FutureAction action) {
@@ -184,6 +191,6 @@ public class ActionTaker {
                     sendCallbackForActionCompleted(futureAction, result);
                 }
             }
-        }, threadpool.getExecutor());
+        }, executor);
     }
 }

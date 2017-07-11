@@ -5,9 +5,11 @@ import android.support.annotation.Nullable;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.actionlibrary.ActionResult;
-import com.inceptai.actionlibrary.ActionThreadPool;
 import com.inceptai.actionlibrary.NetworkLayer.NetworkActionLayer;
 import com.inceptai.actionlibrary.R;
+
+import java.util.concurrent.Executor;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * Created by vivek on 7/5/17.
@@ -16,8 +18,13 @@ import com.inceptai.actionlibrary.R;
 public class ConnectWithGivenWifiNetwork extends FutureAction {
     private int networkId;
 
-    public ConnectWithGivenWifiNetwork(Context context, ActionThreadPool threadpool, NetworkActionLayer networkActionLayer, long actionTimeOutMs, int networkId) {
-        super(context, threadpool, networkActionLayer, actionTimeOutMs);
+    public ConnectWithGivenWifiNetwork(Context context,
+                                       Executor executor,
+                                       ScheduledExecutorService scheduledExecutorService,
+                                       NetworkActionLayer networkActionLayer,
+                                       long actionTimeOutMs,
+                                       int networkId) {
+        super(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
         this.networkId = networkId;
     }
 

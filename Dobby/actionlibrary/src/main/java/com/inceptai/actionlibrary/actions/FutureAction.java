@@ -7,12 +7,13 @@ import android.util.Log;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import com.inceptai.actionlibrary.ActionResult;
-import com.inceptai.actionlibrary.ActionThreadPool;
 import com.inceptai.actionlibrary.NetworkLayer.NetworkActionLayer;
 import com.inceptai.actionlibrary.utils.ActionLog;
 
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -29,16 +30,22 @@ import static com.inceptai.actionlibrary.ActionResult.ActionResultCodes.SUCCESS;
 
 public abstract class FutureAction {
     private static final String TAG = "ActionService";
-    ActionThreadPool actionThreadPool;
     private FutureAction uponCompletion;
     private SettableFuture<ActionResult> settableFuture;
+    Executor executor;
+    ScheduledExecutorService scheduledExecutorService;
     long actionTimeOutMs;
     Context context;
     NetworkActionLayer networkActionLayer;
 
-    FutureAction(Context context, ActionThreadPool actionThreadPool, NetworkActionLayer networkActionLayer, long actionTimeOutMs) {
+    FutureAction(Context context,
+                 Executor executor,
+                 ScheduledExecutorService scheduledExecutorService,
+                 NetworkActionLayer networkActionLayer,
+                 long actionTimeOutMs) {
         this.context = context;
-        this.actionThreadPool = actionThreadPool;
+        this.executor = executor;
+        this.scheduledExecutorService = scheduledExecutorService;
         this.actionTimeOutMs = actionTimeOutMs;
         settableFuture = SettableFuture.create();
         this.networkActionLayer = networkActionLayer;
@@ -60,7 +67,7 @@ public abstract class FutureAction {
             return;
         }
 
-        final ScheduledFuture<?> timeOutFuture = actionThreadPool.getScheduledExecutorService().schedule(new Runnable() {
+        final ScheduledFuture<?> timeOutFuture = scheduledExecutorService.schedule(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -87,7 +94,7 @@ public abstract class FutureAction {
                     timeOutFuture.cancel(true);
                 }
             }
-        }, actionThreadPool.getExecutor());
+        }, executor);
     }
 
     protected void setResult(ActionResult result) {
@@ -107,7 +114,7 @@ public abstract class FutureAction {
                     uponCompletion.post();
                 }
             }
-        }, actionThreadPool.getExecutor());
+        }, executor);
     }
 
     public SettableFuture<ActionResult> getSettableFuture() {

@@ -6,12 +6,13 @@ import android.support.annotation.Nullable;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.actionlibrary.ActionResult;
-import com.inceptai.actionlibrary.ActionThreadPool;
 import com.inceptai.actionlibrary.NetworkLayer.NetworkActionLayer;
 import com.inceptai.actionlibrary.R;
 import com.inceptai.actionlibrary.utils.ActionLog;
 
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * Created by vivek on 7/5/17.
@@ -20,13 +21,18 @@ import java.util.concurrent.ExecutionException;
 public class ConnectToBestConfiguredNetworkIfAvailable extends FutureAction {
     private WifiConfiguration bestAvailableWifiConfiguration;
 
-    public ConnectToBestConfiguredNetworkIfAvailable(Context context, ActionThreadPool threadpool, NetworkActionLayer networkActionLayer, long actionTimeOutMs) {
-        super(context, threadpool, networkActionLayer, actionTimeOutMs);
+    public ConnectToBestConfiguredNetworkIfAvailable(Context context,
+                                                     Executor executor,
+                                                     ScheduledExecutorService scheduledExecutorService,
+                                                     NetworkActionLayer networkActionLayer,
+                                                     long actionTimeOutMs) {
+        super(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
     }
 
     @Override
     public void post() {
-        final FutureAction getBestConfiguredNetworkAction = new GetBestConfiguredNetwork(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
+        final FutureAction getBestConfiguredNetworkAction = new GetBestConfiguredNetwork(context,
+                executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
         getBestConfiguredNetworkAction.getFuture().addListener(new Runnable() {
             @Override
             public void run() {
@@ -38,7 +44,8 @@ public class ConnectToBestConfiguredNetworkIfAvailable extends FutureAction {
                     }
                     if (bestAvailableWifiConfiguration != null) {
                         final FutureAction connectToBestNetworkAction = new ConnectWithGivenWifiNetwork(context,
-                                actionThreadPool, networkActionLayer, actionTimeOutMs, bestAvailableWifiConfiguration.networkId);
+                                executor, scheduledExecutorService, networkActionLayer,
+                                actionTimeOutMs, bestAvailableWifiConfiguration.networkId);
                         setFuture(connectToBestNetworkAction.getFuture());
                         connectToBestNetworkAction.post();
                     } else {
@@ -50,7 +57,7 @@ public class ConnectToBestConfiguredNetworkIfAvailable extends FutureAction {
                     setResult(new ActionResult(ActionResult.ActionResultCodes.EXCEPTION, e.toString()));
                 }
             }
-        }, actionThreadPool.getExecutor());
+        }, executor);
         getBestConfiguredNetworkAction.post();
     }
 
@@ -79,17 +86,4 @@ public class ConnectToBestConfiguredNetworkIfAvailable extends FutureAction {
         return super.getFuture();
     }
 
-    private void setBestAvailableWifiConfiguration(ActionResult actionResult) {
-        if (actionResult != null) {
-            bestAvailableWifiConfiguration = (WifiConfiguration)actionResult.getPayload();
-        }
-        if (bestAvailableWifiConfiguration != null) {
-            final FutureAction connectToBestNetworkAction = new ConnectWithGivenWifiNetwork(context,
-                    actionThreadPool, networkActionLayer, actionTimeOutMs, bestAvailableWifiConfiguration.networkId);
-            setFuture(connectToBestNetworkAction.getFuture());
-            connectToBestNetworkAction.post();
-        } else {
-            setResult(null);
-        }
-    }
 }

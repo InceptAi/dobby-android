@@ -5,12 +5,13 @@ import android.support.annotation.Nullable;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.actionlibrary.ActionResult;
-import com.inceptai.actionlibrary.ActionThreadPool;
 import com.inceptai.actionlibrary.NetworkLayer.NetworkActionLayer;
 import com.inceptai.actionlibrary.R;
 import com.inceptai.actionlibrary.utils.ActionLog;
 
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * Created by vivek on 7/5/17.
@@ -18,14 +19,18 @@ import java.util.concurrent.ExecutionException;
 
 public class ToggleWifi extends FutureAction {
 
-    public ToggleWifi(Context context, ActionThreadPool actionThreadPool, NetworkActionLayer networkActionLayer, long actionTimeOutMs) {
-        super(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
+    public ToggleWifi(Context context,
+                      Executor executor,
+                      ScheduledExecutorService scheduledExecutorService,
+                      NetworkActionLayer networkActionLayer,
+                      long actionTimeOutMs) {
+        super(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
     }
 
     @Override
     public void post() {
-        final FutureAction turnWifiOff = new TurnWifiOff(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
-        final FutureAction turnWifiOn = new TurnWifiOn(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
+        final FutureAction turnWifiOff = new TurnWifiOff(context, executor,  scheduledExecutorService, networkActionLayer, actionTimeOutMs);
+        final FutureAction turnWifiOn = new TurnWifiOn(context, executor,  scheduledExecutorService, networkActionLayer, actionTimeOutMs);
         turnWifiOff.uponCompletion(turnWifiOn);
         //setFuture(turnWifiOn.getFuture());
         turnWifiOn.getFuture().addListener(new Runnable() {
@@ -41,7 +46,7 @@ public class ToggleWifi extends FutureAction {
                     setResult(new ActionResult(ActionResult.ActionResultCodes.EXCEPTION, e.toString()));
                 }
             }
-        }, actionThreadPool.getExecutor());
+        }, executor);
         turnWifiOff.post();
     }
 

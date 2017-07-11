@@ -5,9 +5,11 @@ import android.support.annotation.Nullable;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.actionlibrary.ActionResult;
-import com.inceptai.actionlibrary.ActionThreadPool;
 import com.inceptai.actionlibrary.NetworkLayer.NetworkActionLayer;
 import com.inceptai.actionlibrary.R;
+
+import java.util.concurrent.Executor;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * Created by vivek on 7/5/17.
@@ -15,8 +17,12 @@ import com.inceptai.actionlibrary.R;
 
 public class PerformConnectivityTest extends FutureAction {
     private final boolean PERFORM_TEST_ONLY_ON_ACTIVE_NETWORK = false;
-    public PerformConnectivityTest(Context context, ActionThreadPool actionThreadPool, NetworkActionLayer networkActionLayer, long actionTimeOutMs) {
-        super(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
+    public PerformConnectivityTest(Context context,
+                                   Executor executor,
+                                   ScheduledExecutorService scheduledExecutorService,
+                                   NetworkActionLayer networkActionLayer,
+                                   long actionTimeOutMs) {
+        super(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
     }
 
     @Override

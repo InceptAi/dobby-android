@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Manages a threadpool for background execution.
+ * Manages a actionThreadPool for background execution.
  */
 
 public class DobbyThreadpool {
@@ -47,6 +47,8 @@ public class DobbyThreadpool {
     private ListeningScheduledExecutorService eventBusExecutorService;
 
     private ListeningScheduledExecutorService scheduledExecutorServiceForPing;
+    private ListeningScheduledExecutorService scheduledExecutorServiceForActions;
+
 
     private UiThreadExecutor uiThreadExecutor;
 
@@ -74,6 +76,8 @@ public class DobbyThreadpool {
         eventBusExecutorService = MoreExecutors.listeningDecorator(Executors.newSingleThreadScheduledExecutor());
 
         scheduledExecutorServiceForPing = MoreExecutors.listeningDecorator(Executors.newSingleThreadScheduledExecutor());
+        scheduledExecutorServiceForActions = MoreExecutors.listeningDecorator(Executors.newSingleThreadScheduledExecutor());
+
     }
 
     public void submit(Runnable runnable) {
@@ -95,6 +99,10 @@ public class DobbyThreadpool {
 
     public ScheduledExecutorService getScheduledExecutorServiceForPing() {
         return scheduledExecutorServiceForPing;
+    }
+
+    public ScheduledExecutorService getScheduledExecutorServiceForActions() {
+        return scheduledExecutorServiceForActions;
     }
 
     public ListeningScheduledExecutorService getListeningScheduledExecutorService() {

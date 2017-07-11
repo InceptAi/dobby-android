@@ -5,12 +5,13 @@ import android.support.annotation.Nullable;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.actionlibrary.ActionResult;
-import com.inceptai.actionlibrary.ActionThreadPool;
 import com.inceptai.actionlibrary.NetworkLayer.NetworkActionLayer;
 import com.inceptai.actionlibrary.R;
 import com.inceptai.actionlibrary.utils.ActionLog;
 
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * Created by vivek on 7/5/17.
@@ -18,15 +19,23 @@ import java.util.concurrent.ExecutionException;
 
 public class RepairWifiNetwork extends FutureAction {
 
-    public RepairWifiNetwork(Context context, ActionThreadPool threadpool, NetworkActionLayer networkActionLayer, long actionTimeOutMs) {
-        super(context, threadpool, networkActionLayer, actionTimeOutMs);
+    public RepairWifiNetwork(Context context,
+                             Executor executor,
+                             ScheduledExecutorService scheduledExecutorService,
+                             NetworkActionLayer networkActionLayer,
+                             long actionTimeOutMs) {
+        super(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
     }
 
     @Override
     public void post() {
-        final FutureAction toggleWifiAction = new ToggleWifi(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
-        final FutureAction connectToBestWifiNetwork = new ConnectToBestConfiguredNetworkIfAvailable(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
-        final FutureAction connectivityAction = new PerformConnectivityTest(context, actionThreadPool, networkActionLayer, actionTimeOutMs);
+        final FutureAction toggleWifiAction = new ToggleWifi(context, executor,
+                scheduledExecutorService, networkActionLayer, actionTimeOutMs);
+        final FutureAction connectToBestWifiNetwork =
+                new ConnectToBestConfiguredNetworkIfAvailable(context, executor,
+                        scheduledExecutorService, networkActionLayer, actionTimeOutMs);
+        final FutureAction connectivityAction = new PerformConnectivityTest(context, executor,
+                scheduledExecutorService, networkActionLayer, actionTimeOutMs);
         toggleWifiAction.uponCompletion(connectToBestWifiNetwork);
         connectToBestWifiNetwork.uponCompletion(connectivityAction);
         //setFuture(connectivityAction.getFuture());
@@ -43,7 +52,7 @@ public class RepairWifiNetwork extends FutureAction {
                     setResult(new ActionResult(ActionResult.ActionResultCodes.EXCEPTION, e.toString()));
                 }
             }
-        }, actionThreadPool.getExecutor());
+        }, executor);
         toggleWifiAction.post();
     }
 

@@ -15,7 +15,6 @@ import android.support.annotation.Nullable;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
-import com.inceptai.actionlibrary.ActionThreadPool;
 import com.inceptai.actionlibrary.utils.ActionLog;
 import com.inceptai.actionlibrary.utils.ActionUtils;
 
@@ -23,6 +22,8 @@ import java.io.IOException;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.net.HttpURLConnection;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static android.os.Build.VERSION_CODES.LOLLIPOP;
@@ -64,7 +65,8 @@ public class ConnectivityTester {
 
     // Store application context to prevent leaks and crashes from an activity going out of scope.
     protected Context context;
-    protected ActionThreadPool threadpool;
+    private Executor executor;
+    private ScheduledExecutorService scheduledExecutorService;
     private ConnectivityManager connectivityManager;
     private SettableFuture<Integer> connectivityCheckFuture;
     private ConnectivityAnalyzerWifiNetworkCallback connectivityAnalyzerWifiNetworkCallback;
@@ -72,12 +74,13 @@ public class ConnectivityTester {
 
 
     private ConnectivityTester(Context context,
-                                 ConnectivityManager connectivityManager,
-                                 ActionThreadPool threadpool) {
+                               ConnectivityManager connectivityManager,
+                               Executor executor,
+                               ScheduledExecutorService scheduledExecutorService) {
         Preconditions.checkNotNull(context);
-        Preconditions.checkNotNull(threadpool);
         this.context = context.getApplicationContext();
-        this.threadpool = threadpool;
+        this.executor = executor;
+        this.scheduledExecutorService = scheduledExecutorService;
         this.connectivityManager = connectivityManager;
         // Make sure we're running on Honeycomb or higher to use ActionBar APIs
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -94,10 +97,10 @@ public class ConnectivityTester {
      * @return Instance of WifiAnalyzer or null on error.
      */
     @Nullable
-    public static ConnectivityTester create(Context context, ActionThreadPool actionThreadPool) {
+    public static ConnectivityTester create(Context context, Executor executor, ScheduledExecutorService scheduledExecutorService) {
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         if (connectivityManager != null) {
-            return new ConnectivityTester(context.getApplicationContext(), connectivityManager, actionThreadPool);
+            return new ConnectivityTester(context.getApplicationContext(), connectivityManager, executor, scheduledExecutorService);
         }
         return null;
     }
@@ -107,7 +110,7 @@ public class ConnectivityTester {
             return connectivityCheckFuture;
         }
         connectivityCheckFuture = SettableFuture.create();
-        threadpool.getExecutorService().submit(new Runnable() {
+        executor.execute(new Runnable() {
             @Override
             public void run() {
                 performConnectivityTest(onlyOnActiveNetwork, isWifiConnected, MAX_RESCHEDULING_CONNECTIVITY_TESTS);
@@ -142,7 +145,7 @@ public class ConnectivityTester {
     private void rescheduleConnectivityTest(final boolean onlyOnActiveNetwork,
                                             final boolean isWifiConnected,
                                             final int scheduleCount) {
-        threadpool.getExecutorServiceForNetworkLayer().schedule(new Runnable() {
+        scheduledExecutorService.schedule(new Runnable() {
             @Override
             public void run() {
                 ActionLog.v("ConnectivityTester: Scheduled " + scheduleCount);
