@@ -36,6 +36,8 @@ public class ActionLibrary {
 
     public ActionLibrary(Context context, Executor executor, ScheduledExecutorService scheduledExecutorService) {
         this.context = context;
+        this.executor = executor;
+        this.scheduledExecutorService = scheduledExecutorService;
         networkActionLayer = new NetworkActionLayer(context, executor, scheduledExecutorService);
     }
 
