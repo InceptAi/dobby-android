@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 import com.inceptai.wifimonitoringservice.monitors.PeriodicCheckMonitor;
 import com.inceptai.wifimonitoringservice.monitors.ScreenStateMonitor;
 import com.inceptai.wifimonitoringservice.monitors.WifiStateMonitor;
+import com.inceptai.wifimonitoringservice.utils.ServiceLog;
 
 import java.lang.ref.WeakReference;
 
@@ -87,7 +88,7 @@ public class WifiServiceCore implements
     //Overrides for wifi state
     @Override
     public void wifiStateEnabled() {
-
+        ServiceLog.v("Wifi enabled");
     }
 
     @Override
@@ -105,18 +106,21 @@ public class WifiServiceCore implements
 
     }
 
+    //Problems
     @Override
     public void wifiPrimaryAPSignalLow() {
-
+        //scan and reconnect to other stronger AP if available.
     }
 
     @Override
     public void wifiStateHangingOnScanning() {
+        //Router not visible -- toggle and
 
     }
 
     @Override
     public void wifiStateHangingOnObtainingIPAddress() {
+        //Disconnect and then reassociate with same router
 
     }
 

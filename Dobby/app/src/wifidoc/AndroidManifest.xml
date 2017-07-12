@@ -10,7 +10,7 @@
         android:supportsRtl="true"
         android:name=".DobbyApplication"
         android:theme="@style/AppThemeOrangeDark"
-        tools:replace="android:theme, android:label"
+        tools:replace="android:theme, android:label, android:icon, android:roundIcon"
         >
         <activity android:name=".ui.WifiDocActivity"
             android:theme="@style/AppThemeOrangeDark.NoActionBar.Compat"
