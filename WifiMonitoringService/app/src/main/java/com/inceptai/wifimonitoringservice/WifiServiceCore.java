@@ -70,7 +70,7 @@ public class WifiServiceCore implements
     //Overrides for periodic check
     @Override
     public void checkFired() {
-        //Perform wifi check if needed
+        //Perform wifi connectivity test
     }
 
     //Overrides for screen state check
@@ -114,43 +114,52 @@ public class WifiServiceCore implements
 
     @Override
     public void wifiStateHangingOnScanning() {
-        //Router not visible -- toggle and
+        //Router not visible -- toggle wifi and re-associate.
 
     }
 
     @Override
     public void wifiStateHangingOnObtainingIPAddress() {
-        //Disconnect and then reassociate with same router
+        //Disconnect and then re-associate with same router
 
     }
 
     @Override
     public void wifiStateHangingOnAuthenticating() {
-
+        //Disconnect and  try to reconnect
     }
 
     @Override
     public void wifiStateFrequentDropOff() {
-
+        //If ping ponging -- then increase the priority of one network significantly
+        //If just one wifi and signal is strong -- check smart network switch
+        //If signal is on the fringe, demote this network and connect to a better network if possible.
     }
 
     @Override
     public void wifiStateErrorAuthenticating() {
+        //Tell user that passphrase is wrong
 
     }
 
     @Override
     public void wifiStateProblematicSupplicantPattern() {
-
+        //Toggle wifi
     }
 
     @Override
     public void wifiNetworkConnected() {
-
+        //Perform connectivity test
     }
 
     @Override
     public void wifiNetworkDisconnected() {
+        //Check wifi signal -- if strong signal to a network which was validated to have Internet, then trigger reconnect -- aggressive mode
 
+    }
+
+    @Override
+    public void wifiNetworkInvalidOrInactiveOrDormant() {
+        //Toggle wifi
     }
 }

@@ -52,6 +52,7 @@ public class WifiStateMonitor {
         void wifiStateProblematicSupplicantPattern();
         void wifiNetworkConnected();
         void wifiNetworkDisconnected();
+        void wifiNetworkInvalidOrInactiveOrDormant();
     }
 
     public WifiStateMonitor(Context context) {
