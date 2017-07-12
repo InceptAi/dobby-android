@@ -33,6 +33,7 @@ import com.inceptai.dobby.ui.ChatFragment;
 import com.inceptai.dobby.ui.WifiDocDialogFragment;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
+import com.inceptai.wifimonitoringservice.WifiMonitoringService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -113,8 +114,9 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         setupChatFragment();
-
+        startWifiMonitoringService();
     }
+
 
     private ChatFragment getChatFragmentFromTag() {
         FragmentManager fragmentManager = getSupportFragmentManager();
@@ -417,6 +419,9 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    private void startWifiMonitoringService() {
+        startService(new Intent(this, WifiMonitoringService.class));
+    }
 
     private void showAboutAndPrivacyPolicy() {
         WifiDocDialogFragment fragment = WifiDocDialogFragment.forAboutAndPrivacyPolicy();

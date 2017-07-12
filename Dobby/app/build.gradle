@@ -187,6 +187,7 @@ dependencies {
     //compile group: 'com.sun', name: 'rt', version: '1.5.0_06'
     //FutureAction library compile
     compile project(":actionlibrary")
+    compile project(":wifimonitoring-service")
 
     // Dependencies for tests:
     testCompile 'junit:junit:4.12'

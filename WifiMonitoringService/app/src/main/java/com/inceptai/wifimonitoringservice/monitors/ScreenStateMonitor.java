@@ -1,4 +1,4 @@
-package com.inceptai.dobby.service.monitors;
+package com.inceptai.wifimonitoringservice.monitors;
 
 /**
  * Created by vivek on 7/9/17.
@@ -27,7 +27,7 @@ public class ScreenStateMonitor {
     private static final int SCREEN_EVENT_ON = 1;
     private ScreenStateCallback screenStateCallback;
     private ScreenStateIntentReceiver screenStateIntentReceiver;
-    private AtomicBoolean screenStateReceiverRegistered = new AtomicBoolean(false);
+    private AtomicBoolean screenStateReceiverRegistered;
     private Context context;
 
     public interface ScreenStateCallback {
@@ -45,6 +45,7 @@ public class ScreenStateMonitor {
 			 */
         this.context = context;
         screenStateIntentReceiver = new ScreenStateIntentReceiver();
+        screenStateReceiverRegistered = new AtomicBoolean(false);
     }
 
     public void registerCallback(ScreenStateCallback screenStateCallback) {

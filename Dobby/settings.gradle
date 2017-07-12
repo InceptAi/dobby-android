@@ -1,1 +1,1 @@
-include ':app', ':actionlibrary'
+include ':app', ':actionlibrary', ':wifimonitoring-service'
