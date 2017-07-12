@@ -118,9 +118,8 @@ public class ServiceActionTaker {
         processResultsWhenAvailable(resetConnectionAction);
     }
 
-    public void performConnectivityTest() {
-        FutureAction connectivityTestAction = actionLibrary.performConnectivityTest(ACTION_TIMEOUT_MS);
-        processResultsWhenAvailable(connectivityTestAction);
+    public FutureAction performConnectivityTest() {
+        return actionLibrary.performConnectivityTest(ACTION_TIMEOUT_MS);
     }
 
     public void repairConnection() {

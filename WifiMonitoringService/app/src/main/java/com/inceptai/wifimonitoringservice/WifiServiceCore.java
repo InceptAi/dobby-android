@@ -3,6 +3,10 @@ package com.inceptai.wifimonitoringservice;
 import android.content.Context;
 import android.support.annotation.Nullable;
 
+import com.inceptai.actionlibrary.ActionResult;
+import com.inceptai.actionlibrary.NetworkLayer.ConnectivityTester;
+import com.inceptai.actionlibrary.actions.FutureAction;
+import com.inceptai.actionlibrary.utils.ActionLog;
 import com.inceptai.wifimonitoringservice.monitors.PeriodicCheckMonitor;
 import com.inceptai.wifimonitoringservice.monitors.ScreenStateMonitor;
 import com.inceptai.wifimonitoringservice.monitors.WifiStateMonitor;
@@ -17,13 +21,19 @@ import java.lang.ref.WeakReference;
 public class WifiServiceCore implements
         WifiStateMonitor.WifiStateCallback,
         ScreenStateMonitor.ScreenStateCallback,
-        PeriodicCheckMonitor.PeriodicCheckCallback {
+        PeriodicCheckMonitor.PeriodicCheckCallback,
+        ServiceActionTaker.ActionCallback {
+    private final static int MAX_CONNECTIVITY_TEST_FAILURES = 5;
+
     //Key components
     private WifiStateMonitor wifiStateMonitor;
     private ScreenStateMonitor screenStateMonitor;
     private ServiceActionTaker serviceActionTaker;
     private PeriodicCheckMonitor periodicCheckMonitor;
     private ServiceThreadPool serviceThreadPool;
+    //Key state
+    private int numConsecutiveFailedConnectivityTests;
+
 
     private static WifiServiceCore WIFI_SERVICE_CORE;
 
@@ -35,6 +45,8 @@ public class WifiServiceCore implements
         screenStateMonitor = new ScreenStateMonitor(weakContext.get());
         periodicCheckMonitor = new PeriodicCheckMonitor(weakContext.get());
         serviceActionTaker = new ServiceActionTaker(weakContext.get(), serviceThreadPool.getExecutor(), serviceThreadPool.getScheduledExecutorServiceForActions());
+
+        numConsecutiveFailedConnectivityTests = 0;
     }
 
     /**
@@ -68,9 +80,23 @@ public class WifiServiceCore implements
     }
 
     //Overrides for periodic check
+
+
+    @Override
+    public void actionStarted(String actionName) {
+        ServiceLog.v("Action started  " + actionName);
+    }
+
+    @Override
+    public void actionCompleted(String actionName, ActionResult actionResult) {
+        ServiceLog.v("Action finished  " + actionName);
+    }
+
     @Override
     public void checkFired() {
         //Perform wifi connectivity test
+        ServiceLog.v("Check fired");
+        performConnectivityTest();
     }
 
     //Overrides for screen state check
@@ -162,4 +188,73 @@ public class WifiServiceCore implements
     public void wifiNetworkInvalidOrInactiveOrDormant() {
         //Toggle wifi
     }
+
+    @Override
+    public void wifiNetworkDisconnectedUnexpectedly() {
+
+    }
+
+    //private
+    private void performConnectivityTest() {
+        final FutureAction connectivityAction = serviceActionTaker.performConnectivityTest();
+        connectivityAction.getFuture().addListener(new Runnable() {
+            @Override
+            public void run() {
+                ActionResult result = null;
+                try {
+                    result = connectivityAction.getFuture().get();
+                    ActionLog.v("ActionTaker: Got the result for  " + connectivityAction.getName() + " result " + result.getStatusString());
+                }catch (Exception e) {
+                    e.printStackTrace(System.out);
+                    ActionLog.w("ActionTaker: Exception getting wifi results: " + e.toString());
+                    //Informing inference engine of the error.
+                } finally {
+                    onConnectivityTestDone(result);
+                }
+            }
+        }, serviceThreadPool.getExecutor());
+    }
+
+    private void reconnectToSame() {
+        final FutureAction connectivityAction = serviceActionTaker.performConnectivityTest();
+        connectivityAction.getFuture().addListener(new Runnable() {
+            @Override
+            public void run() {
+                ActionResult result = null;
+                try {
+                    result = connectivityAction.getFuture().get();
+                    ActionLog.v("ActionTaker: Got the result for  " + connectivityAction.getName() + " result " + result.getStatusString());
+                }catch (Exception e) {
+                    e.printStackTrace(System.out);
+                    ActionLog.w("ActionTaker: Exception getting wifi results: " + e.toString());
+                    //Informing inference engine of the error.
+                } finally {
+                    onConnectivityTestDone(result);
+                }
+            }
+        }, serviceThreadPool.getExecutor());
+    }
+
+    private boolean didActionComplete(ActionResult actionResult) {
+        return actionResult != null && actionResult.getStatus() == ActionResult.ActionResultCodes.SUCCESS;
+    }
+
+    private void onConnectivityTestDone(ActionResult connectivityResult) {
+        if (didActionComplete(connectivityResult)) {
+            if (connectivityResult.getPayload() == ConnectivityTester.WifiConnectivityMode.CONNECTED_AND_ONLINE) {
+                //Online
+                numConsecutiveFailedConnectivityTests = 0;
+            } else if (connectivityResult.getPayload() == ConnectivityTester.WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL) {
+                //Captive portal
+                numConsecutiveFailedConnectivityTests++;
+            } else {
+                //Offline
+                numConsecutiveFailedConnectivityTests++;
+            }
+        }
+        if (numConsecutiveFailedConnectivityTests > MAX_CONNECTIVITY_TEST_FAILURES) {
+            numConsecutiveFailedConnectivityTests = 0;
+        }
+    }
+
 }

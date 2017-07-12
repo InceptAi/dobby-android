@@ -53,6 +53,7 @@ public class WifiStateMonitor {
         void wifiNetworkConnected();
         void wifiNetworkDisconnected();
         void wifiNetworkInvalidOrInactiveOrDormant();
+        void wifiNetworkDisconnectedUnexpectedly();
     }
 
     public WifiStateMonitor(Context context) {
