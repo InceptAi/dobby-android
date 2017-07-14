@@ -1,6 +1,7 @@
 package com.inceptai.dobby.ai;
 
 import android.content.Context;
+import android.content.Intent;
 import android.location.Location;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -1090,6 +1091,20 @@ public class DobbyAi implements ApiAiClient.ResultListener,
         actionDatabaseWriter.writeActionToDatabase(actionRecord);
     }
 
+    private void startNeo() {
+        //Send neo start intent
+        Intent intent = new Intent();
+        intent.setAction("com.inceptai.neo.ACTION");
+        context.sendBroadcast(intent);
+    }
+
+    private void endNeo() {
+        //End neo intent
+        Intent intent = new Intent();
+        intent.setAction("com.inceptai.neo.ACTION");
+        context.sendBroadcast(intent);
+    }
+
     private void parseExpertTextAndTakeActionIfNeeded(String expertMessage) {
         if (expertMessage.toLowerCase().contains("wifiscan")) {
             performAndRecordWifiAction();
@@ -1150,6 +1165,10 @@ public class DobbyAi implements ApiAiClient.ResultListener,
             actionTaker.repairConnection();
         } else if (expertMessage.toLowerCase().contains("connectiontest")) {
             actionTaker.performConnectivityTest();
+        } else if (expertMessage.toLowerCase().contains("startneo")) {
+            startNeo();
+        } else if (expertMessage.toLowerCase().contains("endneo")) {
+            endNeo();
         }
     }
 }
