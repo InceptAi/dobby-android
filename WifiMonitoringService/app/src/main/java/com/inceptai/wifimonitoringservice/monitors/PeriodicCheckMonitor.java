@@ -6,8 +6,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 
-import com.inceptai.actionlibrary.utils.ActionLog;
+import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLog;
 import com.inceptai.wifimonitoringservice.utils.ServiceAlarm;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by vivek on 7/10/17.
@@ -15,13 +17,12 @@ import com.inceptai.wifimonitoringservice.utils.ServiceAlarm;
 
 public class PeriodicCheckMonitor {
     private static final String PERIODIC_CHECK_INTENT = "com.inceptai.dobby.PERIODIC_CHECK_INTENT";
-    private static final long PERIODIC_CHECK_INTERVAL_MS = 5 * 60 * 1000;
     private PendingIntent pendingIntent;
     private Context context;
     private Intent intent;
     private PeriodicCheckCallback periodicCheckCallback;
     private PeriodicCheckReceiver periodicCheckReceiver;
-    private boolean periodicCheckReceiverRegistered = false;
+    private AtomicBoolean periodicCheckReceiverRegistered;
 
     public interface PeriodicCheckCallback {
         void checkFired();
@@ -32,31 +33,34 @@ public class PeriodicCheckMonitor {
         intent = new Intent(PERIODIC_CHECK_INTENT);
         pendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
         periodicCheckReceiver = new PeriodicCheckReceiver();
+        periodicCheckReceiverRegistered = new AtomicBoolean(false);
     }
 
 
-    public void enableCheck(long waitBeforeCheck, PeriodicCheckCallback periodicCheckCallback) {
+    public void enableCheck(long waitBeforeCheck, long checkPeriod, PeriodicCheckCallback periodicCheckCallback) {
+        disableCheck();
         registerCallback(periodicCheckCallback);
-        if (!ServiceAlarm.alarmExists(context, intent)) {
-            ServiceAlarm.addAlarm(context,
-                    waitBeforeCheck, true, PERIODIC_CHECK_INTERVAL_MS, pendingIntent);
-        }
+        ServiceAlarm.addAlarm(context, waitBeforeCheck, true, checkPeriod, pendingIntent);
     }
 
     public void disableCheck() {
         unRegisterCallback();
-        ServiceAlarm.unsetAlarm(context, pendingIntent);
+        if (ServiceAlarm.alarmExists(context, intent)) {
+            ServiceAlarm.unsetAlarm(context, pendingIntent);
+        }
     }
 
     //Private calls
     private void registerCallback(PeriodicCheckCallback periodicCheckCallback) {
         this.periodicCheckCallback = periodicCheckCallback;
-        registerReceiver();
+        if (periodicCheckReceiverRegistered.compareAndSet(false, true)) {
+            registerReceiver();
+        }
     }
 
     private void unRegisterCallback() {
         this.periodicCheckCallback = null;
-        if (periodicCheckReceiverRegistered) {
+        if (periodicCheckReceiverRegistered.compareAndSet(true, false)) {
             unregisterReceiver();
         }
     }
@@ -64,7 +68,6 @@ public class PeriodicCheckMonitor {
     private void registerReceiver() {
         IntentFilter intentFilter =  getIntentFilter();
         context.registerReceiver(periodicCheckReceiver, intentFilter);
-        periodicCheckReceiverRegistered = true;
     }
 
     private void unregisterReceiver() {
@@ -73,7 +76,6 @@ public class PeriodicCheckMonitor {
         } catch (IllegalArgumentException e) {
             ActionLog.v("Exception while un-registering wifi receiver: " + e);
         }
-        periodicCheckReceiverRegistered = false;
     }
 
     private IntentFilter getIntentFilter() {

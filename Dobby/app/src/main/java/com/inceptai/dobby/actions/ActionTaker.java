@@ -4,14 +4,12 @@ import android.content.Context;
 import android.net.wifi.WifiInfo;
 import android.support.annotation.Nullable;
 
-import com.inceptai.actionlibrary.ActionLibrary;
-import com.inceptai.actionlibrary.ActionResult;
-import com.inceptai.actionlibrary.NetworkLayer.ConnectivityTester;
-import com.inceptai.actionlibrary.actions.FutureAction;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.utils.DobbyLog;
-
-import static com.inceptai.actionlibrary.ActionResult.ActionResultCodes.SUCCESS;
+import com.inceptai.wifimonitoringservice.ActionLibrary;
+import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
+import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.ConnectivityTester;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.FutureAction;
 
 /**
  * Created by vivek on 7/6/17.
@@ -127,7 +125,7 @@ public class ActionTaker {
                 int modeAfterRepair = ConnectivityTester.WifiConnectivityMode.UNKNOWN;
                 try {
                     repairResult = repairWifiNetworkAction.getFuture().get();
-                    if (repairResult != null && repairResult.getStatus() == SUCCESS) {
+                    if (repairResult != null && repairResult.getStatus() == ActionResult.ActionResultCodes.SUCCESS) {
                         modeAfterRepair = (Integer) repairResult.getPayload();
                         final FutureAction getWifiInfo = actionLibrary.getWifiInfo(ACTION_TIMEOUT_MS);
                         wifiInfoResult = getWifiInfo.getFuture().get();

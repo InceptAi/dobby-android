@@ -7,7 +7,6 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.google.common.util.concurrent.ListenableFuture;
-import com.inceptai.actionlibrary.ActionResult;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.NetworkLayer;
@@ -26,6 +25,7 @@ import com.inceptai.dobby.speedtest.BandwidthResult;
 import com.inceptai.dobby.speedtest.BandwidthTestCodes;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
+import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
 
 import java.util.ArrayList;
 import java.util.HashMap;

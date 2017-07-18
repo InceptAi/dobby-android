@@ -7,8 +7,8 @@ import android.net.wifi.WifiManager;
 import android.support.annotation.IntDef;
 
 import com.google.gson.Gson;
-import com.inceptai.actionlibrary.utils.ActionLog;
 import com.inceptai.dobby.utils.Utils;
+import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLog;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

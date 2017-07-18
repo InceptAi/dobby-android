@@ -9,7 +9,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.widget.Toast;
 
-import com.inceptai.actionlibrary.utils.ActionLog;
+import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLog;
 import com.inceptai.wifimonitoringservice.utils.ServiceAlarm;
 
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;

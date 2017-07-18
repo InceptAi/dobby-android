@@ -1,1 +1,1 @@
-include ':app', ':actionlibrary-release'
+include ':app'

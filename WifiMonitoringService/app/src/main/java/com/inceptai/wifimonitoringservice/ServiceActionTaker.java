@@ -4,18 +4,17 @@ import android.content.Context;
 import android.net.wifi.WifiInfo;
 import android.support.annotation.Nullable;
 
-
-import com.inceptai.actionlibrary.ActionLibrary;
-import com.inceptai.actionlibrary.ActionResult;
-import com.inceptai.actionlibrary.NetworkLayer.ConnectivityTester;
-import com.inceptai.actionlibrary.actions.FutureAction;
-import com.inceptai.actionlibrary.utils.ActionLog;
+import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
+import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.ConnectivityTester;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.FutureAction;
+import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLog;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.ScheduledExecutorService;
 
-import static com.inceptai.actionlibrary.ActionResult.ActionResultCodes.GENERAL_ERROR;
-import static com.inceptai.actionlibrary.ActionResult.ActionResultCodes.SUCCESS;
+import static com.inceptai.wifimonitoringservice.actionlibrary.ActionResult.ActionResultCodes.GENERAL_ERROR;
+import static com.inceptai.wifimonitoringservice.actionlibrary.ActionResult.ActionResultCodes.SUCCESS;
+
 
 /**
  * Created by vivek on 7/10/17.
@@ -144,7 +143,7 @@ public class ServiceActionTaker {
                             resultToReturn = new ActionResult(SUCCESS,
                                     "Repaired !", wifiInfoResult.getPayload());
                         } else {
-                            resultToReturn = new ActionResult(ActionResult.ActionResultCodes.GENERAL_ERROR,
+                            resultToReturn = new ActionResult(GENERAL_ERROR,
                                     "Toggled and connected, but unable to put wifi in connected mode: mode found " +
                                             ConnectivityTester.connectivityModeToString(modeAfterRepair), wifiInfoResult.getPayload());
                         }
@@ -168,6 +167,15 @@ public class ServiceActionTaker {
         }, executor);
     }
 
+    public void cancelPendingActions() {
+        actionLibrary.cancelPendingActions();
+    }
+
+    public void numberOfPendingActions() {
+        actionLibrary.numberOfPendingActions();
+    }
+
+    //Private stuff
     private void sendCallbackForActionStarted(FutureAction action) {
         if (actionCallback != null) {
             actionCallback.actionStarted(action.getName());

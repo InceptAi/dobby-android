@@ -11,7 +11,7 @@ import android.content.IntentFilter;
 import android.os.Build;
 import android.os.PowerManager;
 
-import com.inceptai.actionlibrary.utils.ActionLog;
+import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLog;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 

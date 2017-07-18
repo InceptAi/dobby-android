@@ -19,7 +19,7 @@ public final class ServiceAlarm extends Object {
      */
     public static final String ALARM_START_TYPE = "ALARM_SERVICE_START";
 
-    public static final long PERIOD = 300000;
+    public static final long PERIOD = 20 * 60 * 1000; // Check every 20 mins if service is running
     public static final long SERVICE_START_DELAY_FROM_BOOT = 30000;
     private static final long NO_DELAY = 0;
 

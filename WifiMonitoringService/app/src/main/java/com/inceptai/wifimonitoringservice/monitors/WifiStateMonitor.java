@@ -12,17 +12,19 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.support.annotation.Nullable;
 
-import com.inceptai.actionlibrary.utils.ActionLog;
+import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLog;
 import com.inceptai.wifimonitoringservice.utils.WifiStateData;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.inceptai.wifimonitoringservice.utils.WifiStateData.WifiProblemMode.DISCONNECTED_PREMATURELY;
 import static com.inceptai.wifimonitoringservice.utils.WifiStateData.WifiProblemMode.ERROR_AUTHENTICATING;
 import static com.inceptai.wifimonitoringservice.utils.WifiStateData.WifiProblemMode.FREQUENT_DISCONNECTIONS;
 import static com.inceptai.wifimonitoringservice.utils.WifiStateData.WifiProblemMode.HANGING_ON_AUTHENTICATING;
 import static com.inceptai.wifimonitoringservice.utils.WifiStateData.WifiProblemMode.HANGING_ON_CONNECTING;
 import static com.inceptai.wifimonitoringservice.utils.WifiStateData.WifiProblemMode.HANGING_ON_DHCP;
 import static com.inceptai.wifimonitoringservice.utils.WifiStateData.WifiProblemMode.HANGING_ON_SCANNING;
+import static com.inceptai.wifimonitoringservice.utils.WifiStateData.WifiProblemMode.INACTIVE_OR_DORMANT_SUPPLICANT_STATE;
 import static com.inceptai.wifimonitoringservice.utils.WifiStateData.WifiProblemMode.PROBLEMATIC_SUPPLICANT_PATTERN;
 
 /**
@@ -50,10 +52,11 @@ public class WifiStateMonitor {
         void wifiStateFrequentDropOff();
         void wifiStateErrorAuthenticating();
         void wifiStateProblematicSupplicantPattern();
-        void wifiNetworkConnected();
-        void wifiNetworkDisconnected();
+        void wifiNetworkAcquiredDataConnectivity();
+        void wifiNetworkLostDataConnectivity();
         void wifiNetworkInvalidOrInactiveOrDormant();
         void wifiNetworkDisconnectedUnexpectedly();
+        void wifiStateHangingOnConnecting();
     }
 
     public WifiStateMonitor(Context context) {
@@ -75,6 +78,11 @@ public class WifiStateMonitor {
         if (wifiReceiverRegistered.compareAndSet(true, false)) {
             unregisterReceiver();
         }
+    }
+
+    public boolean safeToScan() {
+        //Scan if not in handshake state
+        return wifiStateData.isInConnectingState();
     }
 
     //Discover the public methods -- do we need any
@@ -153,8 +161,10 @@ public class WifiStateMonitor {
                         wifiStateCallback.wifiStateFrequentDropOff();
                         break;
                     case HANGING_ON_CONNECTING:
-                        //Not implemented right now
-                        //wifiStateCallback.wifiStateHangingOnConnecting();
+                        wifiStateCallback.wifiStateHangingOnConnecting();
+                        break;
+                    case DISCONNECTED_PREMATURELY:
+                        wifiStateCallback.wifiNetworkDisconnectedUnexpectedly();
                         break;
                     default:
                         break;
@@ -169,6 +179,8 @@ public class WifiStateMonitor {
                     wifiStateCallback.wifiStateProblematicSupplicantPattern();
                 } else if (wifiProblem == ERROR_AUTHENTICATING) {
                     wifiStateCallback.wifiStateErrorAuthenticating();
+                } else if (wifiProblem == INACTIVE_OR_DORMANT_SUPPLICANT_STATE) {
+                    wifiStateCallback.wifiNetworkInvalidOrInactiveOrDormant();
                 }
             }
         }
@@ -196,9 +208,9 @@ public class WifiStateMonitor {
                 wifiStateData.updateWifiConnectionState(networkInfo.getState());
                 if (wifiStateCallback != null) {
                     if (networkInfo.getState().equals(NetworkInfo.State.CONNECTED)) {
-                        wifiStateCallback.wifiNetworkConnected();
+                        wifiStateCallback.wifiNetworkAcquiredDataConnectivity();
                     } else if (networkInfo.getState().equals(NetworkInfo.State.DISCONNECTED)) {
-                        wifiStateCallback.wifiNetworkDisconnected();
+                        wifiStateCallback.wifiNetworkLostDataConnectivity();
                     }
                 }
             }

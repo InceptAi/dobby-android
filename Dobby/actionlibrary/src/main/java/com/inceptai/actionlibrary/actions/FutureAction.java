@@ -56,8 +56,16 @@ public abstract class FutureAction {
 
     public abstract String getName();
 
+    public String getActionType() {
+        return this.getClass().getSimpleName();
+    }
+
     public void uponCompletion(FutureAction futureAction) {
         uponCompletion = futureAction;
+    }
+
+    public void cancelAction() {
+        settableFuture.cancel(true);
     }
 
     protected void setFuture(@Nullable final ListenableFuture<?> future) {

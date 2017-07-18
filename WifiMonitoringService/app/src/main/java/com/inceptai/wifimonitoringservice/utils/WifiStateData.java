@@ -7,7 +7,7 @@ import android.net.wifi.WifiManager;
 import android.support.annotation.IntDef;
 
 import com.google.gson.Gson;
-import com.inceptai.actionlibrary.utils.ActionLog;
+import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLog;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -46,12 +46,13 @@ public class WifiStateData {
             WifiProblemMode.HANGING_ON_AUTHENTICATING,
             WifiProblemMode.HANGING_ON_SCANNING,
             WifiProblemMode.FREQUENT_DISCONNECTIONS,
-            WifiProblemMode.UNKNOWN,
+            WifiProblemMode.UNINITIALIZED,
             WifiProblemMode.HANGING_ON_CONNECTING,
-            WifiProblemMode.DISCONNECTED,
+            WifiProblemMode.DISCONNECTED_PREMATURELY,
             WifiProblemMode.CONNECTING,
             WifiProblemMode.LOW_SNR,
             WifiProblemMode.PROBLEMATIC_SUPPLICANT_PATTERN,
+            WifiProblemMode.INACTIVE_OR_DORMANT_SUPPLICANT_STATE,
             WifiProblemMode.ERROR_AUTHENTICATING,
             WifiProblemMode.MAX_MODES})
     public @interface WifiProblemMode {
@@ -62,12 +63,13 @@ public class WifiStateData {
         int FREQUENT_DISCONNECTIONS = 4;
         int HANGING_ON_CONNECTING = 5;
         int CONNECTING = 6;
-        int DISCONNECTED = 7;
+        int DISCONNECTED_PREMATURELY = 7;
         int LOW_SNR = 8;
         int PROBLEMATIC_SUPPLICANT_PATTERN = 9;
-        int ERROR_AUTHENTICATING = 10;
-        int UNKNOWN = 11;
-        int MAX_MODES = 12;
+        int INACTIVE_OR_DORMANT_SUPPLICANT_STATE = 10;
+        int ERROR_AUTHENTICATING = 11;
+        int UNINITIALIZED = 12;
+        int MAX_MODES = 13;
     }
 
     public static String wifiLinkModeToString(@WifiProblemMode int mode) {
@@ -84,8 +86,8 @@ public class WifiStateData {
                 return "HANGING_ON_CONNECTING";
             case WifiProblemMode.FREQUENT_DISCONNECTIONS:
                 return "FREQUENT_DISCONNECTIONS";
-            case WifiProblemMode.DISCONNECTED:
-                return "DISCONNECTED";
+            case WifiProblemMode.DISCONNECTED_PREMATURELY:
+                return "DISCONNECTED_PREMATURELY";
             case WifiProblemMode.CONNECTING:
                 return "CONNECTING";
             case WifiProblemMode.MAX_MODES:
@@ -94,11 +96,13 @@ public class WifiStateData {
                 return "LOW_SNR";
             case WifiProblemMode.PROBLEMATIC_SUPPLICANT_PATTERN:
                 return "PROBLEMATIC_SUPPLICANT_PATTERN";
+            case WifiProblemMode.INACTIVE_OR_DORMANT_SUPPLICANT_STATE:
+                return "INACTIVE_OR_DORMANT_SUPPLICANT_STATE";
             case WifiProblemMode.ERROR_AUTHENTICATING:
                 return "ERROR_AUTHENTICATING";
-            case WifiProblemMode.UNKNOWN:
+            case WifiProblemMode.UNINITIALIZED:
             default:
-                return "UNKNOWN";
+                return "UNINITIALIZED";
         }
     }
 
@@ -134,7 +138,7 @@ public class WifiStateData {
         lastLinkSignalSeenTimestampMs = 0;
 
         //Other state stats
-        wifiProblemMode = WifiProblemMode.UNKNOWN;
+        wifiProblemMode = WifiProblemMode.UNINITIALIZED;
         lastWifiState = WifiManager.WIFI_STATE_UNKNOWN;
         lastSupplicantState = SupplicantState.UNINITIALIZED;
         lastDetailedWifiStateTimestampMs = 0;
@@ -151,7 +155,7 @@ public class WifiStateData {
     @WifiProblemMode
     public int updateSignal(int updatedSignal) {
         if (updatedSignal == 0 || updatedSignal == ANDROID_INVALID_RSSI) {
-            return WifiProblemMode.UNKNOWN;
+            return WifiProblemMode.UNINITIALIZED;
         }
         @WifiProblemMode int linkMode = WifiProblemMode.NO_PROBLEM_DEFAULT_STATE;
         long currentTimestamp = System.currentTimeMillis();
@@ -172,12 +176,15 @@ public class WifiStateData {
         return lastWifiEnabledState;
     }
 
+
+
     @WifiProblemMode
     public int updateWifiDetailedState(NetworkInfo.DetailedState newDetailedState) {
+        @WifiProblemMode int wifiProblem = updateDetailedWifiStateInfo(newDetailedState);
         if (newDetailedState == NetworkInfo.DetailedState.DISCONNECTED) {
             clearWifiConnectionInfo();
         }
-        return updateDetailedWifiStateInfo(newDetailedState);
+        return wifiProblem;
     }
 
     public void updateWifiConnectionState(NetworkInfo.State newConnectionState) {
@@ -186,18 +193,51 @@ public class WifiStateData {
 
     @WifiProblemMode
     public int updateSupplicantState(SupplicantState supplicantState, int supplicantError)  {
-        @WifiProblemMode int problemMode = WifiProblemMode.UNKNOWN;
+        @WifiProblemMode int problemMode = WifiProblemMode.UNINITIALIZED;
         supplicantStateList.add(supplicantState);
+        lastSupplicantState = supplicantState;
         if (checkForProblematicSupplicationPattern()) {
             supplicantStateList.clear();
             problemMode = WifiProblemMode.PROBLEMATIC_SUPPLICANT_PATTERN;
         } else if (supplicantError == WifiManager.ERROR_AUTHENTICATING) {
             problemMode = WifiProblemMode.ERROR_AUTHENTICATING;
+        } else if (inInactiveOrDormantState(supplicantState)) {
+            problemMode = WifiProblemMode.INACTIVE_OR_DORMANT_SUPPLICANT_STATE;
         }
         return problemMode;
     }
 
+    public boolean isInConnectingState() {
+        switch(lastSupplicantState) {
+            case AUTHENTICATING:
+            case ASSOCIATING:
+            case ASSOCIATED:
+            case FOUR_WAY_HANDSHAKE:
+            case GROUP_HANDSHAKE:
+            case COMPLETED:
+                return true;
+            case DISCONNECTED:
+            case INTERFACE_DISABLED:
+            case INACTIVE:
+            case SCANNING:
+            case DORMANT:
+            case UNINITIALIZED:
+            case INVALID:
+            default:
+                return false;
+        }
+    }
+
     //private methods
+    private boolean inInactiveOrDormantState(SupplicantState newSupplicantState) {
+        switch (newSupplicantState) {
+            case INACTIVE:
+            case DORMANT:
+            case INTERFACE_DISABLED:
+                return true;
+        }
+        return false;
+    }
 
     private boolean checkForProblematicSupplicationPattern() {
         SupplicantPatterns.SupplicantPattern pattern =
@@ -296,18 +336,39 @@ public class WifiStateData {
         lastLinkSignalSeenTimestampMs = 0;
     }
 
+    private int getPrimaryLinkSignal() {
+        return linkSignal;
+    }
+
+    private boolean checkIfDisconnectedPrematurely() {
+        final int GOOD_PRIMARY_AP_SIGNAL_THRESHOLD = -80;
+        if (getPrimaryLinkSignal() > GOOD_PRIMARY_AP_SIGNAL_THRESHOLD) {
+            return true;
+        }
+        return false;
+    }
+
     @WifiProblemMode
     private int getCurrentWifiProblemMode() {
+
         long startTimeMs = getCurrentStateStartTimeMs();
         long currentTimeMs = System.currentTimeMillis();
         NetworkInfo.DetailedState currentState = getCurrentState();
         int numDisconnections = getNumberOfTimesWifiInState(NetworkInfo.DetailedState.DISCONNECTED);
         int numConnections = getNumberOfTimesWifiInState(NetworkInfo.DetailedState.CONNECTING);
+
         //If we are in CONNECTED mode now, then mark this as no issue and return
         if (getCurrentState() == NetworkInfo.DetailedState.CONNECTED) {
             wifiProblemMode = WifiProblemMode.NO_PROBLEM_DEFAULT_STATE;
             return wifiProblemMode;
         }
+
+        //If we are in DISCONNECTED mode now, check if we disconnected prematurely
+        if (getCurrentState() == NetworkInfo.DetailedState.DISCONNECTED && checkIfDisconnectedPrematurely()) {
+            wifiProblemMode = WifiProblemMode.DISCONNECTED_PREMATURELY;
+            return wifiProblemMode;
+        }
+
         if (currentTimeMs - startTimeMs >= THRESHOLD_FOR_DECLARING_CONNECTION_SETUP_STATE_AS_HANGING_MS) {
             switch(currentState) {
                 case SCANNING:
@@ -319,30 +380,15 @@ public class WifiStateData {
                 case OBTAINING_IPADDR:
                     wifiProblemMode = WifiProblemMode.HANGING_ON_DHCP;
                     break;
+                case CONNECTING:
+                    wifiProblemMode = WifiProblemMode.HANGING_ON_CONNECTING;
+                    break;
             }
         } else if (Math.max(numDisconnections, numConnections) > THRESHOLD_FOR_FLAGGING_FREQUENT_STATE_CHANGES){
             //Check for frequent disconnections
             wifiProblemMode = WifiProblemMode.FREQUENT_DISCONNECTIONS;
-        } else {
-            switch (currentState) {
-                case IDLE:
-                case SCANNING:
-                case DISCONNECTED:
-                case DISCONNECTING:
-                case FAILED:
-                case BLOCKED:
-                case SUSPENDED:
-                    wifiProblemMode = WifiProblemMode.DISCONNECTED;
-                    break;
-                case CONNECTING:
-                case AUTHENTICATING:
-                case OBTAINING_IPADDR:
-                case VERIFYING_POOR_LINK:
-                case CAPTIVE_PORTAL_CHECK:
-                    wifiProblemMode = WifiProblemMode.CONNECTING;
-                    break;
-            }
         }
+
         return wifiProblemMode;
     }
 

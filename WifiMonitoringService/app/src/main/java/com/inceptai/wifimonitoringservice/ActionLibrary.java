@@ -1,26 +1,27 @@
-package com.inceptai.actionlibrary;
+package com.inceptai.wifimonitoringservice;
 
 import android.content.Context;
 
-import com.inceptai.actionlibrary.NetworkLayer.NetworkActionLayer;
-import com.inceptai.actionlibrary.actions.CheckIf5GHzIsSupported;
-import com.inceptai.actionlibrary.actions.ConnectToBestConfiguredNetworkIfAvailable;
-import com.inceptai.actionlibrary.actions.ConnectWithGivenWifiNetwork;
-import com.inceptai.actionlibrary.actions.DisconnectFromCurrentWifi;
-import com.inceptai.actionlibrary.actions.ForgetWifiNetwork;
-import com.inceptai.actionlibrary.actions.FutureAction;
-import com.inceptai.actionlibrary.actions.GetBestConfiguredNetwork;
-import com.inceptai.actionlibrary.actions.GetConfiguredNetworks;
-import com.inceptai.actionlibrary.actions.GetDHCPInfo;
-import com.inceptai.actionlibrary.actions.GetNearbyWifiNetworks;
-import com.inceptai.actionlibrary.actions.GetWifiInfo;
-import com.inceptai.actionlibrary.actions.PerformConnectivityTest;
-import com.inceptai.actionlibrary.actions.RepairWifiNetwork;
-import com.inceptai.actionlibrary.actions.ResetConnectionWithCurrentWifi;
-import com.inceptai.actionlibrary.actions.ToggleWifi;
-import com.inceptai.actionlibrary.actions.TurnWifiOff;
-import com.inceptai.actionlibrary.actions.TurnWifiOn;
-import com.inceptai.actionlibrary.utils.ActionLog;
+import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
+import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.NetworkActionLayer;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.CheckIf5GHzIsSupported;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.ConnectToBestConfiguredNetworkIfAvailable;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.ConnectWithGivenWifiNetwork;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.DisconnectFromCurrentWifi;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.ForgetWifiNetwork;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.FutureAction;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.GetBestConfiguredNetwork;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.GetConfiguredNetworks;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.GetDHCPInfo;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.GetNearbyWifiNetworks;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.GetWifiInfo;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.PerformConnectivityTest;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.RepairWifiNetwork;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.ResetConnectionWithCurrentWifi;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.ToggleWifi;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.TurnWifiOff;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.TurnWifiOn;
+import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLog;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -150,10 +151,17 @@ public class ActionLibrary {
         return actionList;
     }
 
-    public void cancelPendingActions() {
+    void cancelPendingActions() {
+        FutureAction currentlyRunningAction = futureActionArrayDeque.peek();
         for (FutureAction futureAction: futureActionArrayDeque) {
-            futureAction.cancelAction();
+            if (futureAction != null && currentlyRunningAction != futureAction) {
+                futureAction.cancelAction();
+            }
         }
+    }
+
+    int numberOfPendingActions() {
+        return futureActionArrayDeque.size();
     }
 
     //private stuff
@@ -168,6 +176,7 @@ public class ActionLibrary {
         postAndWaitForResults(addAction(futureAction));
     }
 
+
     synchronized private FutureAction addAction(FutureAction futureAction) {
         futureActionArrayDeque.addLast(futureAction);
         if (futureActionArrayDeque.size() == 1) { //First element -- only one action at a time
@@ -181,9 +190,6 @@ public class ActionLibrary {
         postAndWaitForResults(futureActionArrayDeque.peek());
     }
 
-    synchronized private int numberOfPendingActions() {
-        return futureActionArrayDeque.size();
-    }
 
     private void processResultsWhenAvailable(final FutureAction futureAction) {
         futureAction.getFuture().addListener(new Runnable() {

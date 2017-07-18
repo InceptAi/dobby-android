@@ -12,8 +12,8 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.support.annotation.Nullable;
 
-import com.inceptai.actionlibrary.utils.ActionLog;
 import com.inceptai.dobby.service.utils.WifiStateData;
+import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLog;
 
 import static com.inceptai.dobby.service.utils.WifiStateData.WifiProblemMode.ERROR_AUTHENTICATING;
 import static com.inceptai.dobby.service.utils.WifiStateData.WifiProblemMode.FREQUENT_DISCONNECTIONS;
