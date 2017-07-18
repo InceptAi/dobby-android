@@ -49,7 +49,9 @@ public class WifiMonitoringService extends Service {
         mServiceLooper = thread.getLooper();
         mServiceHandler = new ServiceHandler(mServiceLooper);
         //Start service watch dog
-        wifiServiceCore = WifiServiceCore.create(this, new ServiceThreadPool());
+        if (wifiServiceCore == null) {
+            wifiServiceCore = WifiServiceCore.create(this, new ServiceThreadPool());
+        }
     }
 
     @Override

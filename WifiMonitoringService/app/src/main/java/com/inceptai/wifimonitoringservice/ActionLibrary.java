@@ -5,6 +5,7 @@ import android.content.Context;
 import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.NetworkActionLayer;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.CheckIf5GHzIsSupported;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.ConnectToBestConfiguredNetwork;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.ConnectToBestConfiguredNetworkIfAvailable;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.ConnectWithGivenWifiNetwork;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.DisconnectFromCurrentWifi;
@@ -25,6 +26,7 @@ import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLog;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -90,7 +92,7 @@ public class ActionLibrary {
     }
 
     public FutureAction getBestConfiguredNetwork(long actionTimeOutMs) {
-        FutureAction futureAction = new GetBestConfiguredNetwork(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
+        FutureAction futureAction = new GetBestConfiguredNetwork(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs, null);
         submitAction(futureAction);
         return futureAction;
     }
@@ -121,6 +123,12 @@ public class ActionLibrary {
 
     public FutureAction connectToBestWifi(long actionTimeOutMs) {
         FutureAction futureAction = new ConnectToBestConfiguredNetworkIfAvailable(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
+        submitAction(futureAction);
+        return futureAction;
+    }
+
+    public FutureAction connectToBestWifi(long actionTimeOutMs, List<String> offlineRouterIds) {
+        FutureAction futureAction = new ConnectToBestConfiguredNetwork(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs, offlineRouterIds);
         submitAction(futureAction);
         return futureAction;
     }

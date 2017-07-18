@@ -21,9 +21,9 @@ import java.util.List;
 
 public class WifiStateData {
     public static final int ANDROID_INVALID_RSSI = -127;
-    private static final int THRESHOLD_FOR_DECLARING_CONNECTION_SETUP_STATE_AS_HANGING_MS = 5000;
+    private static final int THRESHOLD_FOR_DECLARING_CONNECTION_SETUP_STATE_AS_HANGING_MS = 10000;
     private static final int THRESHOLD_FOR_FLAGGING_FREQUENT_STATE_CHANGES = 5;
-    private static final int THRESHOLD_FOR_COUNTING_FREQUENT_STATE_CHANGES_MS = 10000;
+    private static final int THRESHOLD_FOR_COUNTING_FREQUENT_STATE_CHANGES_MS = 60 * 1000;
     private static final int MAX_AGE_FOR_SIGNAL_UPDATING_MS = 40000;
     private static final int MIN_SNR_FOR_FLAGGING_POOR_CONNECTION_DBM = -90;
     private static final String DEFAULT_MAC_ADDRESS = "02:00:00:00:00:00";
@@ -176,8 +176,6 @@ public class WifiStateData {
         return lastWifiEnabledState;
     }
 
-
-
     @WifiProblemMode
     public int updateWifiDetailedState(NetworkInfo.DetailedState newDetailedState) {
         @WifiProblemMode int wifiProblem = updateDetailedWifiStateInfo(newDetailedState);
@@ -187,8 +185,18 @@ public class WifiStateData {
         return wifiProblem;
     }
 
+    public NetworkInfo.DetailedState getLastWifiDetailedState() {
+        return lastWifiDetailedState;
+    }
+
     public void updateWifiConnectionState(NetworkInfo.State newConnectionState) {
         lastWifiConnectionState = newConnectionState;
+    }
+
+
+    public String getPrimaryRouterID() {
+        //Be smart here -- return both bssid and ssid -- don't reject just on basis of ssid
+        return "BSSID-" + linkBSSID + ",SSID-" + linkSSID;
     }
 
     @WifiProblemMode
@@ -342,7 +350,7 @@ public class WifiStateData {
 
     private boolean checkIfDisconnectedPrematurely() {
         final int GOOD_PRIMARY_AP_SIGNAL_THRESHOLD = -80;
-        if (getPrimaryLinkSignal() > GOOD_PRIMARY_AP_SIGNAL_THRESHOLD) {
+        if (getPrimaryLinkSignal() != 0 && getPrimaryLinkSignal() > GOOD_PRIMARY_AP_SIGNAL_THRESHOLD) {
             return true;
         }
         return false;
@@ -356,40 +364,40 @@ public class WifiStateData {
         NetworkInfo.DetailedState currentState = getCurrentState();
         int numDisconnections = getNumberOfTimesWifiInState(NetworkInfo.DetailedState.DISCONNECTED);
         int numConnections = getNumberOfTimesWifiInState(NetworkInfo.DetailedState.CONNECTING);
+        @WifiProblemMode int newWifiProblemMode = WifiProblemMode.UNINITIALIZED;
 
         //If we are in CONNECTED mode now, then mark this as no issue and return
         if (getCurrentState() == NetworkInfo.DetailedState.CONNECTED) {
-            wifiProblemMode = WifiProblemMode.NO_PROBLEM_DEFAULT_STATE;
-            return wifiProblemMode;
-        }
-
-        //If we are in DISCONNECTED mode now, check if we disconnected prematurely
-        if (getCurrentState() == NetworkInfo.DetailedState.DISCONNECTED && checkIfDisconnectedPrematurely()) {
-            wifiProblemMode = WifiProblemMode.DISCONNECTED_PREMATURELY;
-            return wifiProblemMode;
-        }
-
-        if (currentTimeMs - startTimeMs >= THRESHOLD_FOR_DECLARING_CONNECTION_SETUP_STATE_AS_HANGING_MS) {
+            newWifiProblemMode = WifiProblemMode.NO_PROBLEM_DEFAULT_STATE;
+        } else if (getCurrentState() == NetworkInfo.DetailedState.DISCONNECTED && checkIfDisconnectedPrematurely()) {
+            //If we are in DISCONNECTED mode now, check if we disconnected prematurely
+            newWifiProblemMode = WifiProblemMode.DISCONNECTED_PREMATURELY;
+        } else if (currentTimeMs - startTimeMs >= THRESHOLD_FOR_DECLARING_CONNECTION_SETUP_STATE_AS_HANGING_MS) {
             switch(currentState) {
                 case SCANNING:
-                    wifiProblemMode = WifiProblemMode.HANGING_ON_SCANNING;
+                    newWifiProblemMode = WifiProblemMode.HANGING_ON_SCANNING;
                     break;
                 case AUTHENTICATING:
-                    wifiProblemMode = WifiProblemMode.HANGING_ON_AUTHENTICATING;
+                    newWifiProblemMode = WifiProblemMode.HANGING_ON_AUTHENTICATING;
                     break;
                 case OBTAINING_IPADDR:
-                    wifiProblemMode = WifiProblemMode.HANGING_ON_DHCP;
+                    newWifiProblemMode = WifiProblemMode.HANGING_ON_DHCP;
                     break;
                 case CONNECTING:
-                    wifiProblemMode = WifiProblemMode.HANGING_ON_CONNECTING;
+                    newWifiProblemMode = WifiProblemMode.HANGING_ON_CONNECTING;
                     break;
             }
         } else if (Math.max(numDisconnections, numConnections) > THRESHOLD_FOR_FLAGGING_FREQUENT_STATE_CHANGES){
             //Check for frequent disconnections
-            wifiProblemMode = WifiProblemMode.FREQUENT_DISCONNECTIONS;
+            newWifiProblemMode = WifiProblemMode.FREQUENT_DISCONNECTIONS;
         }
 
-        return wifiProblemMode;
+        if (newWifiProblemMode != wifiProblemMode) {
+            wifiProblemMode = newWifiProblemMode;
+            return wifiProblemMode;
+        }
+        //No change
+        return WifiProblemMode.UNINITIALIZED;
     }
 
     @WifiProblemMode

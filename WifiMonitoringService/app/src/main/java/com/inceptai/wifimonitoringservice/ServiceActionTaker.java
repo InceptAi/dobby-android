@@ -9,6 +9,9 @@ import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.Connectivit
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.FutureAction;
 import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLog;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -107,8 +110,12 @@ public class ServiceActionTaker {
         processResultsWhenAvailable(nearbyWifiNetworksAction);
     }
 
-    public void connectToBestWifi() {
-        FutureAction connectToBestWifiAction = actionLibrary.connectToBestWifi(ACTION_TIMEOUT_MS);
+    public void connectToBestWifi(Set<String> offlineRouterIds) {
+        List<String> offlineRouterIdList = new ArrayList<>();
+        if (offlineRouterIds != null) {
+            offlineRouterIdList.addAll(offlineRouterIds);
+        }
+        FutureAction connectToBestWifiAction = actionLibrary.connectToBestWifi(ACTION_TIMEOUT_MS, offlineRouterIdList);
         processResultsWhenAvailable(connectToBestWifiAction);
     }
 

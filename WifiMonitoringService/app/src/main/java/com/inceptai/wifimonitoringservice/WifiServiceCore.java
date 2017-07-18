@@ -12,6 +12,9 @@ import com.inceptai.wifimonitoringservice.monitors.WifiStateMonitor;
 import com.inceptai.wifimonitoringservice.utils.ServiceLog;
 import com.inceptai.wifimonitoringservice.utils.Utils;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * Created by vivek on 7/10/17.
  */
@@ -22,7 +25,7 @@ public class WifiServiceCore implements
         PeriodicCheckMonitor.PeriodicCheckCallback,
         ServiceActionTaker.ActionCallback {
     private final static int MAX_CONNECTIVITY_TEST_FAILURES = 3;
-    private final static int WIFI_CHECK_INITIAL_CHECK_DELAY_ACTIVE_MS = 5 * 1000; // 5 sec
+    private final static int WIFI_CHECK_INITIAL_CHECK_DELAY_ACTIVE_MS = 10 * 1000; // 5 sec
     private final static int WIFI_CHECK_INITIAL_CHECK_DELAY_INACTIVE_MS = 60 * 1000; // 60 sec
     private final static int WIFI_CHECK_PERIOD_SCREEN_ACTIVE_MS = 30 * 1000; //30 secs
     private final static int WIFI_CHECK_PERIOD_SCREEN_INACTIVE_MS = 5 * 60 * 1000; //5 mins
@@ -36,6 +39,7 @@ public class WifiServiceCore implements
     private PeriodicCheckMonitor periodicCheckMonitor;
     private ServiceThreadPool serviceThreadPool;
     private Context context;
+    private Set<String> listOfOfflineRouterIDs;
     //Key state
     private int numConsecutiveFailedConnectivityTests;
     private static WifiServiceCore WIFI_SERVICE_CORE;
@@ -46,10 +50,7 @@ public class WifiServiceCore implements
     private long wifiCheckInitialDelayMs;
     private long wifiCheckPeriodMs;
 
-
-    //TODO: Check if smart switch is incorrectly disabling wifi configuration
-
-
+    //TODO: Move to repair if reset doesn't work for n number of times
     private WifiServiceCore(Context context, ServiceThreadPool serviceThreadPool) {
         this.context = context;
         this.serviceThreadPool = serviceThreadPool;
@@ -63,6 +64,7 @@ public class WifiServiceCore implements
         isEnabled = false;
         wifiCheckInitialDelayMs = WIFI_CHECK_INITIAL_CHECK_DELAY_ACTIVE_MS;
         wifiCheckPeriodMs = WIFI_CHECK_PERIOD_SCREEN_ACTIVE_MS;
+        listOfOfflineRouterIDs = new HashSet<>();
     }
 
     /**
@@ -190,7 +192,7 @@ public class WifiServiceCore implements
         ServiceLog.v("wifi primary AP signal low");
         if (!actionPending) {
             ServiceLog.v("ConnectToBestWifi initiated");
-            serviceActionTaker.connectToBestWifi();
+            serviceActionTaker.connectToBestWifi(listOfOfflineRouterIDs);
         }
     }
 
@@ -247,7 +249,7 @@ public class WifiServiceCore implements
         }
         if (!actionPending) {
             ServiceLog.v("ConnectToBestWifi");
-            serviceActionTaker.connectToBestWifi();
+            serviceActionTaker.connectToBestWifi(listOfOfflineRouterIDs);
         }
     }
 
@@ -259,7 +261,7 @@ public class WifiServiceCore implements
         ServiceLog.v("wifiStateErrorAuthenticating");
         if (!actionPending) {
             ServiceLog.v("ConnectToBestWifi");
-            serviceActionTaker.connectToBestWifi();
+            serviceActionTaker.connectToBestWifi(listOfOfflineRouterIDs);
         }
     }
 
@@ -276,9 +278,10 @@ public class WifiServiceCore implements
     @Override
     public void wifiNetworkAcquiredDataConnectivity() {
         //Perform connectivity test
-        ServiceLog.v("wifiNetworkAcquiredDataConnectivity: disabling checks");
+        ServiceLog.v("wifiNetworkAcquiredDataConnectivity");
         numConsecutiveFailedConnectivityTests = 0;
-        periodicCheckMonitor.disableCheck();
+        startWifiCheck(); // Keep checking to make sure we have connectivity
+        //periodicCheckMonitor.disableCheck();
     }
 
     @Override
@@ -305,7 +308,7 @@ public class WifiServiceCore implements
         ServiceLog.v("wifiNetworkDisconnectedUnexpectedly");
         if (!actionPending) {
             ServiceLog.v("connectToBestWifi");
-            serviceActionTaker.connectToBestWifi();
+            serviceActionTaker.connectToBestWifi(listOfOfflineRouterIDs);
         }
     }
 
@@ -340,6 +343,7 @@ public class WifiServiceCore implements
             if ((int)connectivityResult.getPayload() == ConnectivityTester.WifiConnectivityMode.CONNECTED_AND_ONLINE) {
                 //Online
                 numConsecutiveFailedConnectivityTests = 0;
+                listOfOfflineRouterIDs.clear();
                 ServiceLog.v("WifiServiceCore: onConnectivityTestDone -- CONNECTED_AND_ONLINE, setting numChecks to 0");
             } else if ((int)connectivityResult.getPayload() == ConnectivityTester.WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL) {
                 //Captive portal
@@ -347,18 +351,25 @@ public class WifiServiceCore implements
                 ServiceLog.v("WifiServiceCore: onConnectivityTestDone -- CONNECTED_AND_CAPTIVE_PORTAL, incr numChecks");
             } else {
                 //Offline
-                ServiceLog.v("WifiServiceCore: onConnectivityTestDone -- OFFLINE, incr numChecks");
+                ServiceLog.v("WifiServiceCore: onConnectivityTestDone -- OFFLINE,  numChecks: " + numConsecutiveFailedConnectivityTests);
                 numConsecutiveFailedConnectivityTests++;
             }
         }
         if (numConsecutiveFailedConnectivityTests > MAX_CONNECTIVITY_TEST_FAILURES) {
             //trigger reconnect to best wifi
             ServiceLog.v("WifiServiceCore: onConnectivityTestDone numChecks > MAX checks: " +  numConsecutiveFailedConnectivityTests);
-            if (!actionPending) {
-                ServiceLog.v("WifiServiceCore: onConnectToBestWifi");
-                serviceActionTaker.connectToBestWifi();
-            }
+            listOfOfflineRouterIDs.add(wifiStateMonitor.primaryRouterID());
             numConsecutiveFailedConnectivityTests = 0;
+            if (!actionPending) {
+                ServiceLog.v("WifiServiceCore: onConnectToBestWifi: list offline routers " + listOfOfflineRouterIDs.toString());
+                serviceActionTaker.connectToBestWifi(listOfOfflineRouterIDs);
+            }
+        } else if (numConsecutiveFailedConnectivityTests > 0) {
+            //Reschedule connectivity test
+            if (!actionPending && isConnected) {
+                ServiceLog.v("Initiating connectivity test");
+                performConnectivityTest();
+            }
         }
     }
 
@@ -372,6 +383,7 @@ public class WifiServiceCore implements
         ServiceLog.v("WifiServiceCore: InStartWifiCheck");
         if (isEnabled && isConnected) {
             ServiceLog.v("WifiServiceCore: isConnected true, so starting check");
+            checkFired();
             periodicCheckMonitor.enableCheck(wifiCheckInitialDelayMs, wifiCheckPeriodMs, this);
         }
     }

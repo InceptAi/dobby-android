@@ -13,6 +13,7 @@ import android.net.wifi.WifiManager;
 import android.support.annotation.Nullable;
 
 import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLog;
+import com.inceptai.wifimonitoringservice.utils.ServiceLog;
 import com.inceptai.wifimonitoringservice.utils.WifiStateData;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -85,6 +86,10 @@ public class WifiStateMonitor {
         return wifiStateData.isInConnectingState();
     }
 
+    public String primaryRouterID() {
+        return wifiStateData.getPrimaryRouterID();
+    }
+
     //Discover the public methods -- do we need any
     private void registerReceiver() {
         IntentFilter intentFilter =  getIntentFilter();
@@ -137,16 +142,24 @@ public class WifiStateMonitor {
 
         @SuppressLint("SwitchIntDef")
         public void onDetailedStateChanged(NetworkInfo.DetailedState detailedState, @Nullable WifiInfo wifiInfo) {
+            ServiceLog.v("WifiStateMonitor: onDetailedStateChanged " + detailedState.name());
             if (wifiInfo != null) {
                 wifiStateData.updatePrimaryLinkInfo(wifiInfo);
             }
+            NetworkInfo.DetailedState lastDetailedState = wifiStateData.getLastWifiDetailedState();
             @WifiStateData.WifiProblemMode int newProblem = wifiStateData.updateWifiDetailedState(detailedState);
+
             if (wifiStateCallback != null) {
-                if (detailedState == NetworkInfo.DetailedState.CONNECTED) {
-                    wifiStateCallback.wifiStateConnected();
-                } else if (detailedState == NetworkInfo.DetailedState.DISCONNECTED) {
-                    wifiStateCallback.wifiStateDisconnected();
+
+                //New state -- send callback if needed
+                if (lastDetailedState != detailedState) {
+                    if (detailedState == NetworkInfo.DetailedState.CONNECTED) {
+                        wifiStateCallback.wifiStateConnected();
+                    } else if (detailedState == NetworkInfo.DetailedState.DISCONNECTED) {
+                        wifiStateCallback.wifiStateDisconnected();
+                    }
                 }
+
                 switch (newProblem) {
                     case HANGING_ON_DHCP:
                         wifiStateCallback.wifiStateHangingOnObtainingIPAddress();
@@ -170,6 +183,7 @@ public class WifiStateMonitor {
                         break;
                 }
             }
+
         }
 
         public void onSupplicantStateChanged(SupplicantState supplicantState, int supplicantError) {
