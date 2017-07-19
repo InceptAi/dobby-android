@@ -68,11 +68,6 @@ public class DisplayAppNotification implements Runnable {
         if (notificationId == WifiMonitoringService.WIFI_STATUS_NOTIFICATION_ID) {
             notification.flags |= Notification.FLAG_NO_CLEAR | Notification.FLAG_ONGOING_EVENT;
         }
-//        else if (notificationId == WifiMonitoringService.WIFI_ACTION_NOTIFICATION_ID) {
-//            if (Build.VERSION.SDK_INT >= JELLY_BEAN) {
-//                notification.flags |= Notification.PRIORITY_MIN;
-//            }
-//        }
         notificationManager.notify(notificationId, notification);
     }
 }
