@@ -7,12 +7,10 @@ package com.inceptai.dobby.expert;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.media.RingtoneManager;
 import android.net.Uri;
-import android.support.v4.app.TaskStackBuilder;
 import android.support.v7.app.NotificationCompat;
 
 import com.google.firebase.crash.FirebaseCrash;
@@ -24,12 +22,10 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.inceptai.dobby.BuildConfig;
 import com.inceptai.dobby.DobbyApplication;
-import com.inceptai.dobby.MainActivity;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.analytics.DobbyAnalytics;
 import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
-import com.inceptai.dobby.ui.ExpertChatActivity;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 
@@ -197,7 +193,7 @@ public class ExpertChatService implements
             return;
         }
 
-        PendingIntent resultPendingIntent = getPendingIntentForNotification(context, source);
+        PendingIntent resultPendingIntent = Utils.getPendingIntentForNotification(context, source);
         if (resultPendingIntent == null) {
             FirebaseCrash.report(new RuntimeException("Null pending Intent for build flavor" + BuildConfig.FLAVOR));
             return;
@@ -380,6 +376,7 @@ public class ExpertChatService implements
         }
     }
 
+    /*
     private PendingIntent getPendingIntentForNotification(Context context, String source) {
         boolean isWifiTester = false;
 
@@ -420,6 +417,7 @@ public class ExpertChatService implements
 
         return pendingIntent;
     }
+    */
 
     public boolean isExpertChatMessageFresh(ExpertChat expertChat) {
         return (ExpertChatUtil.isMessageFresh(expertChat, lastChatNumberDisplayedToUser));

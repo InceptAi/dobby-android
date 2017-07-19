@@ -38,7 +38,7 @@ public class ConnectivityTester {
     private static final int PORTAL_TEST_READ_TIMEOUT_MS = 3000;
     private static final int PORTAL_TEST_CONNECTION_TIMEOUT_MS = 3000;
     private static int GAP_BETWEEN_CONNECTIVITY_CHECKS_MS = 300;
-    private static int MAX_RESCHEDULING_CONNECTIVITY_TESTS = 5;
+    private static int MAX_RESCHEDULING_CONNECTIVITY_TESTS = 3;
 
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({WifiConnectivityMode.CONNECTED_AND_ONLINE, WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL,

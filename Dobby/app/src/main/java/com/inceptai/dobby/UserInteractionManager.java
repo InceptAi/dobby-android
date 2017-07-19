@@ -1,7 +1,11 @@
 package com.inceptai.dobby;
 
 import android.app.AlarmManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.support.v4.content.LocalBroadcastManager;
 
 import com.google.common.eventbus.Subscribe;
 import com.inceptai.dobby.ai.DataInterpreter;
@@ -13,9 +17,11 @@ import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.expert.ExpertChat;
 import com.inceptai.dobby.expert.ExpertChatService;
+import com.inceptai.dobby.notifications.DisplayAppNotification;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
+import com.inceptai.wifimonitoringservice.WifiMonitoringService;
 
 import java.util.HashSet;
 import java.util.List;
@@ -47,6 +53,7 @@ public class UserInteractionManager implements
     private Set<String> expertChatIdsDisplayed;
     private boolean explicitHumanContactMode;
     private boolean historyAvailable;
+    private NotificationInfoReceiver notificationInfoReceiver;
 
     @Inject
     DobbyAi dobbyAi;
@@ -74,6 +81,7 @@ public class UserInteractionManager implements
         dobbyAi.setShowContactHumanButton(showContactHumanAction);
         dobbyEventBus.registerListener(this);
         this.historyAvailable = false;
+        notificationInfoReceiver = new NotificationInfoReceiver();
     }
 
     public interface InteractionCallback {
@@ -106,12 +114,14 @@ public class UserInteractionManager implements
         expertChatService.sendUserEnteredMetaMessage();
         expertChatService.disableNotifications();
         updateExpertIndicator();
+        unRegisterNotificationInfoReceiver();
     }
 
     public void onUserExitChat() {
         expertChatService.sendUserLeftMetaMessage();
         expertChatService.enableNotifications();
         expertChatService.saveState();
+        registerNotificationInfoReceiver();
     }
 
     public void cleanup() {
@@ -446,4 +456,29 @@ public class UserInteractionManager implements
             }, 0, TimeUnit.MILLISECONDS);
         }
     }
+
+    // Our handler for received Intents. This will be called whenever an Intent
+    // with an action named "custom-event-name" is broadcasted.
+    private class NotificationInfoReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // Get extra data included in the Intent
+            String notificationTitle = intent.getStringExtra(WifiMonitoringService.EXTRA_NOTIFICATION_TITLE);
+            String notificationBody = intent.getStringExtra(WifiMonitoringService.EXTRA_NOTIFICATION_BODY);
+            int notificationId = intent.getIntExtra(WifiMonitoringService.EXTRA_NOTIFICATION_ID, 0);
+            dobbyThreadpool.getExecutor().execute(new DisplayAppNotification(context, notificationTitle, notificationBody, notificationId));
+        }
+    }
+
+    private void registerNotificationInfoReceiver() {
+        IntentFilter intentFilter = new IntentFilter(WifiMonitoringService.NOTIFICATION_INFO_INTENT_VALUE);
+        LocalBroadcastManager.getInstance(context).registerReceiver(
+                notificationInfoReceiver, intentFilter);
+    }
+
+    private void unRegisterNotificationInfoReceiver() {
+        LocalBroadcastManager.getInstance(context).unregisterReceiver(
+                notificationInfoReceiver);
+    }
+
 }

@@ -18,4 +18,19 @@
     <string name="check_5GHz_supported">Check 5GHz supported</string>
     <string name="repair_wifi_network">Repair Wifi Network</string>
     <string name="perform_connectivity_test">Perform Connectivity Test</string>
+    <string name="wifi_bad_state">WiFi Stuck in Bad State</string>
+    <string name="wifi_inactive_state">WiFi Inactive</string>
+    <string name="wifi_disconnected_prematurely">WiFi Disconnected</string>
+    <string name="wifi_authentication_error">WiFi Authentication Error</string>
+    <string name="wifi_signal_poor">WiFi Signal Poor</string>
+    <string name="wifi_stuck_scanning">Unable to Find Good WiFi Network</string>
+    <string name="wifi_stuck_ip">Unable to Get IP Address</string>
+    <string name="wifi_stuck_authenticating">Unable to Authenticate</string>
+    <string name="wifi_stuck_connecting">Unable to Connect To WiFi Network</string>
+    <string name="wifi_frequent_dropoff">Frequent WiFi Drops</string>
+    <string name="wifi_turn_off_smart_switch">Turn off WiFi smart switch</string>
+    <string name="wifi_check_password">Check WiFi Password</string>
+
+
+
 </resources>

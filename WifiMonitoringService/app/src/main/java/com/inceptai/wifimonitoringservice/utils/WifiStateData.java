@@ -15,6 +15,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import static com.inceptai.wifimonitoringservice.utils.WifiStateData.SignalStrengthZones.FRINGE;
+import static com.inceptai.wifimonitoringservice.utils.WifiStateData.SignalStrengthZones.HIGH;
+import static com.inceptai.wifimonitoringservice.utils.WifiStateData.SignalStrengthZones.LOW;
+import static com.inceptai.wifimonitoringservice.utils.WifiStateData.SignalStrengthZones.MEDIUM;
+import static com.inceptai.wifimonitoringservice.utils.WifiStateData.SignalStrengthZones.UNKNOWN;
+
 /**
  * Created by vivek on 4/8/17.
  */
@@ -31,13 +37,46 @@ public class WifiStateData {
     private static final String EMPTY_STRING = "";
 
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({SignalStrengthZones.HIGH, SignalStrengthZones.MEDIUM,
-            SignalStrengthZones.LOW, SignalStrengthZones.FRINGE})
+    @IntDef({HIGH, MEDIUM,
+            LOW, FRINGE,
+            UNKNOWN})
     public @interface SignalStrengthZones {
         int HIGH  = -60;
         int MEDIUM = -80;
         int LOW = -100;
         int FRINGE = -140;
+        int UNKNOWN = 0;
+    }
+
+    private static String getStringFromZone(@SignalStrengthZones int zone) {
+        switch (zone) {
+            case HIGH:
+                return "Excellent";
+            case MEDIUM:
+                return "Ok";
+            case LOW:
+                return "Low";
+            case FRINGE:
+                return "Poor";
+            case UNKNOWN:
+            default:
+                return "Unknown";
+        }
+    }
+
+    @SignalStrengthZones
+    private static int getZoneFromSignalStrength(int signal) {
+        if (signal == 0) {
+            return SignalStrengthZones.UNKNOWN;
+        } else if (signal > SignalStrengthZones.HIGH) {
+            return SignalStrengthZones.HIGH;
+        } else if (signal > SignalStrengthZones.MEDIUM) {
+            return SignalStrengthZones.MEDIUM;
+        } else if (signal > SignalStrengthZones.LOW) {
+            return SignalStrengthZones.LOW;
+        } else {
+            return SignalStrengthZones.FRINGE;
+        }
     }
 
     @Retention(RetentionPolicy.SOURCE)
@@ -197,6 +236,19 @@ public class WifiStateData {
     public String getPrimaryRouterID() {
         //Be smart here -- return both bssid and ssid -- don't reject just on basis of ssid
         return "BSSID-" + linkBSSID + ",SSID-" + linkSSID;
+    }
+
+
+    public String getPrimaryRouterSSID() {
+        return linkSSID;
+    }
+
+    public String getPrimaryRouterSignalQuality() {
+        @SignalStrengthZones int zone = getZoneFromSignalStrength(getPrimaryLinkSignal());
+        if (zone == SignalStrengthZones.UNKNOWN) {
+            return EMPTY_STRING;
+        }
+        return getStringFromZone(zone);
     }
 
     @WifiProblemMode

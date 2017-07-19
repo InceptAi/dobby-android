@@ -90,6 +90,14 @@ public class WifiStateMonitor {
         return wifiStateData.getPrimaryRouterID();
     }
 
+    public String primaryRouterSSID() {
+        return wifiStateData.getPrimaryRouterSSID();
+    }
+
+    public String primaryRouterSignalQuality() {
+        return wifiStateData.getPrimaryRouterSignalQuality();
+    }
+
     //Discover the public methods -- do we need any
     private void registerReceiver() {
         IntentFilter intentFilter =  getIntentFilter();

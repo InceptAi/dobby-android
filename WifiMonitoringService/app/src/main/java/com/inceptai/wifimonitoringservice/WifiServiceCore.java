@@ -9,6 +9,7 @@ import com.inceptai.wifimonitoringservice.actionlibrary.actions.FutureAction;
 import com.inceptai.wifimonitoringservice.monitors.PeriodicCheckMonitor;
 import com.inceptai.wifimonitoringservice.monitors.ScreenStateMonitor;
 import com.inceptai.wifimonitoringservice.monitors.WifiStateMonitor;
+import com.inceptai.wifimonitoringservice.utils.DisplayNotification;
 import com.inceptai.wifimonitoringservice.utils.ServiceLog;
 import com.inceptai.wifimonitoringservice.utils.Utils;
 
@@ -40,6 +41,7 @@ public class WifiServiceCore implements
     private ServiceThreadPool serviceThreadPool;
     private Context context;
     private Set<String> listOfOfflineRouterIDs;
+    private String notificationIntentToBroadcast;
     //Key state
     private int numConsecutiveFailedConnectivityTests;
     private static WifiServiceCore WIFI_SERVICE_CORE;
@@ -49,6 +51,7 @@ public class WifiServiceCore implements
     private boolean isEnabled;
     private long wifiCheckInitialDelayMs;
     private long wifiCheckPeriodMs;
+    private boolean notifiedOfConnectivityPass;
 
     //TODO: Move to repair if reset doesn't work for n number of times
     private WifiServiceCore(Context context, ServiceThreadPool serviceThreadPool) {
@@ -65,6 +68,8 @@ public class WifiServiceCore implements
         wifiCheckInitialDelayMs = WIFI_CHECK_INITIAL_CHECK_DELAY_ACTIVE_MS;
         wifiCheckPeriodMs = WIFI_CHECK_PERIOD_SCREEN_ACTIVE_MS;
         listOfOfflineRouterIDs = new HashSet<>();
+        notificationIntentToBroadcast = WifiMonitoringService.NOTIFICATION_INFO_INTENT_VALUE;
+        notifiedOfConnectivityPass = false;
     }
 
     /**
@@ -82,6 +87,12 @@ public class WifiServiceCore implements
             return new WifiServiceCore(context, serviceThreadPool);
         }
         return WIFI_SERVICE_CORE;
+    }
+
+    public void setNotificationIntent(String notificationIntent) {
+        if (notificationIntent != null) {
+            notificationIntentToBroadcast = notificationIntent;
+        }
     }
 
     public void startMonitoring() {
@@ -118,11 +129,13 @@ public class WifiServiceCore implements
             ServiceLog.v("Action result: " + actionResult.getStatusString());
         }
         actionPending = false;
+        sendNotificationOfServiceActionCompleted(actionName, actionResult);
     }
 
     @Override
     public void checkFired() {
         //Perform wifi connectivity test
+        //showNotification();
         ServiceLog.v("Check fired");
         if (!actionPending && isConnected) {
             ServiceLog.v("Initiating connectivity test");
@@ -174,6 +187,7 @@ public class WifiServiceCore implements
 //                WIFI_CHECK_PERIOD_SCREEN_ACTIVE_MS, this);
         ServiceLog.v("Wifi state disconnected");
         isConnected = false;
+        notifiedOfConnectivityPass = false;
     }
 
     @Override
@@ -190,8 +204,11 @@ public class WifiServiceCore implements
     public void wifiPrimaryAPSignalLow() {
         //scan and reconnect to other stronger AP if available.
         ServiceLog.v("wifi primary AP signal low");
+        sendNotificationOfConnectivityPass(true);
         if (!actionPending) {
             ServiceLog.v("ConnectToBestWifi initiated");
+            sendNotificationOfServiceActionStarted(context.getString(R.string.connect_to_best_wifi),
+                    context.getString(R.string.wifi_signal_poor));
             serviceActionTaker.connectToBestWifi(listOfOfflineRouterIDs);
         }
     }
@@ -202,6 +219,8 @@ public class WifiServiceCore implements
         ServiceLog.v("wifiStateHangingOnScanning");
         if (!actionPending) {
             ServiceLog.v("RepairConnection initiated");
+            sendNotificationOfServiceActionStarted(context.getString(R.string.repair_wifi_network),
+                    context.getString(R.string.wifi_stuck_scanning));
             serviceActionTaker.repairConnection();
         }
     }
@@ -213,6 +232,8 @@ public class WifiServiceCore implements
         ServiceLog.v("wifiStateHangingOnObtainingIPAddress");
         if (!actionPending) {
             ServiceLog.v("RepairConnection initiated");
+            sendNotificationOfServiceActionStarted(context.getString(R.string.reset_connection_to_current_wifi),
+                    context.getString(R.string.wifi_stuck_ip));
             serviceActionTaker.resetConnection();
         }
     }
@@ -224,6 +245,8 @@ public class WifiServiceCore implements
         ServiceLog.v("wifiStateHangingOnAuthenticating");
         if (!actionPending) {
             ServiceLog.v("ResetConnection initiated");
+            sendNotificationOfServiceActionStarted(context.getString(R.string.reset_connection_to_current_wifi),
+                    context.getString(R.string.wifi_stuck_authenticating));
             serviceActionTaker.resetConnection();
         }
     }
@@ -234,6 +257,8 @@ public class WifiServiceCore implements
         ServiceLog.v("wifiStateHangingOnConnecting");
         if (!actionPending) {
             ServiceLog.v("ResetConnection initiated");
+            sendNotificationOfServiceActionStarted(context.getString(R.string.reset_connection_to_current_wifi),
+                    context.getString(R.string.wifi_stuck_connecting));
             serviceActionTaker.resetConnection();
         }
     }
@@ -246,9 +271,12 @@ public class WifiServiceCore implements
         ServiceLog.v("wifiStateFrequentDropOff");
         if (Utils.isPoorNetworkAvoidanceEnabled(context)) {
             //TODO: Show a message to the user to disable Smart Network Switch -- could be causing issues
+            sendNotificationOfUserActionNeeded(context.getString(R.string.wifi_turn_off_smart_switch), context.getString(R.string.wifi_frequent_dropoff));
         }
         if (!actionPending) {
             ServiceLog.v("ConnectToBestWifi");
+            sendNotificationOfServiceActionStarted(context.getString(R.string.connect_to_best_wifi),
+                    context.getString(R.string.wifi_disconnected_prematurely));
             serviceActionTaker.connectToBestWifi(listOfOfflineRouterIDs);
         }
     }
@@ -258,9 +286,12 @@ public class WifiServiceCore implements
         //Tell user that passphrase is wrong
         //TODO: Show a message to the user to check the passphrase for the network --
         //TODO: maybe try connecting to another network ?
+        sendNotificationOfUserActionNeeded(context.getString(R.string.wifi_check_password), context.getString(R.string.wifi_authentication_error));
         ServiceLog.v("wifiStateErrorAuthenticating");
         if (!actionPending) {
             ServiceLog.v("ConnectToBestWifi");
+            sendNotificationOfServiceActionStarted(context.getString(R.string.connect_to_best_wifi),
+                    context.getString(R.string.wifi_authentication_error));
             serviceActionTaker.connectToBestWifi(listOfOfflineRouterIDs);
         }
     }
@@ -271,6 +302,8 @@ public class WifiServiceCore implements
         ServiceLog.v("wifiStateProblematicSupplicantPattern");
         if (!actionPending) {
             ServiceLog.v("repairConnection");
+            sendNotificationOfServiceActionStarted(context.getString(R.string.repair_wifi_network),
+                    context.getString(R.string.wifi_bad_state));
             serviceActionTaker.repairConnection();
         }
     }
@@ -298,6 +331,8 @@ public class WifiServiceCore implements
         ServiceLog.v("wifiNetworkInvalidOrInactiveOrDormant");
         if (!actionPending) {
             ServiceLog.v("toggleWifi");
+            sendNotificationOfServiceActionStarted(context.getString(R.string.toggle_wifi_off_and_on),
+                    context.getString(R.string.wifi_inactive_state));
             serviceActionTaker.toggleWifi();
         }
     }
@@ -308,6 +343,8 @@ public class WifiServiceCore implements
         ServiceLog.v("wifiNetworkDisconnectedUnexpectedly");
         if (!actionPending) {
             ServiceLog.v("connectToBestWifi");
+            sendNotificationOfServiceActionStarted(context.getString(R.string.connect_to_best_wifi),
+                    context.getString(R.string.wifi_disconnected_prematurely));
             serviceActionTaker.connectToBestWifi(listOfOfflineRouterIDs);
         }
     }
@@ -333,33 +370,33 @@ public class WifiServiceCore implements
         }, serviceThreadPool.getExecutor());
     }
 
-    private boolean didActionComplete(ActionResult actionResult) {
-        return actionResult != null && actionResult.getStatus() == ActionResult.ActionResultCodes.SUCCESS;
-    }
 
     private void onConnectivityTestDone(ActionResult connectivityResult) {
         ServiceLog.v("WifiServiceCore: onConnectivityTestDone");
         if (didActionComplete(connectivityResult)) {
             if ((int)connectivityResult.getPayload() == ConnectivityTester.WifiConnectivityMode.CONNECTED_AND_ONLINE) {
                 //Online
+                ServiceLog.v("WifiServiceCore: onConnectivityTestDone -- CONNECTED_AND_ONLINE, setting numChecks to 0");
                 numConsecutiveFailedConnectivityTests = 0;
                 listOfOfflineRouterIDs.clear();
-                ServiceLog.v("WifiServiceCore: onConnectivityTestDone -- CONNECTED_AND_ONLINE, setting numChecks to 0");
+                //Send message to user saying it passed
+                sendNotificationOfConnectivityPass(false);
             } else if ((int)connectivityResult.getPayload() == ConnectivityTester.WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL) {
                 //Captive portal
                 numConsecutiveFailedConnectivityTests++;
                 ServiceLog.v("WifiServiceCore: onConnectivityTestDone -- CONNECTED_AND_CAPTIVE_PORTAL, incr numChecks");
             } else {
                 //Offline
-                ServiceLog.v("WifiServiceCore: onConnectivityTestDone -- OFFLINE,  numChecks: " + numConsecutiveFailedConnectivityTests);
                 numConsecutiveFailedConnectivityTests++;
+                ServiceLog.v("WifiServiceCore: onConnectivityTestDone -- OFFLINE,  numChecks: " + numConsecutiveFailedConnectivityTests);
             }
         }
-        if (numConsecutiveFailedConnectivityTests > MAX_CONNECTIVITY_TEST_FAILURES) {
+        if (numConsecutiveFailedConnectivityTests >= MAX_CONNECTIVITY_TEST_FAILURES) {
             //trigger reconnect to best wifi
             ServiceLog.v("WifiServiceCore: onConnectivityTestDone numChecks > MAX checks: " +  numConsecutiveFailedConnectivityTests);
             listOfOfflineRouterIDs.add(wifiStateMonitor.primaryRouterID());
             numConsecutiveFailedConnectivityTests = 0;
+            sendNotificationOfConnectivityLost();
             if (!actionPending) {
                 ServiceLog.v("WifiServiceCore: onConnectToBestWifi: list offline routers " + listOfOfflineRouterIDs.toString());
                 serviceActionTaker.connectToBestWifi(listOfOfflineRouterIDs);
@@ -387,4 +424,57 @@ public class WifiServiceCore implements
             periodicCheckMonitor.enableCheck(wifiCheckInitialDelayMs, wifiCheckPeriodMs, this);
         }
     }
+
+    private void showNotification() {
+        serviceThreadPool.getExecutor().execute(new DisplayNotification(context));
+    }
+
+    private void sendNotificationOfConnectivityPass(boolean lowSignalNotification) {
+        if (lowSignalNotification || !notifiedOfConnectivityPass) {
+            String title = wifiStateMonitor.primaryRouterSSID() + " Online";
+            String signalQuality = wifiStateMonitor.primaryRouterSignalQuality();
+            if (signalQuality.equals("")) {
+                return;
+            }
+            String body = "Signal: " + signalQuality;
+            Utils.sendNotificationInfo(context, title, body, WifiMonitoringService.WIFI_STATUS_NOTIFICATION_ID);
+            notifiedOfConnectivityPass = true;
+        }
+    }
+
+    private void sendNotificationOfConnectivityLost() {
+        String title = wifiStateMonitor.primaryRouterSSID() + " Offline";
+        String signalQuality = wifiStateMonitor.primaryRouterSignalQuality();
+        if (signalQuality.equals("")) {
+            return;
+        }
+        String body = "WiFi Internet Dropped";
+        Utils.sendNotificationInfo(context, title, body, WifiMonitoringService.WIFI_STATUS_NOTIFICATION_ID);
+        notifiedOfConnectivityPass = false;
+    }
+
+    private void sendNotificationOfServiceActionStarted(String actionTitle, String reason) {
+        Utils.sendNotificationInfo(context, actionTitle, reason, WifiMonitoringService.WIFI_ACTION_NOTIFICATION_ID);
+    }
+
+    private void sendNotificationOfServiceActionCompleted(String actionName, ActionResult actionResult) {
+        String title = "Finished " + actionName;
+        String body = Utils.EMPTY_STRING;
+        if (didActionComplete(actionResult)) {
+            body = "Successful";
+        } else if (actionResult != null){
+            body = actionResult.getStatusString();
+        }
+        Utils.sendNotificationInfo(context, title, body, WifiMonitoringService.WIFI_ACTION_NOTIFICATION_ID);
+    }
+
+    private void sendNotificationOfUserActionNeeded(String actionNeeded, String reason) {
+        Utils.sendNotificationInfo(context, actionNeeded, reason, WifiMonitoringService.WIFI_ISSUE_NOTIFICATION_ID);
+    }
+
+
+    private boolean didActionComplete(ActionResult actionResult) {
+        return actionResult != null && actionResult.getStatus() == ActionResult.ActionResultCodes.SUCCESS;
+    }
+
 }

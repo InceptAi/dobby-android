@@ -1,7 +1,9 @@
 package com.inceptai.dobby.utils;
 
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.content.res.XmlResourceParser;
@@ -10,6 +12,7 @@ import android.provider.Settings;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.app.TaskStackBuilder;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
@@ -18,7 +21,9 @@ import android.widget.ImageView;
 import com.google.common.net.InetAddresses;
 import com.google.gson.Gson;
 import com.inceptai.dobby.BuildConfig;
+import com.inceptai.dobby.MainActivity;
 import com.inceptai.dobby.speedtest.BandwidthTestCodes;
+import com.inceptai.dobby.ui.ExpertChatActivity;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -43,6 +48,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import static com.inceptai.dobby.expert.ExpertChatService.INTENT_NOTIF_SOURCE;
+
 /**
  * Utils class.
  */
@@ -54,7 +61,7 @@ public class Utils {
     public static final String FALSE_STRING = "false";
     public static final String ZERO_POINT_ZERO = "0.0";
     public static final String WIFIDOC_FLAVOR = "wifidoc";
-    public static final String DOBBY_FLAVOR = "dobby";
+    public static final String WIFIEXPERT_FLAVOR = "dobby";
     public static final String PREFERENCES_FILE = BuildConfig.FLAVOR + "_" + BuildConfig.BUILD_TYPE + "_settings";
     public static final String USER_UUID = "userUuid";
 
@@ -956,4 +963,45 @@ public class Utils {
         return manufacturer;
     }
 
+    public static PendingIntent getPendingIntentForNotification(Context context, String source) {
+        boolean isWifiTester = false;
+
+        if (BuildConfig.FLAVOR.equals(WIFIDOC_FLAVOR)) {
+            isWifiTester = true;
+        } else if (!(BuildConfig.FLAVOR.equals(WIFIEXPERT_FLAVOR))) {
+            DobbyLog.e("Unknown build flavor: " + BuildConfig.FLAVOR);
+            return null;
+        }
+        Intent intent = null;
+
+        if (isWifiTester) {
+            intent = new Intent(context, ExpertChatActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        } else {
+            intent = new Intent(context, MainActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        }
+
+        if (source != null) {
+            intent.putExtra(INTENT_NOTIF_SOURCE, source);
+        }
+
+        PendingIntent pendingIntent = null;
+        if (isWifiTester) {
+            TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
+            // Adds the back stack
+            stackBuilder.addParentStack(ExpertChatActivity.class);
+            // Adds the Intent to the top of the stack
+            stackBuilder.addNextIntent(intent);
+            // Gets a PendingIntent containing the entire back stack
+            pendingIntent =
+                    stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+        } else {
+            //pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_ONE_SHOT);
+            pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        }
+
+        return pendingIntent;
+    }
 }

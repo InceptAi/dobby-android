@@ -50,6 +50,7 @@ public class MainActivity extends AppCompatActivity
     private static final boolean RESUME_WITH_SUGGESTION_IF_AVAILABLE = false;
     private static final int SPEECH_RECOGNITION_REQUEST_CODE = 102;
     private static final long BOT_MESSAGE_DELAY_MS = 500;
+    private static final String NOTIFICATION_INFO_INTENT_VALUE = "com.inceptai.wifiexpert.WIFI_MONITORING_INFO";
 
     private static final boolean SHOW_CONTACT_HUMAN_BUTTON = true;
 
@@ -420,6 +421,8 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void startWifiMonitoringService() {
+        Intent serviceStartIntent = new Intent(this, WifiMonitoringService.class);
+        //serviceStartIntent.putExtra(NotificationInfoKeys., NOTIFICATION_INFO_INTENT_VALUE);
         startService(new Intent(this, WifiMonitoringService.class));
     }
 

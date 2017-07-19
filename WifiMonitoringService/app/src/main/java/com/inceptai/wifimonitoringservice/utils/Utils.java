@@ -2,9 +2,13 @@ package com.inceptai.wifimonitoringservice.utils;
 
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.provider.Settings;
+import android.support.v4.content.LocalBroadcastManager;
+
+import com.inceptai.wifimonitoringservice.WifiMonitoringService;
 
 import java.lang.reflect.Field;
 
@@ -17,6 +21,7 @@ import static android.os.Build.VERSION_CODES.JELLY_BEAN_MR1;
  */
 
 public class Utils {
+    public static String EMPTY_STRING = "";
     public static int computeMovingAverageSignal(int currentSignal, int previousSignal, long currentSeen, long previousSeen, int maxAge) {
         if (currentSeen == 0) {
             currentSeen = System.currentTimeMillis();
@@ -100,6 +105,17 @@ public class Utils {
         } else {
             return defVal;
         }
+    }
+
+    //Broadcast notification info
+    public static void sendNotificationInfo(Context context, String title, String body, int notificationId) {
+        ServiceLog.v("Broadcasting message");
+        Intent intent = new Intent(WifiMonitoringService.NOTIFICATION_INFO_INTENT_VALUE);
+        intent.putExtra(WifiMonitoringService.EXTRA_NOTIFICATION_TITLE, title);
+        intent.putExtra(WifiMonitoringService.EXTRA_NOTIFICATION_BODY, body);
+        intent.putExtra(WifiMonitoringService.EXTRA_NOTIFICATION_ID, notificationId);
+        // You can also include some extra data.
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 
     //Private stuff
