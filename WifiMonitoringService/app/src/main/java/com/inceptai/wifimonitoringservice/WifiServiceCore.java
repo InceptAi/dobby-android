@@ -28,7 +28,7 @@ public class WifiServiceCore implements
     private final static int MAX_CONNECTIVITY_TEST_FAILURES = 3;
     private final static int WIFI_CHECK_INITIAL_CHECK_DELAY_ACTIVE_MS = 10 * 1000; // 5 sec
     private final static int WIFI_CHECK_INITIAL_CHECK_DELAY_INACTIVE_MS = 60 * 1000; // 60 sec
-    private final static int WIFI_CHECK_PERIOD_SCREEN_ACTIVE_MS = 30 * 1000; //30 secs
+    private final static int WIFI_CHECK_PERIOD_SCREEN_ACTIVE_MS = 60 * 1000; //30 secs
     private final static int WIFI_CHECK_PERIOD_SCREEN_INACTIVE_MS = 5 * 60 * 1000; //5 mins
     private final static boolean ENABLE_CHECK_WHEN_SCREEN_INACTIVE = false;
 
@@ -52,6 +52,7 @@ public class WifiServiceCore implements
     private long wifiCheckInitialDelayMs;
     private long wifiCheckPeriodMs;
     private boolean notifiedOfConnectivityPass;
+    private boolean captivePortal;
 
     //TODO: Move to repair if reset doesn't work for n number of times
     private WifiServiceCore(Context context, ServiceThreadPool serviceThreadPool) {
@@ -70,6 +71,7 @@ public class WifiServiceCore implements
         listOfOfflineRouterIDs = new HashSet<>();
         notificationIntentToBroadcast = WifiMonitoringService.NOTIFICATION_INFO_INTENT_VALUE;
         notifiedOfConnectivityPass = false;
+        captivePortal = false;
     }
 
     /**
@@ -165,6 +167,7 @@ public class WifiServiceCore implements
 
 
     //Overrides for wifi state
+
     @Override
     public void wifiStateEnabled() {
         ServiceLog.v("Wifi enabled");
@@ -199,12 +202,23 @@ public class WifiServiceCore implements
         startWifiCheck();
     }
 
+    @Override
+    public void wifiStatePrimaryAPSignalLevelChanged() {
+        if (isConnected && notifiedOfConnectivityPass) {
+            ServiceLog.v("Sending wifi status as signal level changed");
+            sendNotificationOfWifiStatus(true);
+        }
+    }
+
     //Problems
     @Override
     public void wifiPrimaryAPSignalLow() {
         //scan and reconnect to other stronger AP if available.
         ServiceLog.v("wifi primary AP signal low");
-        sendNotificationOfConnectivityPass(true);
+        ServiceLog.v("Sending wifi status as signal level low");
+        if (isConnected && notifiedOfConnectivityPass) {
+            sendNotificationOfWifiStatus(true);
+        }
         if (!actionPending) {
             ServiceLog.v("ConnectToBestWifi initiated");
             sendNotificationOfServiceActionStarted(context.getString(R.string.connect_to_best_wifi),
@@ -276,7 +290,7 @@ public class WifiServiceCore implements
         if (!actionPending) {
             ServiceLog.v("ConnectToBestWifi");
             sendNotificationOfServiceActionStarted(context.getString(R.string.connect_to_best_wifi),
-                    context.getString(R.string.wifi_disconnected_prematurely));
+                    context.getString(R.string.wifi_frequent_dropoff));
             serviceActionTaker.connectToBestWifi(listOfOfflineRouterIDs);
         }
     }
@@ -340,6 +354,7 @@ public class WifiServiceCore implements
     @Override
     public void wifiNetworkDisconnectedUnexpectedly() {
         //Reconnect with best AP or last AP
+        //TODO: this is very agressive -- what if the user wants to switch networks for some reacon -- drop it for now
         ServiceLog.v("wifiNetworkDisconnectedUnexpectedly");
         if (!actionPending) {
             ServiceLog.v("connectToBestWifi");
@@ -379,14 +394,17 @@ public class WifiServiceCore implements
                 ServiceLog.v("WifiServiceCore: onConnectivityTestDone -- CONNECTED_AND_ONLINE, setting numChecks to 0");
                 numConsecutiveFailedConnectivityTests = 0;
                 listOfOfflineRouterIDs.clear();
+                captivePortal = false;
                 //Send message to user saying it passed
-                sendNotificationOfConnectivityPass(false);
+                sendNotificationOfWifiStatus(false);
             } else if ((int)connectivityResult.getPayload() == ConnectivityTester.WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL) {
                 //Captive portal
                 numConsecutiveFailedConnectivityTests++;
+                captivePortal = true;
                 ServiceLog.v("WifiServiceCore: onConnectivityTestDone -- CONNECTED_AND_CAPTIVE_PORTAL, incr numChecks");
             } else {
                 //Offline
+                captivePortal = false;
                 numConsecutiveFailedConnectivityTests++;
                 ServiceLog.v("WifiServiceCore: onConnectivityTestDone -- OFFLINE,  numChecks: " + numConsecutiveFailedConnectivityTests);
             }
@@ -429,8 +447,9 @@ public class WifiServiceCore implements
         serviceThreadPool.getExecutor().execute(new DisplayNotification(context));
     }
 
-    private void sendNotificationOfConnectivityPass(boolean lowSignalNotification) {
-        if (lowSignalNotification || !notifiedOfConnectivityPass) {
+    private void sendNotificationOfWifiStatus(boolean signalNotification) {
+        ServiceLog.v("Sending notification of wifi status ");
+        if (!notifiedOfConnectivityPass || signalNotification) {
             String title = wifiStateMonitor.primaryRouterSSID() + " Online";
             String signalQuality = wifiStateMonitor.primaryRouterSignalQuality();
             if (signalQuality.equals("")) {
@@ -443,12 +462,9 @@ public class WifiServiceCore implements
     }
 
     private void sendNotificationOfConnectivityLost() {
-        String title = wifiStateMonitor.primaryRouterSSID() + " Offline";
-        String signalQuality = wifiStateMonitor.primaryRouterSignalQuality();
-        if (signalQuality.equals("")) {
-            return;
-        }
-        String body = "WiFi Internet Dropped";
+        String offlineString = captivePortal ? "Captive Portal Mode" : "No Internet";
+        String title = wifiStateMonitor.primaryRouterSSID() + offlineString;
+        String body = captivePortal ? "Sign in to WiFi required" : "WiFi Internet Dropped";
         Utils.sendNotificationInfo(context, title, body, WifiMonitoringService.WIFI_STATUS_NOTIFICATION_ID);
         notifiedOfConnectivityPass = false;
     }

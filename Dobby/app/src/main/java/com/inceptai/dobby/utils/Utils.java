@@ -23,7 +23,7 @@ import com.google.gson.Gson;
 import com.inceptai.dobby.BuildConfig;
 import com.inceptai.dobby.MainActivity;
 import com.inceptai.dobby.speedtest.BandwidthTestCodes;
-import com.inceptai.dobby.ui.ExpertChatActivity;
+import com.inceptai.dobby.ui.WifiDocActivity;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -975,7 +975,7 @@ public class Utils {
         Intent intent = null;
 
         if (isWifiTester) {
-            intent = new Intent(context, ExpertChatActivity.class);
+            intent = new Intent(context, WifiDocActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         } else {
             intent = new Intent(context, MainActivity.class);
@@ -990,7 +990,7 @@ public class Utils {
         if (isWifiTester) {
             TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
             // Adds the back stack
-            stackBuilder.addParentStack(ExpertChatActivity.class);
+            stackBuilder.addParentStack(WifiDocActivity.class);
             // Adds the Intent to the top of the stack
             stackBuilder.addNextIntent(intent);
             // Gets a PendingIntent containing the entire back stack

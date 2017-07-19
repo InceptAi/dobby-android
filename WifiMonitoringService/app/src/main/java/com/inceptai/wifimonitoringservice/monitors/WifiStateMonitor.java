@@ -14,6 +14,7 @@ import android.support.annotation.Nullable;
 
 import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLog;
 import com.inceptai.wifimonitoringservice.utils.ServiceLog;
+import com.inceptai.wifimonitoringservice.utils.Utils;
 import com.inceptai.wifimonitoringservice.utils.WifiStateData;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -58,6 +59,7 @@ public class WifiStateMonitor {
         void wifiNetworkInvalidOrInactiveOrDormant();
         void wifiNetworkDisconnectedUnexpectedly();
         void wifiStateHangingOnConnecting();
+        void wifiStatePrimaryAPSignalLevelChanged();
     }
 
     public WifiStateMonitor(Context context) {
@@ -139,11 +141,14 @@ public class WifiStateMonitor {
 
         public void onWifiSignalChanged(int updatedSignal) {
             //TODO: Change thread before posting the callback
+            String oldSignalZoneString = wifiStateData.getPrimaryRouterSignalQuality();
             @WifiStateData.WifiProblemMode int wifiLinkMode = wifiStateData.updateSignal(updatedSignal);
-            if (wifiLinkMode == WifiStateData.WifiProblemMode.LOW_SNR) {
-                //We have a link with low snr. give callback
-                if (wifiStateCallback != null) {
+            String newSignalZoneString = wifiStateData.getPrimaryRouterSignalQuality();
+            if (wifiStateCallback != null) {
+                if (wifiLinkMode == WifiStateData.WifiProblemMode.LOW_SNR) {
                     wifiStateCallback.wifiPrimaryAPSignalLow();
+                } else if (!newSignalZoneString.equals(Utils.EMPTY_STRING) && !newSignalZoneString.equals(oldSignalZoneString)){
+                    wifiStateCallback.wifiStatePrimaryAPSignalLevelChanged();
                 }
             }
         }
@@ -152,6 +157,7 @@ public class WifiStateMonitor {
         public void onDetailedStateChanged(NetworkInfo.DetailedState detailedState, @Nullable WifiInfo wifiInfo) {
             ServiceLog.v("WifiStateMonitor: onDetailedStateChanged " + detailedState.name());
             if (wifiInfo != null) {
+                ServiceLog.v("WifiStateMonitor: updating primary link info ");
                 wifiStateData.updatePrimaryLinkInfo(wifiInfo);
             }
             NetworkInfo.DetailedState lastDetailedState = wifiStateData.getLastWifiDetailedState();

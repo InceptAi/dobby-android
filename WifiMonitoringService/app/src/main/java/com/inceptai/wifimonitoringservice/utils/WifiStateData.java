@@ -7,7 +7,6 @@ import android.net.wifi.WifiManager;
 import android.support.annotation.IntDef;
 
 import com.google.gson.Gson;
-import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLog;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -198,6 +197,7 @@ public class WifiStateData {
         }
         @WifiProblemMode int linkMode = WifiProblemMode.NO_PROBLEM_DEFAULT_STATE;
         long currentTimestamp = System.currentTimeMillis();
+        @SignalStrengthZones int lastSignalZone = getZoneFromSignalStrength(linkSignal);
         if (linkSignal == 0) {
             linkSignal = updatedSignal;
         } else {
@@ -206,9 +206,17 @@ public class WifiStateData {
         }
         if (linkSignal < MIN_SNR_FOR_FLAGGING_POOR_CONNECTION_DBM) {
             linkMode = WifiProblemMode.LOW_SNR;
+        } else {
+            @SignalStrengthZones int newZone = getZoneFromSignalStrength(linkSignal);
+            if (newZone != lastSignalZone) {
+
+            }
         }
         return linkMode;
     }
+
+
+
 
     public int updateLastWifiEnabledState(int newWifiEnabledState) {
         lastWifiEnabledState = newWifiEnabledState;
@@ -289,6 +297,7 @@ public class WifiStateData {
     }
 
     //private methods
+
     private boolean inInactiveOrDormantState(SupplicantState newSupplicantState) {
         switch (newSupplicantState) {
             case INACTIVE:
@@ -326,13 +335,14 @@ public class WifiStateData {
 
     private void setLinkSignal(int linkSignal) {
         if (linkSignal != ANDROID_INVALID_RSSI) {
-            ActionLog.v("WS: Setting link signal from  " + this.linkSignal + " to " + linkSignal);
+            ServiceLog.v("WifiStateData: Setting link signal from  " + this.linkSignal + " to " + linkSignal);
             this.linkSignal = linkSignal;
         }
     }
 
     private void setLinkSSID(String linkSSID) {
         if (linkSSID != null) {
+            ServiceLog.v("WifiStateData: Setting link SSID to " + linkSSID);
             this.linkSSID = linkSSID;
         }
     }
@@ -388,6 +398,7 @@ public class WifiStateData {
     }
 
     private void clearWifiConnectionInfo() {
+        ServiceLog.v("WifiStateData: Clearing link info");
         linkSSID = "";
         linkBSSID = "";
         linkFrequency = 0;
@@ -466,11 +477,11 @@ public class WifiStateData {
                     detailedWifiStateStats.put(lastWifiDetailedState, currentList);
                 }
                 currentList.add(lastDetailedWifiStateInfo);
-                ActionLog.v("updateDetailedWifiStateInfo current state is: " +
+                ServiceLog.v("updateDetailedWifiStateInfo current state is: " +
                         detailedWifiState.name() + " last state,lasted: " +
                         lastWifiDetailedState.name() + "," + (currentTimestampMs - lastDetailedWifiStateTimestampMs) + "ms");
             }
-            ActionLog.v("updateDetailedWifiStateInfo updating last wifi state from " + lastWifiDetailedState.name() + " to " + detailedWifiState.name());
+            ServiceLog.v("updateDetailedWifiStateInfo updating last wifi state from " + lastWifiDetailedState.name() + " to " + detailedWifiState.name());
             lastDetailedWifiStateTimestampMs = currentTimestampMs;
         } else if (lastDetailedWifiStateTimestampMs == 0) {
                 lastDetailedWifiStateTimestampMs = currentTimestampMs;

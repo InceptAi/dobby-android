@@ -1,5 +1,7 @@
 package com.inceptai.dobby.ui;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
@@ -9,6 +11,7 @@ import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 
 import com.inceptai.dobby.DobbyApplication;
@@ -20,8 +23,10 @@ import com.inceptai.dobby.ai.DobbyAi;
 import com.inceptai.dobby.ai.suggest.LocalSummary;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.fake.FakeDataIntentReceiver;
+import com.inceptai.dobby.notifications.DisplayAppNotification;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
+import com.inceptai.wifimonitoringservice.WifiMonitoringService;
 
 import javax.inject.Inject;
 
@@ -47,6 +52,8 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
 
     private FakeDataIntentReceiver fakeDataIntentReceiver;
     private Handler handler;
+    private NotificationInfoReceiver notificationInfoReceiver;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,6 +95,8 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
         setContentView(R.layout.activity_wifi_doc);
         setupMainFragment();
         networkLayer.fetchLastKnownLocation();
+        startWifiMonitoringService();
+        notificationInfoReceiver = new NotificationInfoReceiver();
     }
 
     public void setupMainFragment() {
@@ -128,6 +137,8 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
         fragmentTransaction.commit();
     }
 
+
+
     @Override
     public void onFragmentInteraction(Uri uri) {
 
@@ -144,6 +155,7 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
         if (intent != null) {
             DobbyLog.e("intent: " + intent.getComponent());
         }
+        unRegisterNotificationInfoReceiver();
     }
 
     @Override
@@ -153,6 +165,7 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
 
     @Override
     protected void onPause() {
+        super.onPause();
         if (fakeDataIntentReceiver != null) {
             try {
                 unregisterReceiver(fakeDataIntentReceiver);
@@ -160,7 +173,7 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
                 DobbyLog.i("Ignoring IllegalArgumentException for fake intent unregister.");
             }
         }
-        super.onPause();
+        registerNotificationInfoReceiver();
     }
 
     @Override
@@ -211,5 +224,35 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
                 return false;
         }
         return true;
+    }
+
+    private void startWifiMonitoringService() {
+        Intent serviceStartIntent = new Intent(this, WifiMonitoringService.class);
+        //serviceStartIntent.putExtra(NotificationInfoKeys., NOTIFICATION_INFO_INTENT_VALUE);
+        startService(new Intent(this, WifiMonitoringService.class));
+    }
+
+    // Our handler for received Intents. This will be called whenever an Intent
+    // with an action named "custom-event-name" is broadcasted.
+    private class NotificationInfoReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // Get extra data included in the Intent
+            String notificationTitle = intent.getStringExtra(WifiMonitoringService.EXTRA_NOTIFICATION_TITLE);
+            String notificationBody = intent.getStringExtra(WifiMonitoringService.EXTRA_NOTIFICATION_BODY);
+            int notificationId = intent.getIntExtra(WifiMonitoringService.EXTRA_NOTIFICATION_ID, 0);
+            threadpool.getExecutor().execute(new DisplayAppNotification(context, notificationTitle, notificationBody, notificationId));
+        }
+    }
+
+    private void registerNotificationInfoReceiver() {
+        IntentFilter intentFilter = new IntentFilter(WifiMonitoringService.NOTIFICATION_INFO_INTENT_VALUE);
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+                notificationInfoReceiver, intentFilter);
+    }
+
+    private void unRegisterNotificationInfoReceiver() {
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(
+                notificationInfoReceiver);
     }
 }

@@ -14,6 +14,7 @@ import com.inceptai.dobby.BuildConfig;
 import com.inceptai.dobby.R;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
+import com.inceptai.wifimonitoringservice.WifiMonitoringService;
 
 import static android.support.v4.app.NotificationCompat.VISIBILITY_PUBLIC;
 
@@ -50,21 +51,28 @@ public class DisplayAppNotification implements Runnable {
         PendingIntent pendingIntent = Utils.getPendingIntentForNotification(context, null);
         Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         NotificationCompat.Builder notificationBuilder = (NotificationCompat.Builder) new NotificationCompat.Builder(context)
-                //.setAutoCancel(true)   //Automatically delete the notification
+                .setAutoCancel(true)   //Automatically delete the notification
                 .setSmallIcon(R.drawable.ic_wifimonitoring_notif) //Notification icon
                 .setLargeIcon(BitmapFactory.decodeResource(context.getResources(), iconResource))
                 .setContentIntent(pendingIntent)
                 .setContentTitle(title)
                 .setContentText(body)
-                .setVisibility(VISIBILITY_PUBLIC)
-                .setSound(defaultSoundUri);
+                .setVisibility(VISIBILITY_PUBLIC);
+                //.setSound(defaultSoundUri);
         // Vibration
-        notificationBuilder.setVibrate(new long[] { 1000, 1000, 1000, 1000, 1000 });
+        //notificationBuilder.setVibrate(new long[] { 1000, 1000, 1000, 1000, 1000 });
         // LED
-        notificationBuilder.setLights(Color.RED, 3000, 3000);
+        notificationBuilder.setLights(Color.WHITE, 3000, 3000);
         //notificationBuilder.setOngoing(true);
         Notification notification = notificationBuilder.build();
-        notification.flags |= Notification.FLAG_NO_CLEAR | Notification.FLAG_ONGOING_EVENT;
+        if (notificationId == WifiMonitoringService.WIFI_STATUS_NOTIFICATION_ID) {
+            notification.flags |= Notification.FLAG_NO_CLEAR | Notification.FLAG_ONGOING_EVENT;
+        }
+//        else if (notificationId == WifiMonitoringService.WIFI_ACTION_NOTIFICATION_ID) {
+//            if (Build.VERSION.SDK_INT >= JELLY_BEAN) {
+//                notification.flags |= Notification.PRIORITY_MIN;
+//            }
+//        }
         notificationManager.notify(notificationId, notification);
     }
 }

@@ -30,7 +30,7 @@ public class WifiController {
     private static final int WIFI_RECEIVER_UNREGISTERED = 0;
     private static final int WIFI_RECEIVER_REGISTERED = 1;
     private static final boolean TRIGGER_WIFI_SCAN_ON_RSSI_CHANGE = false;
-    private static final int MIN_WIFI_SCANS_NEEDED = 1;
+    private static final int MIN_WIFI_SCANS_NEEDED = 3;
 
     // Store application context to prevent leaks and crashes from an activity going out of scope.
     private Context context;
