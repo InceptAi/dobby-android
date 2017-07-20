@@ -1,5 +1,6 @@
 package com.inceptai.wifimonitoringservice.utils;
 
+import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -138,4 +139,35 @@ public class Utils {
 
 
 
+    /*
+     * Disables component so we don't get alarms
+     * respects disabled state
+     */
+    public static void setComponentEnabled(Context context,
+                                           Class<?> cls, Boolean state) {
+        PackageManager pm = context.getPackageManager();
+        ComponentName service = new ComponentName(context, cls);
+        if (state)
+            pm.setComponentEnabledSetting(service,
+                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                    PackageManager.DONT_KILL_APP);
+        else {
+            pm.setComponentEnabledSetting(service,
+                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                    PackageManager.DONT_KILL_APP);
+        }
+    }
+
+    public static void disableBootReceiver(Context context, Class<?> cls) {
+        updateBootReceiver(context, cls, PackageManager.COMPONENT_ENABLED_STATE_DISABLED);
+    }
+
+    public static void enableBootReceiver(Context context, Class<?> cls) {
+        updateBootReceiver(context, cls, PackageManager.COMPONENT_ENABLED_STATE_ENABLED);
+    }
+
+    private static void updateBootReceiver(Context context, Class<?> cls, int flag) {
+        ComponentName component = new ComponentName(context, cls);
+        context.getPackageManager().setComponentEnabledSetting(component, flag, PackageManager.DONT_KILL_APP);
+    }
 }

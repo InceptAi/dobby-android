@@ -69,6 +69,8 @@ public class Utils {
     private static final int CONNECTION_TIMEOUT_MS = 5000;
     public static final String UNKNOWN_LATENCY_STRING = "--";
     private static final int MAX_SSID_LENGTH = 30;
+    public static final String WIFI_MONITORING_SERVICE_STATE = "WifiMonitoringServiceState";
+
 
 
     private static Random random = new Random();
@@ -1004,4 +1006,17 @@ public class Utils {
 
         return pendingIntent;
     }
+
+    public static void saveWifiMonitoringEnabled(Context context) {
+        saveSharedSetting(context, WIFI_MONITORING_SERVICE_STATE, TRUE_STRING);
+    };
+
+    public static void saveWifiMonitoringDisabled(Context context) {
+        saveSharedSetting(context, WIFI_MONITORING_SERVICE_STATE, FALSE_STRING);
+    };
+
+    public static boolean checkIsWifiMonitoringEnabled(Context context) {
+        return Boolean.valueOf(readSharedSetting(context, WIFI_MONITORING_SERVICE_STATE, Utils.TRUE_STRING));
+    }
+
 }

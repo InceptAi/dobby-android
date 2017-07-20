@@ -12,7 +12,7 @@ import android.os.SystemClock;
 
 import com.inceptai.wifimonitoringservice.WifiMonitoringService;
 
-public final class ServiceAlarm extends Object {
+public final class ServiceAlarm {
 
     /*
      * Notifies Service that start intent comes from ServiceAlarm

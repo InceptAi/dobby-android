@@ -11,6 +11,7 @@ import android.widget.Toast;
 
 import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLog;
 import com.inceptai.wifimonitoringservice.utils.ServiceAlarm;
+import com.inceptai.wifimonitoringservice.utils.Utils;
 
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
 
@@ -65,6 +66,7 @@ public class WifiMonitoringService extends Service {
         if (wifiServiceCore == null) {
             wifiServiceCore = WifiServiceCore.create(this, new ServiceThreadPool());
         }
+        Utils.enableBootReceiver(this, WifiMonitoringService.class);
     }
 
     @Override
@@ -97,6 +99,9 @@ public class WifiMonitoringService extends Service {
     @Override
     public void onDestroy() {
         Toast.makeText(this, "service done", Toast.LENGTH_SHORT).show();
+        //Clear pending alarms
         wifiServiceCore.cleanup();
+        ServiceAlarm.unsetAlarm(this);
+        Utils.disableBootReceiver(this, WifiMonitoringService.class);
     }
 }

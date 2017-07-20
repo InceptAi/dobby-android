@@ -27,9 +27,11 @@ import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -110,6 +112,10 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private LinearLayout shareFl;
     private LinearLayout bottomButtonBarLl;
     private FrameLayout expertChatFl;
+    private FrameLayout repairFl;
+    private Switch serviceSwitch;
+    private TextView serviceSwitchTv;
+
 
     private CircularGauge downloadCircularGauge;
     private TextView downloadGaugeTv;
@@ -298,6 +304,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         void onMainButtonClick();
         void cancelTests();
         void onLocationPermissionGranted();
+        void onWifiRepairInitiated();
+        void onWifiMonitoringServiceDisabled();
+        void onWifiMonitoringServiceEnabled();
     }
 
 
@@ -604,6 +613,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         runTestsFl = (FrameLayout) rootView.findViewById(R.id.bottom_run_tests_fl);
         runTestsFl.setOnClickListener(this);
 
+        /*
         shareFl = (LinearLayout) rootView.findViewById(R.id.button_top_left_fl);
        // leaderboardFl = (FrameLayout) rootView.findViewById(R.id.button_top_right_fl);
         aboutFl = (FrameLayout) rootView.findViewById(R.id.button_bottom_left_fl);
@@ -637,6 +647,24 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             @Override
             public void onClick(View v) {
                 showExpertChat();
+            }
+        });
+        */
+
+        repairFl = (FrameLayout) rootView.findViewById(R.id.repair_fl);
+        repairFl.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sendRepairCommandToService();
+            }
+        });
+
+        serviceSwitchTv = (TextView) rootView.findViewById(R.id.service_switch_tv);
+        serviceSwitch = (Switch) rootView.findViewById(R.id.service_switch);
+        serviceSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                handleMonitoringStateChange(isChecked);
             }
         });
 
@@ -1158,5 +1186,25 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                 .setSubject("Speed test results by WifiTester.")
                 .getIntent();
         startActivity(shareIntent);
+    }
+
+    private void handleMonitoringStateChange(boolean serviceEnabled) {
+        if(serviceEnabled){
+            serviceSwitchTv.setText("Automatic Repair: ON");
+            if (mListener != null) {
+                mListener.onWifiMonitoringServiceEnabled();
+            }
+        }else{
+            serviceSwitchTv.setText("Automatic Repair: OFF");
+            if (mListener != null) {
+                mListener.onWifiMonitoringServiceDisabled();
+            }
+        }
+    }
+
+    private void sendRepairCommandToService() {
+        if (mListener != null) {
+            mListener.onWifiRepairInitiated();
+        }
     }
 }

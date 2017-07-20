@@ -253,4 +253,5 @@ public class WifiDocOnboardingActivity extends AppCompatActivity {
             return null;
         }
     }
+
 }

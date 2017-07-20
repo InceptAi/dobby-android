@@ -423,6 +423,39 @@
                 style="@style/MyLargeImageButton.Base"
                 android:focusable="true"
                 android:clickable="true"
+                android:id="@+id/repair_fl"
+                android:layout_height="match_parent">
+
+                <ImageView
+                    android:id="@+id/bottom_repair"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:layout_gravity="center_horizontal|top"
+                    android:layout_marginTop="5dp"
+                    android:src="@drawable/ic_repair"
+                    android:textColor="@android:color/white" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:text="Repair WiFi Now"
+                    android:textColor="@android:color/white"
+                    android:textSize="16sp"
+                    android:layout_gravity="bottom|center_horizontal"
+                    android:gravity="center_horizontal"
+                    android:paddingBottom="5dp"
+                    android:layout_height="wrap_content" />
+            </FrameLayout>
+
+            <!--
+            <FrameLayout
+                android:layout_width="0dp"
+                android:background="@drawable/blue_button_selector"
+                android:layout_weight="0.4"
+                android:layout_gravity="start"
+                android:layout_marginLeft="2dp"
+                android:layout_marginStart="2dp"
+                style="@style/MyLargeImageButton.Base"
+                android:focusable="true"
+                android:clickable="true"
                 android:id="@+id/contact_expert_fl"
                 android:layout_height="match_parent">
 
@@ -445,10 +478,46 @@
                     android:paddingBottom="5dp"
                     android:layout_height="wrap_content" />
             </FrameLayout>
+            -->
+
 
             <android.support.v4.widget.Space
                 android:layout_width="2dp"
                 android:layout_height="match_parent" />
+
+            <FrameLayout
+                android:layout_width="0dp"
+                android:background="@drawable/blue_button_selector"
+                android:layout_weight="0.4"
+                android:layout_gravity="start"
+                android:layout_marginLeft="2dp"
+                android:layout_marginStart="2dp"
+                style="@style/MyLargeImageButton.Base"
+                android:focusable="true"
+                android:clickable="true"
+                android:id="@+id/service_fl"
+                android:layout_height="match_parent">
+
+                <Switch
+                    android:id="@+id/service_switch"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:layout_gravity="center_horizontal|top"
+                    android:gravity="center_horizontal"
+                    android:switchMinWidth="40dp"
+                    android:checked="true"
+                    android:layout_marginTop="20dp" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:id="@+id/service_switch_tv"
+                    android:text="Automatic repair: ON"
+                    android:textColor="@android:color/white"
+                    android:textSize="16sp"
+                    android:layout_gravity="bottom|center_horizontal"
+                    android:gravity="center_horizontal"
+                    android:paddingBottom="5dp"
+                    android:layout_height="wrap_content" />
+            </FrameLayout>
 
             <!--
 
@@ -596,7 +665,7 @@
                     </FrameLayout>
             </RelativeLayout>
             -->
-
+            <!--
             <include
                 layout="@layout/bottom_button_grid_no_leaderboard"
                 android:layout_height="match_parent"
@@ -604,6 +673,7 @@
                 android:layout_weight="0.7"
                 android:id="@+id/bottom_button_grid_inc"
                 />
+                -->
         </LinearLayout>
 
         <FrameLayout

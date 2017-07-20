@@ -226,10 +226,36 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
         return true;
     }
 
+    @Override
+    public void onWifiRepairInitiated() {
+
+    }
+
+    @Override
+    public void onWifiMonitoringServiceDisabled() {
+        Utils.saveWifiMonitoringDisabled(this);
+        stopWifiMonitoringService();
+    }
+
+    @Override
+    public void onWifiMonitoringServiceEnabled() {
+        Utils.saveWifiMonitoringEnabled(this);
+        startWifiMonitoringService();
+    }
+
+
     private void startWifiMonitoringService() {
-        Intent serviceStartIntent = new Intent(this, WifiMonitoringService.class);
+        //Intent serviceStartIntent = new Intent(this, WifiMonitoringService.class);
         //serviceStartIntent.putExtra(NotificationInfoKeys., NOTIFICATION_INFO_INTENT_VALUE);
-        startService(new Intent(this, WifiMonitoringService.class));
+        if (Utils.checkIsWifiMonitoringEnabled(this)) {
+            startService(new Intent(this, WifiMonitoringService.class));
+        }
+    }
+
+    private void stopWifiMonitoringService() {
+        //Intent serviceStartIntent = new Intent(this, WifiMonitoringService.class);
+        //serviceStartIntent.putExtra(NotificationInfoKeys., NOTIFICATION_INFO_INTENT_VALUE);
+        stopService(new Intent(this, WifiMonitoringService.class));
     }
 
     // Our handler for received Intents. This will be called whenever an Intent
