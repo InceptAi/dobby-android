@@ -993,7 +993,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             vContent = (TextView) rootView.findViewById(R.id.bottomDialog_content);
             vNegative = (Button) rootView.findViewById(R.id.bottomDialog_cancel);
             vNegative.setTag(TAG_CANCEL_BUTTON);
-            vContactExpert = (Button) rootView.findViewById(R.id.bottomDialog_contact_expert);
+            vContactExpert = (Button) rootView.findViewById(R.id.bottomDialog_details);
             vContactExpert.setTag(TAG_CONTACT_EXPERT_BUTTON);
             vNegative.setOnClickListener(this);
             vContactExpert.setOnClickListener(this);
@@ -1161,7 +1161,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         @Override
         public void onClick(View v) {
             if (TAG_CONTACT_EXPERT_BUTTON.equals(v.getTag())) {
-                showExpertChat();
+                //showExpertChat();
+                showMoreSuggestions();
             } else if (TAG_CANCEL_BUTTON.equals(v.getTag())) {
                 if (mode == MODE_STATUS) {
                     cancelTests();

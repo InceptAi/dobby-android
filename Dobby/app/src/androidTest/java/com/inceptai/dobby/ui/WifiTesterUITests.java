@@ -212,7 +212,7 @@ public class WifiTesterUITests {
 
         //When suggestions are available -- make sure the more button is available and bottom dialog title changes to "Suggestions"
         onView(withId(R.id.bottomDialog_title)).check(matches(withText(SUGGESTIONS_TITLE)));
-        onView(withId(R.id.bottomDialog_contact_expert)).check(matches(withText(CONTACT_EXPERT)));
+        onView(withId(R.id.bottomDialog_details)).check(matches(withText(CONTACT_EXPERT)));
     }
 
     @Test
