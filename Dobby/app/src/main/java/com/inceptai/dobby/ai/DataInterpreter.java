@@ -706,6 +706,13 @@ public class DataInterpreter {
 
     }
 
+
+    @MetricType
+    public static int getSignalMetric(int signal) {
+        return getGradeHigherIsBetter(signal, WIFI_RSSI_STEPS_DBM, signal < 0, false);
+    }
+
+
     public static String metricTypeToString(@MetricType int metricType) {
         switch(metricType) {
             case MetricType.EXCELLENT:

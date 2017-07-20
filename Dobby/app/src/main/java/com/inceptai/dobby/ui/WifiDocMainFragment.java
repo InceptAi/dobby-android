@@ -8,6 +8,7 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.net.wifi.WifiInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -87,6 +88,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private static final int MSG_RESUME_HANDLER = 1007;
     private static final int MSG_WIFI_OFFLINE = 1008;
     private static final int MSG_REQUEST_LAYOUT = 1009;
+    private static final int MSG_REPAIR_INFO_AVAILABLE = 1010;
+    private static final int MSG_UPDATE_REPAIR_STATUS = 1011;
     private static final long SUGGESTION_FRESHNESS_TS_MS = 30000; // 30 seconds
     private static final int MAX_HANDLER_PAUSE_MS = 5000;
 
@@ -514,10 +517,36 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             case MSG_REQUEST_LAYOUT:
                 uiStateVisibilityChanges(getView());
                 break;
+            case MSG_REPAIR_INFO_AVAILABLE:
+                showRepairResults((WifiInfo) msg.obj);
+                break;
+            case MSG_UPDATE_REPAIR_STATUS:
+                restoreRepairButton(msg.arg1, msg.arg2);
+                break;
             default:
                 return false;
         }
         return true;
+    }
+
+    public void handleRepairFinished(WifiInfo wifiInfo, int repairStatusTextId, int color) {
+        Message.obtain(handler, MSG_REPAIR_INFO_AVAILABLE, wifiInfo).sendToTarget();
+        Message.obtain(handler, MSG_UPDATE_REPAIR_STATUS, repairStatusTextId, color).sendToTarget();
+    }
+
+    private void showRepairResults(WifiInfo wifiInfo) {
+        String ssid = wifiInfo.getSSID();
+        int signal = wifiInfo.getRssi();
+        @DataInterpreter.MetricType int signalMetric = DataInterpreter.getSignalMetric(signal);
+        if (ssid != null && !ssid.isEmpty()) {
+            ssid = Utils.limitSsid(ssid);
+            wifiSsidTv.setText(ssid);
+        }
+        setWifiResult(wifiSignalValueTv, String.valueOf(signal),
+                wifiSignalIconIv, signalMetric);
+        yourNetworkCv.setVisibility(View.VISIBLE);
+        statusTv.setVisibility(View.GONE);
+        routerIpTv.setText(Utils.EMPTY_STRING);
     }
 
     private void showWifiResults(DataInterpreter.WifiGrade wifiGrade) {
@@ -673,8 +702,10 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         serviceSwitch = (Switch) rootView.findViewById(R.id.service_switch);
         if (Utils.checkIsWifiMonitoringEnabled(getContext())) {
             serviceSwitch.setChecked(true);
+            serviceSwitchTv.setText(R.string.automatic_repair_on);
         } else {
             serviceSwitch.setChecked(false);
+            serviceSwitchTv.setText(R.string.automatic_repair_off);
         }
         serviceSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -1205,12 +1236,12 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
     private void handleMonitoringStateChange(boolean serviceEnabled) {
         if(serviceEnabled){
-            serviceSwitchTv.setText("Automatic Repair: ON");
+            serviceSwitchTv.setText(R.string.automatic_repair_on);
             if (mListener != null) {
                 mListener.onWifiMonitoringServiceEnabled();
             }
         }else{
-            serviceSwitchTv.setText("Automatic Repair: OFF");
+            serviceSwitchTv.setText(R.string.automatic_repair_off);
             if (mListener != null) {
                 mListener.onWifiMonitoringServiceDisabled();
             }
@@ -1219,9 +1250,12 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
     private void sendRepairCommandToService() {
         if (mListener != null) {
-            mListener.onWifiRepairInitiated();
-            repairTv.setText("Repairing WiFi ...");
+            //Disabling service toggling while repair is going on
+            serviceSwitch.setEnabled(false);
+            repairTv.setText(R.string.repairing_wifi);
+            statusTv.setText(R.string.repairing_wifi);
             rotateRepairImage();
+            mListener.onWifiRepairInitiated();
         }
     }
 
@@ -1234,8 +1268,11 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         repairIv.startAnimation(anim);
     }
 
-    private void stopRotatingRepairImage() {
+    private void restoreRepairButton(int stringId, int color) {
         repairIv.setAnimation(null);
-        repairTv.setText("Repair WiFi now");
+        repairTv.setText(stringId);
+        repairTv.setTextColor(color);
+        //Disabling service toggling while repair is going on
+        serviceSwitch.setEnabled(true);
     }
 }

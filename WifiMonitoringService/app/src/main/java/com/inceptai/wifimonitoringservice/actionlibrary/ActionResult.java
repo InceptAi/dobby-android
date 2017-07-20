@@ -10,7 +10,11 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
+import static com.inceptai.wifimonitoringservice.actionlibrary.ActionResult.ActionResultCodes.EXCEPTION;
+import static com.inceptai.wifimonitoringservice.actionlibrary.ActionResult.ActionResultCodes.FAILED_TO_COMPLETE;
+import static com.inceptai.wifimonitoringservice.actionlibrary.ActionResult.ActionResultCodes.FAILED_TO_START;
 import static com.inceptai.wifimonitoringservice.actionlibrary.ActionResult.ActionResultCodes.SUCCESS;
+import static com.inceptai.wifimonitoringservice.actionlibrary.ActionResult.ActionResultCodes.TIMED_OUT;
 
 /**
  * Represents the result of a FutureAction. One of the possible values of T above.
@@ -23,6 +27,7 @@ public class ActionResult {
             ActionResultCodes.TIMED_OUT,
             ActionResultCodes.GENERAL_ERROR,
             ActionResultCodes.EXCEPTION,
+            ActionResultCodes.FAILED_TO_COMPLETE,
             ActionResultCodes.UNKNOWN})
     public @interface ActionResultCodes {
         int SUCCESS = 0;
@@ -31,6 +36,7 @@ public class ActionResult {
         int TIMED_OUT = 3;
         int GENERAL_ERROR = 4;
         int EXCEPTION = 5;
+        int FAILED_TO_COMPLETE = 6;
         int UNKNOWN = 100;
     }
 
@@ -97,6 +103,22 @@ public class ActionResult {
 
     public static boolean isSuccessful(ActionResult actionResult) {
         return  (actionResult != null && actionResult.getStatus() == SUCCESS);
+    }
+
+    public static boolean failedToComplete(ActionResult actionResult) {
+        return  (actionResult != null && actionResult.getStatus() == FAILED_TO_COMPLETE);
+    }
+
+    public static boolean failedToStart(ActionResult actionResult) {
+        return  (actionResult != null && actionResult.getStatus() == FAILED_TO_START);
+    }
+
+    public static boolean timedOut(ActionResult actionResult) {
+        return  (actionResult != null && actionResult.getStatus() == TIMED_OUT);
+    }
+
+    public static boolean exceptionWhileRunning(ActionResult actionResult) {
+        return  (actionResult != null && actionResult.getStatus() == EXCEPTION);
     }
 
 }

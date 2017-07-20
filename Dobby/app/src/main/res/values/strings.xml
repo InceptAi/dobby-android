@@ -122,4 +122,13 @@
     <string name="continue_expert_chat">Continuing expert chat &#8230;</string>
     <string name="agent_is_typing">Agent is typing &#8230;</string>
     <string name="talking_to_human_expert_with_response_time">Expert is listening in now, response time less than 2 mins &#8230;</string>
+    <string name="automatic_repair_on">Automatic Repair: ON</string>
+    <string name="automatic_repair_off">Automatic Repair: OFF</string>
+    <string name="repair_wifi_now">Repair WiFi Now</string>
+    <string name="repairing_wifi">Repairing WiFi &#8230;</string>
+    <string name="repair_wifi_success">Repair Succeeded</string>
+    <string name="repair_wifi_failure">Repair Failed</string>
+    <string name="repair_service_title">Repair your WiFi with one tap !</string>
+    <string name="onboarding_service_desc1">Introducing Automatic Repair &#8212; which will monitor the health of your WiFi connection and take steps to resolve any issues on its own. </string>
+    <string name="onboarding_service_desc2">You can also disable Automatic Repair and just manually repair your WiFi. No more WiFi frustrations !</string>
 </resources>

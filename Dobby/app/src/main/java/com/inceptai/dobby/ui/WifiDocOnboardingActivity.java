@@ -187,7 +187,7 @@ public class WifiDocOnboardingActivity extends AppCompatActivity {
         private static final String ARG_SECTION_NUMBER = "section_number";
 
         private static int[] layoutArray = new int[]{R.layout.fragment_onboarding_1,
-                R.layout.fragment_onboarding_2, R.layout.fragment_onboarding_3};
+                R.layout.fragment_onboarding_2, R.layout.fragment_onboarding_wifiservice};
 
         public PlaceholderFragment() {
         }

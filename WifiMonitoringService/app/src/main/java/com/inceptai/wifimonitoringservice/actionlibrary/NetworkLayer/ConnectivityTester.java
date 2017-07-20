@@ -37,8 +37,8 @@ public class ConnectivityTester {
     private static String URL_FOR_CONNECTIVITY_AND_PORTAL_TEST = "http://clients3.google.com/generate_204";
     private static final int PORTAL_TEST_READ_TIMEOUT_MS = 3000;
     private static final int PORTAL_TEST_CONNECTION_TIMEOUT_MS = 3000;
-    private static int GAP_BETWEEN_CONNECTIVITY_CHECKS_MS = 300;
-    private static int MAX_RESCHEDULING_CONNECTIVITY_TESTS = 3;
+    private static int GAP_BETWEEN_CONNECTIVITY_CHECKS_MS = 200;
+    private static int MAX_RESCHEDULING_CONNECTIVITY_TESTS = 10;
 
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({WifiConnectivityMode.CONNECTED_AND_ONLINE, WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL,

@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.graphics.Color;
 import android.net.Uri;
 import android.net.wifi.WifiInfo;
 import android.os.Bundle;
@@ -315,12 +316,17 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
     }
 
     private void processRepairResult(ActionResult repairResult) {
-        if (ActionResult.isSuccessful(repairResult) && repairResult.getPayload() != null) {
-            //Repair succeeded -- send info to WifiDocFragment
-            WifiInfo repairedWifiInfo = (WifiInfo)repairResult.getPayload();
-        } else {
-            //Repair failed -- send info to WifiDocFragment
+        int textId = R.string.repair_wifi_failure;
+        int textColor = Color.RED;
+        WifiInfo repairedWifiInfo = null;
+        if (ActionResult.isSuccessful(repairResult)) {
+            textId = R.string.repair_wifi_success;
+            textColor = Color.GREEN;
+            repairedWifiInfo = (WifiInfo) repairResult.getPayload();
+        } else if (ActionResult.failedToComplete(repairResult)){
+            repairedWifiInfo = (WifiInfo) repairResult.getPayload();
         }
+        mainFragment.handleRepairFinished(repairedWifiInfo, textId, textColor);
     }
 
     private void startWifiMonitoringService() {
