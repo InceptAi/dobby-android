@@ -43,6 +43,9 @@
                 android:value=".ui.WifiDocActivity"/>
         </activity>
 
+        <service android:name="com.inceptai.wifimonitoringservice.WifiMonitoringService">
+            </service>
+
     </application>
 
 </manifest>

@@ -3,6 +3,7 @@ package com.inceptai.wifimonitoringservice;
 import android.content.Context;
 import android.support.annotation.Nullable;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.ConnectivityTester;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.FutureAction;
@@ -97,25 +98,28 @@ public class WifiServiceCore implements
         }
     }
 
-    public void startMonitoring() {
+    void startMonitoring() {
         wifiStateMonitor.registerCallback(this);
         screenStateMonitor.registerCallback(this);
         serviceActionTaker.registerCallback(this);
         ServiceLog.v("StartMonitoring ");
     }
 
-    public void cleanup() {
-        wifiStateMonitor.unregisterCallback();
-        screenStateMonitor.unregisterCallback();
-        periodicCheckMonitor.disableCheck();
-        serviceActionTaker.unregisterCallback();
+    void cleanup() {
+        wifiStateMonitor.cleanup();
+        screenStateMonitor.cleanup();
+        periodicCheckMonitor.cleanup();
+        serviceActionTaker.cleanup();
         serviceThreadPool.shutdown();
         ServiceLog.v("Cleanup ");
     }
 
+    ListenableFuture<ActionResult> forceRepairWifiNetwork() {
+        cancelChecksAndPendingActions();
+        return serviceActionTaker.repairConnection();
+    }
+
     //Overrides for periodic check
-
-
     @Override
     public void actionStarted(String actionName) {
         ServiceLog.v("Action started  " + actionName);

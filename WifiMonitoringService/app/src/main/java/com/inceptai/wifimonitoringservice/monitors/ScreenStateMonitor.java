@@ -48,6 +48,10 @@ public class ScreenStateMonitor {
         screenStateReceiverRegistered = new AtomicBoolean(false);
     }
 
+    public void cleanup() {
+        unregisterCallback();
+    }
+
     public void registerCallback(ScreenStateCallback screenStateCallback) {
         this.screenStateCallback = screenStateCallback;
         if (screenStateReceiverRegistered.compareAndSet(false, true)) {

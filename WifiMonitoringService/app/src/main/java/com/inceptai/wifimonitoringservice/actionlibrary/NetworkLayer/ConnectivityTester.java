@@ -77,10 +77,7 @@ public class ConnectivityTester {
         this.connectivityManager = connectivityManager;
         // Make sure we're running on Honeycomb or higher to use ActionBar APIs
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            connectivityAnalyzerWifiNetworkCallback = new ConnectivityAnalyzerWifiNetworkCallback();
-            NetworkRequest.Builder request = new NetworkRequest.Builder();
-            request.addTransportType(NetworkCapabilities.TRANSPORT_WIFI);
-            this.connectivityManager.registerNetworkCallback(request.build(), connectivityAnalyzerWifiNetworkCallback);
+            registerNetworkCallback();
         }
     }
 
@@ -112,6 +109,44 @@ public class ConnectivityTester {
         return connectivityCheckFuture;
     }
 
+    public static String connectivityModeToString(@WifiConnectivityMode int mode) {
+        switch (mode) {
+            case WifiConnectivityMode.CONNECTED_AND_ONLINE:
+                return "CONNECTED_AND_ONLINE";
+            case WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL:
+                return "CONNECTED_AND_CAPTIVE_PORTAL";
+            case WifiConnectivityMode.CONNECTED_AND_OFFLINE:
+                return "CONNECTED_AND_OFFLINE";
+            case WifiConnectivityMode.CONNECTED_AND_UNKNOWN:
+                return "CONNECTED_AND_UNKNOWN";
+            case WifiConnectivityMode.ON_AND_DISCONNECTED:
+                return "ON_AND_DISCONNECTED";
+            case WifiConnectivityMode.OFF:
+                return "OFF";
+            default:
+                return "Unknown";
+        }
+    }
+
+    public static boolean isConnected(@WifiConnectivityMode int mode) {
+        return mode == WifiConnectivityMode.CONNECTED_AND_ONLINE;
+    }
+
+    public static boolean isCaptive(@WifiConnectivityMode int mode) {
+        return mode == WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL;
+    }
+
+    public static boolean isOffline(@WifiConnectivityMode int mode) {
+        return mode == WifiConnectivityMode.CONNECTED_AND_OFFLINE;
+    }
+
+    public void cleanup() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            unRegisterNetworkCallback();
+        }
+    }
+
+    //Private
     private void performConnectivityTest(boolean onlyOnActiveNetwork,
                                          boolean isWifiConnected,
                                          int rescheduleCount) {
@@ -145,25 +180,6 @@ public class ConnectivityTester {
                 performConnectivityTest(onlyOnActiveNetwork, isWifiConnected, scheduleCount - 1);
             }
         }, GAP_BETWEEN_CONNECTIVITY_CHECKS_MS, TimeUnit.MILLISECONDS);
-    }
-
-    public static String connectivityModeToString(@WifiConnectivityMode int mode) {
-        switch (mode) {
-            case WifiConnectivityMode.CONNECTED_AND_ONLINE:
-                return "CONNECTED_AND_ONLINE";
-            case WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL:
-                return "CONNECTED_AND_CAPTIVE_PORTAL";
-            case WifiConnectivityMode.CONNECTED_AND_OFFLINE:
-                return "CONNECTED_AND_OFFLINE";
-            case WifiConnectivityMode.CONNECTED_AND_UNKNOWN:
-                return "CONNECTED_AND_UNKNOWN";
-            case WifiConnectivityMode.ON_AND_DISCONNECTED:
-                return "ON_AND_DISCONNECTED";
-            case WifiConnectivityMode.OFF:
-                return "OFF";
-            default:
-                return "Unknown";
-        }
     }
 
 
@@ -260,5 +276,18 @@ public class ConnectivityTester {
 
     }
 
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private void registerNetworkCallback() {
+        connectivityAnalyzerWifiNetworkCallback = new ConnectivityAnalyzerWifiNetworkCallback();
+        NetworkRequest.Builder request = new NetworkRequest.Builder();
+        request.addTransportType(NetworkCapabilities.TRANSPORT_WIFI);
+        connectivityManager.registerNetworkCallback(request.build(), connectivityAnalyzerWifiNetworkCallback);
+
+    }
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private void unRegisterNetworkCallback() {
+        connectivityManager.unregisterNetworkCallback(connectivityAnalyzerWifiNetworkCallback);
+    }
 
 }

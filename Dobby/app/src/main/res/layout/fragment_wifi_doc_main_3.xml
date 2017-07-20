@@ -427,14 +427,15 @@
                 android:layout_height="match_parent">
 
                 <ImageView
-                    android:id="@+id/bottom_repair"
+                    android:id="@+id/repair_iv"
                     android:layout_width="60dp"
                     android:layout_height="60dp"
                     android:layout_gravity="center_horizontal|top"
                     android:layout_marginTop="5dp"
-                    android:src="@drawable/ic_repair"
+                    android:src="@drawable/ic_repair_white"
                     android:textColor="@android:color/white" />
                 <TextView
+                    android:id="@+id/repair_tv"
                     android:layout_width="match_parent"
                     android:text="Repair WiFi Now"
                     android:textColor="@android:color/white"
@@ -444,7 +445,6 @@
                     android:paddingBottom="5dp"
                     android:layout_height="wrap_content" />
             </FrameLayout>
-
             <!--
             <FrameLayout
                 android:layout_width="0dp"

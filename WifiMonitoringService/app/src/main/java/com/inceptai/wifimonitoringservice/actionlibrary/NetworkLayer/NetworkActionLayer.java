@@ -120,5 +120,8 @@ public class NetworkActionLayer {
         return false;
     }
 
-    public void cleanup() {}
+    public void cleanup() {
+        wifiController.cleanup();
+        connectivityTester.cleanup();
+    }
 }

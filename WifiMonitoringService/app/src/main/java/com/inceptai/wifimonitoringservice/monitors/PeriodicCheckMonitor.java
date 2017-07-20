@@ -36,6 +36,9 @@ public class PeriodicCheckMonitor {
         periodicCheckReceiverRegistered = new AtomicBoolean(false);
     }
 
+    public void cleanup() {
+        disableCheck();
+    }
 
     public void enableCheck(long waitBeforeCheck, long checkPeriod, PeriodicCheckCallback periodicCheckCallback) {
         disableCheck();

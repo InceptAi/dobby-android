@@ -49,6 +49,11 @@ public class ActionLibrary {
         futureActionArrayDeque = new ArrayDeque<>();
     }
 
+    public void cleanup() {
+        networkActionLayer.cleanup();
+        futureActionArrayDeque.clear();
+    }
+
     public FutureAction turnWifiOn(long actionTimeOutMs) {
         FutureAction futureAction = new TurnWifiOn(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
         submitAction(futureAction);

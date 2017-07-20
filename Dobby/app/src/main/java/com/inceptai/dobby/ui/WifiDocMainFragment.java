@@ -26,6 +26,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.Animation;
+import android.view.animation.LinearInterpolator;
+import android.view.animation.RotateAnimation;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.FrameLayout;
@@ -113,8 +116,12 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private LinearLayout bottomButtonBarLl;
     private FrameLayout expertChatFl;
     private FrameLayout repairFl;
+
+    //Service and repair stuff
     private Switch serviceSwitch;
     private TextView serviceSwitchTv;
+    private ImageView repairIv;
+    private TextView repairTv;
 
 
     private CircularGauge downloadCircularGauge;
@@ -652,6 +659,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         */
 
         repairFl = (FrameLayout) rootView.findViewById(R.id.repair_fl);
+        repairIv = (ImageView) rootView.findViewById(R.id.repair_iv);
+        repairTv = (TextView) rootView.findViewById(R.id.repair_tv);
+
         repairFl.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -661,6 +671,11 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
         serviceSwitchTv = (TextView) rootView.findViewById(R.id.service_switch_tv);
         serviceSwitch = (Switch) rootView.findViewById(R.id.service_switch);
+        if (Utils.checkIsWifiMonitoringEnabled(getContext())) {
+            serviceSwitch.setChecked(true);
+        } else {
+            serviceSwitch.setChecked(false);
+        }
         serviceSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -1205,6 +1220,22 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private void sendRepairCommandToService() {
         if (mListener != null) {
             mListener.onWifiRepairInitiated();
+            repairTv.setText("Repairing WiFi ...");
+            rotateRepairImage();
         }
+    }
+
+    private void rotateRepairImage() {
+        RotateAnimation anim = new RotateAnimation(0.0f, 360.0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+        //Setup anim with desired properties
+        anim.setInterpolator(new LinearInterpolator());
+        anim.setRepeatCount(Animation.INFINITE); //Repeat animation indefinitely
+        anim.setDuration(700); //Put desired duration per anim cycle here, in milliseconds
+        repairIv.startAnimation(anim);
+    }
+
+    private void stopRotatingRepairImage() {
+        repairIv.setAnimation(null);
+        repairTv.setText("Repair WiFi now");
     }
 }

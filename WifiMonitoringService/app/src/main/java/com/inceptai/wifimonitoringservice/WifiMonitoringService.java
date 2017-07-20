@@ -2,6 +2,7 @@ package com.inceptai.wifimonitoringservice;
 
 import android.app.Service;
 import android.content.Intent;
+import android.os.Binder;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
@@ -9,6 +10,8 @@ import android.os.Looper;
 import android.os.Message;
 import android.widget.Toast;
 
+import com.google.common.util.concurrent.ListenableFuture;
+import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
 import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLog;
 import com.inceptai.wifimonitoringservice.utils.ServiceAlarm;
 import com.inceptai.wifimonitoringservice.utils.Utils;
@@ -32,6 +35,8 @@ public class WifiMonitoringService extends Service {
     private Looper mServiceLooper;
     private ServiceHandler mServiceHandler;
     private WifiServiceCore wifiServiceCore;
+    // Binder given to clients
+    private final IBinder wifiServiceBinder = new WifiServiceBinder();
 
     // Handler that receives messages from the thread
     private final class ServiceHandler extends Handler {
@@ -93,7 +98,7 @@ public class WifiMonitoringService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         // We don't provide binding, so return null
-        return null;
+        return wifiServiceBinder;
     }
 
     @Override
@@ -103,5 +108,23 @@ public class WifiMonitoringService extends Service {
         wifiServiceCore.cleanup();
         ServiceAlarm.unsetAlarm(this);
         Utils.disableBootReceiver(this, WifiMonitoringService.class);
+    }
+
+    public ListenableFuture<ActionResult> repairWifiNetwork() {
+        if (wifiServiceCore !=  null) {
+            return wifiServiceCore.forceRepairWifiNetwork();
+        }
+        return null;
+    }
+
+    /**
+     * Class used for the client Binder.  Because we know this service always
+     * runs in the same process as its clients, we don't need to deal with IPC.
+     */
+    public class WifiServiceBinder extends Binder {
+        public WifiMonitoringService getService() {
+            // Return this instance of LocalService so clients can call public methods
+            return WifiMonitoringService.this;
+        }
     }
 }

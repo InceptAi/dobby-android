@@ -69,6 +69,10 @@ public class WifiStateMonitor {
         wifiReceiverRegistered = new AtomicBoolean(false);
     }
 
+    public void cleanup() {
+        unregisterCallback();
+    }
+
     public void registerCallback(WifiStateCallback wifiStateCallback) {
         this.wifiStateCallback = wifiStateCallback;
         if (wifiReceiverRegistered.compareAndSet(false, true)) {

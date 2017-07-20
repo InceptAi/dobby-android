@@ -10,12 +10,14 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
+import static com.inceptai.wifimonitoringservice.actionlibrary.ActionResult.ActionResultCodes.SUCCESS;
+
 /**
  * Represents the result of a FutureAction. One of the possible values of T above.
  */
 public class ActionResult {
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({ActionResultCodes.SUCCESS,
+    @IntDef({SUCCESS,
             ActionResultCodes.IN_PROGRESS,
             ActionResultCodes.FAILED_TO_START,
             ActionResultCodes.TIMED_OUT,
@@ -34,7 +36,7 @@ public class ActionResult {
 
     public static String actionResultCodeToString(@ActionResultCodes int code) {
         switch (code) {
-            case ActionResultCodes.SUCCESS:
+            case SUCCESS:
                 return "SUCCESS";
             case ActionResultCodes.IN_PROGRESS:
                 return "IN_PROGRESS";
@@ -91,6 +93,10 @@ public class ActionResult {
 
     public String getStatusString() {
         return statusString;
+    }
+
+    public static boolean isSuccessful(ActionResult actionResult) {
+        return  (actionResult != null && actionResult.getStatus() == SUCCESS);
     }
 
 }

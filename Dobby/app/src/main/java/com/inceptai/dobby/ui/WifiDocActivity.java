@@ -1,12 +1,16 @@
 package com.inceptai.dobby.ui;
 
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.net.Uri;
+import android.net.wifi.WifiInfo;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -14,6 +18,7 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.NetworkLayer;
@@ -27,6 +32,9 @@ import com.inceptai.dobby.notifications.DisplayAppNotification;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 import com.inceptai.wifimonitoringservice.WifiMonitoringService;
+import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
+
+import java.util.concurrent.ExecutionException;
 
 import javax.inject.Inject;
 
@@ -53,7 +61,10 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
     private FakeDataIntentReceiver fakeDataIntentReceiver;
     private Handler handler;
     private NotificationInfoReceiver notificationInfoReceiver;
-
+    private WifiServiceConnection wifiServiceConnection;
+    private boolean boundToWifiService = false;
+    private WifiMonitoringService wifiMonitoringService;
+    private ListenableFuture<ActionResult> repairFuture;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,6 +108,7 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
         networkLayer.fetchLastKnownLocation();
         startWifiMonitoringService();
         notificationInfoReceiver = new NotificationInfoReceiver();
+        wifiServiceConnection = new WifiServiceConnection();
     }
 
     public void setupMainFragment() {
@@ -198,9 +210,32 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
         return eventBus;
     }
 
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // Bind to LocalService
+        Intent intent = new Intent(this, WifiMonitoringService.class);
+        try {
+            if (bindService(intent, wifiServiceConnection, Context.BIND_AUTO_CREATE)) {
+                DobbyLog.v("bindService to  wifiServiceConnection succeeded");
+            } else {
+                DobbyLog.v("bindService to wifiServiceConnection failed");
+            }
+        } catch (SecurityException e) {
+            DobbyLog.v("App does not have permission to bind to WifiMonitoring service");
+        }
+    }
+
+
     @Override
     protected void onStop() {
         super.onStop();
+        // Unbind from the service
+        if (boundToWifiService) {
+            unbindService(wifiServiceConnection);
+            boundToWifiService = false;
+        }
     }
 
     @Override
@@ -228,6 +263,21 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
 
     @Override
     public void onWifiRepairInitiated() {
+        if (repairFuture == null || repairFuture.isDone()) {
+            //Start fresh repair
+            if (boundToWifiService && wifiMonitoringService != null) {
+                //Listening for repair to finish on a different thread
+                //Start animation for repair button
+                repairFuture = wifiMonitoringService.repairWifiNetwork();
+                waitForRepair();
+            } else {
+                //Change text for repair button
+                //Notify error to WifiDocMainFragment
+                DobbyLog.e("Repair failed -- Service unavailable");
+            }
+        } else {
+            waitForRepair();
+        }
 
     }
 
@@ -243,6 +293,35 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
         startWifiMonitoringService();
     }
 
+
+    //Private stuff
+    private void startRepair() {
+
+    }
+
+    private void waitForRepair() {
+        repairFuture.addListener(new Runnable() {
+            @Override
+            public void run() {
+                ActionResult repairResult = null;
+                try {
+                    processRepairResult(repairFuture.get());
+                } catch (InterruptedException | ExecutionException e) {
+                    //Notify error to WifiDocMainFragment
+                    DobbyLog.e("Interrupted  while repairing");
+                }
+            }
+        }, threadpool.getExecutor());
+    }
+
+    private void processRepairResult(ActionResult repairResult) {
+        if (ActionResult.isSuccessful(repairResult) && repairResult.getPayload() != null) {
+            //Repair succeeded -- send info to WifiDocFragment
+            WifiInfo repairedWifiInfo = (WifiInfo)repairResult.getPayload();
+        } else {
+            //Repair failed -- send info to WifiDocFragment
+        }
+    }
 
     private void startWifiMonitoringService() {
         //Intent serviceStartIntent = new Intent(this, WifiMonitoringService.class);
@@ -281,4 +360,22 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
         LocalBroadcastManager.getInstance(this).unregisterReceiver(
                 notificationInfoReceiver);
     }
+
+
+    /** Defines callbacks for service binding, passed to bindService() */
+    private class WifiServiceConnection implements ServiceConnection {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            // We've bound to LocalService, cast the IBinder and get LocalService instance
+            WifiMonitoringService.WifiServiceBinder binder = (WifiMonitoringService.WifiServiceBinder) service;
+            wifiMonitoringService = binder.getService();
+            boundToWifiService = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            boundToWifiService = false;
+        }
+    }
+
 }

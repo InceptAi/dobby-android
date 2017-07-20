@@ -4,6 +4,8 @@ import android.content.Context;
 import android.net.wifi.WifiInfo;
 import android.support.annotation.Nullable;
 
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.ConnectivityTester;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.FutureAction;
@@ -42,9 +44,16 @@ public class ServiceActionTaker {
         actionLibrary = new ActionLibrary(applicationContext, executor, scheduledExecutorService);
     }
 
+    public void cleanup() {
+        unregisterCallback();
+        actionLibrary.cleanup();
+    }
+
+
     public void registerCallback(ActionCallback actionCallback) {
         this.actionCallback = actionCallback;
     }
+
 
     public void unregisterCallback() {
         this.actionCallback = null;
@@ -128,7 +137,8 @@ public class ServiceActionTaker {
         return actionLibrary.performConnectivityTest(ACTION_TIMEOUT_MS);
     }
 
-    public void repairConnection() {
+    public ListenableFuture<ActionResult> repairConnection() {
+        final SettableFuture<ActionResult> repairResultFuture = SettableFuture.create();
         final FutureAction repairWifiNetworkAction = actionLibrary.repairWifiNetwork(ACTION_TIMEOUT_MS);
         sendCallbackForActionStarted(repairWifiNetworkAction);
         wifiInfoAfterRepair = null;
@@ -151,7 +161,7 @@ public class ServiceActionTaker {
                                     "Repaired !", wifiInfoResult.getPayload());
                         } else {
                             resultToReturn = new ActionResult(GENERAL_ERROR,
-                                    "Toggled and connected, but unable to put wifi in connected mode: mode found " +
+                                    "Toggled and connected, but unable to put wifi in online mode: mode found " +
                                             ConnectivityTester.connectivityModeToString(modeAfterRepair), wifiInfoResult.getPayload());
                         }
                     } else {
@@ -168,10 +178,12 @@ public class ServiceActionTaker {
                     e.printStackTrace(System.out);
                     ActionLog.w("ActionTaker: Exception getting wifi results: " + e.toString());
                 } finally {
+                    repairResultFuture.set(resultToReturn);
                     sendCallbackForActionCompleted(repairWifiNetworkAction, resultToReturn);
                 }
             }
         }, executor);
+        return repairResultFuture;
     }
 
     public void cancelPendingActions() {
