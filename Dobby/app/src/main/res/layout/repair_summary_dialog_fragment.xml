@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:paddingBottom="10dp"
+    android:layout_height="wrap_content">
+
+
+    <LinearLayout
+        android:id="@+id/repair_summary_ll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="bottom"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/app_icon"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_margin="10dp"
+            android:src="@mipmap/wifi_doc_launcher" />
+
+        <TextView
+            android:id="@+id/repair_title_tv"
+            android:layout_width="match_parent"
+            android:layout_marginLeft="15dp"
+            android:layout_marginStart="15dp"
+            android:textSize="16sp"
+            android:gravity="center_vertical"
+            android:layout_gravity="center_vertical"
+            android:fontFamily="sans-serif-condensed-thin"
+            android:textColor="@android:color/holo_blue_dark"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/darkGray"
+        android:textSize="12sp"
+        android:padding="15dp"
+        android:id="@+id/repair_summary_tv"
+        />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:text="DISMISS"
+        style="@style/MyButton.Flat"
+        android:paddingTop="8dp"
+        android:id="@+id/repair_summary_dismiss_button"
+        android:layout_height="wrap_content" />
+
+</LinearLayout>

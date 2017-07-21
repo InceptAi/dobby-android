@@ -319,14 +319,16 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
         int textId = R.string.repair_wifi_failure;
         int textColor = Color.RED;
         WifiInfo repairedWifiInfo = null;
+        boolean repairSuccessful = false;
         if (ActionResult.isSuccessful(repairResult)) {
             textId = R.string.repair_wifi_success;
+            repairSuccessful = true;
             textColor = Color.GREEN;
             repairedWifiInfo = (WifiInfo) repairResult.getPayload();
         } else if (ActionResult.failedToComplete(repairResult)){
             repairedWifiInfo = (WifiInfo) repairResult.getPayload();
         }
-        mainFragment.handleRepairFinished(repairedWifiInfo, textId, textColor);
+        mainFragment.handleRepairFinished(repairedWifiInfo, textId, textColor, repairSuccessful);
     }
 
     private void startWifiMonitoringService() {

@@ -573,7 +573,7 @@ public class DataInterpreter {
             switch (wifiConnectivityMode) {
                 case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_ONLINE:
                     sb.append("You are connected and online via wifi network: " + getPrimaryApSsid() + ".");
-                    sb.append(convertSignalToReadableMessage());
+                    sb.append(convertSignalToReadableMessage(getPrimaryApSignal()));
                     break;
                 case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL:
                     sb.append("You are behind a captive portal -- " +
@@ -589,7 +589,7 @@ public class DataInterpreter {
                     break;
                 case ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_UNKNOWN:
                     sb.append("You are connected via wifi network: " + getPrimaryApSsid() + ".");
-                    sb.append(convertSignalToReadableMessage());
+                    sb.append(convertSignalToReadableMessage(getPrimaryApSignal()));
                     break;
                 case ConnectivityAnalyzer.WifiConnectivityMode.ON_AND_DISCONNECTED:
                     sb.append("You are currently not connected to any wifi network. If your phone is not connecting, try running full tests and we can diagnose why that could be ?");
@@ -599,28 +599,6 @@ public class DataInterpreter {
                     break;
             }
             return sb.toString();
-        }
-
-        private String convertSignalToReadableMessage() {
-            if (DataInterpreter.isUnknown(getPrimaryApSignalMetric())) {
-                return Utils.EMPTY_STRING;
-            }
-            int signalPercent = Utils.convertSignalDbmToPercent(getPrimaryApSignal());
-            String message = Utils.EMPTY_STRING;
-            if (DataInterpreter.isPoorOrAbysmalOrNonFunctional(getPrimaryApSignalMetric())) {
-                message = "Your connection to your wifi is weak, at about " + signalPercent +
-                        "% strength (100% means very high signal, usually when you " +
-                        "are right next to wifi router).";
-            } else if (DataInterpreter.isAverage(getPrimaryApSignalMetric())) {
-                message = "You connection to your wifi is just ok, at about " + signalPercent +
-                        "% strength (100% means very high signal, usually when you " +
-                        "are right next to wifi router).";
-            } else if (DataInterpreter.isGoodOrExcellent(getPrimaryApSignalMetric())) {
-                message = "You connection to your wifi is really good, at about " + signalPercent +
-                        "% strength (100% means very high signal, usually when you " +
-                        "are right next to wifi router).";
-            }
-            return message;
         }
 
         public void clear() {
@@ -712,6 +690,28 @@ public class DataInterpreter {
         return getGradeHigherIsBetter(signal, WIFI_RSSI_STEPS_DBM, signal < 0, false);
     }
 
+    public static String convertSignalToReadableMessage(int signal) {
+        @MetricType int metric = getSignalMetric(signal);
+        if (DataInterpreter.isUnknown(metric)) {
+            return Utils.EMPTY_STRING;
+        }
+        int signalPercent = Utils.convertSignalDbmToPercent(signal);
+        String message = Utils.EMPTY_STRING;
+        if (DataInterpreter.isPoorOrAbysmalOrNonFunctional(metric)) {
+            message = "Your connection to your wifi is weak, at about " + signalPercent +
+                    "% strength (100% means very high signal, usually when you " +
+                    "are right next to wifi router).";
+        } else if (DataInterpreter.isAverage(metric)) {
+            message = "Your connection to your wifi is just ok, at about " + signalPercent +
+                    "% strength (100% means very high signal, usually when you " +
+                    "are right next to wifi router).";
+        } else if (DataInterpreter.isGoodOrExcellent(metric)) {
+            message = "Your connection to your wifi is really good, at about " + signalPercent +
+                    "% strength (100% means very high signal, usually when you " +
+                    "are right next to wifi router).";
+        }
+        return message;
+    }
 
     public static String metricTypeToString(@MetricType int metricType) {
         switch(metricType) {

@@ -29,6 +29,7 @@ public class DobbyAnalytics extends ExpertChatAnalytics {
     private static final String MORE_SUGGESTION_CLICKED = "more_suggestions_clicked";
     private static final String WIFI_DOC_FRAGMENT_ENTERED = "wifidoc_opened";
     private static final String ABOUT_DIALOG_SHOWN = "about_dialog_shown";
+    private static final String REPAIR_SUMMARY_SHOWN = "repair_summary_shown";
     private static final String FEEDBACK_DIALOG_SHOWN = "feedback_dialog_shown";
     private static final String TESTS_CANCELLED = "tests_cancelled";
 
@@ -183,6 +184,12 @@ public class DobbyAnalytics extends ExpertChatAnalytics {
     public void aboutShown() {
         Bundle bundle = new Bundle();
         bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, ABOUT_DIALOG_SHOWN);
+        dobbyAnalyticsBackend.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
+    }
+
+    public void repairSummaryShown() {
+        Bundle bundle = new Bundle();
+        bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, REPAIR_SUMMARY_SHOWN);
         dobbyAnalyticsBackend.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
     }
 

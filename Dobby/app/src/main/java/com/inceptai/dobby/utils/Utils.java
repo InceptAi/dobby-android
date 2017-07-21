@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.content.res.XmlResourceParser;
+import android.net.wifi.WifiInfo;
 import android.os.Build;
 import android.provider.Settings;
 import android.support.v4.app.Fragment;
@@ -22,6 +23,7 @@ import com.google.common.net.InetAddresses;
 import com.google.gson.Gson;
 import com.inceptai.dobby.BuildConfig;
 import com.inceptai.dobby.MainActivity;
+import com.inceptai.dobby.ai.DataInterpreter;
 import com.inceptai.dobby.speedtest.BandwidthTestCodes;
 import com.inceptai.dobby.ui.WifiDocActivity;
 
@@ -1018,5 +1020,34 @@ public class Utils {
     public static boolean checkIsWifiMonitoringEnabled(Context context) {
         return Boolean.valueOf(readSharedSetting(context, WIFI_MONITORING_SERVICE_STATE, Utils.TRUE_STRING));
     }
+
+    public static String userReadableRepairSummary(boolean repairSuccessful, WifiInfo wifiInfo) {
+       StringBuilder sb = new StringBuilder();
+        if (repairSuccessful) {
+            if (wifiInfo != null) {
+                sb.append("Hooray ! You are connected and online via wifi network: " + wifiInfo.getSSID() + ". ");
+                sb.append(DataInterpreter.convertSignalToReadableMessage(wifiInfo.getRssi()));
+                sb.append(" Run full tests to see what speeds are you currently getting !");
+            } else {
+                //Never happens
+                sb.append("Repair was successful and you are now online via WiFi !");
+                sb.append("Run full tests to see what speeds are you currently getting !");
+            }
+        } else {
+            if (wifiInfo != null) {
+                sb.append("You are connected to wifi network: " + wifiInfo.getSSID() + " but we can't reach Internet through this network. " +
+                        "This could be an issue with the router your Internet provider or you could be behind " +
+                        "a captive portal which requires sign-in for access.");
+                sb.append("Run full tests to see what could be the issue here.");
+            } else {
+                sb.append("Sorry, we were unable to repair your WiFi connection. " +
+                        "If you recently updated your phone software, try resetting network settings. " +
+                        "Further, if your WiFi won't turn on, it could be a memory issue, so make sure to clean unused " +
+                        "apps and have enough RAM on your device.");
+            }
+        }
+        return sb.toString();
+    }
+
 
 }

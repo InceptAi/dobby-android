@@ -42,6 +42,8 @@ public class WifiDocDialogFragment extends DialogFragment {
     public static final int DIALOG_EXPERT_ONBOARDING = 1004;
     public static final int DIALOG_SHOW_SIMPLE_FEEDBACK = 1005;
     public static final int DIALOG_SHOW_LOCATION_PERMISSION_REQUEST = 1006;
+    public static final int DIALOG_SHOW_REPAIR_SUMMARY = 1007;
+
 
     public static final String DIALOG_PAYLOAD = "payload";
     public static final String DIALOG_SUGGESTION_TILTE = "suggestionTitle";
@@ -52,6 +54,10 @@ public class WifiDocDialogFragment extends DialogFragment {
     public static final String APP_ICON = "appIcon";
     public static final String PARENT_VIEW_ID = "parentViewId";
     public static final String VERSION_TEXT = "App Version: ";
+    public static final String DIALOG_REPAIR_TILTE = "repairTitle";
+    public static final String DIALOG_REPAIR_SUMMARY = "repairSummary";
+
+
 
     private static final String PRIVACY_POLICY = "Please click <a href=\"http://inceptai.com/privacy/\"> here </a> to read about our privacy policy.";
     private static final String ABOUT_STRING = "This app is offered by InceptAI. Copyright &#169; 2017. For detailed feedback or questions, email us at <a href=\"mailto:hello@obiai.tech\">hello@obiai.tech</a>.";
@@ -97,6 +103,8 @@ public class WifiDocDialogFragment extends DialogFragment {
                 return createSimpleFeedbackForm(bundle);
             case DIALOG_SHOW_LOCATION_PERMISSION_REQUEST:
                 return createLocationPermissionRequestDialog(bundle);
+            case DIALOG_SHOW_REPAIR_SUMMARY:
+                return createRepairSummaryDialog(bundle);
         }
         return new AlertDialog.Builder(getActivity()).create();
     }
@@ -107,6 +115,16 @@ public class WifiDocDialogFragment extends DialogFragment {
         bundle.putInt(DIALOG_TYPE, DIALOG_SHOW_SUGGESTIONS);
         bundle.putString(DIALOG_SUGGESTION_TILTE, title);
         bundle.putStringArrayList(DIALOG_SUGGESTION_LIST, suggestionList);
+        fragment.setArguments(bundle);
+        return fragment;
+    }
+
+    public static WifiDocDialogFragment forRepairSummary(String title, String summary) {
+        WifiDocDialogFragment fragment = new WifiDocDialogFragment();
+        Bundle bundle = new Bundle();
+        bundle.putInt(DIALOG_TYPE, DIALOG_SHOW_REPAIR_SUMMARY);
+        bundle.putString(DIALOG_REPAIR_TILTE, title);
+        bundle.putString(DIALOG_REPAIR_SUMMARY, summary);
         fragment.setArguments(bundle);
         return fragment;
     }
@@ -173,6 +191,27 @@ public class WifiDocDialogFragment extends DialogFragment {
                 new ArrayAdapter<String>(getContext(), R.layout.custom_simple_list_item, suggestionList);
         listView.setAdapter(itemsAdapter);
         Button dismissButton = (Button) rootView.findViewById(R.id.more_suggestions_dismiss_button);
+        dismissButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dismiss();
+            }
+        });
+        builder.setView(rootView);
+        return builder.create();
+    }
+
+    private Dialog createRepairSummaryDialog(Bundle bundle) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        LayoutInflater inflater = getActivity().getLayoutInflater();
+        rootView = inflater.inflate(R.layout.repair_summary_dialog_fragment, null);
+        String summary = bundle.getString(DIALOG_REPAIR_SUMMARY);
+        String title = bundle.getString(DIALOG_REPAIR_TILTE);
+        TextView repairTitleTv = (TextView) rootView.findViewById(R.id.repair_title_tv);
+        TextView repairSummaryTv = (TextView) rootView.findViewById(R.id.repair_summary_tv);
+        repairTitleTv.setText(title);
+        repairSummaryTv.setText(summary);
+        Button dismissButton = (Button) rootView.findViewById(R.id.repair_summary_dismiss_button);
         dismissButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

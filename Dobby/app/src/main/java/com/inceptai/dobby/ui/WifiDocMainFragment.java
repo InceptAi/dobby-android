@@ -60,6 +60,7 @@ import com.inceptai.dobby.utils.HtmlReportGenerator;
 import com.inceptai.dobby.utils.Utils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -89,7 +90,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private static final int MSG_WIFI_OFFLINE = 1008;
     private static final int MSG_REQUEST_LAYOUT = 1009;
     private static final int MSG_REPAIR_INFO_AVAILABLE = 1010;
-    private static final int MSG_UPDATE_REPAIR_STATUS = 1011;
+    private static final int MSG_SHOW_REPAIR_DIALOG = 1011;
+    private static final int MSG_UPDATE_REPAIR_STATUS = 1012;
     private static final long SUGGESTION_FRESHNESS_TS_MS = 30000; // 30 seconds
     private static final int MAX_HANDLER_PAUSE_MS = 5000;
 
@@ -523,18 +525,32 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             case MSG_UPDATE_REPAIR_STATUS:
                 restoreRepairButton(msg.arg1, msg.arg2);
                 break;
+            case MSG_SHOW_REPAIR_DIALOG:
+                ArrayList<String> repairStringList = ((ArrayList<String>)msg.obj);
+                if (repairStringList != null || repairStringList.size() == 2) {
+                    showRepairSummary(repairStringList.get(0), repairStringList.get(1));
+                }
+                break;
             default:
                 return false;
         }
         return true;
     }
 
-    public void handleRepairFinished(WifiInfo wifiInfo, int repairStatusTextId, int color) {
+    public void handleRepairFinished(WifiInfo wifiInfo, int repairStatusTextId, int color, boolean repairSuccessful) {
+        int repairCode = repairSuccessful ? 1 : 0;
+        String repairSummary = Utils.userReadableRepairSummary(repairSuccessful, wifiInfo);
+        String repairTitle = getString(repairStatusTextId);
+        ArrayList<String> combinedStrings = new ArrayList<>(Arrays.asList(repairTitle, repairSummary));
         Message.obtain(handler, MSG_REPAIR_INFO_AVAILABLE, wifiInfo).sendToTarget();
         Message.obtain(handler, MSG_UPDATE_REPAIR_STATUS, repairStatusTextId, color).sendToTarget();
+        Message.obtain(handler, MSG_SHOW_REPAIR_DIALOG, combinedStrings).sendToTarget();
     }
 
     private void showRepairResults(WifiInfo wifiInfo) {
+        if (wifiInfo == null) {
+            return;
+        }
         String ssid = wifiInfo.getSSID();
         int signal = wifiInfo.getRssi();
         @DataInterpreter.MetricType int signalMetric = DataInterpreter.getSignalMetric(signal);
@@ -1189,6 +1205,13 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         startActivity(new Intent(getContext(), ExpertChatActivity.class));
         dobbyAnalytics.contactExpertEvent();
     }
+
+    private void showRepairSummary(String title, String summary) {
+        WifiDocDialogFragment fragment = WifiDocDialogFragment.forRepairSummary(title, summary);
+        fragment.show(getActivity().getSupportFragmentManager(), "Repair");
+        dobbyAnalytics.repairSummaryShown();
+    }
+
 
     private void showAboutAndPrivacyPolicy() {
         WifiDocDialogFragment fragment = WifiDocDialogFragment.forAboutAndPrivacyPolicy();
