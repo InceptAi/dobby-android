@@ -260,7 +260,7 @@ public class ConnectivityTester {
                     false);
             if (responseCode == HttpURLConnection.HTTP_NO_CONTENT) {
                 mode = CONNECTED_AND_ONLINE;
-            } else if (responseCode == HttpURLConnection.HTTP_OK) {
+            } else if (responseCode == HttpURLConnection.HTTP_OK || responseCode == HttpURLConnection.HTTP_MOVED_TEMP) {
                 mode = CONNECTED_AND_CAPTIVE_PORTAL;
             } else {
                 mode = CONNECTED_AND_OFFLINE;

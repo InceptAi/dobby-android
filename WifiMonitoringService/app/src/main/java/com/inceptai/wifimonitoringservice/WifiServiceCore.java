@@ -67,6 +67,8 @@ public class WifiServiceCore implements
     @ConnectivityTester.WifiConnectivityMode
     private int wifiConnectivityMode;
     private long actionPendingTimestampMs;
+    private String lastNotificationTitle;
+    private String lastNotificationBody;
 
     //TODO: Move to repair if reset doesn't work for n number of times
     private WifiServiceCore(Context context, ServiceThreadPool serviceThreadPool) {
@@ -86,6 +88,8 @@ public class WifiServiceCore implements
         lastWifiEventDescription = Utils.EMPTY_STRING;
         lastWifiEventTimestampMs = 0;
         actionPendingTimestampMs = 0;
+        lastNotificationBody = Utils.EMPTY_STRING;
+        lastNotificationTitle = Utils.EMPTY_STRING;
     }
 
     /**
@@ -442,7 +446,7 @@ public class WifiServiceCore implements
             listOfOfflineRouterIDs.add(wifiStateMonitor.primaryRouterID());
             numConsecutiveFailedConnectivityTests = 0;
             updateWifiConnectivityMode(lastConnectivityMode);
-            if (!isActionPending()) {
+            if (!isActionPending() && ConnectivityTester.isOffline(lastConnectivityMode)) {
                 ServiceLog.v("WifiServiceCore: onConnectToBestWifi: list offline routers " + listOfOfflineRouterIDs.toString());
                 sendNotificationOfServiceActionStarted("Connect to best Wifi", "Max connectivity tests failed");
                 serviceActionTaker.connectToBestWifi(listOfOfflineRouterIDs);
@@ -517,6 +521,17 @@ public class WifiServiceCore implements
             default:
                 break;
         }
+        updateNotificationStateAndSend(title, body);
+    }
+
+
+    private void updateNotificationStateAndSend(String title, String body) {
+        if (lastNotificationTitle.equals(title) && lastNotificationBody.equals(body)) {
+            //No change in notification so don't send
+            return;
+        }
+        lastNotificationTitle = title;
+        lastNotificationBody = body;
         Utils.sendNotificationInfo(context, title, body, WifiMonitoringService.WIFI_STATUS_NOTIFICATION_ID);
     }
 
@@ -544,7 +559,4 @@ public class WifiServiceCore implements
     private boolean isActionPending() {
         return (System.currentTimeMillis() - actionPendingTimestampMs < ACTION_PENDING_TIMEOUT);
     }
-
-
-
 }
