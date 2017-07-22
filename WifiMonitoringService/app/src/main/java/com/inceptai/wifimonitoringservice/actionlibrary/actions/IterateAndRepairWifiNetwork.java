@@ -9,6 +9,7 @@ import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.NetworkActionLayer;
 import com.inceptai.wifimonitoringservice.utils.ServiceLog;
 
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ScheduledExecutorService;
@@ -45,7 +46,7 @@ public class IterateAndRepairWifiNetwork extends FutureAction {
                 try {
                     actionResult = iterateAndConnectToBestWifiNetwork.getFuture().get();
                     setResult(actionResult);
-                } catch (InterruptedException | ExecutionException e) {
+                } catch (InterruptedException | ExecutionException | CancellationException e) {
                     e.printStackTrace(System.out);
                     ServiceLog.w("ActionTaker: Exception getting wifi results: " + e.toString());
                     setResult(new ActionResult(ActionResult.ActionResultCodes.EXCEPTION, e.toString()));

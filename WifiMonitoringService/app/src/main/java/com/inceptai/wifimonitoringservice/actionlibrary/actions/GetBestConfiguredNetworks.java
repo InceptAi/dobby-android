@@ -14,6 +14,7 @@ import com.inceptai.wifimonitoringservice.utils.ServiceLog;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ScheduledExecutorService;
@@ -50,7 +51,7 @@ public class GetBestConfiguredNetworks extends FutureAction {
                 try {
                     setWifiConfigurationList(getConfiguredNetworkListAction.getFuture().get());
                     computeBestConfiguredNetworks();
-                }catch (InterruptedException | ExecutionException e) {
+                }catch (InterruptedException | ExecutionException | CancellationException e) {
                     e.printStackTrace(System.out);
                     ServiceLog.w("ActionTaker: Exception getting wifi results: " + e.toString());
                     setResult(new ActionResult(ActionResult.ActionResultCodes.EXCEPTION, e.toString()));
@@ -64,7 +65,7 @@ public class GetBestConfiguredNetworks extends FutureAction {
                 try {
                     setScanResults(getNearbyNetworksAction.getFuture().get());
                     computeBestConfiguredNetworks();
-                }catch (InterruptedException | ExecutionException e) {
+                }catch (InterruptedException | ExecutionException | CancellationException e) {
                     e.printStackTrace(System.out);
                     ServiceLog.w("ActionTaker: Exception getting wifi results: " + e.toString());
                     setResult(new ActionResult(ActionResult.ActionResultCodes.EXCEPTION, e.toString()));

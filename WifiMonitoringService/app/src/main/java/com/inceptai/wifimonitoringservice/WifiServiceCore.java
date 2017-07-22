@@ -136,6 +136,11 @@ public class WifiServiceCore implements
         return serviceActionTaker.iterateAndRepairConnection();
     }
 
+    void cancelRepairOfWifiNetwork() {
+        ServiceLog.v("WifiServiceCore:cancelRepairOfWifiNetwork");
+        serviceActionTaker.cancelIterateAndRepair();
+    }
+
     void sendStatusUpdateNotification() {
         sendWifiStatusNotification();
     }
@@ -263,7 +268,7 @@ public class WifiServiceCore implements
             ServiceLog.v("RepairConnection initiated");
             sendNotificationOfServiceActionStarted(context.getString(R.string.repair_wifi_network),
                     context.getString(R.string.wifi_stuck_scanning));
-            serviceActionTaker.repairConnection();
+            serviceActionTaker.repairConnectionOneShot();
         }
     }
 
@@ -343,10 +348,10 @@ public class WifiServiceCore implements
         //Toggle wifi
         ServiceLog.v("wifiStateProblematicSupplicantPattern");
         if (!isActionPending()) {
-            ServiceLog.v("repairConnection");
+            ServiceLog.v("repairConnectionOneShot");
             sendNotificationOfServiceActionStarted(context.getString(R.string.repair_wifi_network),
                     context.getString(R.string.wifi_bad_state));
-            serviceActionTaker.repairConnection();
+            serviceActionTaker.repairConnectionOneShot();
         }
     }
 

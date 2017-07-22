@@ -34,6 +34,7 @@ import com.inceptai.dobby.utils.Utils;
 import com.inceptai.wifimonitoringservice.WifiMonitoringService;
 import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
 
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
 import javax.inject.Inject;
@@ -278,6 +279,19 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
         startWifiMonitoringService();
     }
 
+    @Override
+    public void onWifiRepairCancelled() {
+        DobbyLog.v("WifiDocMainActivity: onWifiRepairCancelled");
+        if (repairFuture != null && !repairFuture.isDone()) {
+            DobbyLog.v("WifiDocMainActivity: Calling cancel on repair future");
+            repairFuture.cancel(true);
+            if (boundToWifiService && wifiMonitoringService != null) {
+                wifiMonitoringService.cancelRepairOfWifiNetwork();
+            } else {
+                DobbyLog.e("Cancel Repair failed as service is unavailable");
+            }
+        }
+    }
 
     //Private stuff
     private void startRepair() {
@@ -291,7 +305,7 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
                 ActionResult repairResult = null;
                 try {
                     processRepairResult(repairFuture.get());
-                } catch (InterruptedException | ExecutionException e) {
+                } catch (InterruptedException | ExecutionException | CancellationException e) {
                     //Notify error to WifiDocMainFragment
                     DobbyLog.e("Interrupted  while repairing");
                 }

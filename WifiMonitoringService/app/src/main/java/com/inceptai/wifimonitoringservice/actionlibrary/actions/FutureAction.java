@@ -100,7 +100,7 @@ public abstract class FutureAction {
                 try {
                     ServiceLog.v("FutureAction: Setting result for action with name " + getName());
                     setResult(new ActionResult(SUCCESS, ActionResult.actionResultCodeToString(SUCCESS), future.get()));
-                } catch (InterruptedException | ExecutionException e) {
+                } catch (InterruptedException | ExecutionException | CancellationException e) {
                     Log.w("", "Exception getting result for:" + getName() +
                             " e = " + e.toString());
                     setResult(new ActionResult(EXCEPTION, e.toString()));

@@ -7,6 +7,7 @@ import android.animation.ObjectAnimator;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.Uri;
 import android.net.wifi.WifiInfo;
 import android.os.Build;
@@ -184,6 +185,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private double uploadBw;
     private DataInterpreter.PingGrade pingGrade;
     private DataInterpreter.WifiGrade wifiGrade;
+    private boolean repairing = false;
 
     @Inject
     DobbyAnalytics dobbyAnalytics;
@@ -320,6 +322,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         void onWifiRepairInitiated();
         void onWifiMonitoringServiceDisabled();
         void onWifiMonitoringServiceEnabled();
+        void onWifiRepairCancelled();
     }
 
 
@@ -539,12 +542,22 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     }
 
     public void handleRepairFinished(WifiInfo wifiInfo, int repairStatusTextId, boolean repairSuccessful) {
+        repairing = false;
         String repairSummary = Utils.userReadableRepairSummary(repairSuccessful, wifiInfo);
         String repairTitle = getString(repairStatusTextId);
         ArrayList<String> combinedStrings = new ArrayList<>(Arrays.asList(repairTitle, repairSummary));
         Message.obtain(handler, MSG_REPAIR_INFO_AVAILABLE, wifiInfo).sendToTarget();
         Message.obtain(handler, MSG_UPDATE_REPAIR_STATUS, repairStatusTextId, 0).sendToTarget();
         Message.obtain(handler, MSG_SHOW_REPAIR_DIALOG, combinedStrings).sendToTarget();
+    }
+
+    private void handleRepairCancelled() {
+        if (mListener != null) {
+            DobbyLog.v("handleRepairCancelled: Cancelling repair and sending message to Activity");
+            mListener.onWifiRepairCancelled();
+        }
+        Message.obtain(handler, MSG_UPDATE_REPAIR_STATUS, R.string.repair_wifi_cancelled, 0).sendToTarget();
+        repairing = false;
     }
 
     private void showRepairResults(WifiInfo wifiInfo) {
@@ -711,8 +724,11 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         repairFl.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sendRepairCommandToService();
-                repairFl.setEnabled(false);
+                if (!repairing) {
+                    sendRepairCommandToService();
+                } else {
+                    handleRepairCancelled();
+                }
             }
         });
 
@@ -1280,8 +1296,11 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private void sendRepairCommandToService() {
         if (mListener != null) {
             //Disabling service toggling while repair is going on
+            repairing = true;
+            //repairFl.setEnabled(false);
             serviceSwitch.setEnabled(false);
-            repairTv.setText(R.string.repairing_wifi);
+            repairTv.setText(R.string.repairing_wifi_cancel);
+            repairTv.setTextColor(Color.RED);
             statusTv.setText(R.string.repairing_wifi);
             yourNetworkCv.setVisibility(View.GONE);
             pingCv.setVisibility(View.GONE);
@@ -1301,8 +1320,10 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     }
 
     private void restoreRepairButton(int stringId) {
+        statusTv.setText(R.string.ready_status_message);
         repairIv.setAnimation(null);
         repairTv.setText(stringId);
+        repairTv.setTextColor(Color.WHITE);
         //Disabling service toggling while repair is going on
         repairFl.setEnabled(true);
         serviceSwitch.setEnabled(true);

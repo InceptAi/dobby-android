@@ -12,6 +12,7 @@ import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.NetworkActi
 import com.inceptai.wifimonitoringservice.utils.ServiceLog;
 
 import java.util.List;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ScheduledExecutorService;
@@ -79,7 +80,7 @@ public class IterateAndConnectToBestNetwork extends FutureAction {
                     } else {
                         setResult(new ActionResult(ActionResult.ActionResultCodes.FAILED_TO_COMPLETE, "Unable to get network list"));
                     }
-                } catch (InterruptedException | ExecutionException e) {
+                } catch (InterruptedException | ExecutionException | CancellationException e) {
                     e.printStackTrace(System.out);
                     ServiceLog.w("ActionTaker: Exception getting wifi results: " + e.toString());
                     setResult(new ActionResult(ActionResult.ActionResultCodes.EXCEPTION, e.toString()));
@@ -154,7 +155,7 @@ public class IterateAndConnectToBestNetwork extends FutureAction {
                     } else {
                         connectAndTestGivenNetwork(getNextNetworkToTry());
                     }
-                } catch (InterruptedException | ExecutionException e) {
+                } catch (InterruptedException | ExecutionException | CancellationException e) {
                     e.printStackTrace(System.out);
                     ServiceLog.w("ActionTaker: Exception getting wifi results: " + e.toString());
                     connectAndTestGivenNetwork(getNextNetworkToTry());

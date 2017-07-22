@@ -118,6 +118,13 @@ public class WifiMonitoringService extends Service {
         return null;
     }
 
+    public void cancelRepairOfWifiNetwork() {
+        if (wifiServiceCore !=  null) {
+            ServiceLog.v("WifiServiceMonitoring: cancelRepair");
+            wifiServiceCore.cancelRepairOfWifiNetwork();
+        }
+    }
+
     public void sendStatusUpdateNotification() {
         if (wifiServiceCore !=  null) {
             wifiServiceCore.sendStatusUpdateNotification();

@@ -14,6 +14,8 @@ import com.inceptai.wifimonitoringservice.utils.ServiceLog;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -33,6 +35,8 @@ public class ServiceActionTaker {
     private WifiInfo wifiInfoAfterRepair;
     private Executor executor;
     private ScheduledExecutorService scheduledExecutorService;
+    private ListenableFuture<ActionResult> iterateAndRepairFuture;
+    private FutureAction iterateAndRepairFutureAction;
 
     public interface ActionCallback {
         void actionStarted(String actionName);
@@ -138,7 +142,7 @@ public class ServiceActionTaker {
         return actionLibrary.performConnectivityTest(ACTION_TIMEOUT_MS);
     }
 
-    public ListenableFuture<ActionResult> repairConnection() {
+    public ListenableFuture<ActionResult> repairConnectionOneShot() {
         final SettableFuture<ActionResult> repairResultFuture = SettableFuture.create();
         final FutureAction repairWifiNetworkAction = actionLibrary.repairWifiNetwork(ACTION_TIMEOUT_MS);
         sendCallbackForActionStarted(repairWifiNetworkAction);
@@ -180,7 +184,7 @@ public class ServiceActionTaker {
                         }
                     }
                     ServiceLog.v("ActionTaker: Got the result for  " + repairWifiNetworkAction.getName() + " result " + repairResult.getStatusString());
-                } catch (Exception e) {
+                } catch (InterruptedException | CancellationException | ExecutionException e) {
                     e.printStackTrace(System.out);
                     ServiceLog.w("ActionTaker: Exception getting wifi results: " + e.toString());
                 } finally {
@@ -193,6 +197,11 @@ public class ServiceActionTaker {
     }
 
     public ListenableFuture<ActionResult> iterateAndRepairConnection() {
+
+        if (iterateAndRepairFuture != null && !iterateAndRepairFuture.isDone()) {
+            return iterateAndRepairFuture;
+        }
+
         final SettableFuture<ActionResult> repairResultFuture = SettableFuture.create();
         final FutureAction repairWifiNetworkAction = actionLibrary.iterateAndRepairWifiNetwork(ACTION_TIMEOUT_MS);
         sendCallbackForActionStarted(repairWifiNetworkAction);
@@ -240,7 +249,7 @@ public class ServiceActionTaker {
                         }
                     }
                     ServiceLog.v("ActionTaker: Got the result for  " + repairWifiNetworkAction.getName() + " result " + repairResult.getStatusString());
-                } catch (Exception e) {
+                } catch (InterruptedException | CancellationException | ExecutionException e) {
                     e.printStackTrace(System.out);
                     ServiceLog.w("ActionTaker: Exception getting wifi results: " + e.toString());
                 } finally {
@@ -249,7 +258,20 @@ public class ServiceActionTaker {
                 }
             }
         }, executor);
-        return repairResultFuture;
+        iterateAndRepairFuture = repairResultFuture;
+        iterateAndRepairFutureAction = repairWifiNetworkAction;
+        return iterateAndRepairFuture;
+    }
+
+    public void cancelIterateAndRepair() {
+        ServiceLog.v("In cancelIterateAndRepair");
+        if (iterateAndRepairFuture != null && !iterateAndRepairFuture.isDone()) {
+            iterateAndRepairFuture.cancel(true);
+            ServiceLog.v("In cancelIterateAndRepair: Cancelling iterate and repair");
+            if (iterateAndRepairFutureAction != null) {
+                iterateAndRepairFutureAction.cancelAction();
+            }
+        }
     }
 
 
