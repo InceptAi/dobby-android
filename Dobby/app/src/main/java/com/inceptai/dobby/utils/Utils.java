@@ -1041,7 +1041,8 @@ public class Utils {
                 sb.append("Run full tests to see what could be the issue here.");
             } else {
                 sb.append("Sorry, we were unable to repair your WiFi connection. " +
-                        "If you recently updated your phone software, try resetting network settings. " +
+                        "We were unable to find a good WiFi network to connect to. If you recently " +
+                        "updated your phone software, try forgetting the network and connecing again. " +
                         "Further, if your WiFi won't turn on, it could be a memory issue, so make sure to clean unused " +
                         "apps and have enough RAM on your device.");
             }
