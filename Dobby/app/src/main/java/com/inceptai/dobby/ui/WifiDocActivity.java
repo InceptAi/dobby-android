@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.graphics.Color;
 import android.net.Uri;
 import android.net.wifi.WifiInfo;
 import android.os.Bundle;
@@ -187,6 +186,7 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
             }
         }
         registerNotificationInfoReceiver();
+        initiateStatusNotification();
     }
 
     @Override
@@ -215,28 +215,14 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
     @Override
     protected void onStart() {
         super.onStart();
-        // Bind to LocalService
-        Intent intent = new Intent(this, WifiMonitoringService.class);
-        try {
-            if (bindService(intent, wifiServiceConnection, Context.BIND_AUTO_CREATE)) {
-                DobbyLog.v("bindService to  wifiServiceConnection succeeded");
-            } else {
-                DobbyLog.v("bindService to wifiServiceConnection failed");
-            }
-        } catch (SecurityException e) {
-            DobbyLog.v("App does not have permission to bind to WifiMonitoring service");
-        }
+        bindWithWifiService();
     }
 
 
     @Override
     protected void onStop() {
         super.onStop();
-        // Unbind from the service
-        if (boundToWifiService) {
-            unbindService(wifiServiceConnection);
-            boundToWifiService = false;
-        }
+        unbindWithWifiService();
     }
 
     @Override
@@ -274,12 +260,10 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
             } else {
                 //Change text for repair button
                 //Notify error to WifiDocMainFragment
-                DobbyLog.e("Repair failed -- Service unavailable");
+                DobbyLog.e("Repair failed -- Service unavailable -- boundToService " + (boundToWifiService ? Utils.TRUE_STRING : Utils.FALSE_STRING));
+                processRepairResult(null);
             }
-        } else {
-            waitForRepair();
         }
-
     }
 
     @Override
@@ -317,18 +301,16 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
 
     private void processRepairResult(ActionResult repairResult) {
         int textId = R.string.repair_wifi_failure;
-        int textColor = Color.RED;
         WifiInfo repairedWifiInfo = null;
         boolean repairSuccessful = false;
         if (ActionResult.isSuccessful(repairResult)) {
             textId = R.string.repair_wifi_success;
             repairSuccessful = true;
-            textColor = Color.GREEN;
             repairedWifiInfo = (WifiInfo) repairResult.getPayload();
         } else if (ActionResult.failedToComplete(repairResult)){
             repairedWifiInfo = (WifiInfo) repairResult.getPayload();
         }
-        mainFragment.handleRepairFinished(repairedWifiInfo, textId, textColor, repairSuccessful);
+        mainFragment.handleRepairFinished(repairedWifiInfo, textId, repairSuccessful);
     }
 
     private void startWifiMonitoringService() {
@@ -386,4 +368,38 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
         }
     }
 
+    private void bindWithWifiService() {
+        // Bind to LocalService
+        Intent intent = new Intent(this, WifiMonitoringService.class);
+        try {
+            if (bindService(intent, wifiServiceConnection, Context.BIND_AUTO_CREATE)) {
+                DobbyLog.v("bindService to  wifiServiceConnection succeeded");
+            } else {
+                DobbyLog.v("bindService to wifiServiceConnection failed");
+            }
+        } catch (SecurityException e) {
+            DobbyLog.v("App does not have permission to bind to WifiMonitoring service");
+        }
+    }
+
+    private void unbindWithWifiService() {
+        // Unbind from the service
+        if (boundToWifiService) {
+            DobbyLog.v("Unbinding Service");
+            unbindService(wifiServiceConnection);
+            boundToWifiService = false;
+            wifiMonitoringService = null;
+        }
+    }
+
+    public void initiateStatusNotification() {
+        if (Utils.checkIsWifiMonitoringEnabled(this) && boundToWifiService && wifiMonitoringService != null) {
+            wifiMonitoringService.sendStatusUpdateNotification();
+        } else {
+            //Change text for repair button
+            //Notify error to WifiDocMainFragment
+            DobbyLog.e("Sending status request failed -- Service unavailable  boundToService " + (boundToWifiService ? Utils.TRUE_STRING : Utils.FALSE_STRING));
+        }
+
+    }
 }

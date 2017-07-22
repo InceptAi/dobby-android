@@ -12,6 +12,9 @@ import android.support.v4.content.LocalBroadcastManager;
 import com.inceptai.wifimonitoringservice.WifiMonitoringService;
 
 import java.lang.reflect.Field;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import static android.os.Build.VERSION.SDK_INT;
 import static android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1;
@@ -23,6 +26,8 @@ import static android.os.Build.VERSION_CODES.JELLY_BEAN_MR1;
 
 public class Utils {
     public static String EMPTY_STRING = "";
+    private static final int MAX_SSID_LENGTH = 30;
+
     public static int computeMovingAverageSignal(int currentSignal, int previousSignal, long currentSeen, long previousSeen, int maxAge) {
         if (currentSeen == 0) {
             currentSeen = System.currentTimeMillis();
@@ -110,7 +115,7 @@ public class Utils {
 
     //Broadcast notification info
     public static void sendNotificationInfo(Context context, String title, String body, int notificationId) {
-        ServiceLog.v("Broadcasting message");
+        ServiceLog.v("Broadcasting message with title/body " + title + " / " + body);
         Intent intent = new Intent(WifiMonitoringService.NOTIFICATION_INFO_INTENT_VALUE);
         intent.putExtra(WifiMonitoringService.EXTRA_NOTIFICATION_TITLE, title);
         intent.putExtra(WifiMonitoringService.EXTRA_NOTIFICATION_BODY, body);
@@ -166,8 +171,26 @@ public class Utils {
         updateBootReceiver(context, cls, PackageManager.COMPONENT_ENABLED_STATE_ENABLED);
     }
 
-    private static void updateBootReceiver(Context context, Class<?> cls, int flag) {
+    public static String convertMillisecondsToTimeForNotification(long currentTimeMillis) {
+        DateFormat formatter = SimpleDateFormat.getTimeInstance(DateFormat.SHORT);
+        return formatter.format(new Date(currentTimeMillis));
+    }
+
+    public static void updateBootReceiver(Context context, Class<?> cls, int flag) {
         ComponentName component = new ComponentName(context, cls);
         context.getPackageManager().setComponentEnabledSetting(component, flag, PackageManager.DONT_KILL_APP);
     }
+
+    public static String limitSSID(String ssid) {
+        if (ssid != null && !ssid.isEmpty()) {
+            if (ssid.length() > MAX_SSID_LENGTH) {
+                ssid = ssid.substring(0, MAX_SSID_LENGTH);
+                if (ssid.startsWith("\"") || ssid.startsWith("'")) {
+                    ssid = ssid + ssid.substring(0, 1);
+                }
+            }
+        }
+        return ssid;
+    }
+
 }

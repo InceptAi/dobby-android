@@ -9,7 +9,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.ConnectivityTester;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.FutureAction;
-import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLog;
+import com.inceptai.wifimonitoringservice.utils.ServiceLog;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ScheduledExecutorService;
 
+import static com.inceptai.wifimonitoringservice.actionlibrary.ActionResult.ActionResultCodes.FAILED_TO_COMPLETE;
 import static com.inceptai.wifimonitoringservice.actionlibrary.ActionResult.ActionResultCodes.GENERAL_ERROR;
 import static com.inceptai.wifimonitoringservice.actionlibrary.ActionResult.ActionResultCodes.SUCCESS;
 
@@ -155,14 +156,19 @@ public class ServiceActionTaker {
                         modeAfterRepair = (Integer) repairResult.getPayload();
                         final FutureAction getWifiInfo = actionLibrary.getWifiInfo(ACTION_TIMEOUT_MS);
                         wifiInfoResult = getWifiInfo.getFuture().get();
-                        if (modeAfterRepair == ConnectivityTester.WifiConnectivityMode.CONNECTED_AND_ONLINE) {
-                            //Repair successful -- get wifi info and show it to the user
-                            resultToReturn = new ActionResult(SUCCESS,
-                                    "Repaired !", wifiInfoResult.getPayload());
+                        if (ConnectivityTester.isConnected(modeAfterRepair)) {
+                            //Connected
+                            if (ConnectivityTester.isOnline(modeAfterRepair)) {
+                                resultToReturn = new ActionResult(SUCCESS,
+                                        "Repaired !", wifiInfoResult.getPayload());
+                            } else {
+                                resultToReturn = new ActionResult(FAILED_TO_COMPLETE,
+                                        "Toggled and connected, but unable to put wifi in online mode: mode found " +
+                                                ConnectivityTester.connectivityModeToString(modeAfterRepair), wifiInfoResult.getPayload());
+                            }
                         } else {
                             resultToReturn = new ActionResult(GENERAL_ERROR,
-                                    "Toggled and connected, but unable to put wifi in online mode: mode found " +
-                                            ConnectivityTester.connectivityModeToString(modeAfterRepair), wifiInfoResult.getPayload());
+                                    "Unable to toggle and connect: error ", null);
                         }
                     } else {
                         if (repairResult != null) {
@@ -173,10 +179,10 @@ public class ServiceActionTaker {
                                     "Unable to toggle and connect: error ", null);
                         }
                     }
-                    ActionLog.v("ActionTaker: Got the result for  " + repairWifiNetworkAction.getName() + " result " + repairResult.getStatusString());
+                    ServiceLog.v("ActionTaker: Got the result for  " + repairWifiNetworkAction.getName() + " result " + repairResult.getStatusString());
                 } catch (Exception e) {
                     e.printStackTrace(System.out);
-                    ActionLog.w("ActionTaker: Exception getting wifi results: " + e.toString());
+                    ServiceLog.w("ActionTaker: Exception getting wifi results: " + e.toString());
                 } finally {
                     repairResultFuture.set(resultToReturn);
                     sendCallbackForActionCompleted(repairWifiNetworkAction, resultToReturn);
@@ -185,6 +191,67 @@ public class ServiceActionTaker {
         }, executor);
         return repairResultFuture;
     }
+
+    public ListenableFuture<ActionResult> iterateAndRepairConnection() {
+        final SettableFuture<ActionResult> repairResultFuture = SettableFuture.create();
+        final FutureAction repairWifiNetworkAction = actionLibrary.iterateAndRepairWifiNetwork(ACTION_TIMEOUT_MS);
+        sendCallbackForActionStarted(repairWifiNetworkAction);
+        wifiInfoAfterRepair = null;
+        repairWifiNetworkAction.getFuture().addListener(new Runnable() {
+            @Override
+            public void run() {
+                ActionResult repairResult = null;
+                ActionResult wifiInfoResult = null;
+                ActionResult resultToReturn = null;
+                int modeAfterRepair = ConnectivityTester.WifiConnectivityMode.UNKNOWN;
+                try {
+                    repairResult = repairWifiNetworkAction.getFuture().get();
+                    if (repairResult != null && repairResult.getStatus() == SUCCESS) {
+                        modeAfterRepair = (Integer) repairResult.getPayload();
+                        final FutureAction getWifiInfo = actionLibrary.getWifiInfo(ACTION_TIMEOUT_MS);
+                        wifiInfoResult = getWifiInfo.getFuture().get();
+                        ServiceLog.v("In iterateAndRepairConnection: modeAfterRepair: " + modeAfterRepair);
+                        if (ConnectivityTester.isConnected(modeAfterRepair)) {
+                            //Connected
+                            if (ConnectivityTester.isOnline(modeAfterRepair)) {
+                                resultToReturn = new ActionResult(SUCCESS,
+                                        "Repaired !", wifiInfoResult.getPayload());
+                                ServiceLog.v("In iterateAndRepairConnection: returning online + success ");
+                            } else {
+                                resultToReturn = new ActionResult(FAILED_TO_COMPLETE,
+                                        "Toggled and connected, but unable to put wifi in online mode: mode found " +
+                                                ConnectivityTester.connectivityModeToString(modeAfterRepair), wifiInfoResult.getPayload());
+                                ServiceLog.v("In iterateAndRepairConnection: returning offline + failed to complete ");
+                            }
+                        } else {
+                            resultToReturn = new ActionResult(GENERAL_ERROR,
+                                    "Unable to toggle and connect: error ", null);
+                            ServiceLog.v("In iterateAndRepairConnection: returning general error 1 ");
+                        }
+                    } else {
+                        if (repairResult != null) {
+                            resultToReturn = new ActionResult(repairResult.getStatus(),
+                                    "Unable to toggle and connect: error " + repairResult.getStatusString(), null);
+                            ServiceLog.v("In iterateAndRepairConnection: returning: " + repairResult.getStatus() + " ,  " + repairResult.getStatusString());
+                        } else {
+                            resultToReturn = new ActionResult(GENERAL_ERROR,
+                                    "Unable to toggle and connect: error ", null);
+                            ServiceLog.v("In iterateAndRepairConnection: returning GENERAL error 2");
+                        }
+                    }
+                    ServiceLog.v("ActionTaker: Got the result for  " + repairWifiNetworkAction.getName() + " result " + repairResult.getStatusString());
+                } catch (Exception e) {
+                    e.printStackTrace(System.out);
+                    ServiceLog.w("ActionTaker: Exception getting wifi results: " + e.toString());
+                } finally {
+                    repairResultFuture.set(resultToReturn);
+                    sendCallbackForActionCompleted(repairWifiNetworkAction, resultToReturn);
+                }
+            }
+        }, executor);
+        return repairResultFuture;
+    }
+
 
     public void cancelPendingActions() {
         actionLibrary.cancelPendingActions();
@@ -215,10 +282,10 @@ public class ServiceActionTaker {
                 ActionResult result = null;
                 try {
                     result = futureAction.getFuture().get();
-                    ActionLog.v("ActionTaker: Got the result for  " + futureAction.getName() + " result " + result.getStatusString());
+                    ServiceLog.v("ActionTaker: Got the result for  " + futureAction.getName() + " result " + result.getStatusString());
                 }catch (Exception e) {
                     e.printStackTrace(System.out);
-                    ActionLog.w("ActionTaker: Exception getting wifi results: " + e.toString());
+                    ServiceLog.w("ActionTaker: Exception getting wifi results: " + e.toString());
                     //Informing inference engine of the error.
                 } finally {
                     sendCallbackForActionCompleted(futureAction, result);

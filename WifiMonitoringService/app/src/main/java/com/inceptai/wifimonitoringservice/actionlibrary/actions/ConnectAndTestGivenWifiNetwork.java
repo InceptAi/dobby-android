@@ -17,35 +17,39 @@ import java.util.concurrent.ScheduledExecutorService;
  * Created by vivek on 7/5/17.
  */
 
-public class RepairWifiNetwork extends FutureAction {
-    private static final int MAX_CONNECTIVITY_TRIES = 10;
-    private static final long GAP_BETWEEN_TRIES_MS = 1000;
-    public RepairWifiNetwork(Context context,
-                             Executor executor,
-                             ScheduledExecutorService scheduledExecutorService,
-                             NetworkActionLayer networkActionLayer,
-                             long actionTimeOutMs) {
+public class ConnectAndTestGivenWifiNetwork extends FutureAction {
+    private int networkId;
+    private long gapBetweenChecksMs;
+    private int maxConnectivityChecks;
+
+    public ConnectAndTestGivenWifiNetwork(Context context,
+                                          Executor executor,
+                                          ScheduledExecutorService scheduledExecutorService,
+                                          NetworkActionLayer networkActionLayer,
+                                          long actionTimeOutMs,
+                                          int networkId,
+                                          int maxConnectivityChecks,
+                                          long gapBetweenChecksMs) {
         super(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
+        this.networkId = networkId;
+        this.maxConnectivityChecks = maxConnectivityChecks;
+        this.gapBetweenChecksMs = gapBetweenChecksMs;
     }
 
     @Override
     public void post() {
-        final FutureAction toggleWifiAction = new ToggleWifi(context, executor,
-                scheduledExecutorService, networkActionLayer, actionTimeOutMs);
-        final FutureAction connectToBestWifiNetwork =
-                new ConnectToBestConfiguredNetworkIfAvailable(context, executor,
-                        scheduledExecutorService, networkActionLayer, actionTimeOutMs);
-        final FutureAction connectivityAction = new PerformConnectivityTest(context, executor,
-                scheduledExecutorService, networkActionLayer, actionTimeOutMs, MAX_CONNECTIVITY_TRIES, GAP_BETWEEN_TRIES_MS);
-        toggleWifiAction.uponCompletion(connectToBestWifiNetwork);
-        connectToBestWifiNetwork.uponCompletion(connectivityAction);
-        connectivityAction.getFuture().addListener(new Runnable() {
+        final FutureAction connectToWifiAction = new ConnectWithGivenWifiNetwork(context,
+                executor, scheduledExecutorService, networkActionLayer,
+                actionTimeOutMs, networkId);
+        final FutureAction performConnectivityCheckAction = new PerformConnectivityTest(context,
+                executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs,
+                maxConnectivityChecks, gapBetweenChecksMs);
+        connectToWifiAction.uponSuccessfulCompletion(performConnectivityCheckAction);
+        performConnectivityCheckAction.getFuture().addListener(new Runnable() {
             @Override
             public void run() {
-                ActionResult actionResult = null;
                 try {
-                    actionResult = connectivityAction.getFuture().get();
-                    setResult(actionResult);
+                    setResult(performConnectivityCheckAction.getFuture().get());
                 } catch (InterruptedException | ExecutionException e) {
                     e.printStackTrace(System.out);
                     ServiceLog.w("ActionTaker: Exception getting wifi results: " + e.toString());
@@ -53,12 +57,12 @@ public class RepairWifiNetwork extends FutureAction {
                 }
             }
         }, executor);
-        toggleWifiAction.post();
+        connectToWifiAction.post();
     }
 
     @Override
     public String getName() {
-        return context.getString(R.string.repair_wifi_network);
+        return context.getString(R.string.connect_and_test_given_wifi);
     }
 
     @Override

@@ -16,7 +16,7 @@ import android.support.annotation.Nullable;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
-import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLog;
+import com.inceptai.wifimonitoringservice.utils.ServiceLog;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -207,7 +207,7 @@ public class WifiController {
                 return wifiScanFuture;
             }
         } catch (SecurityException e) {
-            ActionLog.e("Security Exception while scanning");
+            ServiceLog.e("Security Exception while scanning");
         }
         return null;
     }
@@ -215,7 +215,6 @@ public class WifiController {
 
     public ListenableFuture<List<WifiConfiguration>> getWifiConfiguration() {
         if (wifiConfigurationFuture != null && !wifiConfigurationFuture.isDone()) {
-            //WifiScan in progress, just return the current future.
             return wifiConfigurationFuture;
         }
         wifiConfigurationFuture = SettableFuture.create();
@@ -266,7 +265,7 @@ public class WifiController {
         try {
             context.unregisterReceiver(wifiScanReceiver);
         } catch (IllegalArgumentException e) {
-            ActionLog.v("Exception while un-registering wifi receiver: " + e);
+            ServiceLog.v("Exception while un-registering wifi receiver: " + e);
         }
         wifiReceiverState = WIFI_RECEIVER_UNREGISTERED;
     }
@@ -292,7 +291,7 @@ public class WifiController {
                         combinedScanResult.addAll(wifiList);
                         printScanResults(wifiList);
                     } catch (SecurityException e) {
-                        ActionLog.e("Security exception while getting scan results: " + e);
+                        ServiceLog.e("Security exception while getting scan results: " + e);
                         setWifiScanFuture(combinedScanResult);
                         unregisterScanReceiver();
                         resetCurrentScans();
@@ -300,10 +299,10 @@ public class WifiController {
                     }
                     //We got some results back from getScanResults -- so presumably we have location
                     if (doScanAgain && wifiManager.startScan()) {
-                        ActionLog.v("Starting Wifi Scan again, currentScans: " + currentScans);
+                        ServiceLog.v("Starting Wifi Scan again, currentScans: " + currentScans);
                     } else {
                         updateWifiScanResults();
-                        ActionLog.v("Un-registering Scan Receiver");
+                        ServiceLog.v("Un-registering Scan Receiver");
                         unregisterScanReceiver();
                         resetCurrentScans();
                     }
@@ -343,13 +342,13 @@ public class WifiController {
             sb.append((scanResultList.get(i)).toString());
             sb.append("\\n");
         }
-        ActionLog.i("Wifi scan result: " + sb.toString());
+        ServiceLog.i("Wifi scan result: " + sb.toString());
     }
 
     private void setWifiScanFuture(List<ScanResult> scanResultList) {
         if (wifiScanFuture != null) {
             boolean setResult = wifiScanFuture.set(scanResultList);
-            ActionLog.v("Setting wifi scan future: return value: " + setResult);
+            ServiceLog.v("Setting wifi scan future: return value: " + setResult);
         }
     }
 
@@ -385,7 +384,7 @@ public class WifiController {
         try {
             context.unregisterReceiver(wifiStateReceiver);
         } catch (IllegalArgumentException e) {
-            ActionLog.v("Exception while unregistering wifi state receiver: " + e);
+            ServiceLog.v("Exception while unregistering wifi state receiver: " + e);
         }
     }
 

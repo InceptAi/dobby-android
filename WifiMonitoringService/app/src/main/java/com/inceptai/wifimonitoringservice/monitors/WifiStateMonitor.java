@@ -12,7 +12,6 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.support.annotation.Nullable;
 
-import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLog;
 import com.inceptai.wifimonitoringservice.utils.ServiceLog;
 import com.inceptai.wifimonitoringservice.utils.Utils;
 import com.inceptai.wifimonitoringservice.utils.WifiStateData;
@@ -115,7 +114,7 @@ public class WifiStateMonitor {
         try {
             context.unregisterReceiver(wifiIntentReceiver);
         } catch (IllegalArgumentException e) {
-            ActionLog.v("Exception while un-registering wifi receiver: " + e);
+            ServiceLog.v("Exception while un-registering wifi receiver: " + e);
         }
     }
 

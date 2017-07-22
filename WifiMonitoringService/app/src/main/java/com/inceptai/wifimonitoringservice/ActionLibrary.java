@@ -16,13 +16,14 @@ import com.inceptai.wifimonitoringservice.actionlibrary.actions.GetConfiguredNet
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.GetDHCPInfo;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.GetNearbyWifiNetworks;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.GetWifiInfo;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.IterateAndRepairWifiNetwork;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.PerformConnectivityTest;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.RepairWifiNetwork;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.ResetConnectionWithCurrentWifi;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.ToggleWifi;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.TurnWifiOff;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.TurnWifiOn;
-import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLog;
+import com.inceptai.wifimonitoringservice.utils.ServiceLog;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -150,6 +151,12 @@ public class ActionLibrary {
         return futureAction;
     }
 
+    public FutureAction iterateAndRepairWifiNetwork(long actionTimeOutMs) {
+        FutureAction futureAction = new IterateAndRepairWifiNetwork(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
+        submitAction(futureAction);
+        return futureAction;
+    }
+
     public FutureAction performConnectivityTest(long actionTimeOutMs) {
         FutureAction futureAction = new PerformConnectivityTest(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
         submitAction(futureAction);
@@ -211,10 +218,10 @@ public class ActionLibrary {
                 ActionResult result = null;
                 try {
                     result = futureAction.getFuture().get();
-                    ActionLog.v("ActionTaker: Got the result for  " + futureAction.getName() + " result " + result.getStatusString());
+                    ServiceLog.v("ActionTaker: Got the result for  " + futureAction.getName() + " result " + result.getStatusString());
                 }catch (Exception e) {
                     e.printStackTrace(System.out);
-                    ActionLog.w("ActionTaker: Exception getting wifi results: " + e.toString());
+                    ServiceLog.w("ActionTaker: Exception getting wifi results: " + e.toString());
                     //Informing inference engine of the error.
                 } finally {
                     finishAction(futureAction);

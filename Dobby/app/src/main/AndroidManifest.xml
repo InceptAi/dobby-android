@@ -39,7 +39,8 @@
             </intent-filter>
         </service>
 
-
+        <service android:name="com.inceptai.wifimonitoringservice.WifiMonitoringService">
+        </service>
 
     </application>
 

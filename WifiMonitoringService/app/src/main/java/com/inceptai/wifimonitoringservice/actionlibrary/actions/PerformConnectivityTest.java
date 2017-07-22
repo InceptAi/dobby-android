@@ -17,17 +17,34 @@ import java.util.concurrent.ScheduledExecutorService;
 
 public class PerformConnectivityTest extends FutureAction {
     private final boolean PERFORM_TEST_ONLY_ON_ACTIVE_NETWORK = false;
+    private int maxTests;
+    private long gapBetweenChecksMs;
     public PerformConnectivityTest(Context context,
                                    Executor executor,
                                    ScheduledExecutorService scheduledExecutorService,
                                    NetworkActionLayer networkActionLayer,
                                    long actionTimeOutMs) {
         super(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
+        maxTests = 10;
+        gapBetweenChecksMs = 300;
     }
+
+    public PerformConnectivityTest(Context context,
+                                   Executor executor,
+                                   ScheduledExecutorService scheduledExecutorService,
+                                   NetworkActionLayer networkActionLayer,
+                                   long actionTimeOutMs,
+                                   int maxTests,
+                                   long gapBetweenChecksMs) {
+        super(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
+        this.maxTests = maxTests;
+        this.gapBetweenChecksMs = gapBetweenChecksMs;
+    }
+
 
     @Override
     public void post() {
-        setFuture(networkActionLayer.connectivityTest(PERFORM_TEST_ONLY_ON_ACTIVE_NETWORK));
+        setFuture(networkActionLayer.connectivityTest(PERFORM_TEST_ONLY_ON_ACTIVE_NETWORK, maxTests, gapBetweenChecksMs));
     }
 
     @Override

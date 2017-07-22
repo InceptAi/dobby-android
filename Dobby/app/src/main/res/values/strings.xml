@@ -125,7 +125,7 @@
     <string name="automatic_repair_on">Automatic Repair: ON</string>
     <string name="automatic_repair_off">Automatic Repair: OFF</string>
     <string name="repair_wifi_now">Repair WiFi Now</string>
-    <string name="repairing_wifi">Repairing WiFi &#8230;</string>
+    <string name="repairing_wifi">Repairing, need 20&#8212;30 secs</string>
     <string name="repair_wifi_success">Repair Succeeded</string>
     <string name="repair_wifi_failure">Repair Failed</string>
     <string name="repair_service_title">Repair your WiFi with one tap !</string>

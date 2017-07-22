@@ -6,8 +6,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 
-import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLog;
 import com.inceptai.wifimonitoringservice.utils.ServiceAlarm;
+import com.inceptai.wifimonitoringservice.utils.ServiceLog;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -77,7 +77,7 @@ public class PeriodicCheckMonitor {
         try {
             context.unregisterReceiver(periodicCheckReceiver);
         } catch (IllegalArgumentException e) {
-            ActionLog.v("Exception while un-registering wifi receiver: " + e);
+            ServiceLog.v("Exception while un-registering wifi receiver: " + e);
         }
     }
 
@@ -93,7 +93,7 @@ public class PeriodicCheckMonitor {
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
             if (action.equals(PERIODIC_CHECK_INTENT)) {
-                ActionLog.v("OnReceive Alarm Manager.");
+                ServiceLog.v("OnReceive Alarm Manager.");
                 if (periodicCheckCallback != null) {
                     periodicCheckCallback.checkFired();
                 }

@@ -106,9 +106,9 @@ public class NetworkActionLayer {
         return null;
     }
 
-    public ListenableFuture<Integer> connectivityTest(boolean onlyOnActiveNetwork) {
+    public ListenableFuture<Integer> connectivityTest(boolean onlyOnActiveNetwork, int numTests, long gapBetweenConnectivityChecks) {
         if (connectivityTester != null) {
-            return connectivityTester.connectivityTest(onlyOnActiveNetwork, isWifiConnected());
+            return connectivityTester.connectivityTest(onlyOnActiveNetwork, isWifiConnected(), numTests, gapBetweenConnectivityChecks);
         }
         return null;
     }

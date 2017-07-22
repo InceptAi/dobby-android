@@ -7,6 +7,7 @@
     <string name="connect_to_best_wifi">Connecting To Best Wifi Available</string>
     <string name="connect_to_active_wifi">Connecting To Active Wifi</string>
     <string name="connect_to_given_wifi">Connecting To Given Wifi</string>
+    <string name="connect_and_test_given_wifi">Connecting and Testing Given Wifi</string>
     <string name="reset_connection_to_current_wifi">Resetting Connection To Active Wifi</string>
     <string name="forget_active_wifi">Forgetting Current Wifi</string>
     <string name="disable_active_wifi">Disabling Future Connections To Current Wifi</string>

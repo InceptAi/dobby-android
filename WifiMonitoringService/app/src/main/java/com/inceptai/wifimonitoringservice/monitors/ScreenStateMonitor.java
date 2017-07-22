@@ -11,7 +11,7 @@ import android.content.IntentFilter;
 import android.os.Build;
 import android.os.PowerManager;
 
-import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLog;
+import com.inceptai.wifimonitoringservice.utils.ServiceLog;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -85,7 +85,7 @@ public class ScreenStateMonitor {
         try {
             context.unregisterReceiver(screenStateIntentReceiver);
         } catch (IllegalArgumentException e) {
-            ActionLog.v("Exception while un-registering wifi receiver: " + e);
+            ServiceLog.v("Exception while un-registering wifi receiver: " + e);
         }
     }
 

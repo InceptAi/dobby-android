@@ -7,7 +7,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.wifimonitoringservice.R;
 import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.NetworkActionLayer;
-import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLog;
+import com.inceptai.wifimonitoringservice.utils.ServiceLog;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
@@ -42,7 +42,7 @@ public class ToggleWifi extends FutureAction {
                     setResult(actionResult);
                 } catch (InterruptedException | ExecutionException e) {
                     e.printStackTrace(System.out);
-                    ActionLog.w("ActionTaker: Exception getting wifi results: " + e.toString());
+                    ServiceLog.w("ActionTaker: Exception getting wifi results: " + e.toString());
                     setResult(new ActionResult(ActionResult.ActionResultCodes.EXCEPTION, e.toString()));
                 }
             }

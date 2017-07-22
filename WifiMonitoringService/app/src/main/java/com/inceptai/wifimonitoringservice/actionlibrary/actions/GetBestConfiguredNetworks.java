@@ -9,8 +9,8 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.wifimonitoringservice.R;
 import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.NetworkActionLayer;
-import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLog;
 import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionUtils;
+import com.inceptai.wifimonitoringservice.utils.ServiceLog;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,7 +52,7 @@ public class GetBestConfiguredNetworks extends FutureAction {
                     computeBestConfiguredNetworks();
                 }catch (InterruptedException | ExecutionException e) {
                     e.printStackTrace(System.out);
-                    ActionLog.w("ActionTaker: Exception getting wifi results: " + e.toString());
+                    ServiceLog.w("ActionTaker: Exception getting wifi results: " + e.toString());
                     setResult(new ActionResult(ActionResult.ActionResultCodes.EXCEPTION, e.toString()));
                 }
             }
@@ -66,7 +66,7 @@ public class GetBestConfiguredNetworks extends FutureAction {
                     computeBestConfiguredNetworks();
                 }catch (InterruptedException | ExecutionException e) {
                     e.printStackTrace(System.out);
-                    ActionLog.w("ActionTaker: Exception getting wifi results: " + e.toString());
+                    ServiceLog.w("ActionTaker: Exception getting wifi results: " + e.toString());
                     setResult(new ActionResult(ActionResult.ActionResultCodes.EXCEPTION, e.toString()));
                 }
             }
@@ -104,7 +104,9 @@ public class GetBestConfiguredNetworks extends FutureAction {
     synchronized private void setWifiConfigurationList(ActionResult actionResult) {
         if (actionResult != null) {
             wifiConfigurationList = (List<WifiConfiguration>) actionResult.getPayload();
-        } else {
+        }
+        //Get Configured networks can return null so need to handle this.
+        if (wifiConfigurationList == null) {
             wifiConfigurationList = new ArrayList<>();
         }
     }

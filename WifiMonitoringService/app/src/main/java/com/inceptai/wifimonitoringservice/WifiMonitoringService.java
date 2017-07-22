@@ -12,8 +12,8 @@ import android.widget.Toast;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
-import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLog;
 import com.inceptai.wifimonitoringservice.utils.ServiceAlarm;
+import com.inceptai.wifimonitoringservice.utils.ServiceLog;
 import com.inceptai.wifimonitoringservice.utils.Utils;
 
 import static android.os.Process.THREAD_PRIORITY_BACKGROUND;
@@ -76,14 +76,15 @@ public class WifiMonitoringService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        String notificationInfoIntent = null;
         if (intent != null) {
             if (intent.hasExtra(ServiceAlarm.ALARM_START_TYPE)) {
-                ActionLog.v("Service started with alarm");
+                ServiceLog.v("Service started with alarm");
             } else {
-                ActionLog.v("Service started with start intent");
+                ServiceLog.v("Service started with start intent");
             }
+            notificationInfoIntent = intent.getStringExtra(EXTRA_INTENT_NAME);
         }
-        String notificationInfoIntent = intent.getStringExtra(EXTRA_INTENT_NAME);
         // For each start request, send a message to start a job and deliver the
         // start ID so we know which request we're stopping when we finish the job
         Message msg = mServiceHandler.obtainMessage();
@@ -115,6 +116,12 @@ public class WifiMonitoringService extends Service {
             return wifiServiceCore.forceRepairWifiNetwork();
         }
         return null;
+    }
+
+    public void sendStatusUpdateNotification() {
+        if (wifiServiceCore !=  null) {
+            wifiServiceCore.sendStatusUpdateNotification();
+        }
     }
 
     /**

@@ -19,6 +19,7 @@ import android.support.annotation.UiThread;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.ShareCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.CardView;
@@ -523,7 +524,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                 showRepairResults((WifiInfo) msg.obj);
                 break;
             case MSG_UPDATE_REPAIR_STATUS:
-                restoreRepairButton(msg.arg1, msg.arg2);
+                restoreRepairButton(msg.arg1);
                 break;
             case MSG_SHOW_REPAIR_DIALOG:
                 ArrayList<String> repairStringList = ((ArrayList<String>)msg.obj);
@@ -537,13 +538,12 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         return true;
     }
 
-    public void handleRepairFinished(WifiInfo wifiInfo, int repairStatusTextId, int color, boolean repairSuccessful) {
-        int repairCode = repairSuccessful ? 1 : 0;
+    public void handleRepairFinished(WifiInfo wifiInfo, int repairStatusTextId, boolean repairSuccessful) {
         String repairSummary = Utils.userReadableRepairSummary(repairSuccessful, wifiInfo);
         String repairTitle = getString(repairStatusTextId);
         ArrayList<String> combinedStrings = new ArrayList<>(Arrays.asList(repairTitle, repairSummary));
         Message.obtain(handler, MSG_REPAIR_INFO_AVAILABLE, wifiInfo).sendToTarget();
-        Message.obtain(handler, MSG_UPDATE_REPAIR_STATUS, repairStatusTextId, color).sendToTarget();
+        Message.obtain(handler, MSG_UPDATE_REPAIR_STATUS, repairStatusTextId, 0).sendToTarget();
         Message.obtain(handler, MSG_SHOW_REPAIR_DIALOG, combinedStrings).sendToTarget();
     }
 
@@ -704,6 +704,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         */
 
         repairFl = (FrameLayout) rootView.findViewById(R.id.repair_fl);
+        repairFl.setEnabled(true);
         repairIv = (ImageView) rootView.findViewById(R.id.repair_iv);
         repairTv = (TextView) rootView.findViewById(R.id.repair_tv);
 
@@ -711,6 +712,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             @Override
             public void onClick(View v) {
                 sendRepairCommandToService();
+                repairFl.setEnabled(false);
             }
         });
 
@@ -1208,7 +1210,10 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
     private void showRepairSummary(String title, String summary) {
         WifiDocDialogFragment fragment = WifiDocDialogFragment.forRepairSummary(title, summary);
-        fragment.show(getActivity().getSupportFragmentManager(), "Repair");
+        //fragment.show(getActivity().getSupportFragmentManager(), "Repair");
+        FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
+        ft.add(fragment, "Repair");
+        ft.commitAllowingStateLoss();
         dobbyAnalytics.repairSummaryShown();
     }
 
@@ -1278,6 +1283,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             serviceSwitch.setEnabled(false);
             repairTv.setText(R.string.repairing_wifi);
             statusTv.setText(R.string.repairing_wifi);
+            yourNetworkCv.setVisibility(View.GONE);
+            pingCv.setVisibility(View.GONE);
+            statusTv.setVisibility(View.VISIBLE);
             rotateRepairImage();
             mListener.onWifiRepairInitiated();
         }
@@ -1292,11 +1300,11 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         repairIv.startAnimation(anim);
     }
 
-    private void restoreRepairButton(int stringId, int color) {
+    private void restoreRepairButton(int stringId) {
         repairIv.setAnimation(null);
         repairTv.setText(stringId);
-        repairTv.setTextColor(color);
         //Disabling service toggling while repair is going on
+        repairFl.setEnabled(true);
         serviceSwitch.setEnabled(true);
     }
 }
