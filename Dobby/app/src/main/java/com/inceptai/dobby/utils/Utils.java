@@ -1021,7 +1021,7 @@ public class Utils {
         return Boolean.valueOf(readSharedSetting(context, WIFI_MONITORING_SERVICE_STATE, Utils.TRUE_STRING));
     }
 
-    public static String userReadableRepairSummary(boolean repairSuccessful, WifiInfo wifiInfo) {
+    public static String userReadableRepairSummary(boolean repairSuccessful, boolean toggleSuccessful, WifiInfo wifiInfo) {
        StringBuilder sb = new StringBuilder();
         if (repairSuccessful) {
             if (wifiInfo != null) {
@@ -1040,15 +1040,18 @@ public class Utils {
                         "a captive portal which requires sign-in for access.");
                 sb.append("Run full tests to see what could be the issue here.");
             } else {
-                sb.append("Sorry, we were unable to repair your WiFi connection. " +
-                        "We were unable to find a good WiFi network to connect to. If you recently " +
-                        "updated your phone software, try forgetting the network and connecing again. " +
-                        "Further, if your WiFi won't turn on, it could be a memory issue, so make sure to clean unused " +
-                        "apps and have enough RAM on your device.");
+                if (toggleSuccessful) {
+                    sb.append("Sorry, we were unable to repair your WiFi connection. " +
+                            "We were unable to find a good WiFi network to connect to. " +
+                            "Try running the full tests to see whats going on. ");
+                } else {
+                    sb.append("Sorry, we were unable to repair your WiFi connection. " +
+                            "Specifically, if your WiFi won't turn on, it could be a memory issue, so make sure to clean unused " +
+                            "apps and have enough RAM on your device.");
+                }
             }
         }
         return sb.toString();
     }
-
 
 }

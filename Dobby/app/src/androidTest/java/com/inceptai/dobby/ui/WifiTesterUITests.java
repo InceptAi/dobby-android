@@ -109,7 +109,7 @@ public class WifiTesterUITests {
 
     @After
     public void tearDown() throws Exception {
-        Log.d(TAG, "TEARDOWN");
+        Log.d(WIFI_DOC_MAIN_FRAGMENT, "TEARDOWN");
 
         goBackN();
 
@@ -122,7 +122,7 @@ public class WifiTesterUITests {
             for (int i = 0; i < N; i++)
                 Espresso.pressBack();
         } catch (NoActivityResumedException e) {
-            Log.e(TAG, "Closed all activities", e);
+            Log.e(WIFI_DOC_MAIN_FRAGMENT, "Closed all activities", e);
         }
     }
 

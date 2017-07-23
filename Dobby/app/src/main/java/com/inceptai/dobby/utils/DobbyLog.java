@@ -25,7 +25,7 @@ public class DobbyLog {
         if (BuildConfig.DEBUG) {
             Log.i(TAG, message);
         } else {
-            // Log.i(TAG, message);
+            // Log.i(WIFI_DOC_MAIN_FRAGMENT, message);
             FirebaseCrash.logcat(Log.INFO, TAG, message);
         }
     }

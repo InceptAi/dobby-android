@@ -43,6 +43,7 @@ public class WifiDocDialogFragment extends DialogFragment {
     public static final int DIALOG_SHOW_SIMPLE_FEEDBACK = 1005;
     public static final int DIALOG_SHOW_LOCATION_PERMISSION_REQUEST = 1006;
     public static final int DIALOG_SHOW_REPAIR_SUMMARY = 1007;
+    
 
 
     public static final String DIALOG_PAYLOAD = "payload";

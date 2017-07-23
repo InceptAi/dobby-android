@@ -79,7 +79,7 @@ import static com.inceptai.dobby.utils.Utils.ZERO_POINT_ZERO;
 import static com.inceptai.dobby.utils.Utils.nonLinearBwScale;
 
 public class WifiDocMainFragment extends Fragment implements View.OnClickListener, NewBandwidthAnalyzer.ResultsCallback, Handler.Callback {
-    public static final String TAG = "WifiDocMainFragment";
+    public static final String WIFI_DOC_MAIN_FRAGMENT = "WifiDocMainFragment";
     private static final int PERMISSION_COARSE_LOCATION_REQUEST_CODE = 101;
     private static final String ARG_PARAM1 = "param1";
     private static final int MSG_UPDATED_CIRCULAR_GAUGE = 1001;
@@ -123,6 +123,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private LinearLayout bottomButtonBarLl;
     private FrameLayout expertChatFl;
     private FrameLayout repairFl;
+    private FrameLayout serviceFl;
 
     //Service and repair stuff
     private Switch serviceSwitch;
@@ -266,6 +267,21 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         }
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (mListener != null) {
+            mListener.onFragmentReady();
+        }
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (mListener != null) {
+            mListener.onFragmentGone();
+        }
+    }
 
     @Override
     public void onAttach(Context context) {
@@ -323,6 +339,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         void onWifiMonitoringServiceDisabled();
         void onWifiMonitoringServiceEnabled();
         void onWifiRepairCancelled();
+        void onFragmentReady();
+        void onFragmentGone();
     }
 
 
@@ -541,10 +559,11 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         return true;
     }
 
-    public void handleRepairFinished(WifiInfo wifiInfo, int repairStatusTextId, boolean repairSuccessful) {
+    public void handleRepairFinished(WifiInfo wifiInfo, int repairStatusTextId,
+                                     boolean repairSuccessful, boolean toggleSuccessful) {
         repairing = false;
-        String repairSummary = Utils.userReadableRepairSummary(repairSuccessful, wifiInfo);
-        String repairTitle = getString(repairStatusTextId);
+        String repairSummary = Utils.userReadableRepairSummary(repairSuccessful, toggleSuccessful, wifiInfo);
+        String repairTitle = getResources().getString(repairStatusTextId);
         ArrayList<String> combinedStrings = new ArrayList<>(Arrays.asList(repairTitle, repairSummary));
         Message.obtain(handler, MSG_REPAIR_INFO_AVAILABLE, wifiInfo).sendToTarget();
         Message.obtain(handler, MSG_UPDATE_REPAIR_STATUS, repairStatusTextId, 0).sendToTarget();
@@ -732,6 +751,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             }
         });
 
+        serviceFl = (FrameLayout) rootView.findViewById(R.id.service_fl);
+        serviceFl.setClickable(false);
         serviceSwitchTv = (TextView) rootView.findViewById(R.id.service_switch_tv);
         serviceSwitch = (Switch) rootView.findViewById(R.id.service_switch);
         if (Utils.checkIsWifiMonitoringEnabled(getContext())) {
@@ -1302,9 +1323,10 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             repairTv.setText(R.string.repairing_wifi_cancel);
             repairTv.setTextColor(Color.RED);
             statusTv.setText(R.string.repairing_wifi);
-            yourNetworkCv.setVisibility(View.GONE);
-            pingCv.setVisibility(View.GONE);
+            yourNetworkCv.setVisibility(View.INVISIBLE);
+            pingCv.setVisibility(View.INVISIBLE);
             statusTv.setVisibility(View.VISIBLE);
+            statusCv.setVisibility(View.VISIBLE);
             rotateRepairImage();
             mListener.onWifiRepairInitiated();
         }

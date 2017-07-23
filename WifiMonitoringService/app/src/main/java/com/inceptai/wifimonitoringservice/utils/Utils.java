@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
+import android.net.wifi.WifiInfo;
 import android.provider.Settings;
 import android.support.v4.content.LocalBroadcastManager;
 
@@ -191,6 +192,38 @@ public class Utils {
             }
         }
         return ssid;
+    }
+
+    public static String userReadableRepairSummary(boolean repairSuccessful, boolean toggleSuccessful, WifiInfo wifiInfo) {
+        StringBuilder sb = new StringBuilder();
+        if (repairSuccessful) {
+            if (wifiInfo != null) {
+                sb.append("Hooray ! You are connected and online via wifi network: " + wifiInfo.getSSID() + ". ");
+                sb.append(" Run full tests to see what speeds are you currently getting !");
+            } else {
+                //Never happens
+                sb.append("Repair was successful and you are now online via WiFi !");
+                sb.append("Run full tests to see what speeds are you currently getting !");
+            }
+        } else {
+            if (wifiInfo != null) {
+                sb.append("You are connected to wifi network: " + wifiInfo.getSSID() + " but we can't reach Internet through this network. " +
+                        "This could be an issue with the router your Internet provider or you could be behind " +
+                        "a captive portal which requires sign-in for access.");
+                sb.append("Run full tests to see what could be the issue here.");
+            } else {
+                if (toggleSuccessful) {
+                    sb.append("Sorry, we were unable to repair your WiFi connection. " +
+                            "We were unable to find a good WiFi network to connect to. " +
+                            "Try running the full tests to see whats going on. ");
+                } else {
+                    sb.append("Sorry, we were unable to repair your WiFi connection. " +
+                            "Specifically, if your WiFi won't turn on, it could be a memory issue, so make sure to clean unused " +
+                            "apps and have enough RAM on your device.");
+                }
+            }
+        }
+        return sb.toString();
     }
 
 }

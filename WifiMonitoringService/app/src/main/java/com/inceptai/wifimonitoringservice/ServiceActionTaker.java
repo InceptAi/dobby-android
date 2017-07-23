@@ -10,6 +10,7 @@ import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.ConnectivityTester;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.FutureAction;
 import com.inceptai.wifimonitoringservice.utils.ServiceLog;
+import com.inceptai.wifimonitoringservice.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +23,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import static com.inceptai.wifimonitoringservice.actionlibrary.ActionResult.ActionResultCodes.FAILED_TO_COMPLETE;
 import static com.inceptai.wifimonitoringservice.actionlibrary.ActionResult.ActionResultCodes.GENERAL_ERROR;
 import static com.inceptai.wifimonitoringservice.actionlibrary.ActionResult.ActionResultCodes.SUCCESS;
+import static com.inceptai.wifimonitoringservice.actionlibrary.ActionResult.ActionResultCodes.UNKNOWN;
 
 
 /**
@@ -209,44 +211,51 @@ public class ServiceActionTaker {
         repairWifiNetworkAction.getFuture().addListener(new Runnable() {
             @Override
             public void run() {
-                ActionResult repairResult = null;
-                ActionResult wifiInfoResult = null;
+                ActionResult repairResult;
+                ActionResult wifiInfoResult;
                 ActionResult resultToReturn = null;
-                int modeAfterRepair = ConnectivityTester.WifiConnectivityMode.UNKNOWN;
+                WifiInfo wifiInfo = null;
+                String statusString;
+                @ActionResult.ActionResultCodes int repairResultCode = UNKNOWN;
+                int modeAfterRepair;
                 try {
                     repairResult = repairWifiNetworkAction.getFuture().get();
-                    if (repairResult != null && repairResult.getStatus() == SUCCESS) {
+                    if (ActionResult.isSuccessful(repairResult)) {
                         modeAfterRepair = (Integer) repairResult.getPayload();
                         final FutureAction getWifiInfo = actionLibrary.getWifiInfo(ACTION_TIMEOUT_MS);
                         wifiInfoResult = getWifiInfo.getFuture().get();
                         ServiceLog.v("In iterateAndRepairConnection: modeAfterRepair: " + modeAfterRepair);
+                        if (ActionResult.isSuccessful(wifiInfoResult)) {
+                            wifiInfo = (WifiInfo)wifiInfoResult.getPayload();
+                        }
                         if (ConnectivityTester.isConnected(modeAfterRepair)) {
                             //Connected
                             if (ConnectivityTester.isOnline(modeAfterRepair)) {
-                                resultToReturn = new ActionResult(SUCCESS,
-                                        "Repaired !", wifiInfoResult.getPayload());
+                                statusString = Utils.userReadableRepairSummary(true, true, wifiInfo);
+                                resultToReturn = new ActionResult(SUCCESS, statusString, wifiInfo);
                                 ServiceLog.v("In iterateAndRepairConnection: returning online + success ");
                             } else {
-                                resultToReturn = new ActionResult(FAILED_TO_COMPLETE,
-                                        "Toggled and connected, but unable to put wifi in online mode: mode found " +
-                                                ConnectivityTester.connectivityModeToString(modeAfterRepair), wifiInfoResult.getPayload());
+                                statusString = Utils.userReadableRepairSummary(false, true, wifiInfo);
+                                resultToReturn = new ActionResult(FAILED_TO_COMPLETE, statusString, wifiInfo);
                                 ServiceLog.v("In iterateAndRepairConnection: returning offline + failed to complete ");
                             }
                         } else {
-                            resultToReturn = new ActionResult(GENERAL_ERROR,
-                                    "Unable to toggle and connect: error ", null);
-                            ServiceLog.v("In iterateAndRepairConnection: returning general error 1 ");
+                            statusString = "Unable to connect to a good network with Internet. Manually connect to a good network and see if it works.";
+                            resultToReturn = new ActionResult(GENERAL_ERROR, statusString, null);
+                            ServiceLog.v("In iterateAndRepairConnection: returning general error " + statusString);
                         }
-                    } else {
-                        if (repairResult != null) {
+                    } else if (ActionResult.failedToComplete(repairResult)) {
+                        statusString = Utils.userReadableRepairSummary(false, false, null);
+                        resultToReturn = new ActionResult(repairResult.getStatus(), statusString, null);
+                        ServiceLog.v("In iterateAndRepairConnection: returning: " + statusString);
+                    } else if (repairResult != null) {
                             resultToReturn = new ActionResult(repairResult.getStatus(),
-                                    "Unable to toggle and connect: error " + repairResult.getStatusString(), null);
+                                    "Unable to toggle and connect to a good network" + repairResult.getStatusString(), null);
                             ServiceLog.v("In iterateAndRepairConnection: returning: " + repairResult.getStatus() + " ,  " + repairResult.getStatusString());
-                        } else {
+                    } else {
                             resultToReturn = new ActionResult(GENERAL_ERROR,
-                                    "Unable to toggle and connect: error ", null);
+                                    "Unable to toggle and connect to a good network", null);
                             ServiceLog.v("In iterateAndRepairConnection: returning GENERAL error 2");
-                        }
                     }
                     ServiceLog.v("ActionTaker: Got the result for  " + repairWifiNetworkAction.getName() + " result " + repairResult.getStatusString());
                 } catch (InterruptedException | CancellationException | ExecutionException e) {

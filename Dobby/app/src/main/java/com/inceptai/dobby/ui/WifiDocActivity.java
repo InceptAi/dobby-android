@@ -115,7 +115,7 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
     public void setupMainFragment() {
         // Insert the fragment by replacing any existing fragment
         FragmentManager fragmentManager = getSupportFragmentManager();
-        Fragment existingFragment = fragmentManager.findFragmentByTag(WifiDocMainFragment.TAG);
+        Fragment existingFragment = fragmentManager.findFragmentByTag(WifiDocMainFragment.WIFI_DOC_MAIN_FRAGMENT);
         if (existingFragment == null) {
             try {
                 existingFragment = (Fragment) WifiDocMainFragment.newInstance(Utils.EMPTY_STRING);
@@ -124,7 +124,7 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
             }
         }
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        fragmentTransaction.replace(R.id.wifi_doc_placeholder_fl, existingFragment, TAG);
+        fragmentTransaction.replace(R.id.wifi_doc_placeholder_fl, existingFragment, WifiDocMainFragment.WIFI_DOC_MAIN_FRAGMENT);
         // fragmentTransaction.addToBackStack(null);
         fragmentTransaction.commit();
         mainFragment = (WifiDocMainFragment) existingFragment;
@@ -293,6 +293,28 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
         }
     }
 
+    private WifiDocMainFragment getMainFragmentFromTag() {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        if (fragmentManager != null) {
+            Fragment existingFragment = fragmentManager.findFragmentByTag(WifiDocMainFragment.WIFI_DOC_MAIN_FRAGMENT);
+            if (existingFragment != null) {
+                return (WifiDocMainFragment) existingFragment;
+            }
+        }
+        return null;
+    }
+
+
+    @Override
+    public void onFragmentReady() {
+        mainFragment = getMainFragmentFromTag();
+    }
+
+    @Override
+    public void onFragmentGone() {
+        mainFragment = null;
+    }
+
     //Private stuff
     private void startRepair() {
 
@@ -317,14 +339,20 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
         int textId = R.string.repair_wifi_failure;
         WifiInfo repairedWifiInfo = null;
         boolean repairSuccessful = false;
+        boolean toggleSuccessful = true;
         if (ActionResult.isSuccessful(repairResult)) {
             textId = R.string.repair_wifi_success;
             repairSuccessful = true;
             repairedWifiInfo = (WifiInfo) repairResult.getPayload();
         } else if (ActionResult.failedToComplete(repairResult)){
             repairedWifiInfo = (WifiInfo) repairResult.getPayload();
+            if (repairedWifiInfo == null) {
+                toggleSuccessful = false;
+            }
         }
-        mainFragment.handleRepairFinished(repairedWifiInfo, textId, repairSuccessful);
+        if (mainFragment != null) {
+            mainFragment.handleRepairFinished(repairedWifiInfo, textId, repairSuccessful, toggleSuccessful);
+        }
     }
 
     private void startWifiMonitoringService() {

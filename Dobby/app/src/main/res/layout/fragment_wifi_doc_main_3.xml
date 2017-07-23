@@ -272,7 +272,6 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/status_tv"
                 android:layout_marginTop="10dp"
-
                 android:layout_marginBottom="10dp"
                 android:textColor="@android:color/holo_blue_light"
                 android:textSize="15sp"
