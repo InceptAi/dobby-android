@@ -43,6 +43,8 @@ import static com.inceptai.dobby.DobbyApplication.TAG;
 
 public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFragment.OnFragmentInteractionListener, Handler.Callback {
     public static final String PREF_FIRST_TIME_USER = "WifiTesterNewbie";
+    public static final String PREF_FIRST_TOGGLE = "first_time_automatic_repair_on";
+
 
     private static final int MSG_SHOW_SUGGESTIONS_UI = 1001;
 

@@ -1018,7 +1018,7 @@ public class Utils {
     };
 
     public static boolean checkIsWifiMonitoringEnabled(Context context) {
-        return Boolean.valueOf(readSharedSetting(context, WIFI_MONITORING_SERVICE_STATE, Utils.TRUE_STRING));
+        return Boolean.valueOf(readSharedSetting(context, WIFI_MONITORING_SERVICE_STATE, Utils.FALSE_STRING));
     }
 
     public static String userReadableRepairSummary(boolean repairSuccessful, boolean toggleSuccessful, WifiInfo wifiInfo) {

@@ -43,7 +43,7 @@ public class WifiDocDialogFragment extends DialogFragment {
     public static final int DIALOG_SHOW_SIMPLE_FEEDBACK = 1005;
     public static final int DIALOG_SHOW_LOCATION_PERMISSION_REQUEST = 1006;
     public static final int DIALOG_SHOW_REPAIR_SUMMARY = 1007;
-    
+    public static final int DIALOG_AUTOMATIC_REPAIR_ONBOARDING = 1008;
 
 
     public static final String DIALOG_PAYLOAD = "payload";
@@ -106,6 +106,8 @@ public class WifiDocDialogFragment extends DialogFragment {
                 return createLocationPermissionRequestDialog(bundle);
             case DIALOG_SHOW_REPAIR_SUMMARY:
                 return createRepairSummaryDialog(bundle);
+            case DIALOG_AUTOMATIC_REPAIR_ONBOARDING:
+                return createServiceOnboardingDialog(bundle);
         }
         return new AlertDialog.Builder(getActivity()).create();
     }
@@ -142,6 +144,14 @@ public class WifiDocDialogFragment extends DialogFragment {
         WifiDocDialogFragment fragment = new WifiDocDialogFragment();
         Bundle bundle = new Bundle();
         bundle.putInt(DIALOG_TYPE, DIALOG_EXPERT_ONBOARDING);
+        fragment.setArguments(bundle);
+        return fragment;
+    }
+
+    public static WifiDocDialogFragment forAutomaticRepairOnBoarding() {
+        WifiDocDialogFragment fragment = new WifiDocDialogFragment();
+        Bundle bundle = new Bundle();
+        bundle.putInt(DIALOG_TYPE, DIALOG_AUTOMATIC_REPAIR_ONBOARDING);
         fragment.setArguments(bundle);
         return fragment;
     }
@@ -227,6 +237,21 @@ public class WifiDocDialogFragment extends DialogFragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = getActivity().getLayoutInflater();
         rootView = inflater.inflate(R.layout.expert_onboarding_dialog_fragment, null);
+        FrameLayout continueFl = (FrameLayout) rootView.findViewById(R.id.bottom_continue_fl);
+        continueFl.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dismiss();
+            }
+        });
+        builder.setView(rootView);
+        return builder.create();
+    }
+
+    private Dialog createServiceOnboardingDialog(Bundle bundle) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        LayoutInflater inflater = getActivity().getLayoutInflater();
+        rootView = inflater.inflate(R.layout.service_onboarding_dialog_fragment, null);
         FrameLayout continueFl = (FrameLayout) rootView.findViewById(R.id.bottom_continue_fl);
         continueFl.setOnClickListener(new View.OnClickListener() {
             @Override

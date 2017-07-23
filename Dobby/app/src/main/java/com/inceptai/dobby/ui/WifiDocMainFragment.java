@@ -1302,6 +1302,11 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
     private void handleMonitoringStateChange(boolean serviceEnabled) {
         if(serviceEnabled){
+            if (isFirstToggle()) {
+                WifiDocDialogFragment fragment = WifiDocDialogFragment.forAutomaticRepairOnBoarding();
+                fragment.show(getActivity().getSupportFragmentManager(), "Automatic Repair");
+                saveToggle();
+            }
             serviceSwitchTv.setText(R.string.automatic_repair_on);
             if (mListener != null) {
                 mListener.onWifiMonitoringServiceEnabled();
@@ -1350,4 +1355,13 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         repairFl.setEnabled(true);
         serviceSwitch.setEnabled(true);
     }
+
+    private boolean isFirstToggle() {
+        return Utils.readSharedSetting(getActivity(), WifiDocActivity.PREF_FIRST_TOGGLE, Utils.TRUE_STRING).equals(Utils.TRUE_STRING);
+    }
+
+    private void saveToggle() {
+        Utils.saveSharedSetting(getActivity(), WifiDocActivity.PREF_FIRST_TOGGLE, Utils.FALSE_STRING);
+    }
+
 }
