@@ -194,7 +194,9 @@ public class Utils {
         return ssid;
     }
 
-    public static String userReadableRepairSummary(boolean repairSuccessful, boolean toggleSuccessful, WifiInfo wifiInfo) {
+    public static String userReadableRepairSummary(boolean repairSuccessful,
+                                                   boolean toggleSuccessful,
+                                                   WifiInfo wifiInfo) {
         StringBuilder sb = new StringBuilder();
         if (repairSuccessful) {
             if (wifiInfo != null) {

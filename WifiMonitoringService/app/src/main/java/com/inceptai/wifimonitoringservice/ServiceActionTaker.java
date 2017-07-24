@@ -31,10 +31,9 @@ import static com.inceptai.wifimonitoringservice.actionlibrary.ActionResult.Acti
  */
 
 public class ServiceActionTaker {
-    private static long ACTION_TIMEOUT_MS = 1000000; //10sec timeout
+    private static long ACTION_TIMEOUT_MS = 30000; //10sec timeout
     private ActionLibrary actionLibrary;
     private ActionCallback actionCallback;
-    private WifiInfo wifiInfoAfterRepair;
     private Executor executor;
     private ScheduledExecutorService scheduledExecutorService;
     private ListenableFuture<ActionResult> iterateAndRepairFuture;
@@ -148,7 +147,6 @@ public class ServiceActionTaker {
         final SettableFuture<ActionResult> repairResultFuture = SettableFuture.create();
         final FutureAction repairWifiNetworkAction = actionLibrary.repairWifiNetwork(ACTION_TIMEOUT_MS);
         sendCallbackForActionStarted(repairWifiNetworkAction);
-        wifiInfoAfterRepair = null;
         repairWifiNetworkAction.getFuture().addListener(new Runnable() {
             @Override
             public void run() {
@@ -198,7 +196,7 @@ public class ServiceActionTaker {
         return repairResultFuture;
     }
 
-    public ListenableFuture<ActionResult> iterateAndRepairConnection() {
+    public ListenableFuture<ActionResult> iterateAndRepairConnectionOld() {
 
         if (iterateAndRepairFuture != null && !iterateAndRepairFuture.isDone()) {
             return iterateAndRepairFuture;
@@ -207,7 +205,6 @@ public class ServiceActionTaker {
         final SettableFuture<ActionResult> repairResultFuture = SettableFuture.create();
         final FutureAction repairWifiNetworkAction = actionLibrary.iterateAndRepairWifiNetwork(ACTION_TIMEOUT_MS);
         sendCallbackForActionStarted(repairWifiNetworkAction);
-        wifiInfoAfterRepair = null;
         repairWifiNetworkAction.getFuture().addListener(new Runnable() {
             @Override
             public void run() {
@@ -269,6 +266,21 @@ public class ServiceActionTaker {
         }, executor);
         iterateAndRepairFuture = repairResultFuture;
         iterateAndRepairFutureAction = repairWifiNetworkAction;
+        return iterateAndRepairFuture;
+    }
+
+    public ListenableFuture<ActionResult> iterateAndRepairConnection(long timeOutMs) {
+
+        if (iterateAndRepairFuture != null && !iterateAndRepairFuture.isDone()) {
+            return iterateAndRepairFuture;
+        }
+        if (timeOutMs > 0) {
+            iterateAndRepairFutureAction = actionLibrary.iterateAndRepairWifiNetwork(timeOutMs);
+        } else {
+            iterateAndRepairFutureAction = actionLibrary.iterateAndRepairWifiNetwork(ACTION_TIMEOUT_MS);
+        }
+        sendCallbackForActionStarted(iterateAndRepairFutureAction);
+        iterateAndRepairFuture = iterateAndRepairFutureAction.getSettableFuture();
         return iterateAndRepairFuture;
     }
 

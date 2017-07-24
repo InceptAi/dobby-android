@@ -139,6 +139,33 @@ public class DobbyAnalytics extends ExpertChatAnalytics {
 
     private static final String DAILY_HEARTBEAT_EVENT = "daily_heartbeat_event";
 
+    //repair related
+    private static final String WIFI_REPAIR_TAPPED = "wifi_repair_tapped";
+    private static final String WIFI_REPAIR_INITIATED = "wifi_repair_started";
+    private static final String WIFI_REPAIR_SUCCESSFUL = "wifi_repair_succeeded";
+    private static final String WIFI_REPAIR_FAILED = "wifi_repair_failed";
+    private static final String WIFI_REPAIR_FAILURE_CODE = "wifi_repair_failure_code";
+    private static final String WIFI_REPAIR_CANCELLED = "wifi_repair_cancelled";
+    private static final String WIFI_REPAIR_FINISHED = "wifi_repair_finished";
+
+
+    //service related
+    private static final String WIFI_SERVICE_STARTED = "wifi_service_started";
+    private static final String WIFI_SERVICE_STOPPED = "wifi_service_stopped";
+    private static final String WIFI_SERVICE_ON_BOARDING_SHOWN = "wifi_service_onboarding";
+    private static final String WIFI_SERVICE_NOTIFICATION_SHOWN = "wifi_notification_shown";
+
+    //binding related
+    private static final String WIFI_SERVICE_BINDING_FAILED = "wifi_service_binding_failed";
+    private static final String WIFI_SERVICE_BINDING_SUCCESSFUL = "wifi_service_binding_good";
+    private static final String WIFI_SERVICE_BINDING_NOT_AVAILABLE = "wifi_service_binding_not_found";
+    private static final String WIFI_SERVICE_UNBINDING_CALLED = "wifi_service_unbinding";
+    private static final String WIFI_SERVICE_DISCONNECTED = "wifi_service_disconnected";
+    private static final String WIFI_SERVICE_SECURITY_EXCEPTION = "wifi_service_security_exception";
+    private static final String WIFI_SERVICE_CONNECTED = "wifi_service_connected";
+
+
+
     private DobbyAnalyticsBackend dobbyAnalyticsBackend;
 
     @Inject
@@ -559,4 +586,95 @@ public class DobbyAnalytics extends ExpertChatAnalytics {
         Bundle bundle = new Bundle();
         dobbyAnalyticsBackend.logEvent(EXPERT_SAYS_INFERENCING_CAN_BE_BETTER, bundle);
     }
+
+    //Repair stuff
+    public void setWifiRepairInitiated() {
+        Bundle bundle = new Bundle();
+        dobbyAnalyticsBackend.logEvent(WIFI_REPAIR_INITIATED, bundle);
+    }
+
+    public void setWifiRepairFinished() {
+        Bundle bundle = new Bundle();
+        dobbyAnalyticsBackend.logEvent(WIFI_REPAIR_FINISHED, bundle);
+    }
+
+    public void setWifiRepairSuccessful() {
+        Bundle bundle = new Bundle();
+        dobbyAnalyticsBackend.logEvent(WIFI_REPAIR_SUCCESSFUL, bundle);
+    }
+
+    public void setWifiRepairCancelled() {
+        Bundle bundle = new Bundle();
+        dobbyAnalyticsBackend.logEvent(WIFI_REPAIR_CANCELLED, bundle);
+    }
+
+    public void setWifiRepairFailed(int failureCode) {
+        Bundle bundle = new Bundle();
+        bundle.putInt(WIFI_REPAIR_FAILURE_CODE, failureCode);
+        dobbyAnalyticsBackend.logEvent(WIFI_REPAIR_FAILED, bundle);
+    }
+
+    public void setWifiServiceBindingFailed() {
+        Bundle bundle = new Bundle();
+        dobbyAnalyticsBackend.logEvent(WIFI_SERVICE_BINDING_FAILED, bundle);
+    }
+
+    public void setWifiServiceBindingSuccessful() {
+        Bundle bundle = new Bundle();
+        dobbyAnalyticsBackend.logEvent(WIFI_SERVICE_BINDING_SUCCESSFUL, bundle);
+    }
+
+    public void setWifiServiceDisconnected() {
+        Bundle bundle = new Bundle();
+        dobbyAnalyticsBackend.logEvent(WIFI_SERVICE_DISCONNECTED, bundle);
+    }
+
+    public void setWifiServiceConnected() {
+        Bundle bundle = new Bundle();
+        dobbyAnalyticsBackend.logEvent(WIFI_SERVICE_CONNECTED, bundle);
+    }
+
+    public void setWifiServiceUnbindingCalled() {
+        Bundle bundle = new Bundle();
+        dobbyAnalyticsBackend.logEvent(WIFI_SERVICE_UNBINDING_CALLED, bundle);
+    }
+
+    public void setWifiServiceUnavailableForRepair() {
+        Bundle bundle = new Bundle();
+        dobbyAnalyticsBackend.logEvent(WIFI_SERVICE_BINDING_NOT_AVAILABLE, bundle);
+    }
+
+    public void setWifiRepairTapped() {
+        Bundle bundle = new Bundle();
+        dobbyAnalyticsBackend.logEvent(WIFI_REPAIR_TAPPED, bundle);
+    }
+
+    public void setWifiServiceBindingSecurityException() {
+        Bundle bundle = new Bundle();
+        dobbyAnalyticsBackend.logEvent(WIFI_SERVICE_SECURITY_EXCEPTION, bundle);
+    }
+
+    //Service related
+    public void setWifiServiceStarted() {
+        Bundle bundle = new Bundle();
+        dobbyAnalyticsBackend.logEvent(WIFI_SERVICE_STARTED, bundle);
+    }
+
+    public void setWifiServiceStopped() {
+        Bundle bundle = new Bundle();
+        dobbyAnalyticsBackend.logEvent(WIFI_SERVICE_STOPPED, bundle);
+    }
+
+    public void setWifiServiceNotificationShown() {
+        Bundle bundle = new Bundle();
+        dobbyAnalyticsBackend.logEvent(WIFI_SERVICE_NOTIFICATION_SHOWN, bundle);
+    }
+
+    public void setWifiServiceOnBoardingShown() {
+        Bundle bundle = new Bundle();
+        dobbyAnalyticsBackend.logEvent(WIFI_SERVICE_ON_BOARDING_SHOWN, bundle);
+    }
+
+
+
 }

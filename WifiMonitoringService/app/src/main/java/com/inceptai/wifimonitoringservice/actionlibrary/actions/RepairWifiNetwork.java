@@ -1,18 +1,24 @@
 package com.inceptai.wifimonitoringservice.actionlibrary.actions;
 
 import android.content.Context;
+import android.net.wifi.WifiInfo;
 import android.support.annotation.Nullable;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.wifimonitoringservice.R;
 import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
+import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.ConnectivityTester;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.NetworkActionLayer;
 import com.inceptai.wifimonitoringservice.utils.ServiceLog;
+import com.inceptai.wifimonitoringservice.utils.Utils;
 
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ScheduledExecutorService;
+
+import static com.inceptai.wifimonitoringservice.actionlibrary.ActionResult.ActionResultCodes.FAILED_TO_COMPLETE;
+import static com.inceptai.wifimonitoringservice.actionlibrary.ActionResult.ActionResultCodes.GENERAL_ERROR;
 
 /**
  * Created by vivek on 7/5/17.
@@ -43,6 +49,9 @@ public class RepairWifiNetwork extends FutureAction {
         connectivityAction.getFuture().addListener(new Runnable() {
             @Override
             public void run() {
+
+
+
                 ActionResult actionResult = null;
                 try {
                     actionResult = connectivityAction.getFuture().get();
@@ -81,4 +90,6 @@ public class RepairWifiNetwork extends FutureAction {
     public ListenableFuture<ActionResult> getFuture() {
         return super.getFuture();
     }
+
+
 }

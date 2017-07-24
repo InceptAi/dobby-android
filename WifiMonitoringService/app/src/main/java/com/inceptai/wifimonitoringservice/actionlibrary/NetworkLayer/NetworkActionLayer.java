@@ -77,6 +77,13 @@ public class NetworkActionLayer {
         return null;
     }
 
+    public WifiInfo getWifiInfoSync() {
+        if (wifiController != null) {
+            return wifiController.getWifiInfoSync();
+        }
+        return null;
+    }
+
     public ListenableFuture<Boolean> resetConnectionToActiveWifi() {
         if (wifiController != null) {
             return wifiController.reAssociateWithCurrentWifi();

@@ -8,7 +8,6 @@ import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
-import android.widget.Toast;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
@@ -104,16 +103,24 @@ public class WifiMonitoringService extends Service {
 
     @Override
     public void onDestroy() {
-        Toast.makeText(this, "service done", Toast.LENGTH_SHORT).show();
+        //Toast.makeText(this, "service done", Toast.LENGTH_SHORT).show();
         //Clear pending alarms
         wifiServiceCore.cleanup();
+        wifiServiceCore = null;
         ServiceAlarm.unsetAlarm(this);
         Utils.disableBootReceiver(this, WifiMonitoringService.class);
     }
 
+    public ListenableFuture<ActionResult> repairWifiNetwork(long timeOutMs) {
+        if (wifiServiceCore !=  null) {
+            return wifiServiceCore.forceRepairWifiNetwork(timeOutMs);
+        }
+        return null;
+    }
+
     public ListenableFuture<ActionResult> repairWifiNetwork() {
         if (wifiServiceCore !=  null) {
-            return wifiServiceCore.forceRepairWifiNetwork();
+            return wifiServiceCore.forceRepairWifiNetwork(0);
         }
         return null;
     }

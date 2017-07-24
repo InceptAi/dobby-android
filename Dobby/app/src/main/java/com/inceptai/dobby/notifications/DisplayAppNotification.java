@@ -68,6 +68,7 @@ public class DisplayAppNotification implements Runnable {
         if (notificationId == WifiMonitoringService.WIFI_STATUS_NOTIFICATION_ID) {
             notification.flags |= Notification.FLAG_NO_CLEAR | Notification.FLAG_ONGOING_EVENT;
         }
+
         notificationManager.notify(notificationId, notification);
     }
 }

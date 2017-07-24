@@ -559,10 +559,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         return true;
     }
 
-    public void handleRepairFinished(WifiInfo wifiInfo, int repairStatusTextId,
-                                     boolean repairSuccessful, boolean toggleSuccessful) {
+    public void handleRepairFinished(WifiInfo wifiInfo, int repairStatusTextId, String repairSummary) {
         repairing = false;
-        String repairSummary = Utils.userReadableRepairSummary(repairSuccessful, toggleSuccessful, wifiInfo);
         String repairTitle = getResources().getString(repairStatusTextId);
         ArrayList<String> combinedStrings = new ArrayList<>(Arrays.asList(repairTitle, repairSummary));
         Message.obtain(handler, MSG_REPAIR_INFO_AVAILABLE, wifiInfo).sendToTarget();
@@ -696,7 +694,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     private void fetchViewInstances(View rootView) {
         runTestsFl = (FrameLayout) rootView.findViewById(R.id.bottom_run_tests_fl);
         runTestsFl.setOnClickListener(this);
-
+        runTestsFl.setEnabled(true);
         /*
         shareFl = (LinearLayout) rootView.findViewById(R.id.button_top_left_fl);
        // leaderboardFl = (FrameLayout) rootView.findViewById(R.id.button_top_right_fl);
@@ -744,6 +742,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             @Override
             public void onClick(View v) {
                 if (!repairing) {
+                    dobbyAnalytics.setWifiRepairTapped();
                     sendRepairCommandToService();
                 } else {
                     handleRepairCancelled();
@@ -1306,6 +1305,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                 WifiDocDialogFragment fragment = WifiDocDialogFragment.forAutomaticRepairOnBoarding();
                 fragment.show(getActivity().getSupportFragmentManager(), "Automatic Repair");
                 saveToggle();
+                dobbyAnalytics.setWifiServiceOnBoardingShown();
             }
             serviceSwitchTv.setText(R.string.automatic_repair_on);
             if (mListener != null) {
@@ -1325,6 +1325,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
             repairing = true;
             //repairFl.setEnabled(false);
             serviceSwitch.setEnabled(false);
+            runTestsFl.setEnabled(false);
             repairTv.setText(R.string.repairing_wifi_cancel);
             repairTv.setTextColor(Color.RED);
             statusTv.setText(R.string.repairing_wifi);
@@ -1354,6 +1355,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         //Disabling service toggling while repair is going on
         repairFl.setEnabled(true);
         serviceSwitch.setEnabled(true);
+        runTestsFl.setEnabled(true);
     }
 
     private boolean isFirstToggle() {

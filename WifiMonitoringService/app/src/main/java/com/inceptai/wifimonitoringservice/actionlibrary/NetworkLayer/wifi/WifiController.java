@@ -234,6 +234,10 @@ public class WifiController {
         return wifiInfoSettableFuture;
     }
 
+    public WifiInfo getWifiInfoSync() {
+        return wifiManager.getConnectionInfo();
+    }
+
     public ListenableFuture<Boolean> check5GHzSupported() {
         SettableFuture<Boolean> check5GHzSettableFuture = SettableFuture.create();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {

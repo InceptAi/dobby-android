@@ -127,13 +127,13 @@ public class WifiServiceCore implements
         screenStateMonitor.cleanup();
         periodicCheckMonitor.cleanup();
         serviceActionTaker.cleanup();
-        serviceThreadPool.shutdown();
+        //serviceThreadPool.shutdown();
         ServiceLog.v("Cleanup ");
     }
 
-    ListenableFuture<ActionResult> forceRepairWifiNetwork() {
+    ListenableFuture<ActionResult> forceRepairWifiNetwork(long timeOutMs) {
         cancelChecksAndPendingActions();
-        return serviceActionTaker.iterateAndRepairConnection();
+        return serviceActionTaker.iterateAndRepairConnection(timeOutMs);
     }
 
     void cancelRepairOfWifiNetwork() {

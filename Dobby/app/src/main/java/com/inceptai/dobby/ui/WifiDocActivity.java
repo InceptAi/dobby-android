@@ -26,6 +26,7 @@ import com.inceptai.dobby.R;
 import com.inceptai.dobby.ai.Action;
 import com.inceptai.dobby.ai.DobbyAi;
 import com.inceptai.dobby.ai.suggest.LocalSummary;
+import com.inceptai.dobby.analytics.DobbyAnalytics;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.fake.FakeDataIntentReceiver;
 import com.inceptai.dobby.notifications.DisplayAppNotification;
@@ -44,6 +45,7 @@ import static com.inceptai.dobby.DobbyApplication.TAG;
 public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFragment.OnFragmentInteractionListener, Handler.Callback {
     public static final String PREF_FIRST_TIME_USER = "WifiTesterNewbie";
     public static final String PREF_FIRST_TOGGLE = "first_time_automatic_repair_on";
+    public static final long REPAIR_TIMEOUT_MS = 30000; //10 secs for testing
 
 
     private static final int MSG_SHOW_SUGGESTIONS_UI = 1001;
@@ -60,6 +62,8 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
     NetworkLayer networkLayer;
     @Inject
     DobbyEventBus eventBus;
+    @Inject
+    DobbyAnalytics dobbyAnalytics;
 
     private FakeDataIntentReceiver fakeDataIntentReceiver;
     private Handler handler;
@@ -90,15 +94,6 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
          *
          */
 
-//        if (!isTaskRoot()
-//                && getIntent().hasCategory(Intent.CATEGORY_LAUNCHER)
-//                && getIntent().getAction() != null
-//                && getIntent().getAction().equals(Intent.ACTION_MAIN)) {
-//            finish();
-//            DobbyLog.v("Finishing since this is not root task");
-//            return;
-//        }
-
         if (!isTaskRoot()) {
             finish();
             DobbyLog.v("Finishing since this is not root task");
@@ -115,11 +110,13 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
     }
 
     public void setupMainFragment() {
+        DobbyLog.v("WifiDocActivity setupMainFragment");
         // Insert the fragment by replacing any existing fragment
         FragmentManager fragmentManager = getSupportFragmentManager();
         Fragment existingFragment = fragmentManager.findFragmentByTag(WifiDocMainFragment.WIFI_DOC_MAIN_FRAGMENT);
         if (existingFragment == null) {
             try {
+                DobbyLog.v("WifiDocActivity setupMainFragment existing fragment is there");
                 existingFragment = (Fragment) WifiDocMainFragment.newInstance(Utils.EMPTY_STRING);
             } catch (Exception e) {
                 DobbyLog.e("Unable to create WifiDocMainFragment");
@@ -130,6 +127,7 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
         // fragmentTransaction.addToBackStack(null);
         fragmentTransaction.commit();
         mainFragment = (WifiDocMainFragment) existingFragment;
+        DobbyLog.v("WifiDocActivity setupMainFragment returning existing fragment");
     }
 
     public void setupSuggestionsFragment(LocalSummary localSummary) {
@@ -225,7 +223,12 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
     @Override
     protected void onStop() {
         super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
         unbindWithWifiService();
+        super.onDestroy();
     }
 
     @Override
@@ -255,15 +258,17 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
     public void onWifiRepairInitiated() {
         if (repairFuture == null || repairFuture.isDone()) {
             //Start fresh repair
+            dobbyAnalytics.setWifiRepairInitiated();
             if (boundToWifiService && wifiMonitoringService != null) {
                 //Listening for repair to finish on a different thread
                 //Start animation for repair button
-                repairFuture = wifiMonitoringService.repairWifiNetwork();
+                repairFuture = wifiMonitoringService.repairWifiNetwork(REPAIR_TIMEOUT_MS);
                 waitForRepair();
             } else {
                 //Change text for repair button
                 //Notify error to WifiDocMainFragment
                 DobbyLog.e("Repair failed -- Service unavailable -- boundToService " + (boundToWifiService ? Utils.TRUE_STRING : Utils.FALSE_STRING));
+                dobbyAnalytics.setWifiServiceUnavailableForRepair();
                 processRepairResult(null);
             }
         }
@@ -285,6 +290,7 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
     public void onWifiRepairCancelled() {
         DobbyLog.v("WifiDocMainActivity: onWifiRepairCancelled");
         if (repairFuture != null && !repairFuture.isDone()) {
+            dobbyAnalytics.setWifiRepairCancelled();
             DobbyLog.v("WifiDocMainActivity: Calling cancel on repair future");
             repairFuture.cancel(true);
             if (boundToWifiService && wifiMonitoringService != null) {
@@ -300,6 +306,7 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
         if (fragmentManager != null) {
             Fragment existingFragment = fragmentManager.findFragmentByTag(WifiDocMainFragment.WIFI_DOC_MAIN_FRAGMENT);
             if (existingFragment != null) {
+                DobbyLog.v("In WifiDocActivity: getMainFragmentFromTag returning NON NULL fragment");
                 return (WifiDocMainFragment) existingFragment;
             }
         }
@@ -309,11 +316,13 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
 
     @Override
     public void onFragmentReady() {
+        DobbyLog.v("In WifiDocActivity: onFragmentReady");
         mainFragment = getMainFragmentFromTag();
     }
 
     @Override
     public void onFragmentGone() {
+        DobbyLog.v("In WifiDocActivity: onFragmentGone");
         mainFragment = null;
     }
 
@@ -342,18 +351,31 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
         WifiInfo repairedWifiInfo = null;
         boolean repairSuccessful = false;
         boolean toggleSuccessful = true;
+        String repairSummary = Utils.EMPTY_STRING;
+        dobbyAnalytics.setWifiRepairFinished();
         if (ActionResult.isSuccessful(repairResult)) {
             textId = R.string.repair_wifi_success;
             repairSuccessful = true;
             repairedWifiInfo = (WifiInfo) repairResult.getPayload();
+            dobbyAnalytics.setWifiRepairSuccessful();
         } else if (ActionResult.failedToComplete(repairResult)){
             repairedWifiInfo = (WifiInfo) repairResult.getPayload();
             if (repairedWifiInfo == null) {
                 toggleSuccessful = false;
             }
+            dobbyAnalytics.setWifiRepairFailed(repairResult.getStatus());
+        } else if (repairResult != null){
+            dobbyAnalytics.setWifiRepairFailed(repairResult.getStatus());
+        } else {
+            dobbyAnalytics.setWifiRepairFailed(ActionResult.ActionResultCodes.UNKNOWN);
         }
+
+        if (repairResult != null) {
+            repairSummary = repairResult.getStatusString();
+        }
+
         if (mainFragment != null) {
-            mainFragment.handleRepairFinished(repairedWifiInfo, textId, repairSuccessful, toggleSuccessful);
+            mainFragment.handleRepairFinished(repairedWifiInfo, textId, repairSummary);
         }
     }
 
@@ -361,6 +383,7 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
         //Intent serviceStartIntent = new Intent(this, WifiMonitoringService.class);
         //serviceStartIntent.putExtra(NotificationInfoKeys., NOTIFICATION_INFO_INTENT_VALUE);
         if (Utils.checkIsWifiMonitoringEnabled(this)) {
+            dobbyAnalytics.setWifiServiceStarted();
             startService(new Intent(this, WifiMonitoringService.class));
         }
     }
@@ -368,6 +391,7 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
     private void stopWifiMonitoringService() {
         //Intent serviceStartIntent = new Intent(this, WifiMonitoringService.class);
         //serviceStartIntent.putExtra(NotificationInfoKeys., NOTIFICATION_INFO_INTENT_VALUE);
+        dobbyAnalytics.setWifiServiceStopped();
         stopService(new Intent(this, WifiMonitoringService.class));
     }
 
@@ -380,6 +404,7 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
             String notificationTitle = intent.getStringExtra(WifiMonitoringService.EXTRA_NOTIFICATION_TITLE);
             String notificationBody = intent.getStringExtra(WifiMonitoringService.EXTRA_NOTIFICATION_BODY);
             int notificationId = intent.getIntExtra(WifiMonitoringService.EXTRA_NOTIFICATION_ID, 0);
+            dobbyAnalytics.setWifiServiceNotificationShown();
             threadpool.getExecutor().execute(new DisplayAppNotification(context, notificationTitle, notificationBody, notificationId));
         }
     }
@@ -402,26 +427,34 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
         public void onServiceConnected(ComponentName name, IBinder service) {
             // We've bound to LocalService, cast the IBinder and get LocalService instance
             WifiMonitoringService.WifiServiceBinder binder = (WifiMonitoringService.WifiServiceBinder) service;
+            DobbyLog.v("In onServiceConnected for bind service");
             wifiMonitoringService = binder.getService();
             boundToWifiService = true;
+            dobbyAnalytics.setWifiServiceConnected();
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
+            DobbyLog.v("WifiDocActivity: onServiceDisconnected");
             boundToWifiService = false;
+            dobbyAnalytics.setWifiServiceDisconnected();
         }
     }
 
     private void bindWithWifiService() {
         // Bind to LocalService
+        unbindWithWifiService();
         Intent intent = new Intent(this, WifiMonitoringService.class);
         try {
             if (bindService(intent, wifiServiceConnection, Context.BIND_AUTO_CREATE)) {
                 DobbyLog.v("bindService to  wifiServiceConnection succeeded");
+                dobbyAnalytics.setWifiServiceBindingSuccessful();
             } else {
                 DobbyLog.v("bindService to wifiServiceConnection failed");
+                dobbyAnalytics.setWifiServiceBindingFailed();
             }
         } catch (SecurityException e) {
+            dobbyAnalytics.setWifiServiceBindingSecurityException();
             DobbyLog.v("App does not have permission to bind to WifiMonitoring service");
         }
     }
@@ -433,6 +466,7 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
             unbindService(wifiServiceConnection);
             boundToWifiService = false;
             wifiMonitoringService = null;
+            dobbyAnalytics.setWifiServiceUnbindingCalled();
         }
     }
 
