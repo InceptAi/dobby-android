@@ -263,7 +263,11 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
                 //Listening for repair to finish on a different thread
                 //Start animation for repair button
                 repairFuture = wifiMonitoringService.repairWifiNetwork(REPAIR_TIMEOUT_MS);
-                waitForRepair();
+                if (repairFuture != null) {
+                    waitForRepair();
+                } else {
+                    processRepairResult(null);
+                }
             } else {
                 //Change text for repair button
                 //Notify error to WifiDocMainFragment
