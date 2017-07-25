@@ -72,6 +72,7 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
     private boolean boundToWifiService = false;
     private WifiMonitoringService wifiMonitoringService;
     private ListenableFuture<ActionResult> repairFuture;
+    private boolean isNotificationReceiverRegistered;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,6 +108,8 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
         startWifiMonitoringService();
         notificationInfoReceiver = new NotificationInfoReceiver();
         wifiServiceConnection = new WifiServiceConnection();
+        bindWithWifiService();
+        isNotificationReceiverRegistered = false;
     }
 
     public void setupMainFragment() {
@@ -186,8 +189,10 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
                 DobbyLog.i("Ignoring IllegalArgumentException for fake intent unregister.");
             }
         }
-        registerNotificationInfoReceiver();
-        initiateStatusNotification();
+        if (Utils.checkIsWifiMonitoringEnabled(this)) {
+            registerNotificationInfoReceiver();
+            initiateStatusNotification();
+        }
     }
 
     @Override
@@ -216,7 +221,6 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
     @Override
     protected void onStart() {
         super.onStart();
-        bindWithWifiService();
     }
 
 
@@ -414,14 +418,18 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
     }
 
     private void registerNotificationInfoReceiver() {
-        IntentFilter intentFilter = new IntentFilter(WifiMonitoringService.NOTIFICATION_INFO_INTENT_VALUE);
-        LocalBroadcastManager.getInstance(this).registerReceiver(
-                notificationInfoReceiver, intentFilter);
+            IntentFilter intentFilter = new IntentFilter(WifiMonitoringService.NOTIFICATION_INFO_INTENT_VALUE);
+            LocalBroadcastManager.getInstance(this).registerReceiver(
+                    notificationInfoReceiver, intentFilter);
+            isNotificationReceiverRegistered = true;
     }
 
     private void unRegisterNotificationInfoReceiver() {
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(
-                notificationInfoReceiver);
+        if (isNotificationReceiverRegistered) {
+            LocalBroadcastManager.getInstance(this).unregisterReceiver(
+                    notificationInfoReceiver);
+            isNotificationReceiverRegistered = false;
+        }
     }
 
 
@@ -447,7 +455,6 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
 
     private void bindWithWifiService() {
         // Bind to LocalService
-        unbindWithWifiService();
         Intent intent = new Intent(this, WifiMonitoringService.class);
         try {
             if (bindService(intent, wifiServiceConnection, Context.BIND_AUTO_CREATE)) {
