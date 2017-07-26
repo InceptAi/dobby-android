@@ -43,7 +43,6 @@
             android:name="com.inceptai.wifimonitoringservice.WifiMonitoringService"
             android:exported="true">
         </service>
-
     </application>
 
 </manifest>
