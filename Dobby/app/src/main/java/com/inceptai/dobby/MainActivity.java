@@ -8,8 +8,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.speech.RecognizerIntent;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
@@ -51,7 +53,10 @@ public class MainActivity extends AppCompatActivity
         ChatFragment.OnFragmentInteractionListener,
         UserInteractionManager.InteractionCallback {
 
+    //permission codes
     private static final int PERMISSION_COARSE_LOCATION_REQUEST_CODE = 101;
+    private static final int PERMISSION_OVERLAY_REQUEST_CODE = 201;
+
     private static final boolean RESUME_WITH_SUGGESTION_IF_AVAILABLE = false;
     private static final int SPEECH_RECOGNITION_REQUEST_CODE = 102;
     private static final long BOT_MESSAGE_DELAY_MS = 500;
@@ -66,6 +71,7 @@ public class MainActivity extends AppCompatActivity
     private ChatFragment chatFragment;
     private boolean isTaskRoot = true;
     private NotificationInfoReceiver notificationInfoReceiver;
+    private boolean askedForOverlayPermission;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -319,6 +325,59 @@ public class MainActivity extends AppCompatActivity
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_COARSE_LOCATION_REQUEST_CODE);
     }
 
+///Neo stuff
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+         if (requestCode == PERMISSION_OVERLAY_REQUEST_CODE && isAndroidMOrLater()) {
+            askedForOverlayPermission = false;
+            if (Settings.canDrawOverlays(this)) {
+                //Callback that permission granted
+            } else {
+                //Callback that permission denied
+                Toast.makeText(this, "ACTION_MANAGE_OVERLAY_PERMISSION Permission Denied", Toast.LENGTH_SHORT).show();
+            }
+        } else if (requestCode == SPEECH_RECOGNITION_REQUEST_CODE) {
+            if (resultCode == RESULT_OK && null != data) {
+                ArrayList<String> res = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                String inSpeech = res.get(0);
+                if (chatFragment != null) {
+                    chatFragment.addSpokenText(inSpeech);
+                }
+                onUserQuery(inSpeech, false);
+            }
+        } else {
+             super.onActivityResult(requestCode, resultCode, data);
+        }
+    }
+
+    @TargetApi(Build.VERSION_CODES.M)
+    private void askForOverlayPermission() {
+        askedForOverlayPermission = true;
+        Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
+        startActivityForResult(intent, PERMISSION_OVERLAY_REQUEST_CODE);
+    }
+
+    private boolean isAndroidMOrLater() {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M;
+    }
+
+    @Override
+    public void requestOverlayPermission() {
+        if (!isAndroidMOrLater() || Settings.canDrawOverlays(this)) {
+            userInteractionManager.overlayPermissionStatus(true /* granted */);
+            return;
+        }
+
+        if (isAndroidMOrLater()) {
+            if (!askedForOverlayPermission) {
+                askForOverlayPermission();
+            } else {
+                DobbyLog.v("Waiting for user to grant overlay permission");
+            }
+        }
+        userInteractionManager.overlayPermissionStatus(true /* by default since M or lower */);
+    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -416,21 +475,6 @@ public class MainActivity extends AppCompatActivity
         //Don't do resume stuff for now
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == SPEECH_RECOGNITION_REQUEST_CODE) {
-            if (resultCode == RESULT_OK && null != data) {
-                ArrayList<String> res = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                String inSpeech = res.get(0);
-                if (chatFragment != null) {
-                    chatFragment.addSpokenText(inSpeech);
-                }
-                onUserQuery(inSpeech, false);
-            }
-        } else {
-            super.onActivityResult(requestCode, resultCode, data);
-        }
-    }
 
     private void startWifiMonitoringService() {
         Intent serviceStartIntent = new Intent(this, WifiMonitoringService.class);

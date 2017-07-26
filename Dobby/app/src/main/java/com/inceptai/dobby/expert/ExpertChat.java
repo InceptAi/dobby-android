@@ -26,6 +26,13 @@ public class ExpertChat {
     public static final int MSG_TYPE_META_SEND_MESSAGE_TO_EXPERT_FOR_HELP = 5005;
 
 
+    //Neo stuff
+    public static final int MSG_TYPE_META_NEO_SERVICE_READY = 6001;
+    public static final int MSG_TYPE_META_NEO_SERVICE_STOPPED_BY_USER = 6002;
+    public static final int MSG_TYPE_META_NEO_SERVICE_STOPPED_BY_EXPERT = 6003;
+    public static final int MSG_TYPE_META_NEO_SERVICE_SHOWING_SETTINGS_FAILED = 6004;
+    public static final int MSG_TYPE_META_NEO_SERVICE_PERMISSION_DENIED = 6005;
+
 
     String id;
     private String text;

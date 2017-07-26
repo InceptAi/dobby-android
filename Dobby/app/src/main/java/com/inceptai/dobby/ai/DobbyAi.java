@@ -1,7 +1,6 @@
 package com.inceptai.dobby.ai;
 
 import android.content.Context;
-import android.content.Intent;
 import android.location.Location;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -97,8 +96,6 @@ public class DobbyAi implements ApiAiClient.ResultListener,
     private boolean isExpertListening = false;
     private boolean showContactHumanButton = true;
 
-
-
     @Inject
     NetworkLayer networkLayer;
     @Inject
@@ -129,6 +126,8 @@ public class DobbyAi implements ApiAiClient.ResultListener,
         void userAskedForExpert();
         void expertActionStarted();
         void expertActionCompleted();
+        void startNeoByExpert();
+        void stopNeoByExpert();
     }
 
     @Inject
@@ -1093,16 +1092,23 @@ public class DobbyAi implements ApiAiClient.ResultListener,
 
     private void startNeo() {
         //Send neo start intent
-        Intent intent = new Intent();
-        intent.setAction("com.inceptai.neo.ACTION");
-        context.sendBroadcast(intent);
+        if (responseCallback != null) {
+            responseCallback.startNeoByExpert();
+        }
+//        Intent intent = new Intent();
+//        intent.setAction("com.inceptai.neo.ACTION");
+//        context.sendBroadcast(intent);
     }
 
     private void endNeo() {
         //End neo intent
-        Intent intent = new Intent();
-        intent.setAction("com.inceptai.neo.ACTION");
-        context.sendBroadcast(intent);
+        if (responseCallback != null) {
+            responseCallback.stopNeoByExpert();
+        }
+//
+//        Intent intent = new Intent();
+//        intent.setAction("com.inceptai.neo.ACTION");
+//        context.sendBroadcast(intent);
     }
 
     private void parseExpertTextAndTakeActionIfNeeded(String expertMessage) {

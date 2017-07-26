@@ -16,6 +16,7 @@ import com.inceptai.dobby.expert.ExpertChatService;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
+import com.inceptai.neoservice.NeoService;
 
 import java.util.HashSet;
 import java.util.List;
@@ -31,12 +32,14 @@ import javax.inject.Inject;
 
 public class UserInteractionManager implements
         DobbyAi.ResponseCallback,
-        ExpertChatService.ChatCallback {
+        ExpertChatService.ChatCallback, NeoService.Callback {
 
     private static final String PREF_CHAT_IN_EXPERT_MODE = "wifidoc_in_expert_mode";
     private static final String EXPERT_MODE_INITIATED_TIMESTAMP = "expert_mode_start_ts";
     private static final long MAX_TIME_ELAPSED_FOR_RESUMING_EXPERT_MODE_MS = AlarmManager.INTERVAL_DAY;
     private static final long DELAY_BEFORE_WELCOME_MESSAGE_MS = 500;
+
+    private static final String SERVER_ADDRESS = "ws://192.168.1.129:8080/";
 
 
     private long currentEtaSeconds;
@@ -59,6 +62,10 @@ public class UserInteractionManager implements
     DobbyEventBus dobbyEventBus;
     @Inject
     DobbyAnalytics dobbyAnalytics;
+    @Inject
+    DobbyApplication dobbyApplication;
+
+    private NeoService neoService;
 
 
     public UserInteractionManager(Context context, InteractionCallback interactionCallback, boolean showContactHumanAction) {
@@ -75,6 +82,7 @@ public class UserInteractionManager implements
         dobbyAi.setShowContactHumanButton(showContactHumanAction);
         dobbyEventBus.registerListener(this);
         this.historyAvailable = false;
+        neoService = new NeoService(SERVER_ADDRESS, dobbyApplication.getUserUuid(), context, this);
         //notificationInfoReceiver = new NotificationInfoReceiver();
     }
 
@@ -98,6 +106,7 @@ public class UserInteractionManager implements
         void showBandwidthViewCard(DataInterpreter.BandwidthGrade bandwidthGrade);
         void showNetworkInfoViewCard(DataInterpreter.WifiGrade wifiGrade, String isp, String ip);
         void showDetailedSuggestions(SuggestionCreator.Suggestion suggestion);
+        void requestOverlayPermission();
     }
 
     //API calls
@@ -126,6 +135,24 @@ public class UserInteractionManager implements
         dobbyAi.cleanup();
     }
 
+    public void startNeoService() {
+        if (interactionCallback != null) {
+            interactionCallback.requestOverlayPermission();
+        }
+    }
+
+    public void stopNeoService() {
+        neoService.stopService();
+    }
+
+    public void overlayPermissionStatus(boolean granted) {
+        if (!granted) {
+            DobbyLog.e("Permission denied for accessibility");
+            sendPermissionDeniedMetaMessage();
+        } else {
+            neoService.startService();
+        }
+    }
 
     public void onUserQuery(String text, boolean isButtonActionText) {
         dobbyAi.sendQuery(text, isButtonActionText);
@@ -244,6 +271,22 @@ public class UserInteractionManager implements
 
 
     //Dobby Ai callbacks
+
+
+    public UserInteractionManager() {
+        super();
+    }
+
+    @Override
+    public void startNeoByExpert() {
+        startNeoService();
+    }
+
+    @Override
+    public void stopNeoByExpert() {
+        stopNeoService();
+    }
+
     @Override
     public void showBotResponseToUser(String text) {
         expertChatService.pushBotChatMessage(text);
@@ -449,6 +492,58 @@ public class UserInteractionManager implements
                 }
             }, 0, TimeUnit.MILLISECONDS);
         }
+    }
+
+
+    //Neo callbacks
+
+
+    @Override
+    public void onServiceReady() {
+        sendServiceReadyMetaMessage();
+    }
+
+    @Override
+    public void onStop(int reason) {
+        switch (reason) {
+            case NeoService.REASON_STOPPED_BY_EXPERT:
+                sendServiceStoppedByExpertMetaMessage();
+                break;
+            case NeoService.REASON_STOPPED_BY_USER:
+                sendServiceStoppedByUserMetaMessage();
+                break;
+            case NeoService.REASON_STOPPED_UNABLE_TO_SHOW_SETTINGS:
+                sendShowSettingsFailureMetaMessage();
+                break;
+            default:
+                break;
+        }
+    }
+
+
+    //private stuff
+    private void sendServiceReadyMetaMessage() {
+        expertChatService.pushMetaChatMessage(ExpertChat.MSG_TYPE_META_NEO_SERVICE_READY);
+    }
+
+    private void sendShowSettingsFailureMetaMessage() {
+        expertChatService.pushMetaChatMessage(ExpertChat.MSG_TYPE_META_NEO_SERVICE_SHOWING_SETTINGS_FAILED);
+
+    }
+
+    private void sendPermissionDeniedMetaMessage() {
+        expertChatService.pushMetaChatMessage(ExpertChat.MSG_TYPE_META_NEO_SERVICE_PERMISSION_DENIED);
+
+    }
+
+    private void sendServiceStoppedByUserMetaMessage() {
+        expertChatService.pushMetaChatMessage(ExpertChat.MSG_TYPE_META_NEO_SERVICE_STOPPED_BY_USER);
+
+    }
+
+    private void sendServiceStoppedByExpertMetaMessage() {
+        expertChatService.pushMetaChatMessage(ExpertChat.MSG_TYPE_META_NEO_SERVICE_STOPPED_BY_EXPERT);
+
     }
 
     // Our handler for received Intents. This will be called whenever an Intent
