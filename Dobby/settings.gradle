@@ -1,1 +1,4 @@
-include ':app', ':wifimonitoring-service'
+include ':app', ':wifimonitoring-service', ':neo-service'
+
+project(':neo-service').projectDir = file("../../neo/android/neo-service/app")
+project(':wifimonitoring-service').projectDir = file("../WifiMonitoringService/app")
