@@ -22,6 +22,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.Map;
+import java.util.Random;
 
 import static com.inceptai.expertchat.Utils.EMPTY_STRING;
 import static com.inceptai.expertchat.Utils.TAG;
@@ -417,7 +418,8 @@ public class ExpertChatService implements SharedPreferences.OnSharedPreferenceCh
         Intent intent = new Intent(context, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         intent.putExtra(Utils.NOTIFICATION_USER_UUID, fromUuid);
-        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        Random generator = new Random();
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, generator.nextInt(), intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         for (String key : data.keySet()) {
             Log.i(TAG, "Key: " + key + ", value: " + data.get(key));
