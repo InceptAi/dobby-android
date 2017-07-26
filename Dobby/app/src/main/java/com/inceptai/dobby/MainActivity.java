@@ -62,6 +62,7 @@ public class MainActivity extends AppCompatActivity
     private static final long BOT_MESSAGE_DELAY_MS = 500;
 
     private static final boolean SHOW_CONTACT_HUMAN_BUTTON = true;
+    private static final boolean ENABLE_WIFI_MONITORING_SERVICE = false;
 
 
     private UserInteractionManager userInteractionManager;
@@ -126,7 +127,9 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         setupChatFragment();
-        startWifiMonitoringService();
+        if (ENABLE_WIFI_MONITORING_SERVICE) {
+            startWifiMonitoringService();
+        }
     }
 
 
