@@ -93,6 +93,7 @@ public class ActionResult {
         this.payload = payload;
     }
 
+    @ActionResultCodes
     public int getStatus() {
         return status;
     }

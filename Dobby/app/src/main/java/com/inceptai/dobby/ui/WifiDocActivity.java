@@ -27,6 +27,8 @@ import com.inceptai.dobby.ai.Action;
 import com.inceptai.dobby.ai.DobbyAi;
 import com.inceptai.dobby.ai.suggest.LocalSummary;
 import com.inceptai.dobby.analytics.DobbyAnalytics;
+import com.inceptai.dobby.database.RepairDatabaseWriter;
+import com.inceptai.dobby.database.RepairRecord;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.fake.FakeDataIntentReceiver;
 import com.inceptai.dobby.notifications.DisplayAppNotification;
@@ -64,6 +66,8 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
     DobbyEventBus eventBus;
     @Inject
     DobbyAnalytics dobbyAnalytics;
+    @Inject
+    RepairDatabaseWriter repairDatabaseWriter;
 
     private FakeDataIntentReceiver fakeDataIntentReceiver;
     private Handler handler;
@@ -385,6 +389,29 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
         if (mainFragment != null) {
             mainFragment.handleRepairFinished(repairedWifiInfo, textId, repairSummary);
         }
+        writeRepairRecord(createRepairRecord(repairResult));
+
+    }
+
+    private RepairRecord createRepairRecord(ActionResult actionResult) {
+        RepairRecord repairRecord = new RepairRecord();
+        repairRecord.uid = dobbyApplication.getUserUuid();
+        repairRecord.phoneInfo = dobbyApplication.getPhoneInfo();
+        repairRecord.appVersion = DobbyApplication.getAppVersion();
+        if (actionResult != null) {
+            repairRecord.repairStatusString = ActionResult.actionResultCodeToString(actionResult.getStatus());
+            repairRecord.repairStatusMessage = actionResult.getStatusString();
+        } else {
+            repairRecord.repairStatusString = ActionResult.actionResultCodeToString(ActionResult.ActionResultCodes.UNKNOWN);
+            repairRecord.repairStatusString = Utils.EMPTY_STRING;
+        }
+        repairRecord.timestamp = System.currentTimeMillis();
+        return repairRecord;
+    }
+
+
+    private void writeRepairRecord(final RepairRecord repairRecord) {
+        repairDatabaseWriter.writeRepairToDatabase(repairRecord);
     }
 
     private void startWifiMonitoringService() {
