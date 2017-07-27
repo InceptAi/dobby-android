@@ -22,6 +22,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -79,6 +81,8 @@ public class RecentUsersFragment extends Fragment {
             TextView uuidTv = (TextView) convertView.findViewById(R.id.userUuidTv);
             TextView flavorTv = (TextView) convertView.findViewById(R.id.flavorTv);
             TextView buildTypeTv = (TextView) convertView.findViewById(R.id.buildTypeTv);
+            TextView timeTv = (TextView) convertView.findViewById(R.id.timeTv);
+
             uuidTv.setText(userData.getUserUuid());
             flavorTv.setText(Utils.unknownIfEmpty(userData.appFlavor));
             buildTypeTv.setText(Utils.unknownIfEmpty(userData.buildType));
@@ -87,6 +91,7 @@ public class RecentUsersFragment extends Fragment {
             } else {
                 convertView.setBackgroundColor(context.getResources().getColor(android.R.color.white));
             }
+            timeTv.setText("    " + Utils.convertMillisecondsToTimeForNotification(userData.freshnessTimestampMs));
             return convertView;
         }
 
@@ -189,6 +194,7 @@ public class RecentUsersFragment extends Fragment {
                     UserData userData = UserDataBackend.fetchUserWith(uuid, flavor, Utils.BUILD_TYPE_DEBUG);
                     debugUsers.add(userData);
                 }
+                sortUserList(debugUsers);
                 arrayAdapter.addAll(debugUsers);
             }
 
@@ -212,6 +218,7 @@ public class RecentUsersFragment extends Fragment {
                     UserData userData = UserDataBackend.fetchUserWith(uuid, flavor, Utils.BUILD_TYPE_RELEASE);
                     releaseUsers.add(userData);
                 }
+                sortUserList(releaseUsers);
                 arrayAdapter.addAll(releaseUsers);
             }
 
@@ -229,6 +236,15 @@ public class RecentUsersFragment extends Fragment {
         } else {
             return Utils.DOBBY_RECENTS;
         }
+    }
+
+    private void sortUserList(List<UserData> userDataList) {
+        Collections.sort(userDataList, new Comparator<UserData>() {
+            @Override
+            public int compare(UserData w1, UserData w2) {
+                return (int) (w2.getFreshnessTimestampMs() - w1.getFreshnessTimestampMs());
+            }
+        });
     }
 
     @Override

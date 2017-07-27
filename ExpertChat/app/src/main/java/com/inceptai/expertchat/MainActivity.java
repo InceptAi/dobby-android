@@ -26,6 +26,8 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.squareup.picasso.Picasso;
 
 import static com.inceptai.expertchat.Utils.EMPTY_STRING;
@@ -248,11 +250,22 @@ public class MainActivity extends AppCompatActivity
             showChatFragment();
         } else if (id == R.id.nav_settings) {
             showPreferenceFragment();
+        } else if (id == R.id.clear_recent) {
+            clearRecents();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void clearRecents() {
+        String wifidocRecents = Utils.WIFIDOC_RECENTS + "/release";
+        String dobbyRecents = Utils.DOBBY_RECENTS + "/release";
+        DatabaseReference wifiDocRecentRef = FirebaseDatabase.getInstance().getReference().child(wifidocRecents);
+        DatabaseReference dobbyRecentRef = FirebaseDatabase.getInstance().getReference().child(dobbyRecents);
+        wifiDocRecentRef.setValue(null);
+        dobbyRecentRef.setValue(null);
     }
 
     private void showChatFragment() {

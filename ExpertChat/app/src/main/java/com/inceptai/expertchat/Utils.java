@@ -4,6 +4,10 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 /**
  * Created by arunesh on 6/6/17.
  */
@@ -76,5 +80,10 @@ public class Utils {
             return "UNKNOWN";
         }
         return orig;
+    }
+
+    public static String convertMillisecondsToTimeForNotification(long currentTimeMillis) {
+        DateFormat formatter = SimpleDateFormat.getTimeInstance(DateFormat.SHORT);
+        return formatter.format(new Date(currentTimeMillis));
     }
 }
