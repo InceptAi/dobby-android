@@ -25,7 +25,6 @@ public class DobbyLog {
         if (BuildConfig.DEBUG) {
             Log.i(TAG, message);
         } else {
-            // Log.i(WIFI_DOC_MAIN_FRAGMENT, message);
             FirebaseCrash.logcat(Log.INFO, TAG, message);
         }
     }
@@ -34,7 +33,6 @@ public class DobbyLog {
         if (BuildConfig.DEBUG) {
             Log.e(TAG, message);
         } else {
-            Log.e(TAG, message);
             FirebaseCrash.logcat(Log.ERROR, TAG, message);
         }
     }

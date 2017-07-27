@@ -133,6 +133,7 @@ public class UserInteractionManager implements
         expertChatService.unregisterChatCallback();
         expertChatService.disconnect();
         dobbyAi.cleanup();
+        neoService.cleanup();
     }
 
     public void startNeoService() {
@@ -145,9 +146,17 @@ public class UserInteractionManager implements
         neoService.stopService();
     }
 
+    public void toggleNeoService() {
+        if (neoService.isServiceRunning()) {
+            stopNeoByExpert();
+        } else {
+            startNeoByExpert();
+        }
+    }
+
     public void overlayPermissionStatus(boolean granted) {
         if (!granted) {
-            DobbyLog.e("Permission denied for accessibility");
+            DobbyLog.e("Permission denied for overlay draw.");
             sendPermissionDeniedMetaMessage();
         } else {
             neoService.startService();

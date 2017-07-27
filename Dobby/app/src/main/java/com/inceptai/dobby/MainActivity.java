@@ -53,6 +53,7 @@ public class MainActivity extends AppCompatActivity
         ChatFragment.OnFragmentInteractionListener,
         UserInteractionManager.InteractionCallback {
 
+    private static final String NEO_CUSTOM_INTENT = "com.inceptai.wifiexpert.neo.ACTION";
     //permission codes
     private static final int PERMISSION_COARSE_LOCATION_REQUEST_CODE = 101;
     private static final int PERMISSION_OVERLAY_REQUEST_CODE = 201;
@@ -72,6 +73,7 @@ public class MainActivity extends AppCompatActivity
     private ChatFragment chatFragment;
     private boolean isTaskRoot = true;
     private NotificationInfoReceiver notificationInfoReceiver;
+    private NeoCustomIntentReceiver neoCustomIntentReceiver;
     private boolean askedForOverlayPermission;
 
     @Override
@@ -127,6 +129,7 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         setupChatFragment();
+        registerNeoCustomIntentReceiver();
         if (ENABLE_WIFI_MONITORING_SERVICE) {
             startWifiMonitoringService();
         }
@@ -332,12 +335,15 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        DobbyLog.i("onActivityResult:" + requestCode + " package name: " + getPackageName());
          if (requestCode == PERMISSION_OVERLAY_REQUEST_CODE && isAndroidMOrLater()) {
             askedForOverlayPermission = false;
             if (Settings.canDrawOverlays(this)) {
                 //Callback that permission granted
+                userInteractionManager.overlayPermissionStatus(true);
             } else {
                 //Callback that permission denied
+                userInteractionManager.overlayPermissionStatus(false);
                 Toast.makeText(this, "ACTION_MANAGE_OVERLAY_PERMISSION Permission Denied", Toast.LENGTH_SHORT).show();
             }
         } else if (requestCode == SPEECH_RECOGNITION_REQUEST_CODE) {
@@ -358,6 +364,7 @@ public class MainActivity extends AppCompatActivity
     private void askForOverlayPermission() {
         askedForOverlayPermission = true;
         Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
+        //intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivityForResult(intent, PERMISSION_OVERLAY_REQUEST_CODE);
     }
 
@@ -378,8 +385,9 @@ public class MainActivity extends AppCompatActivity
             } else {
                 DobbyLog.v("Waiting for user to grant overlay permission");
             }
+        } else {
+            userInteractionManager.overlayPermissionStatus(true /* by default since lower than M */);
         }
-        userInteractionManager.overlayPermissionStatus(true /* by default since M or lower */);
     }
 
     @Override
@@ -413,6 +421,7 @@ public class MainActivity extends AppCompatActivity
         super.onDestroy();
         if (isTaskRoot) {
             userInteractionManager.cleanup();
+            removeNeoCustomIntentReceiver();
         }
     }
 
@@ -540,4 +549,28 @@ public class MainActivity extends AppCompatActivity
                 notificationInfoReceiver);
     }
 
+    private class NeoCustomIntentReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            MainActivity.this.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    userInteractionManager.toggleNeoService();
+                }
+            });
+        }
+    }
+
+    private void registerNeoCustomIntentReceiver() {
+        neoCustomIntentReceiver = new NeoCustomIntentReceiver();
+        IntentFilter intentFilter = new IntentFilter(NEO_CUSTOM_INTENT);
+        registerReceiver(neoCustomIntentReceiver, intentFilter);
+    }
+
+    private void removeNeoCustomIntentReceiver() {
+        if (neoCustomIntentReceiver != null) {
+            unregisterReceiver(neoCustomIntentReceiver);
+            neoCustomIntentReceiver = null;
+        }
+    }
 }
