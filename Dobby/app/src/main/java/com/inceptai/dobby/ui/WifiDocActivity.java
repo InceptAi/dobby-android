@@ -36,6 +36,7 @@ import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 import com.inceptai.wifimonitoringservice.WifiMonitoringService;
 import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.IterateAndRepairWifiNetwork;
 
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
@@ -347,9 +348,8 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
         repairFuture.addListener(new Runnable() {
             @Override
             public void run() {
-                ActionResult repairResult = null;
                 try {
-                    processRepairResult(repairFuture.get());
+                    processRepairResult((IterateAndRepairWifiNetwork.RepairResult)repairFuture.get());
                 } catch (InterruptedException | ExecutionException | CancellationException e) {
                     //Notify error to WifiDocMainFragment
                     DobbyLog.e("Interrupted  while repairing");
@@ -358,7 +358,7 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
         }, threadpool.getExecutor());
     }
 
-    private void processRepairResult(ActionResult repairResult) {
+    private void processRepairResult(IterateAndRepairWifiNetwork.RepairResult repairResult) {
         int textId = R.string.repair_wifi_failure;
         WifiInfo repairedWifiInfo = null;
         boolean repairSuccessful = false;
@@ -390,20 +390,50 @@ public class WifiDocActivity extends AppCompatActivity implements WifiDocMainFra
             mainFragment.handleRepairFinished(repairedWifiInfo, textId, repairSummary);
         }
         writeRepairRecord(createRepairRecord(repairResult));
-
+        addWifiFailureReasonToAnalytics(repairResult);
     }
 
-    private RepairRecord createRepairRecord(ActionResult actionResult) {
+    private void addWifiFailureReasonToAnalytics(IterateAndRepairWifiNetwork.RepairResult repairResult) {
+        if (repairResult == null) {
+            dobbyAnalytics.setWifiRepairUnknownFailure();
+            return;
+        }
+        switch (repairResult.getRepairFailureReason()) {
+            case IterateAndRepairWifiNetwork.RepairResult.NO_NEARBY_CONFIGURED_NETWORKS:
+                dobbyAnalytics.setWifiRepairNoNearbyConfiguredNetworks();
+                break;
+            case IterateAndRepairWifiNetwork.RepairResult.NO_NETWORK_WITH_ONLINE_CONNECTIVITY_MODE:
+                dobbyAnalytics.setWifiRepairNoNetworkWithOnlineConnectivityMode();
+                break;
+            case IterateAndRepairWifiNetwork.RepairResult.UNABLE_TO_CONNECT_TO_ANY_NETWORK:
+                dobbyAnalytics.setWifiRepairUnableToConnectToAnyNetwork();
+                break;
+            case IterateAndRepairWifiNetwork.RepairResult.UNABLE_TO_TOGGLE_WIFI:
+                dobbyAnalytics.setWifiRepairUnableToToggleWifi();
+                break;
+            case IterateAndRepairWifiNetwork.RepairResult.TIMED_OUT:
+                dobbyAnalytics.setWifiRepairTimedOut();
+                break;
+            case IterateAndRepairWifiNetwork.RepairResult.UNKNOWN:
+            default:
+                dobbyAnalytics.setWifiRepairUnknownFailure();
+                break;
+        }
+    }
+
+    private RepairRecord createRepairRecord(IterateAndRepairWifiNetwork.RepairResult repairResult) {
         RepairRecord repairRecord = new RepairRecord();
         repairRecord.uid = dobbyApplication.getUserUuid();
         repairRecord.phoneInfo = dobbyApplication.getPhoneInfo();
         repairRecord.appVersion = DobbyApplication.getAppVersion();
-        if (actionResult != null) {
-            repairRecord.repairStatusString = ActionResult.actionResultCodeToString(actionResult.getStatus());
-            repairRecord.repairStatusMessage = actionResult.getStatusString();
+        if (repairResult != null) {
+            repairRecord.repairStatusString = ActionResult.actionResultCodeToString(repairResult.getStatus());
+            repairRecord.repairStatusMessage = repairResult.getStatusString();
+            repairRecord.failureReason = repairResult.getRepairFailureReason();
         } else {
             repairRecord.repairStatusString = ActionResult.actionResultCodeToString(ActionResult.ActionResultCodes.UNKNOWN);
             repairRecord.repairStatusString = Utils.EMPTY_STRING;
+            repairRecord.failureReason = Utils.EMPTY_STRING;
         }
         repairRecord.timestamp = System.currentTimeMillis();
         return repairRecord;

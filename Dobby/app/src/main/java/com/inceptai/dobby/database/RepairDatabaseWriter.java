@@ -24,6 +24,7 @@ public class RepairDatabaseWriter {
     private static final String REPAIR_NODE_NAME = "repairs";
     private static final String USERS_NODE_NAME = "users";
     private static final String USERS_DB_ROOT = BuildConfig.FLAVOR + "/" + BuildConfig.BUILD_TYPE + "/" + USERS_NODE_NAME;
+    private static final String REPAIRS_DB_ROOT = BuildConfig.FLAVOR + "/" + BuildConfig.BUILD_TYPE + "/" + REPAIR_NODE_NAME;
 
     private DatabaseReference mDatabase;
     private ExecutorService executorService;
@@ -43,13 +44,22 @@ public class RepairDatabaseWriter {
             userKey = mDatabase.child(USERS_DB_ROOT).push().getKey();
         }
         String repairKey = mDatabase.child(USERS_NODE_NAME).child(userKey).child(REPAIR_NODE_NAME).push().getKey();
-        Map<String, Object> inferenceValues = repairRecord.toMap();
+        Map<String, Object> repairValues = repairRecord.toMap();
         DobbyLog.i("Repair key: " + repairKey);
+
+        //Writing to users/UUID/repairs/repairKey
         Map<String, Object> userUpdates = new HashMap<>();
-        userUpdates.put("/" + USERS_DB_ROOT + "/" + userKey + "/" + REPAIR_NODE_NAME + "/" + repairKey , inferenceValues);
+        userUpdates.put("/" + USERS_DB_ROOT + "/" + userKey + "/" + REPAIR_NODE_NAME + "/" + repairKey , repairValues);
         mDatabase.child(USERS_DB_ROOT).child(userKey).child(REPAIR_NODE_NAME).child(repairKey).addValueEventListener(failureListener);
         mDatabase.updateChildren(userUpdates);
+
+        //Writing to repairs/repairKeyEndPoint
+        Map<String, Object> repairUpdates = new HashMap<>();
+        userUpdates.put("/" + REPAIRS_DB_ROOT + "/" + repairKey , repairValues);
+        mDatabase.updateChildren(repairUpdates);
+
     }
+
 
     public void writeRepairToDatabase(final RepairRecord repairRecord) {
         executorService.submit(new Runnable() {

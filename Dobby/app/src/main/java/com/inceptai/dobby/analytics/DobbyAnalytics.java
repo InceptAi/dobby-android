@@ -148,6 +148,14 @@ public class DobbyAnalytics extends ExpertChatAnalytics {
     private static final String WIFI_REPAIR_CANCELLED = "wifi_repair_cancelled";
     private static final String WIFI_REPAIR_FINISHED = "wifi_repair_finished";
 
+    //Wifi Repair failure reasons
+    private static final String WIFI_REPAIR_NO_NEARBY_CONFIGURED_NETWORKS = "no_nearby_config_nw";
+    private static final String WIFI_REPAIR_UNABLE_TO_CONNECT_TO_ANY_NETWORK = "unable_to_connect";
+    private static final String WIFI_REPAIR_NO_NETWORK_WITH_ONLINE_CONNECTIVITY_MODE = "no_nw_with_internet";
+    private static final String WIFI_REPAIR_UNABLE_TO_TOGGLE_WIFI = "unable_to_toggle_wifi";
+    private static final String WIFI_REPAIR_TIMED_OUT = "timed_out";
+    private static final String WIFI_REPAIR_UNKNOWN = "unknown";
+
 
     //service related
     private static final String WIFI_SERVICE_STARTED = "wifi_service_started";
@@ -612,6 +620,37 @@ public class DobbyAnalytics extends ExpertChatAnalytics {
         Bundle bundle = new Bundle();
         bundle.putInt(WIFI_REPAIR_FAILURE_CODE, failureCode);
         dobbyAnalyticsBackend.logEvent(WIFI_REPAIR_FAILED, bundle);
+    }
+
+    public void setWifiRepairNoNearbyConfiguredNetworks() {
+        Bundle bundle = new Bundle();
+        dobbyAnalyticsBackend.logEvent(WIFI_REPAIR_NO_NEARBY_CONFIGURED_NETWORKS, bundle);
+    }
+
+    public void setWifiRepairNoNetworkWithOnlineConnectivityMode() {
+        Bundle bundle = new Bundle();
+        dobbyAnalyticsBackend.logEvent(WIFI_REPAIR_NO_NETWORK_WITH_ONLINE_CONNECTIVITY_MODE, bundle);
+    }
+
+    public void setWifiRepairUnableToConnectToAnyNetwork() {
+        Bundle bundle = new Bundle();
+        dobbyAnalyticsBackend.logEvent(WIFI_REPAIR_UNABLE_TO_CONNECT_TO_ANY_NETWORK, bundle);
+    }
+
+    public void setWifiRepairUnableToToggleWifi() {
+        Bundle bundle = new Bundle();
+        dobbyAnalyticsBackend.logEvent(WIFI_REPAIR_UNABLE_TO_TOGGLE_WIFI, bundle);
+    }
+
+    public void setWifiRepairTimedOut() {
+        Bundle bundle = new Bundle();
+        dobbyAnalyticsBackend.logEvent(WIFI_REPAIR_TIMED_OUT, bundle);
+    }
+
+
+    public void setWifiRepairUnknownFailure() {
+        Bundle bundle = new Bundle();
+        dobbyAnalyticsBackend.logEvent(WIFI_REPAIR_UNKNOWN, bundle);
     }
 
     public void setWifiServiceBindingFailed() {

@@ -17,6 +17,7 @@ public class RepairRecord {
     public String appVersion;
     public String repairStatusMessage;
     public String repairStatusString;
+    public String failureReason;
     public long timestamp;
 
     public RepairRecord() {}
@@ -30,6 +31,7 @@ public class RepairRecord {
         result.put("repairStatusString", repairStatusMessage);
         result.put("appVersion", appVersion);
         result.put("timestamp", timestamp);
+        result.put("failureReason", failureReason);
         return result;
     }
 
@@ -57,5 +59,7 @@ public class RepairRecord {
         return repairStatusString;
     }
 
-
+    public String getFailureReason() {
+        return failureReason;
+    }
 }
