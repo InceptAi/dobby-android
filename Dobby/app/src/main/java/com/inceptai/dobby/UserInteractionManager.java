@@ -4,7 +4,6 @@ import android.app.AlarmManager;
 import android.content.Context;
 
 import com.google.common.eventbus.Subscribe;
-import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.dobby.ai.DataInterpreter;
 import com.inceptai.dobby.ai.DobbyAi;
 import com.inceptai.dobby.ai.RtDataSource;
@@ -16,6 +15,7 @@ import com.inceptai.dobby.expert.ExpertChat;
 import com.inceptai.dobby.expert.ExpertChatService;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.utils.DobbyLog;
+import com.inceptai.dobby.utils.NeoServiceManager;
 import com.inceptai.dobby.utils.Utils;
 import com.inceptai.neoservice.NeoService;
 
@@ -40,7 +40,7 @@ public class UserInteractionManager implements
     private static final long MAX_TIME_ELAPSED_FOR_RESUMING_EXPERT_MODE_MS = AlarmManager.INTERVAL_DAY;
     private static final long DELAY_BEFORE_WELCOME_MESSAGE_MS = 500;
 
-    private static final String SERVER_ADDRESS = "ws://192.168.1.129:8080/";
+    private static final String DEFAULT_NEO_SERVER_ADDRESS = "ws://dobby1743.duckdns.org:8080/";
 
 
     private long currentEtaSeconds;
@@ -68,8 +68,7 @@ public class UserInteractionManager implements
     @Inject
     RemoteConfig remoteConfig;
 
-    private NeoService neoService;
-
+    private NeoServiceManager neoServiceManager;
 
     public UserInteractionManager(Context context, InteractionCallback interactionCallback, boolean showContactHumanAction) {
         ((DobbyApplication) context.getApplicationContext()).getProdComponent().inject(this);
@@ -85,9 +84,7 @@ public class UserInteractionManager implements
         dobbyAi.setShowContactHumanButton(showContactHumanAction);
         dobbyEventBus.registerListener(this);
         this.historyAvailable = false;
-        startConfigFetchAndWait();
-
-        //notificationInfoReceiver = new NotificationInfoReceiver();
+        neoServiceManager = new NeoServiceManager(remoteConfig, dobbyThreadpool, dobbyApplication, this);
     }
 
     public interface InteractionCallback {
@@ -137,26 +134,22 @@ public class UserInteractionManager implements
         expertChatService.unregisterChatCallback();
         expertChatService.disconnect();
         dobbyAi.cleanup();
-        neoService.cleanup();
+        neoServiceManager.cleanup();
     }
 
     public void startNeoService() {
-        neoService.startService();
+        neoServiceManager.startService();
 //        if (interactionCallback != null) {
 //            interactionCallback.requestOverlayPermission();
 //        }
     }
 
     public void stopNeoService() {
-        neoService.stopService();
+        neoServiceManager.stopService();
     }
 
     public void toggleNeoService() {
-        if (neoService.isServiceRunning()) {
-            stopNeoByExpert();
-        } else {
-            startNeoByExpert();
-        }
+        neoServiceManager.toggleNeoService();
     }
 
     public void overlayPermissionStatus(boolean granted) {
@@ -285,20 +278,14 @@ public class UserInteractionManager implements
 
 
     //Dobby Ai callbacks
-
-
-    public UserInteractionManager() {
-        super();
-    }
-
     @Override
     public void startNeoByExpert() {
-        startNeoService();
+        neoServiceManager.startService();
     }
 
     @Override
     public void stopNeoByExpert() {
-        stopNeoService();
+        neoServiceManager.stopService();
     }
 
     @Override
@@ -566,45 +553,4 @@ public class UserInteractionManager implements
 
     }
 
-
-    //Remote config fetch
-
-    private void startConfigFetchAndWait() {
-        ListenableFuture<RemoteConfig> remoteConfigListenableFuture =  remoteConfig.fetchAsync();
-        remoteConfigListenableFuture.addListener(new Runnable() {
-            @Override
-            public void run() {
-                //We have the server info: lets start the service
-                DobbyLog.v("UIM: Starting neoService with server: " + remoteConfig.getNeoServer() + " and UUID " + dobbyApplication.getUserUuid());
-                neoService = new NeoService(remoteConfig.getNeoServer(), dobbyApplication.getUserUuid(), context, UserInteractionManager.this);
-            }
-        }, dobbyThreadpool.getExecutor());
-    }
-
-
-    // Our handler for received Intents. This will be called whenever an Intent
-    // with an action named "custom-event-name" is broad casted.
-    /*
-    private class NotificationInfoReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            // Get extra data included in the Intent
-            String notificationTitle = intent.getStringExtra(WifiMonitoringService.EXTRA_NOTIFICATION_TITLE);
-            String notificationBody = intent.getStringExtra(WifiMonitoringService.EXTRA_NOTIFICATION_BODY);
-            int notificationId = intent.getIntExtra(WifiMonitoringService.EXTRA_NOTIFICATION_ID, 0);
-            dobbyThreadpool.getExecutor().execute(new DisplayAppNotification(context, notificationTitle, notificationBody, notificationId));
-        }
-    }
-
-    private void registerNotificationInfoReceiver() {
-        IntentFilter intentFilter = new IntentFilter(WifiMonitoringService.NOTIFICATION_INFO_INTENT_VALUE);
-        LocalBroadcastManager.getInstance(context).registerReceiver(
-                notificationInfoReceiver, intentFilter);
-    }
-
-    private void unRegisterNotificationInfoReceiver() {
-        LocalBroadcastManager.getInstance(context).unregisterReceiver(
-                notificationInfoReceiver);
-    }
-    */
 }

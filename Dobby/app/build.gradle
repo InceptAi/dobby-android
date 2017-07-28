@@ -87,6 +87,10 @@ android {
     lintOptions {
         abortOnError false
     }
+
+    dexOptions {
+        jumboMode = true
+    }
 }
 
 
@@ -193,5 +197,6 @@ dependencies {
     androidTestCompile 'com.android.support.test:rules:' + rootProject.rulesVersion
     androidTestCompile 'com.squareup.spoon:spoon-client:1.6.4'
 }
+
 
 apply plugin: 'com.google.gms.google-services'
