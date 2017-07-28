@@ -90,7 +90,7 @@ public class ExpertChatActivity extends AppCompatActivity implements
     //Interaction Manager callbacks
 
     @Override
-    public void requestOverlayPermission() {
+    public void requestAccessibilityPermission() {
         //No-op
     }
 

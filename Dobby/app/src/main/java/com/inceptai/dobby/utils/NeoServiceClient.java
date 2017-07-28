@@ -13,20 +13,20 @@ import java.util.concurrent.Executor;
 /**
  * Created by vivek on 7/27/17.
  */
-public class NeoServiceManager {
+public class NeoServiceClient {
     private static final String DEFAULT_NEO_SERVER_ADDRESS = "ws://dobby1743.duckdns.org:8080/";
     private static final String PREF_SERVER_ADDRESS = "neo_server_address";
-
+    private static final int MAX_CHARACTERS_FOR_STATUS = 100;
     private RemoteConfig remoteConfig;
     private Executor executor;
     private Context context;
     private NeoService neoService;
     private NeoService.Callback neoServiceCallback;
 
-    public NeoServiceManager(RemoteConfig remoteConfig,
-                             DobbyThreadpool dobbyThreadpool,
-                             DobbyApplication dobbyApplication,
-                             NeoService.Callback neoServiceCallback) {
+    public NeoServiceClient(RemoteConfig remoteConfig,
+                            DobbyThreadpool dobbyThreadpool,
+                            DobbyApplication dobbyApplication,
+                            NeoService.Callback neoServiceCallback) {
         this.remoteConfig = remoteConfig;
         executor = dobbyThreadpool.getExecutor();
         context = dobbyApplication.getApplicationContext();
@@ -48,6 +48,21 @@ public class NeoServiceManager {
         } else {
             startService();
         }
+    }
+
+    public void setStatus(String message) {
+        String trailer = Utils.EMPTY_STRING;
+        if (message != null && !message.isEmpty()) {
+            if (message.length() > MAX_CHARACTERS_FOR_STATUS) {
+                trailer = "...";
+            }
+            neoService.updateStatus(message.substring(0, Math.min(MAX_CHARACTERS_FOR_STATUS, message.length())) + trailer);
+        }
+    }
+
+
+    public void takeUserToAccessibilitySettings() {
+        NeoService.showAccessibilitySettings(context);
     }
 
     private boolean saveServerAddressIfChanged(String newAddress) {

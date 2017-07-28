@@ -357,8 +357,13 @@ public class MainActivity extends AppCompatActivity
         requestLocationPermission();
     }
 
-///Neo stuff
+    @Override
+    public void requestAccessibilityPermission() {
+        WifiDocDialogFragment fragment = WifiDocDialogFragment.forDobbyAccessibilityPermission(this);
+        fragment.show(this.getSupportFragmentManager(), "Accessibility Permission.");
+    }
 
+    //Neo stuff
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         DobbyLog.i("onActivityResult:" + requestCode + " package name: " + getPackageName());
@@ -391,31 +396,12 @@ public class MainActivity extends AppCompatActivity
     private void askForOverlayPermission() {
         askedForOverlayPermission = true;
         Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
-        //intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivityForResult(intent, PERMISSION_OVERLAY_REQUEST_CODE);
         new OverlayPermissionChecker(dobbyThreadpool.getScheduledExecutorService()).startChecking();
     }
 
     private boolean isAndroidMOrLater() {
         return Build.VERSION.SDK_INT >= M;
-    }
-
-    @Override
-    public void requestOverlayPermission() {
-        if (!isAndroidMOrLater() || Settings.canDrawOverlays(this)) {
-            userInteractionManager.overlayPermissionStatus(true /* granted */);
-            return;
-        }
-
-        if (isAndroidMOrLater()) {
-            if (!askedForOverlayPermission) {
-                askForOverlayPermission();
-            } else {
-                DobbyLog.v("Waiting for user to grant overlay permission");
-            }
-        } else {
-            userInteractionManager.overlayPermissionStatus(true /* by default since lower than M */);
-        }
     }
 
     @Override
@@ -610,9 +596,7 @@ public class MainActivity extends AppCompatActivity
     private boolean checkOverlayPermissionAndLaunchMainActivity() {
         if (Settings.canDrawOverlays(MainActivity.this)) {
             //You have the permission, re-launch MainActivity
-            Intent i = new Intent(MainActivity.this, MainActivity.class);
-            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(i);
+            Utils.launchWifiExpertMainActivity(this);
             return true;
         }
         return false;
@@ -646,4 +630,5 @@ public class MainActivity extends AppCompatActivity
             }, CHECKING_INTERVAL_MS, TimeUnit.MILLISECONDS);
         }
     }
+
 }

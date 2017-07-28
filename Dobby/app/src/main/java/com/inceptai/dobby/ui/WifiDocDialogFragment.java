@@ -44,9 +44,10 @@ public class WifiDocDialogFragment extends DialogFragment {
     public static final int DIALOG_EXPERT_ONBOARDING = 1004;
     public static final int DIALOG_SHOW_SIMPLE_FEEDBACK = 1005;
     public static final int DIALOG_SHOW_LOCATION_PERMISSION_REQUEST = 1006;
-    public static final int DIALOG_SHOW_LOCATION_AND_OVERDRAW_PERMISSION_REQUEST = 1009;
     public static final int DIALOG_SHOW_REPAIR_SUMMARY = 1007;
     public static final int DIALOG_AUTOMATIC_REPAIR_ONBOARDING = 1008;
+    public static final int DIALOG_SHOW_LOCATION_AND_OVERDRAW_PERMISSION_REQUEST = 1009;
+    public static final int DIALOG_SHOW_ACCESSIBILITY_PERMISSION_REQUEST = 1010;
 
 
     public static final String DIALOG_PAYLOAD = "payload";
@@ -109,6 +110,8 @@ public class WifiDocDialogFragment extends DialogFragment {
                 return createLocationPermissionRequestDialog(bundle);
             case DIALOG_SHOW_LOCATION_AND_OVERDRAW_PERMISSION_REQUEST:
                 return createLocationAndOverdrawPermissionRequestDialog(bundle);
+            case DIALOG_SHOW_ACCESSIBILITY_PERMISSION_REQUEST:
+                return createAccessibilityPermissionRequestDialog(bundle);
             case DIALOG_SHOW_REPAIR_SUMMARY:
                 return createRepairSummaryDialog(bundle);
             case DIALOG_AUTOMATIC_REPAIR_ONBOARDING:
@@ -206,6 +209,16 @@ public class WifiDocDialogFragment extends DialogFragment {
         fragment.setArguments(bundle);
         return fragment;
     }
+
+    public static WifiDocDialogFragment forDobbyAccessibilityPermission(MainActivity mainActivity)  {
+        WifiDocDialogFragment fragment = new WifiDocDialogFragment();
+        fragment.setMainActivity(mainActivity);
+        Bundle bundle = new Bundle();
+        bundle.putInt(DIALOG_TYPE, DIALOG_SHOW_ACCESSIBILITY_PERMISSION_REQUEST);
+        fragment.setArguments(bundle);
+        return fragment;
+    }
+
 
 
     private Dialog createSuggestionsDialog(Bundle bundle) {
@@ -364,6 +377,26 @@ public class WifiDocDialogFragment extends DialogFragment {
         return builder.create();
     }
 
+
+
+    private Dialog createAccessibilityPermissionRequestDialog(Bundle bundle) {
+        Preconditions.checkArgument(BuildConfig.FLAVOR.equals(WIFIEXPERT_FLAVOR));
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        LayoutInflater inflater = getActivity().getLayoutInflater();
+        rootView = inflater.inflate(R.layout.accessibility_permission_dialog_fragment_dobby, null);
+        FrameLayout nextFl = (FrameLayout) rootView.findViewById(R.id.bottom_next_fl);
+        nextFl.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mainActivity != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    mainActivity.requestLocationAndOverdrawPermission();
+                }
+                dismiss();
+            }
+        });
+        builder.setView(rootView);
+        return builder.create();
+    }
 
     @NonNull
     private Dialog createPrivacyPolicyDialog(Bundle bundle) {
