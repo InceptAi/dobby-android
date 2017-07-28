@@ -2,7 +2,6 @@ package com.inceptai.wifimonitoringservice.actionlibrary.actions;
 
 import android.content.Context;
 import android.support.annotation.Nullable;
-import android.util.Log;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
@@ -101,7 +100,7 @@ public abstract class FutureAction {
                     ServiceLog.v("FutureAction: Setting result for action with name " + getName());
                     setResult(new ActionResult(SUCCESS, ActionResult.actionResultCodeToString(SUCCESS), future.get()));
                 } catch (InterruptedException | ExecutionException | CancellationException e) {
-                    Log.w("", "Exception getting result for:" + getName() +
+                    ServiceLog.e("Exception getting result for:" + getName() +
                             " e = " + e.toString());
                     setResult(new ActionResult(EXCEPTION, e.toString()));
                 } finally {
@@ -134,7 +133,7 @@ public abstract class FutureAction {
                         ServiceLog.v("CO: Running upon successful completion for " + getName());
                         uponSuccessfulCompletion.post();
                     } else {
-                        uponCompletion.setResult(new ActionResult(ActionResult.ActionResultCodes.FAILED_TO_START));
+                        uponSuccessfulCompletion.setResult(new ActionResult(ActionResult.ActionResultCodes.FAILED_TO_START));
                     }
                 }
             }
