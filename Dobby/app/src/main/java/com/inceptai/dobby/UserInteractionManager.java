@@ -4,6 +4,7 @@ import android.app.AlarmManager;
 import android.content.Context;
 
 import com.google.common.eventbus.Subscribe;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.dobby.ai.DataInterpreter;
 import com.inceptai.dobby.ai.DobbyAi;
 import com.inceptai.dobby.ai.RtDataSource;
@@ -64,6 +65,8 @@ public class UserInteractionManager implements
     DobbyAnalytics dobbyAnalytics;
     @Inject
     DobbyApplication dobbyApplication;
+    @Inject
+    RemoteConfig remoteConfig;
 
     private NeoService neoService;
 
@@ -82,7 +85,8 @@ public class UserInteractionManager implements
         dobbyAi.setShowContactHumanButton(showContactHumanAction);
         dobbyEventBus.registerListener(this);
         this.historyAvailable = false;
-        neoService = new NeoService(SERVER_ADDRESS, dobbyApplication.getUserUuid(), context, this);
+        startConfigFetchAndWait();
+
         //notificationInfoReceiver = new NotificationInfoReceiver();
     }
 
@@ -137,9 +141,10 @@ public class UserInteractionManager implements
     }
 
     public void startNeoService() {
-        if (interactionCallback != null) {
-            interactionCallback.requestOverlayPermission();
-        }
+        neoService.startService();
+//        if (interactionCallback != null) {
+//            interactionCallback.requestOverlayPermission();
+//        }
     }
 
     public void stopNeoService() {
@@ -157,9 +162,9 @@ public class UserInteractionManager implements
     public void overlayPermissionStatus(boolean granted) {
         if (!granted) {
             DobbyLog.e("Permission denied for overlay draw.");
-            sendPermissionDeniedMetaMessage();
+            sendOverlayPermissionDeniedMetaMessage();
         } else {
-            neoService.startService();
+            sendOverlayPermissionGrantedMetaMessage();
         }
     }
 
@@ -512,14 +517,17 @@ public class UserInteractionManager implements
         sendServiceReadyMetaMessage();
     }
 
+
     @Override
-    public void onStop(int reason) {
+    public void onStopClickedByUser() {
+        sendServiceStoppedByUserMetaMessage();
+    }
+
+    @Override
+    public void onServiceStopped(int reason) {
         switch (reason) {
             case NeoService.REASON_STOPPED_BY_EXPERT:
                 sendServiceStoppedByExpertMetaMessage();
-                break;
-            case NeoService.REASON_STOPPED_BY_USER:
-                sendServiceStoppedByUserMetaMessage();
                 break;
             case NeoService.REASON_STOPPED_UNABLE_TO_SHOW_SETTINGS:
                 sendShowSettingsFailureMetaMessage();
@@ -540,9 +548,12 @@ public class UserInteractionManager implements
 
     }
 
-    private void sendPermissionDeniedMetaMessage() {
-        expertChatService.pushMetaChatMessage(ExpertChat.MSG_TYPE_META_NEO_SERVICE_PERMISSION_DENIED);
+    private void sendOverlayPermissionDeniedMetaMessage() {
+        expertChatService.pushMetaChatMessage(ExpertChat.MSG_TYPE_META_NEO_SERVICE_OVERLAY_PERMISSION_DENIED);
+    }
 
+    private void sendOverlayPermissionGrantedMetaMessage() {
+        expertChatService.pushMetaChatMessage(ExpertChat.MSG_TYPE_META_NEO_SERVICE_OVERLAY_PERMISSION_GRANTED);
     }
 
     private void sendServiceStoppedByUserMetaMessage() {
@@ -554,6 +565,22 @@ public class UserInteractionManager implements
         expertChatService.pushMetaChatMessage(ExpertChat.MSG_TYPE_META_NEO_SERVICE_STOPPED_BY_EXPERT);
 
     }
+
+
+    //Remote config fetch
+
+    private void startConfigFetchAndWait() {
+        ListenableFuture<RemoteConfig> remoteConfigListenableFuture =  remoteConfig.fetchAsync();
+        remoteConfigListenableFuture.addListener(new Runnable() {
+            @Override
+            public void run() {
+                //We have the server info: lets start the service
+                DobbyLog.v("UIM: Starting neoService with server: " + remoteConfig.getNeoServer() + " and UUID " + dobbyApplication.getUserUuid());
+                neoService = new NeoService(remoteConfig.getNeoServer(), dobbyApplication.getUserUuid(), context, UserInteractionManager.this);
+            }
+        }, dobbyThreadpool.getExecutor());
+    }
+
 
     // Our handler for received Intents. This will be called whenever an Intent
     // with an action named "custom-event-name" is broad casted.

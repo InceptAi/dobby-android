@@ -45,8 +45,12 @@ import com.inceptai.wifimonitoringservice.WifiMonitoringService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
+
+import static android.os.Build.VERSION_CODES.M;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
@@ -75,6 +79,7 @@ public class MainActivity extends AppCompatActivity
     private NotificationInfoReceiver notificationInfoReceiver;
     private NeoCustomIntentReceiver neoCustomIntentReceiver;
     private boolean askedForOverlayPermission;
+    private boolean needOverlayPermission;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,6 +112,7 @@ public class MainActivity extends AppCompatActivity
             return;
         }
 
+        needOverlayPermission = false;
         userInteractionManager = new UserInteractionManager(getApplicationContext(), this, SHOW_CONTACT_HUMAN_BUTTON);
         heartBeatManager.setDailyHeartBeat();
         notificationInfoReceiver = new NotificationInfoReceiver();
@@ -119,7 +125,7 @@ public class MainActivity extends AppCompatActivity
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        if (Build.VERSION.SDK_INT >= M) {
             drawer.addDrawerListener(toggle);
         } else {
             drawer.setDrawerListener(toggle);
@@ -134,6 +140,7 @@ public class MainActivity extends AppCompatActivity
             startWifiMonitoringService();
         }
     }
+
 
 
     private ChatFragment getChatFragmentFromTag() {
@@ -315,9 +322,9 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    @TargetApi(Build.VERSION_CODES.M)
+    @TargetApi(M)
     public void showLocationPermissionRequest() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        if (Build.VERSION.SDK_INT >= M) {
             // Assume thisActivity is the current activity
             int permissionCheck = this.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION);
             if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
@@ -327,8 +334,27 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+
+    @TargetApi(M)
+    public void showLocationAndOverdrawPermissionRequest() {
+        if (Build.VERSION.SDK_INT >= M) {
+            // Assume thisActivity is the current activity
+            boolean locationPermissionGranted = this.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+            boolean overdrawPermissionGranted = Settings.canDrawOverlays(this);
+            if (!locationPermissionGranted && !overdrawPermissionGranted) {
+                WifiDocDialogFragment fragment = WifiDocDialogFragment.forDobbyLocationAndOverdrawPermission(this);
+                fragment.show(this.getSupportFragmentManager(), "Request Location and Draw Permission.");
+            }
+        }
+    }
+
     public void requestLocationPermission() {
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_COARSE_LOCATION_REQUEST_CODE);
+    }
+
+    public void requestLocationAndOverdrawPermission() {
+        needOverlayPermission = true;
+        requestLocationPermission();
     }
 
 ///Neo stuff
@@ -341,6 +367,7 @@ public class MainActivity extends AppCompatActivity
             if (Settings.canDrawOverlays(this)) {
                 //Callback that permission granted
                 userInteractionManager.overlayPermissionStatus(true);
+                //navigate back to current activity
             } else {
                 //Callback that permission denied
                 userInteractionManager.overlayPermissionStatus(false);
@@ -360,16 +387,17 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    @TargetApi(Build.VERSION_CODES.M)
+    @TargetApi(M)
     private void askForOverlayPermission() {
         askedForOverlayPermission = true;
         Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
         //intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivityForResult(intent, PERMISSION_OVERLAY_REQUEST_CODE);
+        new OverlayPermissionChecker(dobbyThreadpool.getScheduledExecutorService()).startChecking();
     }
 
     private boolean isAndroidMOrLater() {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M;
+        return Build.VERSION.SDK_INT >= M;
     }
 
     @Override
@@ -399,6 +427,9 @@ public class MainActivity extends AppCompatActivity
                 } else {
                     Utils.buildSimpleDialog(this, "Functionality limited",
                             "Since location access has not been granted, this app will not be able to analyze your wifi network.");
+                }
+                if (needOverlayPermission) {
+                    askForOverlayPermission();
                 }
                 return;
         }
@@ -460,7 +491,8 @@ public class MainActivity extends AppCompatActivity
     public void onRecyclerViewReady() {
         //Get the welcome message
         DobbyLog.v("MainActivity:onRecyclerViewReady");
-        showLocationPermissionRequest();
+        //showLocationPermissionRequest();
+        showLocationAndOverdrawPermissionRequest();
     }
 
     @Override
@@ -571,6 +603,47 @@ public class MainActivity extends AppCompatActivity
         if (neoCustomIntentReceiver != null) {
             unregisterReceiver(neoCustomIntentReceiver);
             neoCustomIntentReceiver = null;
+        }
+    }
+
+    @TargetApi(M)
+    private boolean checkOverlayPermissionAndLaunchMainActivity() {
+        if (Settings.canDrawOverlays(MainActivity.this)) {
+            //You have the permission, re-launch MainActivity
+            Intent i = new Intent(MainActivity.this, MainActivity.class);
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(i);
+            return true;
+        }
+        return false;
+    }
+
+    private class OverlayPermissionChecker {
+        private static final int CHECKING_INTERVAL_MS = 1000;
+        private static final int MAX_ATTEMPTS = 5;
+
+        private ScheduledExecutorService scheduledExecutorService;
+        private int numAttempts;
+
+        public OverlayPermissionChecker(ScheduledExecutorService scheduledExecutorService) {
+            this.scheduledExecutorService = scheduledExecutorService;
+            numAttempts = 0;
+        }
+
+        void startChecking() {
+            postOverdrawCheck();
+        }
+
+        private void postOverdrawCheck() {
+            scheduledExecutorService.schedule(new Runnable() {
+                @Override
+                public void run() {
+                    numAttempts++;
+                    if (!MainActivity.this.checkOverlayPermissionAndLaunchMainActivity() && numAttempts < MAX_ATTEMPTS) {
+                        postOverdrawCheck();
+                    }
+                }
+            }, CHECKING_INTERVAL_MS, TimeUnit.MILLISECONDS);
         }
     }
 }

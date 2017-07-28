@@ -20,6 +20,7 @@ import android.widget.ListView;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 
+import com.google.common.base.Preconditions;
 import com.inceptai.dobby.BuildConfig;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.MainActivity;
@@ -33,6 +34,7 @@ import java.util.ArrayList;
 import javax.inject.Inject;
 
 import static com.inceptai.dobby.utils.Utils.WIFIDOC_FLAVOR;
+import static com.inceptai.dobby.utils.Utils.WIFIEXPERT_FLAVOR;
 
 
 public class WifiDocDialogFragment extends DialogFragment {
@@ -42,6 +44,7 @@ public class WifiDocDialogFragment extends DialogFragment {
     public static final int DIALOG_EXPERT_ONBOARDING = 1004;
     public static final int DIALOG_SHOW_SIMPLE_FEEDBACK = 1005;
     public static final int DIALOG_SHOW_LOCATION_PERMISSION_REQUEST = 1006;
+    public static final int DIALOG_SHOW_LOCATION_AND_OVERDRAW_PERMISSION_REQUEST = 1009;
     public static final int DIALOG_SHOW_REPAIR_SUMMARY = 1007;
     public static final int DIALOG_AUTOMATIC_REPAIR_ONBOARDING = 1008;
 
@@ -104,6 +107,8 @@ public class WifiDocDialogFragment extends DialogFragment {
                 return createSimpleFeedbackForm(bundle);
             case DIALOG_SHOW_LOCATION_PERMISSION_REQUEST:
                 return createLocationPermissionRequestDialog(bundle);
+            case DIALOG_SHOW_LOCATION_AND_OVERDRAW_PERMISSION_REQUEST:
+                return createLocationAndOverdrawPermissionRequestDialog(bundle);
             case DIALOG_SHOW_REPAIR_SUMMARY:
                 return createRepairSummaryDialog(bundle);
             case DIALOG_AUTOMATIC_REPAIR_ONBOARDING:
@@ -191,6 +196,17 @@ public class WifiDocDialogFragment extends DialogFragment {
         fragment.setArguments(bundle);
         return fragment;
     }
+
+
+    public static WifiDocDialogFragment forDobbyLocationAndOverdrawPermission(MainActivity mainActivity)  {
+        WifiDocDialogFragment fragment = new WifiDocDialogFragment();
+        fragment.setMainActivity(mainActivity);
+        Bundle bundle = new Bundle();
+        bundle.putInt(DIALOG_TYPE, DIALOG_SHOW_LOCATION_AND_OVERDRAW_PERMISSION_REQUEST);
+        fragment.setArguments(bundle);
+        return fragment;
+    }
+
 
     private Dialog createSuggestionsDialog(Bundle bundle) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
@@ -327,6 +343,27 @@ public class WifiDocDialogFragment extends DialogFragment {
         builder.setView(rootView);
         return builder.create();
     }
+
+
+    private Dialog createLocationAndOverdrawPermissionRequestDialog(Bundle bundle) {
+        Preconditions.checkArgument(BuildConfig.FLAVOR.equals(WIFIEXPERT_FLAVOR));
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        LayoutInflater inflater = getActivity().getLayoutInflater();
+        rootView = inflater.inflate(R.layout.location_and_overdraw_permission_dialog_fragment_dobby, null);
+        FrameLayout nextFl = (FrameLayout) rootView.findViewById(R.id.bottom_next_fl);
+        nextFl.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mainActivity != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    mainActivity.requestLocationAndOverdrawPermission();
+                }
+                dismiss();
+            }
+        });
+        builder.setView(rootView);
+        return builder.create();
+    }
+
 
     @NonNull
     private Dialog createPrivacyPolicyDialog(Bundle bundle) {

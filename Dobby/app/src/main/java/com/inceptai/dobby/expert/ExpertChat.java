@@ -31,7 +31,9 @@ public class ExpertChat {
     public static final int MSG_TYPE_META_NEO_SERVICE_STOPPED_BY_USER = 6002;
     public static final int MSG_TYPE_META_NEO_SERVICE_STOPPED_BY_EXPERT = 6003;
     public static final int MSG_TYPE_META_NEO_SERVICE_SHOWING_SETTINGS_FAILED = 6004;
-    public static final int MSG_TYPE_META_NEO_SERVICE_PERMISSION_DENIED = 6005;
+    public static final int MSG_TYPE_META_NEO_SERVICE_OVERLAY_PERMISSION_DENIED = 6005;
+    public static final int MSG_TYPE_META_NEO_SERVICE_OVERLAY_PERMISSION_GRANTED = 6006;
+
 
 
     String id;

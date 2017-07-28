@@ -115,6 +115,8 @@
     <string name="expected_response_time_for_expert">Expert response time:</string>
     <string name="location_permission_approval_text">We need the \'Location\' permission on Android to collect Wifi Scan Signal data. This will help us find issues with your Wifi Network.</string>
     <string name="location_permission_approval_title">Approval for the Location permission</string>
+    <string name="location_and_overdraw_permission_approval_title">Approval for permissions</string>
+    <string name="location_and_overdraw_permission_approval_text">We need the \'Location\' and \'Overdraw\' permissions to help you with issues. Location allows us to collect Wifi Scan data to pin point issues. Overdraw allows us to inform you when we are actively working on fixing issues.</string>
     <string name="you_are_now_talking_to_human_expert">You are now talking to a Human Expert !</string>
     <string name="contacting_human_expert">Contacted human expert, you can type any message to them &#8230;</string>
     <string name="contacting_and_getting_eta">Contacting Wifi Expert and getting ETA now &#8230;</string>
@@ -133,4 +135,6 @@
     <string name="repair_service_title">Repair your WiFi with one tap !</string>
     <string name="onboarding_service_desc1">Introducing Automatic Repair &#8212; which will monitor the health of your WiFi connection and take steps to resolve any issues on its own. </string>
     <string name="onboarding_service_desc2">You can also disable Automatic Repair and just manually repair your WiFi. No more WiFi frustrations !</string>
+    <string name="location_approval_text">Location permission allows us to collect Wifi Scan data to understand the issues.</string>
+    <string name="overdraw_approval_text">Overlay permission allows us to inform you when we are actively working on fixing issues.</string>
 </resources>
