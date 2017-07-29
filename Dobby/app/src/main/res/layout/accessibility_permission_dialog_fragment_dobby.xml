@@ -6,10 +6,10 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:orientation="horizontal"
-        android:paddingTop="20dp"
+        android:paddingTop="5dp"
         android:layout_gravity="left"
         android:gravity="center_horizontal"
-        android:paddingBottom="20dp"
+        android:paddingBottom="5dp"
         android:layout_height="wrap_content">
 
         <ImageView
@@ -17,33 +17,44 @@
             android:src="@mipmap/wifi_expert_launcher"
             android:layout_gravity="left"
             android:layout_height="wrap_content" />
+
         <TextView
+            android:id="@+id/textView"
             android:layout_width="wrap_content"
-            android:text="@string/accessibility_permission_approval_title"
+            android:layout_height="match_parent"
             android:gravity="center_vertical"
-            android:textColor="@color/soberDarkBlue"
-            android:textSize="16sp"
             android:paddingLeft="10dp"
-            android:layout_height="match_parent" />
+            android:text="@string/accessibility_permission_approval_title"
+            android:textColor="@color/soberDarkBlue"
+            android:textSize="16sp" />
 
     </LinearLayout>
 
+    <ImageView
+        android:id="@+id/imageView3"
+        android:layout_width="218dp"
+        android:layout_height="335dp"
+        android:layout_gravity="center"
+        android:adjustViewBounds="true"
+        android:contentDescription="Accessibility permission screenshot"
+        android:src="@drawable/accessibility_permission_scaled" />
 
     <TextView
+        android:id="@+id/textView5"
         android:layout_width="wrap_content"
-        android:paddingTop="20dp"
-        android:text="@string/accessibility_permission_approval_text"
-        android:textSize="14sp"
-        android:fontFamily="sans-serif-condensed-thin"
+        android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
+        android:fontFamily="sans-serif-condensed-thin"
         android:gravity="center_horizontal"
+        android:paddingBottom="10dp"
+        android:paddingEnd="10dp"
+        android:paddingLeft="10dp"
         android:paddingRight="10dp"
         android:paddingStart="10dp"
-        android:paddingLeft="10dp"
-        android:paddingEnd="10dp"
-        android:paddingBottom="10dp"
+        android:paddingTop="10dp"
+        android:text="@string/accessibility_permission_approval_text"
         android:textColor="@color/darkGray"
-        android:layout_height="wrap_content" />
+        android:textSize="14sp" />
 
     <FrameLayout
         android:id="@+id/bottom_next_fl"

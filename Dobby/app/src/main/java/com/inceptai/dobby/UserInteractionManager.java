@@ -73,6 +73,8 @@ public class UserInteractionManager implements
     RemoteConfig remoteConfig;
 
     private NeoServiceClient neoServiceClient;
+    private boolean isUserInChat;
+    private boolean triggerAccessibilityDialogOnResume;
 
     public UserInteractionManager(Context context, InteractionCallback interactionCallback, boolean showContactHumanAction) {
         ((DobbyApplication) context.getApplicationContext()).getProdComponent().inject(this);
@@ -89,6 +91,8 @@ public class UserInteractionManager implements
         dobbyEventBus.registerListener(this);
         this.historyAvailable = false;
         neoServiceClient = new NeoServiceClient(remoteConfig, dobbyThreadpool, dobbyApplication, this);
+        isUserInChat = false;
+        triggerAccessibilityDialogOnResume = false;
     }
 
     public interface InteractionCallback {
@@ -116,16 +120,21 @@ public class UserInteractionManager implements
 
     //API calls
     public void onUserEnteredChat() {
+        isUserInChat = true;
         fetchChatMessages();
         expertChatService.checkIn();
         expertChatService.registerToEventBusListener();
         expertChatService.sendUserEnteredMetaMessage();
         expertChatService.disableNotifications();
         updateExpertIndicator();
-        //unRegisterNotificationInfoReceiver();
+        if (triggerAccessibilityDialogOnResume) {
+            askForAccessibilityPermission();
+            triggerAccessibilityDialogOnResume = false;
+        }
     }
 
     public void onUserExitChat() {
+        isUserInChat = false;
         expertChatService.sendUserLeftMetaMessage();
         expertChatService.enableNotifications();
         expertChatService.saveState();
@@ -402,6 +411,7 @@ public class UserInteractionManager implements
         expertChatService.onNotificationConsumed();
     }
 
+
     //Private methods
     private String getEtaMessage() {
         String messagePrefix = context.getResources().getString(R.string.expected_response_time_for_expert);
@@ -495,17 +505,11 @@ public class UserInteractionManager implements
 
     @Override
     public void onRequestAccessibilitySettings() {
-        if (interactionCallback != null) {
-            interactionCallback.requestAccessibilityPermission();
+        if (isUserInChat) {
+            askForAccessibilityPermission();
+        } else {
+            triggerAccessibilityDialogOnResume = true;
         }
-        neoServiceClient.takeUserToAccessibilitySettings();
-        accessibilityCheckFuture = scheduledExecutorService.schedule(new Runnable() {
-            @Override
-            public void run() {
-                DobbyLog.e("User did not grant accessibility permission");
-                sendAccessibilityPermissionNotGrantedWithinTimeoutMessage();
-            }
-        }, ACCESSIBILITY_SETTING_CHECKER_TIMEOUT_MS, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -540,6 +544,19 @@ public class UserInteractionManager implements
     }
 
     //private stuff
+    private void askForAccessibilityPermission() {
+        if (interactionCallback != null) {
+            interactionCallback.requestAccessibilityPermission();
+        }
+        accessibilityCheckFuture = scheduledExecutorService.schedule(new Runnable() {
+            @Override
+            public void run() {
+                DobbyLog.e("User did not grant accessibility permission");
+                sendAccessibilityPermissionNotGrantedWithinTimeoutMessage();
+            }
+        }, ACCESSIBILITY_SETTING_CHECKER_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+    }
+
     private void sendAccessibilityPermissionNotGrantedWithinTimeoutMessage() {
         expertChatService.pushMetaChatMessage(ExpertChat.MSG_TYPE_META_NEO_ACCESSIBILITY_PERMISSION_NOT_GRANTED_WITHIN_TIMEOUT);
     }

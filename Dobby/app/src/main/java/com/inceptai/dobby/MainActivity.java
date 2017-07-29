@@ -40,6 +40,7 @@ import com.inceptai.dobby.ui.ChatFragment;
 import com.inceptai.dobby.ui.WifiDocDialogFragment;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
+import com.inceptai.neoservice.NeoService;
 import com.inceptai.wifimonitoringservice.WifiMonitoringService;
 
 import java.util.ArrayList;
@@ -357,12 +358,20 @@ public class MainActivity extends AppCompatActivity
         requestLocationPermission();
     }
 
+
     @Override
     public void requestAccessibilityPermission() {
+        showAccessibilityPermissionDialog();
+    }
+
+    private void showAccessibilityPermissionDialog() {
         WifiDocDialogFragment fragment = WifiDocDialogFragment.forDobbyAccessibilityPermission(this);
         fragment.show(this.getSupportFragmentManager(), "Accessibility Permission.");
     }
 
+    public void takeUserToAccessibilitySetting() {
+        NeoService.showAccessibilitySettings(this);
+    }
     //Neo stuff
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {

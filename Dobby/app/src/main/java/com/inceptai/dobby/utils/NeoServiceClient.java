@@ -16,7 +16,7 @@ import java.util.concurrent.Executor;
 public class NeoServiceClient {
     private static final String DEFAULT_NEO_SERVER_ADDRESS = "ws://dobby1743.duckdns.org:8080/";
     private static final String PREF_SERVER_ADDRESS = "neo_server_address";
-    private static final int MAX_CHARACTERS_FOR_STATUS = 100;
+    private static final int MAX_CHARACTERS_FOR_STATUS = 120;
     private RemoteConfig remoteConfig;
     private Executor executor;
     private Context context;
