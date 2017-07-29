@@ -544,7 +544,7 @@ public class UserInteractionManager implements
         sendServiceStoppedByExpertMetaMessage();
         Utils.launchWifiExpertMainActivity(context.getApplicationContext());
     }
-    
+
 
     //private stuff
     private void askForAccessibilityPermission() {
