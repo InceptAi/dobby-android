@@ -605,7 +605,7 @@ public class MainActivity extends AppCompatActivity
     private boolean checkOverlayPermissionAndLaunchMainActivity() {
         if (Settings.canDrawOverlays(MainActivity.this)) {
             //You have the permission, re-launch MainActivity
-            Utils.launchWifiExpertMainActivity(this);
+            Utils.launchWifiExpertMainActivity(this.getApplicationContext());
             return true;
         }
         return false;

@@ -524,24 +524,27 @@ public class UserInteractionManager implements
         sendServiceReadyMetaMessage();
     }
 
+    public UserInteractionManager() {
+        super();
+    }
 
     @Override
-    public void onStopClickedByUser() {
+    public void onServiceStopped() {
+        sendServiceStoppedDueToErrorsMetaMessage();
+    }
+
+    @Override
+    public void onUiStreamingStoppedByUser() {
         sendServiceStoppedByUserMetaMessage();
+        Utils.launchWifiExpertMainActivity(context.getApplicationContext());
     }
 
     @Override
-    public void onServiceStopped(int reason) {
-        switch (reason) {
-            case NeoService.REASON_STOPPED_BY_EXPERT:
-                sendServiceStoppedByExpertMetaMessage();
-                break;
-            default:
-                break;
-        }
-        //Bring the user back into the app
-        Utils.launchWifiExpertMainActivity(context);
+    public void onUiStreamingStoppedByExpert() {
+        sendServiceStoppedByExpertMetaMessage();
+        Utils.launchWifiExpertMainActivity(context.getApplicationContext());
     }
+    
 
     //private stuff
     private void askForAccessibilityPermission() {
@@ -565,8 +568,8 @@ public class UserInteractionManager implements
         expertChatService.pushMetaChatMessage(ExpertChat.MSG_TYPE_META_NEO_SERVICE_READY);
     }
 
-    private void sendShowSettingsFailureMetaMessage() {
-        expertChatService.pushMetaChatMessage(ExpertChat.MSG_TYPE_META_NEO_SERVICE_SHOWING_SETTINGS_FAILED);
+    private void sendServiceStoppedDueToErrorsMetaMessage() {
+        expertChatService.pushMetaChatMessage(ExpertChat.MSG_TYPE_META_NEO_SERVICE_STOPPED_DUE_TO_ERRORS);
 
     }
 
@@ -584,6 +587,11 @@ public class UserInteractionManager implements
     }
 
     private void sendServiceStoppedByExpertMetaMessage() {
+        expertChatService.pushMetaChatMessage(ExpertChat.MSG_TYPE_META_NEO_SERVICE_STOPPED_BY_EXPERT);
+
+    }
+
+    private void sendServiceStoppedDueToErrorsMessage() {
         expertChatService.pushMetaChatMessage(ExpertChat.MSG_TYPE_META_NEO_SERVICE_STOPPED_BY_EXPERT);
 
     }
