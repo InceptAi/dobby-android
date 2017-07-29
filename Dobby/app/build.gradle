@@ -47,7 +47,7 @@ android {
     productFlavors {
         wifidoc {
             applicationId  "com.inceptai.dobby.wifidoc"
-            versionCode 50
+            versionCode 51
             versionName "3.0.1-wifitester-repair"
         }
         dobby {

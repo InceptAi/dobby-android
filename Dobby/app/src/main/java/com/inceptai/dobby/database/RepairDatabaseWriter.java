@@ -55,7 +55,7 @@ public class RepairDatabaseWriter {
 
         //Writing to repairs/repairKeyEndPoint
         Map<String, Object> repairUpdates = new HashMap<>();
-        userUpdates.put("/" + REPAIRS_DB_ROOT + "/" + repairKey , repairValues);
+        repairUpdates.put("/" + REPAIRS_DB_ROOT + "/" + repairKey , repairValues);
         mDatabase.updateChildren(repairUpdates);
 
     }
