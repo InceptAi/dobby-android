@@ -283,11 +283,13 @@ public class UserInteractionManager implements
     //Dobby Ai callbacks
     @Override
     public void startNeoByExpert() {
+        //Stop notifications in onServiceReady
         neoServiceClient.startService();
     }
 
     @Override
     public void stopNeoByExpert() {
+        expertChatService.enableNotifications(); //Enable notifications here.
         neoServiceClient.stopService();
     }
 
@@ -522,6 +524,7 @@ public class UserInteractionManager implements
             DobbyLog.v("Exception while cancelling accessibility future");
         }
         sendServiceReadyMetaMessage();
+        expertChatService.disableNotifications();
     }
 
     public UserInteractionManager() {

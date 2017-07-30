@@ -1173,8 +1173,10 @@ public class DobbyAi implements ApiAiClient.ResultListener,
             actionTaker.performConnectivityTest();
         } else if (expertMessage.toLowerCase().contains("startneo")) {
             startNeo();
-        } else if (expertMessage.toLowerCase().contains("endneo")) {
+        } else if (expertMessage.toLowerCase().contains("endneo") || expertMessage.toLowerCase().contains("stopneo")) {
             endNeo();
+        } else if (expertMessage.toLowerCase().contains("launchexpert")) {
+            Utils.launchWifiExpertMainActivity(context.getApplicationContext());
         }
     }
 }
