@@ -384,8 +384,8 @@ public class MainActivity extends AppCompatActivity
                 //navigate back to current activity
             } else {
                 //Callback that permission denied
+                //Toast.makeText(this, "ACTION_MANAGE_OVERLAY_PERMISSION Permission Denied", Toast.LENGTH_SHORT).show();
                 userInteractionManager.overlayPermissionStatus(false);
-                Toast.makeText(this, "ACTION_MANAGE_OVERLAY_PERMISSION Permission Denied", Toast.LENGTH_SHORT).show();
             }
         } else if (requestCode == SPEECH_RECOGNITION_REQUEST_CODE) {
             if (resultCode == RESULT_OK && null != data) {

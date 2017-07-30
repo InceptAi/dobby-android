@@ -41,10 +41,7 @@ public class UserInteractionManager implements
     private static final String EXPERT_MODE_INITIATED_TIMESTAMP = "expert_mode_start_ts";
     private static final long MAX_TIME_ELAPSED_FOR_RESUMING_EXPERT_MODE_MS = AlarmManager.INTERVAL_DAY;
     private static final long DELAY_BEFORE_WELCOME_MESSAGE_MS = 500;
-    private static final long ACCESSIBILITY_SETTING_CHECKER_TIMEOUT_MS = 5000;
-
-    private static final String DEFAULT_NEO_SERVER_ADDRESS = "ws://dobby1743.duckdns.org:8080/";
-
+    private static final long ACCESSIBILITY_SETTING_CHECKER_TIMEOUT_MS = 10000;
 
     private long currentEtaSeconds;
     private InteractionCallback interactionCallback;
