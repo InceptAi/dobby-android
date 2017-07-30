@@ -463,7 +463,7 @@ public class DobbyAi implements ApiAiClient.ResultListener,
 
         if (useApiAi) {
             if (!chatInExpertMode || isButtonActionText) {
-                if (networkLayer.isWifiOnline()) {
+                if (networkLayer.isInternetReachable()) {
                     if (isQueryRequestForHumanExpert(text)) {
                         //User is asking for human through button,
                         //so reset the contexts before sending the request
