@@ -464,11 +464,6 @@ public class DobbyAi implements ApiAiClient.ResultListener,
         if (useApiAi) {
             if (!chatInExpertMode || isButtonActionText) {
                 if (networkLayer.isInternetReachable()) {
-                    if (isQueryRequestForHumanExpert(text)) {
-                        //User is asking for human through button,
-                        //so reset the contexts before sending the request
-                        //apiAiClient.resetContexts();
-                    }
                     apiAiClient.sendTextQuery(text, null, getLastAction(), this);
                 } else {
                     //Context doesn't matter here.
@@ -488,31 +483,13 @@ public class DobbyAi implements ApiAiClient.ResultListener,
 
     public void sendEvent(String text) {
         if (useApiAi) {
-            if (networkLayer.isWifiOnline()) {
+            if (networkLayer.isInternetReachable()) {
                 apiAiClient.sendTextQuery(null, text, getLastAction(), this);
             } else {
                 apiAiClient.processTextQueryOffline(null, text, getLastAction(), this);
             }
         } else {
             DobbyLog.w("Ignoring events for Wifi doc version :" + text);
-        }
-    }
-
-    public void sendWelcomeEvent(boolean resumeWithSuggestionIfPossible, boolean resumedWithExpertMode) {
-        if (useApiAi) {
-            if (resumeWithSuggestionIfPossible) {
-                if (lastSuggestion != null) {
-                    takeAction(new Action(Utils.EMPTY_STRING, ACTION_TYPE_SHOW_SHORT_SUGGESTION));
-                } else if (!resumedWithExpertMode){
-                    apiAiClient.processTextQueryOffline(null, ApiAiClient.APIAI_WELCOME_EVENT, getLastAction(), this);
-                }
-            } else {
-                if (!chatInExpertMode) {
-                    apiAiClient.processTextQueryOffline(null, ApiAiClient.APIAI_WELCOME_EVENT, getLastAction(), this);
-                }
-            }
-        } else {
-            DobbyLog.w("Ignoring events for Wifi doc version :" + ApiAiClient.APIAI_WELCOME_EVENT);
         }
     }
 

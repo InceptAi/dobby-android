@@ -52,7 +52,7 @@ android {
         }
         dobby {
             applicationId "com.inceptai.wifiexpert"
-            versionCode 44
+            versionCode 45
             versionName "3.0.0-wifiexpert-with-neo"
         }
     }
