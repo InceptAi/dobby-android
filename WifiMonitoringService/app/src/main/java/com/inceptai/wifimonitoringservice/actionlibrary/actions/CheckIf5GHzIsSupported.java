@@ -54,4 +54,6 @@ public class CheckIf5GHzIsSupported extends FutureAction {
     public ListenableFuture<ActionResult> getFuture() {
         return super.getFuture();
     }
+
+
 }

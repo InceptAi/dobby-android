@@ -27,5 +27,9 @@ dependencies {
     compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'com.google.guava:guava:20.0'
     compile 'com.google.code.gson:gson:2.7'
+    compile 'fr.bmartel:http-endec:1.04'
+    compile 'commons-net:commons-net:3.6'
+    compile project(':jspeedtest')
+
     testCompile 'junit:junit:4.12'
 }

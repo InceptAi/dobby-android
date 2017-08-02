@@ -71,6 +71,12 @@ public abstract class FutureAction {
 
     public void cancelAction() {
         settableFuture.cancel(true);
+        if (uponSuccessfulCompletion != null) {
+            uponSuccessfulCompletion.cancelAction();
+        }
+        if (uponCompletion != null) {
+            uponCompletion.cancelAction();
+        }
     }
 
     protected void setFuture(@Nullable final ListenableFuture<?> future) {
