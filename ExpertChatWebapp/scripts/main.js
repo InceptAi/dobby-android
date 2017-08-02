@@ -119,7 +119,25 @@ ExpertChat.prototype.loadMessages = function(userUuid) {
     }  else if (val.messageType == 5004)  {
 	    val.text = "META: Action completed.";
 	    val.name = val.timestamp;
-    }
+    }  else if (val.messageType == 6001)  {
+	    val.text = "META: Neo Service Ready.";
+	    val.name = val.timestamp;
+    }  else if (val.messageType == 6002)  {
+	    val.text = "META: Neo Event Streaming Stopped by User.";
+	    val.name = val.timestamp;
+    }  else if (val.messageType == 6003)  {
+	    val.text = "META: Neo Event Streaming Stopped by Expert.";
+	    val.name = val.timestamp;
+    }  else if (val.messageType == 6005)  {
+	    val.text = "META: Neo Service Overlay Permission Denied.";
+	    val.name = val.timestamp;
+    }  else if (val.messageType == 6006)  {
+	    val.text = "META: Neo Service Overlay Permission Granted.";
+	    val.name = val.timestamp;
+    }  else if (val.messageType == 6007)  {
+	    val.text = "META: Neo Accessibility Permission Not Granted within Timeout.";
+	    val.name = val.timestamp;
+    }  
     this.displayMessage(data.key, val.name, val.text, val.photoUrl, val.imageUrl);
   }.bind(this);
   this.messagesRef.limitToLast(12).on('child_added', setMessage);

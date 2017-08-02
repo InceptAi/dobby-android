@@ -17,6 +17,7 @@ import javax.inject.Singleton;
 @Singleton
 public class RemoteConfig {
     public static final String SHOW_INFO_IN_RELEASE = "show_info_in_rb";
+    public static final String NEO_SERVER = "neo_server_address";
 
     private FirebaseRemoteConfig firebaseRemoteConfig;
 
@@ -53,4 +54,9 @@ public class RemoteConfig {
     public boolean showInfoInReleaseBuilds() {
         return firebaseRemoteConfig.getBoolean(SHOW_INFO_IN_RELEASE);
     }
+
+    public String getNeoServer() {
+        return firebaseRemoteConfig.getString(NEO_SERVER);
+    }
+
 }

@@ -1,7 +1,6 @@
 package com.inceptai.dobby.ai;
 
 import android.content.Context;
-import android.content.Intent;
 import android.location.Location;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -97,8 +96,6 @@ public class DobbyAi implements ApiAiClient.ResultListener,
     private boolean isExpertListening = false;
     private boolean showContactHumanButton = true;
 
-
-
     @Inject
     NetworkLayer networkLayer;
     @Inject
@@ -129,6 +126,8 @@ public class DobbyAi implements ApiAiClient.ResultListener,
         void userAskedForExpert();
         void expertActionStarted();
         void expertActionCompleted();
+        void startNeoByExpert();
+        void stopNeoByExpert();
     }
 
     @Inject
@@ -464,12 +463,7 @@ public class DobbyAi implements ApiAiClient.ResultListener,
 
         if (useApiAi) {
             if (!chatInExpertMode || isButtonActionText) {
-                if (networkLayer.isWifiOnline()) {
-                    if (isQueryRequestForHumanExpert(text)) {
-                        //User is asking for human through button,
-                        //so reset the contexts before sending the request
-                        //apiAiClient.resetContexts();
-                    }
+                if (networkLayer.isInternetReachable()) {
                     apiAiClient.sendTextQuery(text, null, getLastAction(), this);
                 } else {
                     //Context doesn't matter here.
@@ -489,31 +483,13 @@ public class DobbyAi implements ApiAiClient.ResultListener,
 
     public void sendEvent(String text) {
         if (useApiAi) {
-            if (networkLayer.isWifiOnline()) {
+            if (networkLayer.isInternetReachable()) {
                 apiAiClient.sendTextQuery(null, text, getLastAction(), this);
             } else {
                 apiAiClient.processTextQueryOffline(null, text, getLastAction(), this);
             }
         } else {
             DobbyLog.w("Ignoring events for Wifi doc version :" + text);
-        }
-    }
-
-    public void sendWelcomeEvent(boolean resumeWithSuggestionIfPossible, boolean resumedWithExpertMode) {
-        if (useApiAi) {
-            if (resumeWithSuggestionIfPossible) {
-                if (lastSuggestion != null) {
-                    takeAction(new Action(Utils.EMPTY_STRING, ACTION_TYPE_SHOW_SHORT_SUGGESTION));
-                } else if (!resumedWithExpertMode){
-                    apiAiClient.processTextQueryOffline(null, ApiAiClient.APIAI_WELCOME_EVENT, getLastAction(), this);
-                }
-            } else {
-                if (!chatInExpertMode) {
-                    apiAiClient.processTextQueryOffline(null, ApiAiClient.APIAI_WELCOME_EVENT, getLastAction(), this);
-                }
-            }
-        } else {
-            DobbyLog.w("Ignoring events for Wifi doc version :" + ApiAiClient.APIAI_WELCOME_EVENT);
         }
     }
 
@@ -1093,16 +1069,23 @@ public class DobbyAi implements ApiAiClient.ResultListener,
 
     private void startNeo() {
         //Send neo start intent
-        Intent intent = new Intent();
-        intent.setAction("com.inceptai.neo.ACTION");
-        context.sendBroadcast(intent);
+        if (responseCallback != null) {
+            responseCallback.startNeoByExpert();
+        }
+//        Intent intent = new Intent();
+//        intent.setAction("com.inceptai.neo.ACTION");
+//        context.sendBroadcast(intent);
     }
 
     private void endNeo() {
         //End neo intent
-        Intent intent = new Intent();
-        intent.setAction("com.inceptai.neo.ACTION");
-        context.sendBroadcast(intent);
+        if (responseCallback != null) {
+            responseCallback.stopNeoByExpert();
+        }
+//
+//        Intent intent = new Intent();
+//        intent.setAction("com.inceptai.neo.ACTION");
+//        context.sendBroadcast(intent);
     }
 
     private void parseExpertTextAndTakeActionIfNeeded(String expertMessage) {
@@ -1167,8 +1150,10 @@ public class DobbyAi implements ApiAiClient.ResultListener,
             actionTaker.performConnectivityTest();
         } else if (expertMessage.toLowerCase().contains("startneo")) {
             startNeo();
-        } else if (expertMessage.toLowerCase().contains("endneo")) {
+        } else if (expertMessage.toLowerCase().contains("endneo") || expertMessage.toLowerCase().contains("stopneo")) {
             endNeo();
+        } else if (expertMessage.toLowerCase().contains("launchexpert")) {
+            Utils.launchWifiExpertMainActivity(context.getApplicationContext());
         }
     }
 }

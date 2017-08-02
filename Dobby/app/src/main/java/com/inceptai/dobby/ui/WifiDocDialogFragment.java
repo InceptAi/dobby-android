@@ -4,6 +4,7 @@ import android.app.Dialog;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
@@ -11,6 +12,7 @@ import android.text.Html;
 import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -20,6 +22,7 @@ import android.widget.ListView;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 
+import com.google.common.base.Preconditions;
 import com.inceptai.dobby.BuildConfig;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.MainActivity;
@@ -33,6 +36,7 @@ import java.util.ArrayList;
 import javax.inject.Inject;
 
 import static com.inceptai.dobby.utils.Utils.WIFIDOC_FLAVOR;
+import static com.inceptai.dobby.utils.Utils.WIFIEXPERT_FLAVOR;
 
 
 public class WifiDocDialogFragment extends DialogFragment {
@@ -44,6 +48,8 @@ public class WifiDocDialogFragment extends DialogFragment {
     public static final int DIALOG_SHOW_LOCATION_PERMISSION_REQUEST = 1006;
     public static final int DIALOG_SHOW_REPAIR_SUMMARY = 1007;
     public static final int DIALOG_AUTOMATIC_REPAIR_ONBOARDING = 1008;
+    public static final int DIALOG_SHOW_LOCATION_AND_OVERDRAW_PERMISSION_REQUEST = 1009;
+    public static final int DIALOG_SHOW_ACCESSIBILITY_PERMISSION_REQUEST = 1010;
 
 
     public static final String DIALOG_PAYLOAD = "payload";
@@ -86,6 +92,13 @@ public class WifiDocDialogFragment extends DialogFragment {
         this.mainActivity = mainActivity;
     }
 
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        getDialog().setCanceledOnTouchOutside(false);
+        return super.onCreateView(inflater, container, savedInstanceState);
+    }
+
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         ((DobbyApplication) getActivity().getApplication()).getProdComponent().inject(this);
@@ -104,6 +117,10 @@ public class WifiDocDialogFragment extends DialogFragment {
                 return createSimpleFeedbackForm(bundle);
             case DIALOG_SHOW_LOCATION_PERMISSION_REQUEST:
                 return createLocationPermissionRequestDialog(bundle);
+            case DIALOG_SHOW_LOCATION_AND_OVERDRAW_PERMISSION_REQUEST:
+                return createLocationAndOverdrawPermissionRequestDialog(bundle);
+            case DIALOG_SHOW_ACCESSIBILITY_PERMISSION_REQUEST:
+                return createAccessibilityPermissionRequestDialog(bundle);
             case DIALOG_SHOW_REPAIR_SUMMARY:
                 return createRepairSummaryDialog(bundle);
             case DIALOG_AUTOMATIC_REPAIR_ONBOARDING:
@@ -191,6 +208,27 @@ public class WifiDocDialogFragment extends DialogFragment {
         fragment.setArguments(bundle);
         return fragment;
     }
+
+
+    public static WifiDocDialogFragment forDobbyLocationAndOverdrawPermission(MainActivity mainActivity)  {
+        WifiDocDialogFragment fragment = new WifiDocDialogFragment();
+        fragment.setMainActivity(mainActivity);
+        Bundle bundle = new Bundle();
+        bundle.putInt(DIALOG_TYPE, DIALOG_SHOW_LOCATION_AND_OVERDRAW_PERMISSION_REQUEST);
+        fragment.setArguments(bundle);
+        return fragment;
+    }
+
+    public static WifiDocDialogFragment forDobbyAccessibilityPermission(MainActivity mainActivity)  {
+        WifiDocDialogFragment fragment = new WifiDocDialogFragment();
+        fragment.setMainActivity(mainActivity);
+        Bundle bundle = new Bundle();
+        bundle.putInt(DIALOG_TYPE, DIALOG_SHOW_ACCESSIBILITY_PERMISSION_REQUEST);
+        fragment.setArguments(bundle);
+        return fragment;
+    }
+
+
 
     private Dialog createSuggestionsDialog(Bundle bundle) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
@@ -320,6 +358,47 @@ public class WifiDocDialogFragment extends DialogFragment {
                     if (mainActivity != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                         mainActivity.requestLocationPermission();
                     }
+                }
+                dismiss();
+            }
+        });
+        builder.setView(rootView);
+        return builder.create();
+    }
+
+
+    private Dialog createLocationAndOverdrawPermissionRequestDialog(Bundle bundle) {
+        Preconditions.checkArgument(BuildConfig.FLAVOR.equals(WIFIEXPERT_FLAVOR));
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        LayoutInflater inflater = getActivity().getLayoutInflater();
+        rootView = inflater.inflate(R.layout.location_and_overdraw_permission_dialog_fragment_dobby, null);
+        FrameLayout nextFl = (FrameLayout) rootView.findViewById(R.id.bottom_next_fl);
+        nextFl.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mainActivity != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    mainActivity.requestLocationAndOverdrawPermission();
+                }
+                dismiss();
+            }
+        });
+        builder.setView(rootView);
+        return builder.create();
+    }
+
+
+
+    private Dialog createAccessibilityPermissionRequestDialog(Bundle bundle) {
+        Preconditions.checkArgument(BuildConfig.FLAVOR.equals(WIFIEXPERT_FLAVOR));
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        LayoutInflater inflater = getActivity().getLayoutInflater();
+        rootView = inflater.inflate(R.layout.accessibility_permission_dialog_fragment_dobby, null);
+        FrameLayout nextFl = (FrameLayout) rootView.findViewById(R.id.bottom_next_fl);
+        nextFl.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mainActivity != null) {
+                    mainActivity.takeUserToAccessibilitySetting();
                 }
                 dismiss();
             }

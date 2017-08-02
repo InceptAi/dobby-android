@@ -1054,4 +1054,9 @@ public class Utils {
         return sb.toString();
     }
 
+    public static void launchWifiExpertMainActivity(Context context) {
+        Intent i = new Intent(context, MainActivity.class);
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        context.startActivity(i);
+    }
 }

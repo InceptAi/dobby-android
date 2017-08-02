@@ -90,6 +90,11 @@ public class ExpertChatActivity extends AppCompatActivity implements
     //Interaction Manager callbacks
 
     @Override
+    public void requestAccessibilityPermission() {
+        //No-op
+    }
+
+    @Override
     public void showBotResponse(String text) {
         if (chatFragment != null) {
             chatFragment.showBotResponse(text);

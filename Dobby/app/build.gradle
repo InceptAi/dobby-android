@@ -23,7 +23,7 @@ android {
     buildToolsVersion "25.0.2"
     defaultConfig {
         applicationId "com.inceptai.wifiexpert"
-        minSdkVersion 15
+        minSdkVersion 16
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
@@ -52,8 +52,8 @@ android {
         }
         dobby {
             applicationId "com.inceptai.wifiexpert"
-            versionCode 38
-            versionName "2.0.6-wifiexpert"
+            versionCode 45
+            versionName "3.0.0-wifiexpert-with-neo"
         }
     }
     buildTypes {
@@ -86,6 +86,10 @@ android {
 
     lintOptions {
         abortOnError false
+    }
+
+    dexOptions {
+        jumboMode = true
     }
 }
 
@@ -176,11 +180,13 @@ dependencies {
     compile 'commons-net:commons-net:3.6'
     compile 'com.google.firebase:firebase-config:10.0.1'
     compile 'org.parceler:parceler-api:1.1.6'
+    compile project(':neo-service')
+    compile project(':wifimonitoring-service')
     annotationProcessor 'org.parceler:parceler:1.1.6'
     //For ManagementFactory classes
     //compile group: 'com.sun', name: 'rt', version: '1.5.0_06'
     //FutureAction library compile
-    compile project(':wifimonitoring-service')
+
     // Dependencies for tests:
     testCompile 'junit:junit:4.12'
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
@@ -191,5 +197,6 @@ dependencies {
     androidTestCompile 'com.android.support.test:rules:' + rootProject.rulesVersion
     androidTestCompile 'com.squareup.spoon:spoon-client:1.6.4'
 }
+
 
 apply plugin: 'com.google.gms.google-services'

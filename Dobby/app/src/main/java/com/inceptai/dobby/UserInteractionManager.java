@@ -15,12 +15,16 @@ import com.inceptai.dobby.expert.ExpertChat;
 import com.inceptai.dobby.expert.ExpertChatService;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.utils.DobbyLog;
+import com.inceptai.dobby.utils.NeoServiceClient;
 import com.inceptai.dobby.utils.Utils;
+import com.inceptai.neoservice.NeoService;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
@@ -31,13 +35,13 @@ import javax.inject.Inject;
 
 public class UserInteractionManager implements
         DobbyAi.ResponseCallback,
-        ExpertChatService.ChatCallback {
+        ExpertChatService.ChatCallback, NeoService.Callback {
 
     private static final String PREF_CHAT_IN_EXPERT_MODE = "wifidoc_in_expert_mode";
     private static final String EXPERT_MODE_INITIATED_TIMESTAMP = "expert_mode_start_ts";
     private static final long MAX_TIME_ELAPSED_FOR_RESUMING_EXPERT_MODE_MS = AlarmManager.INTERVAL_DAY;
     private static final long DELAY_BEFORE_WELCOME_MESSAGE_MS = 500;
-
+    private static final long ACCESSIBILITY_SETTING_CHECKER_TIMEOUT_MS = 10000;
 
     private long currentEtaSeconds;
     private InteractionCallback interactionCallback;
@@ -47,6 +51,7 @@ public class UserInteractionManager implements
     private Set<String> expertChatIdsDisplayed;
     private boolean explicitHumanContactMode;
     private boolean historyAvailable;
+    private ScheduledFuture<?> accessibilityCheckFuture;
     //private NotificationInfoReceiver notificationInfoReceiver;
 
     @Inject
@@ -59,7 +64,14 @@ public class UserInteractionManager implements
     DobbyEventBus dobbyEventBus;
     @Inject
     DobbyAnalytics dobbyAnalytics;
+    @Inject
+    DobbyApplication dobbyApplication;
+    @Inject
+    RemoteConfig remoteConfig;
 
+    private NeoServiceClient neoServiceClient;
+    private boolean isUserInChat;
+    private boolean triggerAccessibilityDialogOnResume;
 
     public UserInteractionManager(Context context, InteractionCallback interactionCallback, boolean showContactHumanAction) {
         ((DobbyApplication) context.getApplicationContext()).getProdComponent().inject(this);
@@ -75,7 +87,9 @@ public class UserInteractionManager implements
         dobbyAi.setShowContactHumanButton(showContactHumanAction);
         dobbyEventBus.registerListener(this);
         this.historyAvailable = false;
-        //notificationInfoReceiver = new NotificationInfoReceiver();
+        neoServiceClient = new NeoServiceClient(remoteConfig, dobbyThreadpool, dobbyApplication, this);
+        isUserInChat = false;
+        triggerAccessibilityDialogOnResume = false;
     }
 
     public interface InteractionCallback {
@@ -98,20 +112,26 @@ public class UserInteractionManager implements
         void showBandwidthViewCard(DataInterpreter.BandwidthGrade bandwidthGrade);
         void showNetworkInfoViewCard(DataInterpreter.WifiGrade wifiGrade, String isp, String ip);
         void showDetailedSuggestions(SuggestionCreator.Suggestion suggestion);
+        void requestAccessibilityPermission();
     }
 
     //API calls
     public void onUserEnteredChat() {
+        isUserInChat = true;
         fetchChatMessages();
         expertChatService.checkIn();
         expertChatService.registerToEventBusListener();
         expertChatService.sendUserEnteredMetaMessage();
         expertChatService.disableNotifications();
         updateExpertIndicator();
-        //unRegisterNotificationInfoReceiver();
+        if (triggerAccessibilityDialogOnResume) {
+            askForAccessibilityPermission();
+            triggerAccessibilityDialogOnResume = false;
+        }
     }
 
     public void onUserExitChat() {
+        isUserInChat = false;
         expertChatService.sendUserLeftMetaMessage();
         expertChatService.enableNotifications();
         expertChatService.saveState();
@@ -124,8 +144,21 @@ public class UserInteractionManager implements
         expertChatService.unregisterChatCallback();
         expertChatService.disconnect();
         dobbyAi.cleanup();
+        neoServiceClient.cleanup();
     }
 
+    public void toggleNeoService() {
+        neoServiceClient.toggleNeoService();
+    }
+
+    public void overlayPermissionStatus(boolean granted) {
+        if (!granted) {
+            DobbyLog.e("Permission denied for overlay draw.");
+            sendOverlayPermissionDeniedMetaMessage();
+        } else {
+            sendOverlayPermissionGrantedMetaMessage();
+        }
+    }
 
     public void onUserQuery(String text, boolean isButtonActionText) {
         dobbyAi.sendQuery(text, isButtonActionText);
@@ -214,6 +247,7 @@ public class UserInteractionManager implements
                     DobbyLog.v("UserInteractionManager: coming in fresh expert message, set chat to expert");
                     dobbyAi.setChatInExpertMode();
                 }
+                neoServiceClient.setStatus(messageReceived);
                 DobbyLog.v("MainActivity:FirebaseMessage added mesg to ExpertChat");
                 break;
             case ExpertChat.MSG_TYPE_BOT_TEXT:
@@ -244,6 +278,18 @@ public class UserInteractionManager implements
 
 
     //Dobby Ai callbacks
+    @Override
+    public void startNeoByExpert() {
+        //Stop notifications in onServiceReady
+        neoServiceClient.startService();
+    }
+
+    @Override
+    public void stopNeoByExpert() {
+        expertChatService.enableNotifications(); //Enable notifications here.
+        neoServiceClient.stopService();
+    }
+
     @Override
     public void showBotResponseToUser(String text) {
         expertChatService.pushBotChatMessage(text);
@@ -364,6 +410,7 @@ public class UserInteractionManager implements
         expertChatService.onNotificationConsumed();
     }
 
+
     //Private methods
     private String getEtaMessage() {
         String messagePrefix = context.getResources().getString(R.string.expected_response_time_for_expert);
@@ -451,29 +498,102 @@ public class UserInteractionManager implements
         }
     }
 
-    // Our handler for received Intents. This will be called whenever an Intent
-    // with an action named "custom-event-name" is broad casted.
-    /*
-    private class NotificationInfoReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            // Get extra data included in the Intent
-            String notificationTitle = intent.getStringExtra(WifiMonitoringService.EXTRA_NOTIFICATION_TITLE);
-            String notificationBody = intent.getStringExtra(WifiMonitoringService.EXTRA_NOTIFICATION_BODY);
-            int notificationId = intent.getIntExtra(WifiMonitoringService.EXTRA_NOTIFICATION_ID, 0);
-            dobbyThreadpool.getExecutor().execute(new DisplayAppNotification(context, notificationTitle, notificationBody, notificationId));
+
+    //Neo callbacks
+
+
+    @Override
+    public void onRequestAccessibilitySettings() {
+        if (isUserInChat) {
+            askForAccessibilityPermission();
+        } else {
+            triggerAccessibilityDialogOnResume = true;
         }
     }
 
-    private void registerNotificationInfoReceiver() {
-        IntentFilter intentFilter = new IntentFilter(WifiMonitoringService.NOTIFICATION_INFO_INTENT_VALUE);
-        LocalBroadcastManager.getInstance(context).registerReceiver(
-                notificationInfoReceiver, intentFilter);
+    @Override
+    public void onServiceReady() {
+        try {
+            if (accessibilityCheckFuture != null && !accessibilityCheckFuture.isDone()) {
+                accessibilityCheckFuture.cancel(true);
+            }
+        } catch (CancellationException e) {
+            DobbyLog.v("Exception while cancelling accessibility future");
+        }
+        sendServiceReadyMetaMessage();
+        expertChatService.disableNotifications();
     }
 
-    private void unRegisterNotificationInfoReceiver() {
-        LocalBroadcastManager.getInstance(context).unregisterReceiver(
-                notificationInfoReceiver);
+    public UserInteractionManager() {
+        super();
     }
-    */
+
+    @Override
+    public void onServiceStopped() {
+        sendServiceStoppedDueToErrorsMetaMessage();
+    }
+
+    @Override
+    public void onUiStreamingStoppedByUser() {
+        sendServiceStoppedByUserMetaMessage();
+        Utils.launchWifiExpertMainActivity(context.getApplicationContext());
+    }
+
+    @Override
+    public void onUiStreamingStoppedByExpert() {
+        sendServiceStoppedByExpertMetaMessage();
+        Utils.launchWifiExpertMainActivity(context.getApplicationContext());
+    }
+
+
+    //private stuff
+    private void askForAccessibilityPermission() {
+        if (interactionCallback != null) {
+            interactionCallback.requestAccessibilityPermission();
+        }
+        accessibilityCheckFuture = scheduledExecutorService.schedule(new Runnable() {
+            @Override
+            public void run() {
+                DobbyLog.e("User did not grant accessibility permission");
+                sendAccessibilityPermissionNotGrantedWithinTimeoutMessage();
+            }
+        }, ACCESSIBILITY_SETTING_CHECKER_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+    }
+
+    private void sendAccessibilityPermissionNotGrantedWithinTimeoutMessage() {
+        expertChatService.pushMetaChatMessage(ExpertChat.MSG_TYPE_META_NEO_ACCESSIBILITY_PERMISSION_NOT_GRANTED_WITHIN_TIMEOUT);
+    }
+
+    private void sendServiceReadyMetaMessage() {
+        expertChatService.pushMetaChatMessage(ExpertChat.MSG_TYPE_META_NEO_SERVICE_READY);
+    }
+
+    private void sendServiceStoppedDueToErrorsMetaMessage() {
+        expertChatService.pushMetaChatMessage(ExpertChat.MSG_TYPE_META_NEO_SERVICE_STOPPED_DUE_TO_ERRORS);
+
+    }
+
+    private void sendOverlayPermissionDeniedMetaMessage() {
+        expertChatService.pushMetaChatMessage(ExpertChat.MSG_TYPE_META_NEO_SERVICE_OVERLAY_PERMISSION_DENIED);
+    }
+
+    private void sendOverlayPermissionGrantedMetaMessage() {
+        expertChatService.pushMetaChatMessage(ExpertChat.MSG_TYPE_META_NEO_SERVICE_OVERLAY_PERMISSION_GRANTED);
+    }
+
+    private void sendServiceStoppedByUserMetaMessage() {
+        expertChatService.pushMetaChatMessage(ExpertChat.MSG_TYPE_META_NEO_SERVICE_STOPPED_BY_USER);
+
+    }
+
+    private void sendServiceStoppedByExpertMetaMessage() {
+        expertChatService.pushMetaChatMessage(ExpertChat.MSG_TYPE_META_NEO_SERVICE_STOPPED_BY_EXPERT);
+
+    }
+
+    private void sendServiceStoppedDueToErrorsMessage() {
+        expertChatService.pushMetaChatMessage(ExpertChat.MSG_TYPE_META_NEO_SERVICE_STOPPED_BY_EXPERT);
+
+    }
+
 }

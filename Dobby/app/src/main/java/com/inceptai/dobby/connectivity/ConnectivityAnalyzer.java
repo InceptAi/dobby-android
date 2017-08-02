@@ -268,6 +268,10 @@ public class ConnectivityAnalyzer {
         return (wifiConnectivityMode == CONNECTED_AND_ONLINE);
     }
 
+    public boolean isInternetReachable() {
+        final NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
+        return (activeNetwork != null && activeNetwork.isConnected());
+    }
 
     public boolean isWifiDisconnected() {
         return (wifiConnectivityMode == WifiConnectivityMode.OFF ||

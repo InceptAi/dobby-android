@@ -246,6 +246,10 @@ public class NetworkLayer implements LocationListener {
 
     public DobbyWifiInfo getLinkInfo() { return getWifiAnalyzerInstance().getLinkInfo(); }
 
+    public boolean isInternetReachable() {
+        return getConnectivityAnalyzerInstance().isInternetReachable();
+    }
+
     public boolean isWifiOnline() {
         return getConnectivityAnalyzerInstance().isWifiOnline();
     }

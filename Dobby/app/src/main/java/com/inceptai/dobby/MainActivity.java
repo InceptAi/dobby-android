@@ -8,8 +8,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.speech.RecognizerIntent;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
@@ -38,25 +40,35 @@ import com.inceptai.dobby.ui.ChatFragment;
 import com.inceptai.dobby.ui.WifiDocDialogFragment;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
+import com.inceptai.neoservice.NeoService;
 import com.inceptai.wifimonitoringservice.WifiMonitoringService;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
+
+import static android.os.Build.VERSION_CODES.M;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
         ChatFragment.OnFragmentInteractionListener,
         UserInteractionManager.InteractionCallback {
 
+    private static final String NEO_CUSTOM_INTENT = "com.inceptai.wifiexpert.neo.ACTION";
+    //permission codes
     private static final int PERMISSION_COARSE_LOCATION_REQUEST_CODE = 101;
+    private static final int PERMISSION_OVERLAY_REQUEST_CODE = 201;
+
     private static final boolean RESUME_WITH_SUGGESTION_IF_AVAILABLE = false;
     private static final int SPEECH_RECOGNITION_REQUEST_CODE = 102;
     private static final long BOT_MESSAGE_DELAY_MS = 500;
 
     private static final boolean SHOW_CONTACT_HUMAN_BUTTON = true;
+    private static final boolean ENABLE_WIFI_MONITORING_SERVICE = false;
 
 
     private UserInteractionManager userInteractionManager;
@@ -66,6 +78,9 @@ public class MainActivity extends AppCompatActivity
     private ChatFragment chatFragment;
     private boolean isTaskRoot = true;
     private NotificationInfoReceiver notificationInfoReceiver;
+    private NeoCustomIntentReceiver neoCustomIntentReceiver;
+    private boolean askedForOverlayPermission;
+    private boolean needOverlayPermission;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,6 +113,7 @@ public class MainActivity extends AppCompatActivity
             return;
         }
 
+        needOverlayPermission = false;
         userInteractionManager = new UserInteractionManager(getApplicationContext(), this, SHOW_CONTACT_HUMAN_BUTTON);
         heartBeatManager.setDailyHeartBeat();
         notificationInfoReceiver = new NotificationInfoReceiver();
@@ -110,7 +126,7 @@ public class MainActivity extends AppCompatActivity
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        if (Build.VERSION.SDK_INT >= M) {
             drawer.addDrawerListener(toggle);
         } else {
             drawer.setDrawerListener(toggle);
@@ -120,8 +136,12 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         setupChatFragment();
-        startWifiMonitoringService();
+        registerNeoCustomIntentReceiver();
+        if (ENABLE_WIFI_MONITORING_SERVICE) {
+            startWifiMonitoringService();
+        }
     }
+
 
 
     private ChatFragment getChatFragmentFromTag() {
@@ -303,9 +323,9 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    @TargetApi(Build.VERSION_CODES.M)
+    @TargetApi(M)
     public void showLocationPermissionRequest() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        if (Build.VERSION.SDK_INT >= M) {
             // Assume thisActivity is the current activity
             int permissionCheck = this.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION);
             if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
@@ -315,10 +335,83 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+
+    @TargetApi(M)
+    public void showLocationAndOverdrawPermissionRequest() {
+        if (Build.VERSION.SDK_INT >= M) {
+            // Assume thisActivity is the current activity
+            boolean locationPermissionGranted = this.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+            boolean overdrawPermissionGranted = Settings.canDrawOverlays(this);
+            if (!locationPermissionGranted && !overdrawPermissionGranted) {
+                WifiDocDialogFragment fragment = WifiDocDialogFragment.forDobbyLocationAndOverdrawPermission(this);
+                fragment.show(this.getSupportFragmentManager(), "Request Location and Draw Permission.");
+            }
+        }
+    }
+
     public void requestLocationPermission() {
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_COARSE_LOCATION_REQUEST_CODE);
     }
 
+    public void requestLocationAndOverdrawPermission() {
+        needOverlayPermission = true;
+        requestLocationPermission();
+    }
+
+
+    @Override
+    public void requestAccessibilityPermission() {
+        showAccessibilityPermissionDialog();
+    }
+
+    private void showAccessibilityPermissionDialog() {
+        WifiDocDialogFragment fragment = WifiDocDialogFragment.forDobbyAccessibilityPermission(this);
+        fragment.show(this.getSupportFragmentManager(), "Accessibility Permission.");
+    }
+
+    public void takeUserToAccessibilitySetting() {
+        NeoService.showAccessibilitySettings(this);
+    }
+    //Neo stuff
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        DobbyLog.i("onActivityResult:" + requestCode + " package name: " + getPackageName());
+         if (requestCode == PERMISSION_OVERLAY_REQUEST_CODE && isAndroidMOrLater()) {
+            askedForOverlayPermission = false;
+            if (Settings.canDrawOverlays(this)) {
+                //Callback that permission granted
+                userInteractionManager.overlayPermissionStatus(true);
+                //navigate back to current activity
+            } else {
+                //Callback that permission denied
+                //Toast.makeText(this, "ACTION_MANAGE_OVERLAY_PERMISSION Permission Denied", Toast.LENGTH_SHORT).show();
+                userInteractionManager.overlayPermissionStatus(false);
+            }
+        } else if (requestCode == SPEECH_RECOGNITION_REQUEST_CODE) {
+            if (resultCode == RESULT_OK && null != data) {
+                ArrayList<String> res = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                String inSpeech = res.get(0);
+                if (chatFragment != null) {
+                    chatFragment.addSpokenText(inSpeech);
+                }
+                onUserQuery(inSpeech, false);
+            }
+        } else {
+             super.onActivityResult(requestCode, resultCode, data);
+        }
+    }
+
+    @TargetApi(M)
+    private void askForOverlayPermission() {
+        askedForOverlayPermission = true;
+        Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
+        startActivityForResult(intent, PERMISSION_OVERLAY_REQUEST_CODE);
+        new OverlayPermissionChecker(dobbyThreadpool.getScheduledExecutorService()).startChecking();
+    }
+
+    private boolean isAndroidMOrLater() {
+        return Build.VERSION.SDK_INT >= M;
+    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -329,6 +422,9 @@ public class MainActivity extends AppCompatActivity
                 } else {
                     Utils.buildSimpleDialog(this, "Functionality limited",
                             "Since location access has not been granted, this app will not be able to analyze your wifi network.");
+                }
+                if (needOverlayPermission) {
+                    askForOverlayPermission();
                 }
                 return;
         }
@@ -351,6 +447,7 @@ public class MainActivity extends AppCompatActivity
         super.onDestroy();
         if (isTaskRoot) {
             userInteractionManager.cleanup();
+            removeNeoCustomIntentReceiver();
         }
     }
 
@@ -389,7 +486,8 @@ public class MainActivity extends AppCompatActivity
     public void onRecyclerViewReady() {
         //Get the welcome message
         DobbyLog.v("MainActivity:onRecyclerViewReady");
-        showLocationPermissionRequest();
+        //showLocationPermissionRequest();
+        showLocationAndOverdrawPermissionRequest();
     }
 
     @Override
@@ -416,21 +514,6 @@ public class MainActivity extends AppCompatActivity
         //Don't do resume stuff for now
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == SPEECH_RECOGNITION_REQUEST_CODE) {
-            if (resultCode == RESULT_OK && null != data) {
-                ArrayList<String> res = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                String inSpeech = res.get(0);
-                if (chatFragment != null) {
-                    chatFragment.addSpokenText(inSpeech);
-                }
-                onUserQuery(inSpeech, false);
-            }
-        } else {
-            super.onActivityResult(requestCode, resultCode, data);
-        }
-    }
 
     private void startWifiMonitoringService() {
         Intent serviceStartIntent = new Intent(this, WifiMonitoringService.class);
@@ -491,6 +574,70 @@ public class MainActivity extends AppCompatActivity
     private void unRegisterNotificationInfoReceiver() {
         LocalBroadcastManager.getInstance(this).unregisterReceiver(
                 notificationInfoReceiver);
+    }
+
+    private class NeoCustomIntentReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            MainActivity.this.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    userInteractionManager.toggleNeoService();
+                }
+            });
+        }
+    }
+
+    private void registerNeoCustomIntentReceiver() {
+        neoCustomIntentReceiver = new NeoCustomIntentReceiver();
+        IntentFilter intentFilter = new IntentFilter(NEO_CUSTOM_INTENT);
+        registerReceiver(neoCustomIntentReceiver, intentFilter);
+    }
+
+    private void removeNeoCustomIntentReceiver() {
+        if (neoCustomIntentReceiver != null) {
+            unregisterReceiver(neoCustomIntentReceiver);
+            neoCustomIntentReceiver = null;
+        }
+    }
+
+    @TargetApi(M)
+    private boolean checkOverlayPermissionAndLaunchMainActivity() {
+        if (Settings.canDrawOverlays(MainActivity.this)) {
+            //You have the permission, re-launch MainActivity
+            Utils.launchWifiExpertMainActivity(this.getApplicationContext());
+            return true;
+        }
+        return false;
+    }
+
+    private class OverlayPermissionChecker {
+        private static final int CHECKING_INTERVAL_MS = 1000;
+        private static final int MAX_ATTEMPTS = 5;
+
+        private ScheduledExecutorService scheduledExecutorService;
+        private int numAttempts;
+
+        public OverlayPermissionChecker(ScheduledExecutorService scheduledExecutorService) {
+            this.scheduledExecutorService = scheduledExecutorService;
+            numAttempts = 0;
+        }
+
+        void startChecking() {
+            postOverdrawCheck();
+        }
+
+        private void postOverdrawCheck() {
+            scheduledExecutorService.schedule(new Runnable() {
+                @Override
+                public void run() {
+                    numAttempts++;
+                    if (!MainActivity.this.checkOverlayPermissionAndLaunchMainActivity() && numAttempts < MAX_ATTEMPTS) {
+                        postOverdrawCheck();
+                    }
+                }
+            }, CHECKING_INTERVAL_MS, TimeUnit.MILLISECONDS);
+        }
     }
 
 }
