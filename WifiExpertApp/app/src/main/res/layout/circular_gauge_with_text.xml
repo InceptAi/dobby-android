@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <com.inceptai.dobby.ui.CircularGauge
+        android:id="@+id/bw_gauge"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        app:gaugePointStartColor="@color/darkGreen"
+        app:gaugePointEndColor="@color/whiteGreen"
+        app:gaugePointSize="0"
+        app:gaugeStartAngle="135"
+        app:gaugeSweepAngle="270"
+        app:gaugeStrokeCap="ROUND"
+        app:gaugeStrokeColor="@color/lessDarkGray2"
+        app:gaugeStrokeWidth="4dp"
+        app:gaugeBaselineStrokeWidth="1dp"
+        app:gaugeStartValue="0"
+        app:gaugeEndValue="100"
+        android:layout_gravity="center_horizontal"
+        android:layout_alignParentTop="true"
+        />
+
+    <TextView
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:text="0.0"
+        android:textSize="30sp"
+        android:id="@+id/gauge_tv"
+        android:gravity="center_vertical|center_horizontal"
+        android:layout_alignTop="@id/bw_gauge"
+        android:layout_alignEnd="@id/bw_gauge"
+        android:layout_alignRight="@id/bw_gauge"
+        android:layout_alignStart="@id/bw_gauge"
+        android:layout_alignLeft="@id/bw_gauge"
+        android:textColor="@android:color/holo_red_dark"
+        />
+
+    <TextView
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        android:text="Mbps"
+        android:textSize="15sp"
+        android:id="@+id/gauge_tv_mbps"
+        android:gravity="bottom|center_horizontal"
+        android:layout_alignRight="@id/bw_gauge"
+        android:layout_alignEnd="@id/bw_gauge"
+        android:layout_alignStart="@id/bw_gauge"
+        android:layout_alignLeft="@id/bw_gauge"
+        android:layout_alignBottom="@id/gauge_tv"
+        android:layout_marginBottom="30dp"
+        android:fontFamily="sans-serif-condensed"
+        android:textColor="@color/lessDarkGray"
+        />
+
+    <TextView
+        android:layout_width="150dp"
+        android:layout_below="@id/gauge_tv"
+        android:id="@+id/title_tv"
+        tools:text="Title here"
+        android:layout_marginTop="-10dp"
+        android:gravity="center_horizontal"
+        android:layout_height="wrap_content" />
+</RelativeLayout>

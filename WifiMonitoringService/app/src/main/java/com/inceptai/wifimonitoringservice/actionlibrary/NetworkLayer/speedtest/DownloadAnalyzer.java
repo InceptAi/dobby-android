@@ -2,9 +2,8 @@ package com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest;
 
 import android.support.annotation.Nullable;
 
-import com.inceptai.dobby.model.BandwidthStats;
-import com.inceptai.dobby.speedtest.BandwidthTestCodes.TestMode;
-import com.inceptai.dobby.utils.DobbyLog;
+import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLibraryCodes.BandwidthTestMode;
+import com.inceptai.wifimonitoringservice.utils.ServiceLog;
 
 import java.util.concurrent.ExecutorService;
 
@@ -15,7 +14,7 @@ import fr.bmartel.speedtest.model.SpeedTestError;
  * Created by vivek on 4/1/17.
  */
 
-public class NewDownloadAnalyzer {
+public class DownloadAnalyzer {
     private final int DOWNLOAD_SIZES = 4000; //TODO: Add more sizes as per speedtest-cli
     private final String DOWNLOAD_FILE = "/speedtest/random" + DOWNLOAD_SIZES + "x" + DOWNLOAD_SIZES + ".jpg";
 
@@ -32,14 +31,14 @@ public class NewDownloadAnalyzer {
      * Callback interface for results. More methods to follow.
      */
     public interface ResultsCallback {
-        void onFinish(@TestMode int testMode, BandwidthStats bandwidthStats);
-        void onProgress(@TestMode int testMode, double instantBandwidth);
-        void onError(@TestMode int testMode, SpeedTestError speedTestError, String errorMessage);
+        void onFinish(@BandwidthTestMode int testMode, BandwidthStats bandwidthStats);
+        void onProgress(@BandwidthTestMode int testMode, double instantBandwidth);
+        void onError(@BandwidthTestMode int testMode, SpeedTestError speedTestError, String errorMessage);
     }
 
-    public NewDownloadAnalyzer(SpeedTestConfig.DownloadConfig config,
-                               ServerInformation.ServerDetails serverDetails,
-                               @Nullable ResultsCallback resultsCallback) {
+    public DownloadAnalyzer(SpeedTestConfig.DownloadConfig config,
+                            ServerInformation.ServerDetails serverDetails,
+                            @Nullable ResultsCallback resultsCallback) {
         this.downloadConfig = config;
         this.serverDetails = serverDetails;
         this.serverUrlPrefix = getServerUrlForSpeedTest(serverDetails.url);
@@ -54,11 +53,11 @@ public class NewDownloadAnalyzer {
      * @return
      */
     @Nullable
-    public static NewDownloadAnalyzer create(SpeedTestConfig.DownloadConfig config,
-                                             ServerInformation.ServerDetails serverDetails,
-                                             ResultsCallback resultsCallback) {
+    public static DownloadAnalyzer create(SpeedTestConfig.DownloadConfig config,
+                                          ServerInformation.ServerDetails serverDetails,
+                                          ResultsCallback resultsCallback) {
         if (serverDetails.serverId > 0) {
-            return new NewDownloadAnalyzer(config, serverDetails, resultsCallback);
+            return new DownloadAnalyzer(config, serverDetails, resultsCallback);
         }
         return null;
     }
@@ -84,11 +83,11 @@ public class NewDownloadAnalyzer {
 
     void downloadTestWithMultipleThreads(int numThreads, int reportIntervalMs) {
         if (downloadConfig == null) {
-            DobbyLog.e("Download config is null while trying to start download");
+            ServiceLog.e("Download config is null while trying to start download");
             return;
         }
         if (bandwidthAggregator != null) {
-            DobbyLog.e("Download is already in progress. Cancel it first before running again");
+            ServiceLog.e("Download is already in progress. Cancel it first before running again");
             return;
         }
         bandwidthAggregator = new BandwidthAggregator(new DownloadTestListener());
@@ -99,7 +98,7 @@ public class NewDownloadAnalyzer {
                     downloadConfig.testLength * 1000, //converting to ms,
                     reportIntervalMs,
                     bandwidthAggregator.getListener(threadCountIndex));
-            DobbyLog.v("Started Download speedtest with socket: " + speedTestSocket.toString());
+            ServiceLog.v("Started Download speedtest with socket: " + speedTestSocket.toString());
         }
     }
 
@@ -121,7 +120,7 @@ public class NewDownloadAnalyzer {
         @Override
         public void onFinish(BandwidthStats stats) {
             if (resultsCallback != null) {
-                resultsCallback.onFinish(BandwidthTestCodes.TestMode.DOWNLOAD, stats);
+                resultsCallback.onFinish(BandwidthTestMode.DOWNLOAD, stats);
             }
             cleanup();
         }
@@ -129,7 +128,7 @@ public class NewDownloadAnalyzer {
         @Override
         public void onError(SpeedTestError speedTestError, String errorMessage) {
             if (resultsCallback != null) {
-                resultsCallback.onError(TestMode.DOWNLOAD, speedTestError, errorMessage);
+                resultsCallback.onError(BandwidthTestMode.DOWNLOAD, speedTestError, errorMessage);
             }
             cleanup();
         }
@@ -137,7 +136,7 @@ public class NewDownloadAnalyzer {
         @Override
         public void onProgress(double instantBandwidth) {
             if (resultsCallback != null) {
-                resultsCallback.onProgress(TestMode.DOWNLOAD, instantBandwidth);
+                resultsCallback.onProgress(BandwidthTestMode.DOWNLOAD, instantBandwidth);
             }
         }
     }

@@ -1,8 +1,5 @@
 package com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest;
 
-import com.inceptai.dobby.DobbyApplication;
-import com.inceptai.dobby.fake.FakeSpeedTestSocket;
-
 import fr.bmartel.speedtest.SpeedTestSocket;
 
 /**
@@ -13,10 +10,6 @@ public class SpeedTestSocketFactory {
     private SpeedTestSocketFactory() {}
 
     public static SpeedTestSocket newSocket() {
-        if (DobbyApplication.USE_FAKES.get()) {
-            return new FakeSpeedTestSocket();
-        } else {
             return new SpeedTestSocket();
-        }
     }
 }

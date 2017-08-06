@@ -2,7 +2,7 @@ package com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest;
 
 import android.support.annotation.Nullable;
 
-import com.inceptai.dobby.model.BandwidthStats;
+import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLibraryCodes;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -11,17 +11,17 @@ import java.util.concurrent.ExecutorService;
  * Created by vivek on 4/26/17.
  */
 
-public class CallbackThreadSwitcher implements NewBandwidthAnalyzer.ResultsCallback {
+public class CallbackThreadSwitcher implements BandwidthAnalyzer.ResultsCallback {
 
     private ExecutorService executorService;
-    private NewBandwidthAnalyzer.ResultsCallback resultsCallback;
+    private BandwidthAnalyzer.ResultsCallback resultsCallback;
 
-    CallbackThreadSwitcher(ExecutorService service, NewBandwidthAnalyzer.ResultsCallback delegate) {
+    CallbackThreadSwitcher(ExecutorService service, BandwidthAnalyzer.ResultsCallback delegate) {
         this.executorService = service;
         this.resultsCallback = delegate;
     }
 
-    public static CallbackThreadSwitcher wrap(ExecutorService service, NewBandwidthAnalyzer.ResultsCallback delegate) {
+    public static CallbackThreadSwitcher wrap(ExecutorService service, BandwidthAnalyzer.ResultsCallback delegate) {
         return new CallbackThreadSwitcher(service, delegate);
     }
 
@@ -66,7 +66,7 @@ public class CallbackThreadSwitcher implements NewBandwidthAnalyzer.ResultsCallb
     }
 
     @Override
-    public void onTestFinished(final @BandwidthTestCodes.TestMode int testMode,
+    public void onTestFinished(final @ActionLibraryCodes.BandwidthTestMode int testMode,
                                final BandwidthStats stats) {
         executorService.submit(new Runnable() {
             @Override
@@ -77,7 +77,7 @@ public class CallbackThreadSwitcher implements NewBandwidthAnalyzer.ResultsCallb
     }
 
     @Override
-    public void onTestProgress(final @BandwidthTestCodes.TestMode int testMode,
+    public void onTestProgress(final @ActionLibraryCodes.BandwidthTestMode int testMode,
                                final double instantBandwidth) {
         executorService.submit(new Runnable() {
             @Override
@@ -88,8 +88,8 @@ public class CallbackThreadSwitcher implements NewBandwidthAnalyzer.ResultsCallb
     }
 
     @Override
-    public void onBandwidthTestError(final @BandwidthTestCodes.TestMode int testMode,
-                                     final @BandwidthTestCodes.ErrorCodes int errorCode,
+    public void onBandwidthTestError(final @ActionLibraryCodes.BandwidthTestMode int testMode,
+                                     final @ActionLibraryCodes.ErrorCodes int errorCode,
                                      final @Nullable String errorMessage) {
         executorService.submit(new Runnable() {
             @Override

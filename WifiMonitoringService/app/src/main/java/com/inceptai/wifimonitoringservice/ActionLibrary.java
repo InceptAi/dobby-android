@@ -42,11 +42,11 @@ public class ActionLibrary {
     private ScheduledExecutorService scheduledExecutorService;
     private ArrayDeque<FutureAction> futureActionArrayDeque;
 
-    public ActionLibrary(Context context, Executor executor, ScheduledExecutorService scheduledExecutorService) {
+    public ActionLibrary(Context context, ServiceThreadPool serviceThreadPool) {
         this.context = context;
-        this.executor = executor;
-        this.scheduledExecutorService = scheduledExecutorService;
-        networkActionLayer = new NetworkActionLayer(context, executor, scheduledExecutorService);
+        this.executor = serviceThreadPool.getExecutor();
+        this.scheduledExecutorService = serviceThreadPool.getScheduledExecutorService();
+        networkActionLayer = new NetworkActionLayer(context, serviceThreadPool);
         futureActionArrayDeque = new ArrayDeque<>();
     }
 

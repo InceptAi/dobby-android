@@ -1,29 +1,28 @@
-package com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest;
+package com.inceptai.wifimonitoringservice.actionlibrary.utils;
 
 import android.support.annotation.IntDef;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-import static com.inceptai.dobby.speedtest.BandwidthTestCodes.ErrorCodes.ERROR_FETCHING_CONFIG;
-import static com.inceptai.dobby.speedtest.BandwidthTestCodes.ErrorCodes.ERROR_WIFI_CONNECTED_AND_OFFLINE;
-import static com.inceptai.dobby.speedtest.BandwidthTestCodes.ErrorCodes.ERROR_WIFI_CONNECTED_AND_UNKNOWN;
-import static com.inceptai.dobby.speedtest.BandwidthTestCodes.ErrorCodes.ERROR_WIFI_IN_CAPTIVE_PORTAL;
-import static com.inceptai.dobby.speedtest.BandwidthTestCodes.ErrorCodes.ERROR_WIFI_OFF;
-import static com.inceptai.dobby.speedtest.BandwidthTestCodes.ErrorCodes.ERROR_WIFI_ON_AND_DISCONNECTED;
-import static com.inceptai.dobby.speedtest.BandwidthTestCodes.ErrorCodes.ERROR_WIFI_UNKNOWN_STATE;
+import static com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLibraryCodes.ErrorCodes.ERROR_WIFI_CONNECTED_AND_OFFLINE;
+import static com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLibraryCodes.ErrorCodes.ERROR_WIFI_CONNECTED_AND_UNKNOWN;
+import static com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLibraryCodes.ErrorCodes.ERROR_WIFI_IN_CAPTIVE_PORTAL;
+import static com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLibraryCodes.ErrorCodes.ERROR_WIFI_OFF;
+import static com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLibraryCodes.ErrorCodes.ERROR_WIFI_ON_AND_DISCONNECTED;
+import static com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLibraryCodes.ErrorCodes.ERROR_WIFI_UNKNOWN_STATE;
 
 /**
  * Created by vivek on 4/5/17.
  */
 
-public class BandwidthTestCodes {
+public class ActionLibraryCodes {
 
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({TestMode.DOWNLOAD_AND_UPLOAD, TestMode.DOWNLOAD,
-            TestMode.UPLOAD, TestMode.CONFIG_FETCH,
-            TestMode.SERVER_FETCH, TestMode.STARTING, TestMode.IDLE})
-    public @interface TestMode {
+    @IntDef({BandwidthTestMode.DOWNLOAD_AND_UPLOAD, BandwidthTestMode.DOWNLOAD,
+            BandwidthTestMode.UPLOAD, BandwidthTestMode.CONFIG_FETCH,
+            BandwidthTestMode.SERVER_FETCH, BandwidthTestMode.STARTING, BandwidthTestMode.IDLE})
+    public @interface BandwidthTestMode {
         int DOWNLOAD_AND_UPLOAD = 0;
         int DOWNLOAD = 1;
         int UPLOAD = 2;
@@ -34,17 +33,17 @@ public class BandwidthTestCodes {
     }
 
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({ErrorCodes.ERROR_UNKNOWN, ERROR_FETCHING_CONFIG,
+    @IntDef({ErrorCodes.ERROR_UNKNOWN, ErrorCodes.ERROR_FETCHING_CONFIG,
             ErrorCodes.ERROR_PARSING_CONFIG, ErrorCodes.ERROR_FETCHING_SERVER_INFO,
             ErrorCodes.ERROR_PARSING_SERVER_INFO, ErrorCodes.ERROR_SELECTING_BEST_SERVER,
             ErrorCodes.ERROR_INVALID_HTTP_RESPONSE, ErrorCodes.ERROR_SOCKET_ERROR,
             ErrorCodes.ERROR_SOCKET_TIMEOUT, ErrorCodes.ERROR_CONNECTION_ERROR,
             ErrorCodes.ERROR_TEST_INTERRUPTED, ErrorCodes.ERROR_TEST_ALREADY_RUNNING,
             ErrorCodes.ERROR_WIFI_OFFLINE, ErrorCodes.NO_ERROR, ErrorCodes.ERROR_DHCP_INFO_UNAVAILABLE,
-            ErrorCodes.ERROR_PERFORMING_PING, ErrorCodes.ERROR_WIFI_IN_CAPTIVE_PORTAL,
-            ErrorCodes.ERROR_WIFI_CONNECTED_AND_OFFLINE, ErrorCodes.ERROR_WIFI_CONNECTED_AND_UNKNOWN,
-            ErrorCodes.ERROR_WIFI_ON_AND_DISCONNECTED, ErrorCodes.ERROR_WIFI_OFF,
-            ERROR_WIFI_UNKNOWN_STATE, ErrorCodes.ERROR_UNINITIAlIZED})
+            ErrorCodes.ERROR_PERFORMING_PING, ERROR_WIFI_IN_CAPTIVE_PORTAL,
+            ERROR_WIFI_CONNECTED_AND_OFFLINE, ERROR_WIFI_CONNECTED_AND_UNKNOWN,
+            ERROR_WIFI_ON_AND_DISCONNECTED, ERROR_WIFI_OFF,
+            ErrorCodes.ERROR_WIFI_UNKNOWN_STATE, ErrorCodes.ERROR_UNINITIAlIZED})
     public @interface ErrorCodes {
         int ERROR_UNINITIAlIZED = -1;
         int NO_ERROR = 0;
@@ -119,6 +118,19 @@ public class BandwidthTestCodes {
             default:
                 return "ERROR_UNKNOWN";
         }
+    }
+
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef({BandwidthTestSnapshotType.INSTANTANEOUS_BANDWIDTH, BandwidthTestSnapshotType.FINAL_BANDWIDTH,
+            BandwidthTestSnapshotType.SPEED_TEST_CONFIG, BandwidthTestSnapshotType.BEST_SERVER_DETAILS,
+            BandwidthTestSnapshotType.SERVER_INFORMATION, BandwidthTestSnapshotType.CLOSEST_SERVERS})
+    public @interface BandwidthTestSnapshotType {
+        int INSTANTANEOUS_BANDWIDTH = 0;
+        int FINAL_BANDWIDTH = 1;
+        int SPEED_TEST_CONFIG = 2;
+        int BEST_SERVER_DETAILS = 3;
+        int SERVER_INFORMATION = 4;
+        int CLOSEST_SERVERS = 5;
     }
 
 

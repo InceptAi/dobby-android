@@ -18,6 +18,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ScheduledExecutorService;
 
+import io.reactivex.Observable;
+
 import static com.inceptai.wifimonitoringservice.actionlibrary.ActionResult.ActionResultCodes.FAILED_TO_COMPLETE;
 import static com.inceptai.wifimonitoringservice.actionlibrary.ActionResult.ActionResultCodes.GENERAL_ERROR;
 import static com.inceptai.wifimonitoringservice.actionlibrary.ActionResult.ActionResultCodes.SUCCESS;
@@ -41,10 +43,10 @@ public class ServiceActionTaker {
         void actionCompleted(String actionName, ActionResult actionResult);
     }
 
-    public ServiceActionTaker(Context applicationContext, Executor executor, ScheduledExecutorService scheduledExecutorService) {
-        this.executor = executor;
-        this.scheduledExecutorService = scheduledExecutorService;
-        actionLibrary = new ActionLibrary(applicationContext, executor, scheduledExecutorService);
+    public ServiceActionTaker(Context applicationContext, ServiceThreadPool serviceThreadPool) {
+        this.executor = serviceThreadPool.getExecutor();
+        this.scheduledExecutorService = serviceThreadPool.getScheduledExecutorService();
+        actionLibrary = new ActionLibrary(applicationContext, serviceThreadPool);
     }
 
     public void cleanup() {
@@ -62,6 +64,16 @@ public class ServiceActionTaker {
         this.actionCallback = null;
     }
 
+
+    public FutureAction takeAction(ExpertAction.ActionRequest actionRequest) {
+        switch(actionRequest.getActionType()) {
+            case ExpertAction.ActionType.CHECK_IF_5GHz_IS_SUPPORTED:
+                return checkIf5GHzSupported();
+                break;
+
+        }
+    }
+
     public void turnWifiOff() {
         final FutureAction wifiOff = actionLibrary.turnWifiOff(ACTION_TIMEOUT_MS);
         processResultsWhenAvailable(wifiOff);
@@ -77,9 +89,10 @@ public class ServiceActionTaker {
         processResultsWhenAvailable(toggleWifi);
     }
 
-    public void checkIf5GHzSupported() {
+    public FutureAction checkIf5GHzSupported() {
         final FutureAction check5GHz = actionLibrary.checkIf5GHzSupported(ACTION_TIMEOUT_MS);
         processResultsWhenAvailable(check5GHz);
+        return check5GHz;
     }
 
     public void disconnect() {

@@ -10,7 +10,10 @@ import android.net.wifi.WifiInfo;
 import android.provider.Settings;
 import android.support.v4.content.LocalBroadcastManager;
 
+import com.google.common.net.InetAddresses;
 import com.inceptai.wifimonitoringservice.WifiMonitoringService;
+import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.ConnectivityTester;
+import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLibraryCodes;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -501,6 +504,42 @@ public class Utils {
 
     public static String generateUUID() {
         return UUID.randomUUID().toString();
+    }
+
+
+    @ActionLibraryCodes.ErrorCodes
+    private static int getWifiErrorCode(@ConnectivityTester.WifiConnectivityMode int wifiConnectivityMode) {
+        switch (wifiConnectivityMode) {
+            case ConnectivityTester.WifiConnectivityMode.CONNECTED_AND_ONLINE:
+                return ActionLibraryCodes.ErrorCodes.NO_ERROR;
+            case ConnectivityTester.WifiConnectivityMode.CONNECTED_AND_CAPTIVE_PORTAL:
+                return ActionLibraryCodes.ErrorCodes.ERROR_WIFI_IN_CAPTIVE_PORTAL;
+            case ConnectivityTester.WifiConnectivityMode.CONNECTED_AND_OFFLINE:
+                return ActionLibraryCodes.ErrorCodes.ERROR_WIFI_CONNECTED_AND_OFFLINE;
+            case ConnectivityTester.WifiConnectivityMode.CONNECTED_AND_UNKNOWN:
+                return ActionLibraryCodes.ErrorCodes.ERROR_WIFI_CONNECTED_AND_UNKNOWN;
+            case ConnectivityTester.WifiConnectivityMode.ON_AND_DISCONNECTED:
+                return ActionLibraryCodes.ErrorCodes.ERROR_WIFI_ON_AND_DISCONNECTED;
+            case ConnectivityTester.WifiConnectivityMode.OFF:
+                return ActionLibraryCodes.ErrorCodes.ERROR_WIFI_OFF;
+            case ConnectivityTester.WifiConnectivityMode.UNKNOWN:
+                return ActionLibraryCodes.ErrorCodes.ERROR_WIFI_UNKNOWN_STATE;
+            default:
+                return ActionLibraryCodes.ErrorCodes.ERROR_UNKNOWN;
+        }
+    }
+
+    //Int to IP
+    public static String intToIp(int ipAddress) {
+        String returnValue = ((ipAddress & 0xFF) + "." +
+                ((ipAddress >>>= 8) & 0xFF) + "." +
+                ((ipAddress >>>= 8) & 0xFF) + "." +
+                ((ipAddress >>>= 8) & 0xFF));
+        boolean isValid = InetAddresses.isInetAddress(returnValue);
+        if (!isValid) {
+            return EMPTY_STRING;
+        }
+        return returnValue;
     }
 
 }

@@ -77,7 +77,7 @@ public class WifiServiceCore implements
         wifiStateMonitor = new WifiStateMonitor(context);
         screenStateMonitor = new ScreenStateMonitor(context);
         periodicCheckMonitor = new PeriodicCheckMonitor(context);
-        serviceActionTaker = new ServiceActionTaker(context, serviceThreadPool.getExecutor(), serviceThreadPool.getScheduledExecutorServiceForActions());
+        serviceActionTaker = new ServiceActionTaker(context, serviceThreadPool);
         numConsecutiveFailedConnectivityTests = 0;
         wifiCheckInitialDelayMs = WIFI_CHECK_INITIAL_CHECK_DELAY_ACTIVE_MS;
         wifiCheckPeriodMs = WIFI_CHECK_PERIOD_SCREEN_ACTIVE_MS;

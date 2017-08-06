@@ -4,8 +4,8 @@ import android.content.Context;
 import android.content.res.XmlResourceParser;
 import android.support.annotation.Nullable;
 
-import com.inceptai.dobby.utils.DobbyLog;
-import com.inceptai.dobby.utils.Utils;
+import com.inceptai.wifimonitoringservice.utils.ServiceLog;
+import com.inceptai.wifimonitoringservice.utils.Utils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -80,14 +80,14 @@ public class ParseServerInformation {
         try {
             info = downloadAndParseServerInformation(defaultServerListUrl1);
         } catch (IOException e) {
-            DobbyLog.v("Exception thrown while fetching server information try 1: " + e);
+            ServiceLog.v("Exception thrown while fetching server information try 1: " + e);
         }
         if (info == null) {
             try {
                 info = downloadAndParseServerInformation(defaultServerListUrl2);
             } catch (IOException e) {
                 String exceptionString = "Exception thrown while fetching server information try 2: " + e;
-                DobbyLog.v(exceptionString);
+                ServiceLog.v(exceptionString);
                 if (this.resultsCallback != null) {
                     this.resultsCallback.onServerInformationFetchError(exceptionString);
                 }

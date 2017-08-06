@@ -37,6 +37,8 @@ public class ServiceThreadPool {
     private ListeningExecutorService listeningExecutorService;
     private ListeningScheduledExecutorService scheduledExecutorService;
     private ListeningScheduledExecutorService scheduledExecutorServiceForActions;
+    private ListeningScheduledExecutorService networkLayerExecutorService;
+
 
     public ServiceThreadPool() {
 
@@ -53,6 +55,7 @@ public class ServiceThreadPool {
         listeningExecutorService = MoreExecutors.listeningDecorator(threadPoolExecutor);
         scheduledExecutorService = MoreExecutors.listeningDecorator(Executors.newSingleThreadScheduledExecutor());
         scheduledExecutorServiceForActions = MoreExecutors.listeningDecorator(Executors.newSingleThreadScheduledExecutor());
+        networkLayerExecutorService = MoreExecutors.listeningDecorator(Executors.newSingleThreadScheduledExecutor());
     }
 
     public void submit(Runnable runnable) {
@@ -74,6 +77,10 @@ public class ServiceThreadPool {
 
     public ScheduledExecutorService getScheduledExecutorServiceForActions() {
         return scheduledExecutorServiceForActions;
+    }
+
+    public ListeningScheduledExecutorService getNetworkLayerExecutorService() {
+        return networkLayerExecutorService;
     }
 
     public void shutdown() {

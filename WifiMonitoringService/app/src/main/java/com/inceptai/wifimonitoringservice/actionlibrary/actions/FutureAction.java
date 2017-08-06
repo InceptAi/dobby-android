@@ -27,29 +27,18 @@ import static com.inceptai.wifimonitoringservice.actionlibrary.ActionResult.Acti
 
 
 
-public abstract class FutureAction {
-    private static final String TAG = "ActionService";
+public abstract class FutureAction extends Action {
     private FutureAction uponCompletion;
     private FutureAction uponSuccessfulCompletion;
     private SettableFuture<ActionResult> settableFuture;
-    Executor executor;
-    ScheduledExecutorService scheduledExecutorService;
-    long actionTimeOutMs;
-    Context context;
-    NetworkActionLayer networkActionLayer;
-    private ActionResult actionResult;
 
     FutureAction(Context context,
                  Executor executor,
                  ScheduledExecutorService scheduledExecutorService,
                  NetworkActionLayer networkActionLayer,
                  long actionTimeOutMs) {
-        this.context = context;
-        this.executor = executor;
-        this.scheduledExecutorService = scheduledExecutorService;
-        this.actionTimeOutMs = actionTimeOutMs;
+        super(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
         settableFuture = SettableFuture.create();
-        this.networkActionLayer = networkActionLayer;
         addCompletionWork();
     }
 

@@ -1,0 +1,142 @@
+<resources>
+    <string name="wifiexpert_app_name">Wifi Expert</string>
+    <string name="wifidoc_app_name">Wifi Tester</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="action_settings">Settings</string>
+    <string name="chat_hint">Type a query about your network ...</string>
+    <string name="dobby_name">Dobby</string>
+    <string name="dobby_email">Contact: dobby@obiai.tech</string>
+    <string name="user_chat_text">Your message here.</string>
+    <string name="user_initials">U</string>
+    <string name="dobby_chat_hint">Dobby here.</string>
+    <string name="expert_chat_hint">Wifi Expert here.</string>
+    <string name="dobby_initials">D</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Welcome !</string>
+    <string name="wifi_scan_results_title">Wifi Scan results</string>
+    <string name="wifi_scan">Wifi scan</string>
+    <string name="ping">Ping</string>
+    <string name="bandwidth_test">Bandwidth test</string>
+    <string name="upload">Upload</string>
+    <string name="download">Download</string>
+    <string name="debug">Debug</string>
+    <string name="wifi_stats"> Wifi Stats</string>
+    <string name="download_bandwidth_mbps">Download bandwidth (per thread Mbps)</string>
+    <string name="upload_bandwidth_mbps">Upload bandwidth (per thread Mbps)</string>
+    <string name="fake_data_injection_title">Fake data injection (click to toggle):</string>
+    <string name="save_changes">Save changes</string>
+    <string name="wifi_chan_1_num_aps">Channel 1, Num APs:</string>
+    <string name="wifi_chan_6_num_aps">Channel 6, Num APs:</string>
+    <string name="wifi_chan_11_num_aps">Channel 11, Num APs:</string>
+    <string name="fake_wifi_scan_settings">Fake wifi scan settings:</string>
+    <string name="primary_ap_rssi">AP Rssi:</string>
+    <string name="primary_ap_channel">Primary AP channel:</string>
+    <string name="ping_stats_mode_selector">Ping Mode Selector</string>
+    <string name="fake_ping_data_setting"> Ping Data Settings</string>
+    <string name="fake_connectivity_mode_selector">Connectivity Mode Selector</string>
+    <string name="fake_connectivity_setting">Connectivity Mode Settings</string>
+    <string name="fake_wifi_problem_setting">Wifi Problem Mode Setting</string>
+    <string name="fake_wifi_problem_mode_selector">Wifi Problem Mode Settings</string>
+    <string name="ping_latency">Ping Latency</string>
+    <string name="router_ping"> Router</string>
+    <string name="dns_primary_ping">Your DNS</string>
+    <string name="dns_second_ping">Alternative DNS</string>
+    <string name="web_ping">Google </string>
+    <string name="download_bw">Download</string>
+    <string name="upload_bw">Upload</string>
+    <string name="percent">%</string>
+    <string name="congestion">Congestion</string>
+    <string name="your_net">Your Network</string>
+    <string name="running_tests">Running tests..</string>
+    <string name="dismiss_button">DISMISS</string>
+    <string name="cancel_button">CANCEL</string>
+    <string name="status_title">Status</string>
+    <string name="suggestions_title">Suggestions</string>
+    <string-array name="rssi_level_array">
+        <item>High</item>
+        <item>Medium</item>
+        <item>Low</item>
+        <item>Fringe</item>
+    </string-array>
+    <string name="title_activity_wifi_doc_onboarding">WifiDocOnboardingActivity</string>
+    <string name="section_format">Hello World from section: %1$d</string>
+    <string name="onboarding_one_desc1">How good is your wifi connectivity ?</string>
+    <string name="onboarding_one_desc2">This app can run some tests on your phone to find out. It can also suggest remedies for issues found.</string>
+    <string name="onboarding_two_desc1">Wifi Tester can run a speed test to show your upload and download speeds.</string>
+    <string name="onboarding_two_desc2">It can also see if your DNS servers or your routers are slow. You can chat with a Wifi Expert to help resolve your problems !</string>
+    <string name="onboarding_three_desc1">Wifi Tester can perform Wifi scans to see if your wifi environment is congested.</string>
+    <string name="onboarding_three_desc2">It will also figure out if there is a problem with your Wifi router signal.</string>
+    <string name="onboarding_three_expert_desc1">You can chat with a Wifi / Network Expert to help resolve your problems for FREE.</string>
+    <string name="onboarding_three_expert_desc2">Share test results with our team of experts who can help find solutions to issues on your phone or in a home/office wifi network.</string>
+    <string name="slow_internet_q">Slow Internet ?</string>
+    <string name="bad_wifi_signal">Bad Wifi signal ?</string>
+    <string name="wifi_quality">Wifi Link</string>
+    <string name="suggestions">Suggestions</string>
+    <string name="ready_status_message">Ready to run tests.</string>
+    <string name="about_string">This app is offered by InceptAI. Copyright &#169; 2017. For detailed feedback or questions, email us at hello@obiai.tech.</string>
+    <string name="status_tests_cancelled">Tests cancelled !</string>
+    <string name="status_cancelling_tests">Cancelling tests ..</string>
+    <string name="status_error_bw_tests">Error running bandwidth tests. Please cancel and try again.</string>
+    <string name="status_running_upload_tests">Running Upload test &#8230; </string>
+    <string name="status_running_download_tests">Running Download test &#8230; </string>
+    <string name="status_finished_bw_tests">Finished bandwidth tests, preparing reports &#8230;</string>
+    <string name="status_fetching_server_list">Fetching list of servers &#8230; </string>
+    <string name="status_analyzing_speed_test_data">Analyzing speed test data ..</string>
+    <string name="status_speed_test_analysis_ready">Speed test analysis ready ..</string>
+    <string name="status_running_ping_tests">Running Ping tests ..</string>
+    <string name="status_analyzing_ping_results">Analyzing Ping results ..</string>
+    <string name="status_ping_analysis_ready">Ping analysis ready ..</string>
+    <string name="status_running_wifi_tests">Running Wifi tests ..</string>
+    <string name="status_analyzing_wifi_data">Analyzing Wifi data ..</string>
+    <string name="status_wifi_analysis_ready">Wifi analysis ready ..</string>
+    <string name="status_bw_test_error_wifi_offline">"Unable to run Bandwidth tests since the Wifi network is OFFLINE."</string>
+    <string name="status_wifi_ping_tests_continue">"We are continuing to run Ping and Wifi analysis tests."</string>
+    <string name="status_fetching_server_config">Fetching server configuration &#8230;</string>
+    <string name="toast_tests_already_running">Tests already running.</string>
+    <string name="tap_anim_run_tests">Run some tests</string>
+    <string name="tap_anim_run_tests_long_msg">Tap the button to let Wifi Tester run some tests.</string>
+    <string name="status_closest_servers" formatted="false">Computing closest out of %1$d servers &#8230;</string>
+    <string name="status_found_closest_server" formatted="false">Closest server in %1$s has a latency of %2$.2f ms.</string>
+    <string name="expert_chat_title">Chat with an Expert</string>
+    <string name="feedback_button_title">Feedback</string>
+    <string name="about_button_title">About</string>
+    <string name="wifi_expert_name">Wifi Expert</string>
+    <string name="bandwidth_card_view_message">Here is how your current bandwidth looks like: </string>
+    <string name="wifi_status_view_message">Here is your current wifi network snapshot: </string>
+    <string name="detailed_suggestion_tip">You can see the detailed suggestion anytime by typing `show details` or `last details` &#8230;</string>
+    <string name="detailed_suggestion_not_available">We don\'t have any suggestions to show yet. Type `run tests` or `check wifi` to run tests and get suggestions for fixing your Wifi.</string>
+    <string name="detailed_suggestion_status_message">Showing detailed summary.</string>
+    <string name="wifi_leaderboard">Wifi Leaderboard</string>
+    <string name="talk_to_an_expert_title">Talk to an Expert !</string>
+    <string name="expected_response_time_for_expert">Expert response time:</string>
+    <string name="location_permission_approval_text">We need the \'Location\' permission on Android to collect Wifi Scan Signal data. This will help us find issues with your Wifi Network.</string>
+    <string name="location_permission_approval_title">Approval for the Location permission</string>
+    <string name="location_and_overdraw_permission_approval_title">Approval for permissions</string>
+    <string name="location_and_overdraw_permission_approval_text">We need the \'Location\' and \'Overdraw\' permissions to help you with issues. Location allows us to collect Wifi Scan data to pin point issues. Overdraw allows us to inform you when we are actively working on fixing issues.</string>
+    <string name="you_are_now_talking_to_human_expert">You are now talking to a Human Expert !</string>
+    <string name="contacting_human_expert">Contacted human expert, you can type any message to them &#8230;</string>
+    <string name="contacting_and_getting_eta">Contacting Wifi Expert and getting ETA now &#8230;</string>
+    <string name="pre_human_contact_tests">Preparing reports to contact human expert &#8230;</string>
+    <string name="continue_expert_chat">Continuing expert chat &#8230;</string>
+    <string name="agent_is_typing">Agent is typing &#8230;</string>
+    <string name="talking_to_human_expert_with_response_time">Expert is listening in now, response time less than 2 mins &#8230;</string>
+    <string name="automatic_repair_on">Automatic Repair: ON</string>
+    <string name="automatic_repair_off">Automatic Repair: OFF</string>
+    <string name="repair_wifi_now">Repair WiFi Now</string>
+    <string name="repairing_wifi">Repairing, need 20&#8212;30 secs</string>
+    <string name="repairing_wifi_cancel">Repairing, tap to Cancel</string>
+    <string name="repair_wifi_success">Repair Succeeded</string>
+    <string name="repair_wifi_failure">Repair Failed</string>
+    <string name="repair_wifi_cancelled">Repair Cancelled</string>
+    <string name="repair_service_title">Repair your WiFi with one tap !</string>
+    <string name="onboarding_service_desc1">Introducing Automatic Repair &#8212; which will monitor the health of your WiFi connection and take steps to resolve any issues on its own. </string>
+    <string name="onboarding_service_desc2">You can also disable Automatic Repair and just manually repair your WiFi. No more WiFi frustrations !</string>
+    <string name="location_approval_text">Location permission allows us to collect Wifi Scan data to understand the issues.</string>
+    <string name="overdraw_approval_text">Overlay permission allows us to inform you when we are actively working on fixing issues.</string>
+    <string name="accessibility_permission_approval_title">Approval for Accessibility permission</string>
+    <string name="accessibility_permission_approval_text">Accessibility permission will allow the expert to take actions on your device to fix the issues. </string>
+</resources>

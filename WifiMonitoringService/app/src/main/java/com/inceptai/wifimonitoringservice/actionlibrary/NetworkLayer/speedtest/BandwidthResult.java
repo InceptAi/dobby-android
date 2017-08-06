@@ -1,5 +1,7 @@
 package com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest;
 
+import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLibraryCodes;
+
 /**
  * Created by arunesh on 4/20/17.
  */
@@ -8,7 +10,7 @@ public class BandwidthResult {
 
     private BandwidthStats uploadStats;
     private BandwidthStats downloadStats;
-    @BandwidthTestCodes.TestMode
+    @ActionLibraryCodes.BandwidthTestMode
     private int testMode;
 
     public BandwidthResult(int testMode) {

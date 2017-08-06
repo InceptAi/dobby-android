@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- set of strings for suggestions -->
+<resources>
+
+    <string name="suggestion_fragment_title">Results and Analysis</string>
+    <string name="suggest_bw_unknown">Unable to compute your upload and download speeds.</string>
+    <string name="suggest_bw_unknown_more">The speed tests did not run successfully. This could be due to many reasons. Please see if the detailed suggestions has an indication of why this might have happened.</string>
+    <string name="suggest_download_bw_unknown">Unable to compute your download speeds.</string>
+    <string name="suggest_download_bw_unknown_more">There was a problem running a Download Speed test. Please see if the detailed suggestions has an indication of why this might have happened.</string>
+    <string name="suggest_upload_bw_unknown">Unable to compute your upload speeds.</string>
+    <string name="suggest_upload_bw_unknown_more">There was a problem running an Upload Speed test. Please see if the detailed suggestions has an indication of why this might have happened.</string>
+
+    <string name="suggest_download_bw_lt40kbps">Tests show a download speed of %1$1.1f KBPS which is too low for many apps. </string>
+    <string name="suggest_download_bw_lt40kbps_more">This speed is too low for many applications including internet browsing or streaming audio/video. Your apps will experience excessive buffering or very high load times. Many apps might timeout and abandon downloads or page loads.</string>
+
+    <string name="suggest_download_bw_lt100kbps">Tests show a download speed of %1$1.1f KBPS which is low for many apps. </string>
+    <string name="suggest_download_bw_lt100kbps_more">This speed is too low for audio or video streaming apps which might experience excessive buffering or very high load times. The speeds look sufficient for browsing internet websites which have low media content.</string>
+
+    <string name="suggest_download_bw_lt500kbps">Tests show a download speed of %1$1.1f KBPS which is good for internet browsing. </string>
+    <string name="suggest_download_bw_lt500kbps_more">This speed is sufficient for internet browsing with occasional delays. The speed is good for streaming audio, but too low for streaming video. You might experience regular buffering problems with streaming.</string>
+
+    <string name="suggest_download_bw_lt1mbps">Tests show a download speed of %1$1.1f MBPS which is good for internet browsing. </string>
+    <string name="suggest_download_bw_lt1mbps_more">This speed is sufficient for internet browsing. You might experience some buffering or delays with audio streaming apps. The speeds are too low for streaming videos.</string>
+
+    <string name="suggest_download_bw_1mbps">Tests show a download speed of %1$1.1f MBPS which is good for internet browsing and audio streaming. </string>
+    <string name="suggest_download_bw_1mbps_more">This speed is sufficient for internet browsing and apps that do audio streaming (with occasional buffering). The speeds are a bit low for an un-interrupted video streaming experience.</string>
+
+    <string name="suggest_download_bw_2mbps">Tests show a download speed of %1$1.1f MBPS which is good for internet browsing, audio streaming and limited video streaming. </string>
+    <string name="suggest_download_bw_2mbps_more">You should be able to experience fast internet browsing and do HD audio streaming or downloads. Video at Standard Definition (SD) or 480p should work reliably. You might experience issues with 720p (HD) or higher quality video.</string>
+
+    <string name="suggest_download_bw_4mbps">Tests show a download speed of %1$1.1f MBPS which is sufficient for most apps.</string>
+    <string name="suggest_download_bw_4mbps_more">You should be able to experience fast internet browsing and do HD audio streaming or downloads. Video at Standard Definition (SD) or 480p should work reliably. You might experience issues with 720p (HD) or higher quality video.</string>
+
+    <string name="suggest_download_bw_6to8mbps">Tests show a download speed of %1$1.1f MBPS. You should have a good experience with most apps.</string>
+    <string name="suggest_download_bw_6to8mbps_more">You are expected to have fast internet browsing and Standard Definition (SD) video streaming experience without any delays, jitter or buffering. You should be able to do HD and 720p video streaming. You might see occasional issues with 1080p video streaming.</string>
+
+    <string name="suggest_download_bw_8to20mbps">Tests show a download speed of %1$1.1f MBPS. You should have a excellent experience with apps and internet content.</string>
+    <string name="suggest_download_bw_8to20mbps_more">You are expected to have fast internet browsing and HD video streaming experience without any delays, jitter or buffering. You could also do 1080p ultra-HD video streaming. You might see some issues with 4K streaming.</string>
+
+    <string name="suggest_download_bw_above20mbps">Tests show a download speed of %1$1.1f MBPS. You should have a excellent experience with apps and internet content.</string>
+    <string name="suggest_download_bw_above20mbps_more">You are expected to see lightning fast internet browsing and HD video streaming without any delays, jitter or buffering. You should also be able to stream 4K definition video content.</string>
+
+    <string name="suggest_bandwidth_overall_ok">Overall your wifi internet looks fine.</string>
+    <string name="suggest_bandwidth_overall_ok_more">Your overall download and upload bandwidth speeds look reasonably good. This usually means that should not be any unexpected issues with your Internet. If you are still seeing problems, it is possible that they are intermittent. Running this test a few times might help.</string>
+
+    <string name="suggest_bandwidth_overall_good">Overall your wifi internet looks good.</string>
+    <string name="suggest_bandwidth_overall_good_more">Your overall download and upload bandwidth speeds are very good. You not experience any issues due to the Wifi internet. </string>
+
+    <string name="suggest_bandwidth_overall_poor">Overall your wifi internet connectivity is poor.</string>
+    <string name="suggest_bandwidth_overall_poor_more">Your overall download and upload bandwidth speeds are not good enough to for apps to use them. You will experience delays and high loading times. </string>
+
+    <string name="suggest_upload_bw_poor">Your upload bandwidth is too low.</string>
+    <string name="suggest_upload_bw_poor_more">A very low upload bandwidth is too low to support internet enabled applications. This could cause issues with using streaming apps, browsing or downloads.</string>
+
+    <string name="suggest_upload_bw_ok_ratio_poor">The upload bandwidth is good but relatively low compared to your download bandwidth.</string>
+    <string name="suggest_upload_bw_ok_ratio_poor_more">The upload bandwidth should ideally have a 1:4 ratio to your download bandwidth for best performance. The ratio is a bit low, this might cause intermittent issues with some streaming or video applications.</string>
+
+    <string name="suggest_upload_bw_and_ratio_poor">Your upload bandwidth is too low.</string>
+    <string name="suggest_upload_bw_and_ratio_poor_more">The upload bandwidth is too low. Also in comparison to the download bandwidth, the upload is relatively low. This can cause issues with streaming audio or video applicatoins especially upload based.</string>
+
+    <string name="suggest_upload_bw_and_ratio_ok">The upload bandwidth looks good.</string>
+    <string name="suggest_upload_bw_and_ratio_ok_more">You should not have issues due to the upload bandwidth which looks good relative to your download bandwidth numbers. </string>
+    <string name="wd_suggest_more_string">What do these mean ?</string>
+
+</resources>

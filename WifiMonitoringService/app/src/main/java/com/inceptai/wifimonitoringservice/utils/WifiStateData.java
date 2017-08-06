@@ -110,6 +110,10 @@ public class WifiStateData {
         int MAX_MODES = 13;
     }
 
+    public static boolean isWifiInAnyProblemMode(@WifiProblemMode int mode) {
+        return mode != WifiProblemMode.NO_PROBLEM_DEFAULT_STATE;
+    }
+
     public static String wifiLinkModeToString(@WifiProblemMode int mode) {
         switch (mode) {
             case WifiProblemMode.NO_PROBLEM_DEFAULT_STATE:

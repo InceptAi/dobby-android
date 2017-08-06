@@ -7,11 +7,11 @@ import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import com.inceptai.wifimonitoringservice.ServiceThreadPool;
+import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest.BandwidthObserver;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.wifi.WifiController;
 
 import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * This class abstracts out the implementation details of all things 'network' related. The UI and
@@ -21,11 +21,14 @@ import java.util.concurrent.ScheduledExecutorService;
 public class NetworkActionLayer {
     private WifiController wifiController;
     private ConnectivityTester connectivityTester;
+    private BandwidthObserver bandwidthObserver;
 
     // Use Dagger to get a singleton instance of this class.
-    public NetworkActionLayer(Context context, Executor executor, ScheduledExecutorService scheduledExecutorService) {
-        this.wifiController = WifiController.create(context, executor);
-        this.connectivityTester = ConnectivityTester.create(context, executor, scheduledExecutorService);
+    public NetworkActionLayer(Context context, ServiceThreadPool serviceThreadPool) {
+        this.wifiController = WifiController.create(context, serviceThreadPool.getExecutor());
+        this.connectivityTester = ConnectivityTester.create(context, serviceThreadPool.getExecutor(),
+                serviceThreadPool.getScheduledExecutorService());
+        this.bandwidthObserver = new BandwidthObserver(context, serviceThreadPool);
     }
 
     public ListenableFuture<List<ScanResult>> getNearbyWifiNetworks() {
@@ -121,14 +124,14 @@ public class NetworkActionLayer {
     }
 
     private boolean isWifiConnected() {
-        if (wifiController != null) {
-            return wifiController.isWifiConnected();
-        }
-        return false;
+        return (wifiController != null && wifiController.isWifiConnected());
     }
 
     public void cleanup() {
         wifiController.cleanup();
         connectivityTester.cleanup();
+        bandwidthObserver.cleanup();
     }
+
+
 }

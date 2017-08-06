@@ -2,8 +2,8 @@ package com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest;
 
 import android.support.annotation.Nullable;
 
-import com.inceptai.dobby.utils.DobbyLog;
-import com.inceptai.dobby.utils.Utils;
+import com.inceptai.wifimonitoringservice.utils.ServiceLog;
+import com.inceptai.wifimonitoringservice.utils.Utils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -54,9 +54,9 @@ public class ParseSpeedTestConfig {
     public SpeedTestConfig getConfigFromUrlString (String urlString) {
         SpeedTestConfig config = null;
         try {
-            DobbyLog.v("PSTC downloadAndParseConfig start");
+            ServiceLog.v("PSTC downloadAndParseConfig start");
             config = downloadAndParseConfig(urlString);
-            DobbyLog.v("PSTC downloadAndParseConfig end");
+            ServiceLog.v("PSTC downloadAndParseConfig end");
             if (resultsCallback != null) {
                 this.resultsCallback.onConfigFetch(config);
             }

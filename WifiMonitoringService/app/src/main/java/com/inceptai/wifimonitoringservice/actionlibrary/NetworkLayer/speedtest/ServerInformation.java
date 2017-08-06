@@ -3,8 +3,8 @@ package com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest;
 import android.content.res.XmlResourceParser;
 import android.util.Xml;
 
-import com.inceptai.dobby.utils.DobbyLog;
-import com.inceptai.dobby.utils.Utils;
+import com.inceptai.wifimonitoringservice.utils.ServiceLog;
+import com.inceptai.wifimonitoringservice.utils.Utils;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -73,7 +73,7 @@ public class ServerInformation {
     // Parses the contents of an client config. If it encounters a ip, summary, or link tag, hands them off
     // to their respective "read" methods for processing. Otherwise, skips the tag.
     private ServerInformation readServerInformation(XmlPullParser parser) throws XmlPullParserException, IOException {
-        DobbyLog.v("Xml parser is " + parser);
+        ServiceLog.v("Xml parser is " + parser);
         parser.require(XmlPullParser.START_TAG, ns, "settings");
         parser.nextTag();
         parser.require(XmlPullParser.START_TAG, ns, "servers");
@@ -102,7 +102,7 @@ public class ServerInformation {
             serverInformation = readServerInformation(xmlPullParser);
         } catch (XmlPullParserException|IOException e) {
             /* no - op */
-            DobbyLog.e("Exception while parsing server list " +  e);
+            ServiceLog.e("Exception while parsing server list " +  e);
         }
         return serverInformation;
     }
