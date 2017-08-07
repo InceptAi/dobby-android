@@ -22,7 +22,7 @@ public class ResetConnectionWithCurrentWifi extends FutureAction {
                                           ScheduledExecutorService scheduledExecutorService,
                                           NetworkActionLayer networkActionLayer,
                                           long actionTimeOutMs) {
-        super(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
+        super(ActionType.RESET_CONNECTION_WITH_CURRENT_WIFI, context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
     }
 
     @Override

@@ -22,7 +22,7 @@ public class DisconnectFromCurrentWifi extends FutureAction {
                                      ScheduledExecutorService scheduledExecutorService,
                                      NetworkActionLayer networkActionLayer,
                                      long actionTimeOutMs) {
-        super(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
+        super(ActionType.DISCONNECT_FROM_CURRENT_WIFI, context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
     }
 
     @Override

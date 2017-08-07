@@ -32,7 +32,7 @@ public class IterateAndRepairWifiNetwork extends FutureAction {
                                        ScheduledExecutorService scheduledExecutorService,
                                        NetworkActionLayer networkActionLayer,
                                        long actionTimeOutMs) {
-        super(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
+        super(ActionType.ITERATE_AND_REPAIR_WIFI_NETWORK, context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
     }
 
     @Override

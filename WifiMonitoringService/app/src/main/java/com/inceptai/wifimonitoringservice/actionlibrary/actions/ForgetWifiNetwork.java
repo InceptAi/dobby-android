@@ -25,7 +25,7 @@ public class ForgetWifiNetwork extends FutureAction {
                              NetworkActionLayer networkActionLayer,
                              long actionTimeOutMs,
                              int networkId) {
-        super(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
+        super(ActionType.FORGET_WIFI_NETWORK, context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
         this.networkId = networkId;
     }
 

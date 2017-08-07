@@ -22,7 +22,7 @@ public class GetNearbyWifiNetworks extends FutureAction {
                                  ScheduledExecutorService scheduledExecutorService,
                                  NetworkActionLayer networkActionLayer,
                                  long actionTimeOutMs) {
-        super(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
+        super(ActionType.GET_NEARBY_WIFI_NETWORKS, context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
     }
 
     @Override

@@ -1,24 +1,16 @@
 package com.inceptai.wifimonitoringservice.actionlibrary.actions;
 
 import android.content.Context;
-import android.support.annotation.Nullable;
 
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.SettableFuture;
-import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.NetworkActionLayer;
-import com.inceptai.wifimonitoringservice.utils.ServiceLog;
 
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import static com.inceptai.wifimonitoringservice.actionlibrary.ActionResult.ActionResultCodes.EXCEPTION;
-import static com.inceptai.wifimonitoringservice.actionlibrary.ActionResult.ActionResultCodes.FAILED_TO_START;
-import static com.inceptai.wifimonitoringservice.actionlibrary.ActionResult.ActionResultCodes.SUCCESS;
+import io.reactivex.Observable;
+import io.reactivex.observers.DisposableObserver;
+import io.reactivex.schedulers.Schedulers;
 
 
 /**
@@ -30,112 +22,93 @@ import static com.inceptai.wifimonitoringservice.actionlibrary.ActionResult.Acti
 public abstract class ObservableAction extends Action {
     private ObservableAction uponCompletion;
     private ObservableAction uponSuccessfulCompletion;
-    private SettableFuture<ActionResult> settableFuture;
+    private Observable observable;
 
-    ObservableAction(Context context,
+    ObservableAction(@ActionType int actionType,
+                     Context context,
                      Executor executor,
                      ScheduledExecutorService scheduledExecutorService,
                      NetworkActionLayer networkActionLayer,
                      long actionTimeOutMs) {
-        super(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
-        settableFuture = SettableFuture.create();
+        super(actionType, context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
         addCompletionWork();
     }
 
-    public abstract void post();
+    public abstract void start();
 
     public abstract String getName();
 
-    public String getActionType() {
-        return this.getClass().getSimpleName();
-    }
-
-    public void uponCompletion(ObservableAction futureAction) {
-        uponCompletion = futureAction;
-    }
-
-    public void uponSuccessfulCompletion(ObservableAction futureAction) {
-        uponSuccessfulCompletion = futureAction;
-    }
-
-    public void cancelAction() {
-        settableFuture.cancel(true);
-        if (uponSuccessfulCompletion != null) {
-            uponSuccessfulCompletion.cancelAction();
-        }
-        if (uponCompletion != null) {
-            uponCompletion.cancelAction();
-        }
-    }
-
-    protected void setFuture(@Nullable final ListenableFuture<?> future) {
-        if (future == null) {
-            setResult(new ActionResult(FAILED_TO_START,
-                    ActionResult.actionResultCodeToString(FAILED_TO_START)));
+    public void setObservable(Observable observable) {
+        this.observable = observable;
+        if (observable == null) {
             return;
         }
+        observable.subscribeOn(Schedulers.from(executor))
+                .timeout(actionTimeOutMs, TimeUnit.MILLISECONDS)
+                .subscribeWith(new DisposableObserver() {
+                    @Override
+                    public void onNext(Object o) {
+                    }
 
-        final ScheduledFuture<?> timeOutFuture = scheduledExecutorService.schedule(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    ServiceLog.v("FutureAction: timeout for action " + getName());
-                    setResult(new ActionResult(ActionResult.ActionResultCodes.TIMED_OUT));
-                    future.cancel(true);
-                } catch (CancellationException e) {
-                    ServiceLog.v("Exception while cancelling task.");
-                }
-            }
-        }, actionTimeOutMs, TimeUnit.MILLISECONDS);
+                    @Override
+                    public void onError(Throwable e) {
+                        //finish the action here
+                    }
 
-        future.addListener(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    ServiceLog.v("FutureAction: Setting result for action with name " + getName());
-                    setResult(new ActionResult(SUCCESS, ActionResult.actionResultCodeToString(SUCCESS), future.get()));
-                } catch (InterruptedException | ExecutionException | CancellationException e) {
-                    ServiceLog.e("Exception getting result for:" + getName() +
-                            " e = " + e.toString());
-                    setResult(new ActionResult(EXCEPTION, e.toString()));
-                } finally {
-                    timeOutFuture.cancel(true);
-                }
-            }
-        }, executor);
+                    @Override
+                    public void onComplete() {
+                        //finish it here too
+                    }
+                });
     }
 
-    protected void setResult(ActionResult result) {
-        actionResult = result;
-        settableFuture.set(result);
+    public void uponCompletion(ObservableAction observableAction) {
+        uponCompletion = observableAction;
     }
 
-    public ListenableFuture<ActionResult> getFuture() {
-        return settableFuture;
+    public void uponSuccessfulCompletion(ObservableAction observableAction) {
+        uponSuccessfulCompletion = observableAction;
     }
 
-    private void  addCompletionWork() {
-        settableFuture.addListener(new Runnable() {
-            @Override
-            public void run() {
-                if (uponCompletion != null) {
-                    ServiceLog.v("CO: Running upon completion for " + getName());
-                    uponCompletion.post();
-                }
-                //Add upon success
-                if (uponSuccessfulCompletion != null) {
-                    if (ActionResult.isSuccessful(actionResult)) {
-                        ServiceLog.v("CO: Running upon successful completion for " + getName());
-                        uponSuccessfulCompletion.post();
-                    } else {
-                        uponSuccessfulCompletion.setResult(new ActionResult(ActionResult.ActionResultCodes.FAILED_TO_START));
+
+    public void cancelAction() {
+        //Cancel the observable here
+        if (observable != null) {
+            observable.doOnDispose(new io.reactivex.functions.Action() {
+                @Override
+                public void run() throws Exception {
+                    if (uponSuccessfulCompletion != null) {
+                        uponSuccessfulCompletion.cancelAction();
+                    }
+                    if (uponCompletion != null) {
+                        uponCompletion.cancelAction();
                     }
                 }
-            }
-        }, executor);
+            });
+        }
     }
 
-    public SettableFuture<ActionResult> getSettableFuture() {
-        return settableFuture;
+
+    public Observable getObservable() {
+        return observable;
+    }
+
+    private void addCompletionWork() {
+        //Not sure how to sequence observables
+//        getObservable().subscribeWith(new DisposableObserver() {
+//            @Override
+//            public void onNext(Object o) {
+//            }
+//
+//            @Override
+//            public void onError(Throwable e) {
+//
+//            }
+//
+//            @Override
+//            public void onComplete() {
+//
+//            }
+//        });
     }
 }

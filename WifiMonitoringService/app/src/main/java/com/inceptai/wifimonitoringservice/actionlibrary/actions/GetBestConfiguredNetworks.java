@@ -24,7 +24,7 @@ import java.util.concurrent.ScheduledExecutorService;
  */
 
 public class GetBestConfiguredNetworks extends FutureAction {
-
+    private static final int DEFAULT_NUMBER_OF_NETWORKS_TO_RETURN = 4;
     private List<ScanResult> scanResultList;
     private List<WifiConfiguration> wifiConfigurationList;
     private List<WifiConfiguration> bestAvailableWifiConfigurations;
@@ -36,8 +36,17 @@ public class GetBestConfiguredNetworks extends FutureAction {
                                      NetworkActionLayer networkActionLayer,
                                      long actionTimeOutMs,
                                      int numberOfNetworksToReturn) {
-        super(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
+        super(ActionType.GET_BEST_CONFIGURED_NETWORKS, context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
         this.numberOfNetworksToReturn = numberOfNetworksToReturn;
+    }
+
+    public GetBestConfiguredNetworks(Context context,
+                                     Executor executor,
+                                     ScheduledExecutorService scheduledExecutorService,
+                                     NetworkActionLayer networkActionLayer,
+                                     long actionTimeOutMs) {
+        super(ActionType.GET_BEST_CONFIGURED_NETWORKS, context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
+        this.numberOfNetworksToReturn = DEFAULT_NUMBER_OF_NETWORKS_TO_RETURN;
     }
 
     @Override

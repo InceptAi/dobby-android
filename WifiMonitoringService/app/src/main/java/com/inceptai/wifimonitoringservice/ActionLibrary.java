@@ -4,21 +4,24 @@ import android.content.Context;
 
 import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.NetworkActionLayer;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.Action;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.CheckIf5GHzIsSupported;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.ConnectAndTestGivenWifiNetwork;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.ConnectToBestConfiguredNetwork;
-import com.inceptai.wifimonitoringservice.actionlibrary.actions.ConnectToBestConfiguredNetworkIfAvailable;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.ConnectWithGivenWifiNetwork;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.DisconnectFromCurrentWifi;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.ForgetWifiNetwork;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.FutureAction;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.GetBestConfiguredNetwork;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.GetBestConfiguredNetworks;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.GetConfiguredNetworks;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.GetDHCPInfo;
-import com.inceptai.wifimonitoringservice.actionlibrary.actions.GetNearbyWifiNetworks;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.GetWifiInfo;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.IterateAndConnectToBestNetwork;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.IterateAndRepairWifiNetwork;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.ObservableAction;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.PerformBandwidthTest;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.PerformConnectivityTest;
-import com.inceptai.wifimonitoringservice.actionlibrary.actions.RepairWifiNetwork;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.ResetConnectionWithCurrentWifi;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.ToggleWifi;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.TurnWifiOff;
@@ -27,9 +30,11 @@ import com.inceptai.wifimonitoringservice.utils.ServiceLog;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ScheduledExecutorService;
+
+import io.reactivex.observers.DisposableObserver;
+import io.reactivex.schedulers.Schedulers;
 
 /**
  * Created by Vivek on 7/6/17.
@@ -40,140 +45,101 @@ public class ActionLibrary {
     private Context context;
     private Executor executor;
     private ScheduledExecutorService scheduledExecutorService;
-    private ArrayDeque<FutureAction> futureActionArrayDeque;
+    private ArrayDeque<Action> actionArrayDeque;
 
     public ActionLibrary(Context context, ServiceThreadPool serviceThreadPool) {
         this.context = context;
         this.executor = serviceThreadPool.getExecutor();
         this.scheduledExecutorService = serviceThreadPool.getScheduledExecutorService();
         networkActionLayer = new NetworkActionLayer(context, serviceThreadPool);
-        futureActionArrayDeque = new ArrayDeque<>();
+        actionArrayDeque = new ArrayDeque<>();
     }
 
     public void cleanup() {
         networkActionLayer.cleanup();
-        futureActionArrayDeque.clear();
+        actionArrayDeque.clear();
     }
 
-    public FutureAction turnWifiOn(long actionTimeOutMs) {
-        FutureAction futureAction = new TurnWifiOn(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
-        submitAction(futureAction);
-        return futureAction;
+
+    public Action takeAction(ActionRequest actionRequest) {
+        Action action = null;
+        switch(actionRequest.getActionType()) {
+            case Action.ActionType.CHECK_IF_5GHz_IS_SUPPORTED:
+                action = new CheckIf5GHzIsSupported(context, executor, scheduledExecutorService, networkActionLayer, actionRequest.getActionTimeOutMs());
+                break;
+            case Action.ActionType.CONNECT_AND_TEST_GIVEN_WIFI_NETWORK:
+                action = new ConnectAndTestGivenWifiNetwork(context, executor, scheduledExecutorService, networkActionLayer, actionRequest.getActionTimeOutMs(), actionRequest.getNetworkId());
+                break;
+            case Action.ActionType.CONNECT_TO_BEST_CONFIGURED_NETWORK:
+                action = new ConnectToBestConfiguredNetwork(context, executor, scheduledExecutorService, networkActionLayer, actionRequest.getActionTimeOutMs());
+                break;
+            case Action.ActionType.CONNECT_WITH_GIVEN_WIFI_NETWORK:
+                action = new ConnectWithGivenWifiNetwork(context, executor, scheduledExecutorService, networkActionLayer, actionRequest.getActionTimeOutMs(), actionRequest.getNetworkId());
+                break;
+            case Action.ActionType.DISCONNECT_FROM_CURRENT_WIFI:
+                action = new DisconnectFromCurrentWifi(context, executor, scheduledExecutorService, networkActionLayer, actionRequest.getActionTimeOutMs());
+                break;
+            case Action.ActionType.FORGET_WIFI_NETWORK:
+                action = new ForgetWifiNetwork(context, executor, scheduledExecutorService, networkActionLayer, actionRequest.getActionTimeOutMs(), actionRequest.getNetworkId());
+                break;
+            case Action.ActionType.GET_BEST_CONFIGURED_NETWORK:
+                action = new GetBestConfiguredNetwork(context, executor, scheduledExecutorService, networkActionLayer, actionRequest.getActionTimeOutMs());
+                break;
+            case Action.ActionType.GET_BEST_CONFIGURED_NETWORKS:
+                action = new GetBestConfiguredNetworks(context, executor, scheduledExecutorService, networkActionLayer, actionRequest.getActionTimeOutMs(), actionRequest.getNumberOfConfiguredNetworksToReturn());
+                break;
+            case Action.ActionType.GET_CONFIGURED_NETWORKS:
+                action = new GetConfiguredNetworks(context, executor, scheduledExecutorService, networkActionLayer, actionRequest.getActionTimeOutMs());
+                break;
+            case Action.ActionType.GET_DHCP_INFO:
+                action = new GetDHCPInfo(context, executor, scheduledExecutorService, networkActionLayer, actionRequest.getActionTimeOutMs());
+                break;
+            case Action.ActionType.GET_WIFI_INFO:
+                action = new GetWifiInfo(context, executor, scheduledExecutorService, networkActionLayer, actionRequest.getActionTimeOutMs());
+                break;
+            case Action.ActionType.ITERATE_AND_CONNECT_TO_BEST_NETWORK:
+                action = new IterateAndConnectToBestNetwork(context, executor, scheduledExecutorService, networkActionLayer, actionRequest.getActionTimeOutMs());
+                break;
+            case Action.ActionType.ITERATE_AND_REPAIR_WIFI_NETWORK:
+                action = new IterateAndRepairWifiNetwork(context, executor, scheduledExecutorService, networkActionLayer, actionRequest.getActionTimeOutMs());
+                break;
+            case Action.ActionType.PERFORM_BANDWIDTH_TEST:
+                action = new PerformBandwidthTest(context, executor, scheduledExecutorService, networkActionLayer, actionRequest.getActionTimeOutMs(), actionRequest.getBandwidthTestMode());
+                break;
+            case Action.ActionType.PERFORM_CONNECTIVITY_TEST:
+                action = new PerformConnectivityTest(context, executor, scheduledExecutorService, networkActionLayer, actionRequest.getActionTimeOutMs());
+                break;
+            case Action.ActionType.RESET_CONNECTION_WITH_CURRENT_WIFI:
+                action = new ResetConnectionWithCurrentWifi(context, executor, scheduledExecutorService, networkActionLayer, actionRequest.getActionTimeOutMs());
+                break;
+            case Action.ActionType.TOGGLE_WIFI:
+                action = new ToggleWifi(context, executor, scheduledExecutorService, networkActionLayer, actionRequest.getActionTimeOutMs());
+                break;
+            case Action.ActionType.TURN_WIFI_ON:
+                action = new TurnWifiOn(context, executor, scheduledExecutorService, networkActionLayer, actionRequest.getActionTimeOutMs());
+                break;
+            case Action.ActionType.TURN_WIFI_OFF:
+                action = new TurnWifiOff(context, executor, scheduledExecutorService, networkActionLayer, actionRequest.getActionTimeOutMs());
+                break;
+        }
+        //Submit action and return the action
+        if (action != null) {
+            submitAction(action);
+        }
+        return action;
     }
 
-    public FutureAction turnWifiOff(long actionTimeOutMs) {
-        FutureAction futureAction = new TurnWifiOff(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
-        submitAction(futureAction);
-        return futureAction;
-    }
-
-    public FutureAction toggleWifi(long actionTimeOutMs) {
-        FutureAction futureAction = new ToggleWifi(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
-        submitAction(futureAction);
-        return futureAction;
-    }
-
-    public FutureAction checkIf5GHzSupported(long actionTimeOutMs) {
-        FutureAction futureAction = new CheckIf5GHzIsSupported(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
-        submitAction(futureAction);
-        return futureAction;
-    }
-
-    public FutureAction disconnect(long actionTimeOutMs) {
-        FutureAction futureAction = new DisconnectFromCurrentWifi(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
-        submitAction(futureAction);
-        return futureAction;
-    }
-
-    public FutureAction connectWithWifiNetwork(int networkId, long actionTimeOutMs) {
-        FutureAction futureAction = new ConnectWithGivenWifiNetwork(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs, networkId);
-        submitAction(futureAction);
-        return futureAction;
-    }
-
-    public FutureAction forgetWifiNetwork(int networkId, long actionTimeOutMs) {
-        FutureAction futureAction = new ForgetWifiNetwork(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs, networkId);
-        submitAction(futureAction);
-        return futureAction;
-    }
-
-    public FutureAction getBestConfiguredNetwork(long actionTimeOutMs) {
-        FutureAction futureAction = new GetBestConfiguredNetwork(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs, null);
-        submitAction(futureAction);
-        return futureAction;
-    }
-
-    public FutureAction getConfiguredNetworks(long actionTimeOutMs) {
-        FutureAction futureAction = new GetConfiguredNetworks(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
-        submitAction(futureAction);
-        return futureAction;
-    }
-
-    public FutureAction getDhcpInfo(long actionTimeOutMs) {
-        FutureAction futureAction = new GetDHCPInfo(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
-        submitAction(futureAction);
-        return futureAction;
-    }
-
-    public FutureAction getWifiInfo(long actionTimeOutMs) {
-        FutureAction futureAction = new GetWifiInfo(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
-        submitAction(futureAction);
-        return futureAction;
-    }
-
-    public FutureAction getNearbyWifiNetworks(long actionTimeOutMs) {
-        FutureAction futureAction = new GetNearbyWifiNetworks(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
-        submitAction(futureAction);
-        return futureAction;
-    }
-
-    public FutureAction connectToBestWifi(long actionTimeOutMs) {
-        FutureAction futureAction = new ConnectToBestConfiguredNetworkIfAvailable(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
-        submitAction(futureAction);
-        return futureAction;
-    }
-
-    public FutureAction connectToBestWifi(long actionTimeOutMs, List<String> offlineRouterIds) {
-        FutureAction futureAction = new ConnectToBestConfiguredNetwork(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs, offlineRouterIds);
-        submitAction(futureAction);
-        return futureAction;
-    }
-
-    public FutureAction resetConnection(long actionTimeOutMs) {
-        FutureAction futureAction = new ResetConnectionWithCurrentWifi(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
-        submitAction(futureAction);
-        return futureAction;
-    }
-
-    public FutureAction repairWifiNetwork(long actionTimeOutMs) {
-        FutureAction futureAction = new RepairWifiNetwork(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
-        submitAction(futureAction);
-        return futureAction;
-    }
-
-    public FutureAction iterateAndRepairWifiNetwork(long actionTimeOutMs) {
-        FutureAction futureAction = new IterateAndRepairWifiNetwork(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
-        submitAction(futureAction);
-        return futureAction;
-    }
-
-    public FutureAction performConnectivityTest(long actionTimeOutMs) {
-        FutureAction futureAction = new PerformConnectivityTest(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
-        submitAction(futureAction);
-        return futureAction;
-    }
-
-    public ArrayList<String> getListOfPendingActions() {
-        ArrayList<String> actionList = new ArrayList<>();
-        for (FutureAction futureAction: futureActionArrayDeque) {
+    public ArrayList<Integer> getListOfPendingActions() {
+        ArrayList<Integer> actionList = new ArrayList<>();
+        for (Action futureAction: actionArrayDeque) {
             actionList.add(futureAction.getActionType());
         }
         return actionList;
     }
 
     void cancelPendingActions() {
-        FutureAction currentlyRunningAction = futureActionArrayDeque.peek();
-        for (FutureAction futureAction: futureActionArrayDeque) {
+        Action currentlyRunningAction = actionArrayDeque.peek();
+        for (Action futureAction: actionArrayDeque) {
             if (futureAction != null && currentlyRunningAction != futureAction) {
                 futureAction.cancelAction();
             }
@@ -181,37 +147,53 @@ public class ActionLibrary {
     }
 
     int numberOfPendingActions() {
-        return futureActionArrayDeque.size();
+        return actionArrayDeque.size();
     }
 
     //private stuff
-    private void postAndWaitForResults(FutureAction futureAction) {
+    private void startFutureAction(FutureAction futureAction) {
         if (futureAction != null) {
             futureAction.post();
-            processResultsWhenAvailable(futureAction);
+            processFutureActionResults(futureAction);
         }
     }
 
-    private void submitAction(FutureAction futureAction) {
-        postAndWaitForResults(addAction(futureAction));
+    private void startObservableAction(ObservableAction observableAction) {
+        if (observableAction != null) {
+            observableAction.start();
+            processObservableActionResults(observableAction);
+        }
+    }
+
+    private void submitAction(Action action) {
+        if (action instanceof FutureAction) {
+            startFutureAction((FutureAction)addAction(action));
+        } else if (action instanceof ObservableAction) {
+            startObservableAction((ObservableAction)addAction(action));
+        }
     }
 
 
-    synchronized private FutureAction addAction(FutureAction futureAction) {
-        futureActionArrayDeque.addLast(futureAction);
-        if (futureActionArrayDeque.size() == 1) { //First element -- only one action at a time
-            return futureAction;
+    synchronized private Action addAction(Action action) {
+        actionArrayDeque.addLast(action);
+        if (actionArrayDeque.size() == 1) { //First element -- only one action at a time
+            return action;
         }
         return null;
     }
 
-    synchronized private void finishAction(FutureAction futureAction) {
-        futureActionArrayDeque.remove(futureAction);
-        postAndWaitForResults(futureActionArrayDeque.peek());
+    synchronized private void finishAction(Action action) {
+        actionArrayDeque.remove(action);
+        Action nextActionToProcess = actionArrayDeque.peek();
+        if (action instanceof FutureAction) {
+            startFutureAction((FutureAction)nextActionToProcess);
+        } else if (action instanceof ObservableAction) {
+            startObservableAction((ObservableAction)action);
+        }
     }
 
 
-    private void processResultsWhenAvailable(final FutureAction futureAction) {
+    private void processFutureActionResults(final FutureAction futureAction) {
         futureAction.getFuture().addListener(new Runnable() {
             @Override
             public void run() {
@@ -228,6 +210,31 @@ public class ActionLibrary {
                 }
             }
         }, executor);
+    }
+
+    private void processObservableActionResults(final ObservableAction observableAction) {
+        if (observableAction == null) {
+            return;
+        }
+        observableAction.getObservable()
+                .subscribeOn(Schedulers.from(executor))
+                .subscribeWith(new DisposableObserver() {
+            @Override
+            public void onNext(Object o) {
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                //finish the action here
+                finishAction(observableAction);
+            }
+
+            @Override
+            public void onComplete() {
+                //finish it here too
+                finishAction(observableAction);
+            }
+        });
     }
 
 }

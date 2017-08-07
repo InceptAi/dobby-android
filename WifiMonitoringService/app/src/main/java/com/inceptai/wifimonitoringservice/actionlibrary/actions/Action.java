@@ -19,6 +19,7 @@ import java.util.concurrent.ScheduledExecutorService;
 
 
 public abstract class Action {
+    public static final long ACTION_TIMEOUT_MS = 30000;
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({ActionType.CHECK_IF_5GHz_IS_SUPPORTED,
             ActionType.CONNECT_AND_TEST_GIVEN_WIFI_NETWORK,
@@ -26,6 +27,7 @@ public abstract class Action {
             ActionType.CONNECT_WITH_GIVEN_WIFI_NETWORK,
             ActionType.DISCONNECT_FROM_CURRENT_WIFI,
             ActionType.FORGET_WIFI_NETWORK,
+            ActionType.GET_BEST_CONFIGURED_NETWORK,
             ActionType.GET_BEST_CONFIGURED_NETWORKS,
             ActionType.GET_CONFIGURED_NETWORKS,
             ActionType.GET_DHCP_INFO,
@@ -38,7 +40,7 @@ public abstract class Action {
             ActionType.RESET_CONNECTION_WITH_CURRENT_WIFI,
             ActionType.TOGGLE_WIFI,
             ActionType.TURN_WIFI_OFF,
-            ActionType.TURN_WIFI_ON })
+            ActionType.TURN_WIFI_ON})
 
     public @interface ActionType {
         int CHECK_IF_5GHz_IS_SUPPORTED = 0;
@@ -47,25 +49,24 @@ public abstract class Action {
         int CONNECT_WITH_GIVEN_WIFI_NETWORK = 3;
         int DISCONNECT_FROM_CURRENT_WIFI = 4;
         int FORGET_WIFI_NETWORK = 5;
-        int GET_BEST_CONFIGURED_NETWORKS = 6;
-        int GET_CONFIGURED_NETWORKS = 7;
-        int GET_DHCP_INFO = 8;
-        int GET_NEARBY_WIFI_NETWORKS = 9;
-        int GET_WIFI_INFO = 10;
-        int ITERATE_AND_CONNECT_TO_BEST_NETWORK = 11;
-        int ITERATE_AND_REPAIR_WIFI_NETWORK = 12;
-        int PERFORM_BANDWIDTH_TEST = 13;
-        int PERFORM_CONNECTIVITY_TEST = 14;
-        int RESET_CONNECTION_WITH_CURRENT_WIFI = 15;
-        int TOGGLE_WIFI = 16;
-        int TURN_WIFI_OFF = 17;
-        int TURN_WIFI_ON = 18;
+        int GET_BEST_CONFIGURED_NETWORK = 6;
+        int GET_BEST_CONFIGURED_NETWORKS = 7;
+        int GET_CONFIGURED_NETWORKS = 9;
+        int GET_DHCP_INFO = 10;
+        int GET_NEARBY_WIFI_NETWORKS = 11;
+        int GET_WIFI_INFO = 12;
+        int ITERATE_AND_CONNECT_TO_BEST_NETWORK = 13;
+        int ITERATE_AND_REPAIR_WIFI_NETWORK = 14;
+        int PERFORM_BANDWIDTH_TEST = 15;
+        int PERFORM_CONNECTIVITY_TEST = 16;
+        int RESET_CONNECTION_WITH_CURRENT_WIFI = 17;
+        int TOGGLE_WIFI = 18;
+        int TURN_WIFI_OFF = 19;
+        int TURN_WIFI_ON = 20;
     }
 
     @ActionType
-    private int actionType;
-    private Action uponCompletion;
-    private Action uponSuccessfulCompletion;
+    protected int actionType;
     Executor executor;
     ScheduledExecutorService scheduledExecutorService;
     long actionTimeOutMs;
@@ -73,7 +74,8 @@ public abstract class Action {
     NetworkActionLayer networkActionLayer;
     protected ActionResult actionResult;
 
-    Action(Context context,
+    Action(@ActionType int actionType,
+           Context context,
            Executor executor,
            ScheduledExecutorService scheduledExecutorService,
            NetworkActionLayer networkActionLayer,
@@ -83,18 +85,16 @@ public abstract class Action {
         this.scheduledExecutorService = scheduledExecutorService;
         this.actionTimeOutMs = actionTimeOutMs;
         this.networkActionLayer = networkActionLayer;
+        this.actionType = actionType;
     }
 
     @ActionType
-    public abstract int getType();
+    public int getActionType() {
+        return actionType;
+    }
 
-    public abstract void post();
 
     public abstract String getName();
-
-    public String getActionType() {
-        return this.getClass().getSimpleName();
-    }
 
     public abstract void cancelAction();
 

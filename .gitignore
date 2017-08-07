@@ -60,3 +60,6 @@ ActionService/.idea/**
 
 # PDT-specific
 .buildpath
+
+#android studio
+WifiExpertApp/.idea/*

@@ -36,8 +36,17 @@ public class GetBestConfiguredNetwork extends FutureAction {
                                     NetworkActionLayer networkActionLayer,
                                     long actionTimeOutMs,
                                     @Nullable List<String> offlineRouterIds) {
-        super(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
+        super(ActionType.GET_BEST_CONFIGURED_NETWORK, context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
         this.offlineRouterIds = offlineRouterIds;
+    }
+
+    public GetBestConfiguredNetwork(Context context,
+                                    Executor executor,
+                                    ScheduledExecutorService scheduledExecutorService,
+                                    NetworkActionLayer networkActionLayer,
+                                    long actionTimeOutMs) {
+        super(ActionType.GET_BEST_CONFIGURED_NETWORK, context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
+        this.offlineRouterIds = new ArrayList<>();
     }
 
     @Override

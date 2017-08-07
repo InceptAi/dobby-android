@@ -9,9 +9,13 @@ import android.net.wifi.WifiInfo;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.wifimonitoringservice.ServiceThreadPool;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest.BandwidthObserver;
+import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest.BandwidthProgressSnapshot;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.wifi.WifiController;
+import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLibraryCodes;
 
 import java.util.List;
+
+import io.reactivex.Observable;
 
 /**
  * This class abstracts out the implementation details of all things 'network' related. The UI and
@@ -123,15 +127,22 @@ public class NetworkActionLayer {
         return null;
     }
 
-    private boolean isWifiConnected() {
-        return (wifiController != null && wifiController.isWifiConnected());
-    }
-
     public void cleanup() {
         wifiController.cleanup();
         connectivityTester.cleanup();
         bandwidthObserver.cleanup();
     }
+
+
+    public Observable<BandwidthProgressSnapshot> startBandwidthTest(@ActionLibraryCodes.BandwidthTestMode int mode) {
+        return bandwidthObserver.startBandwidthTest(mode);
+    }
+
+
+    private boolean isWifiConnected() {
+        return (wifiController != null && wifiController.isWifiConnected());
+    }
+
 
 
 }

@@ -22,7 +22,7 @@ public class TurnWifiOff extends FutureAction {
                        ScheduledExecutorService scheduledExecutorService,
                        NetworkActionLayer networkActionLayer,
                        long actionTimeOutMs) {
-        super(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);;
+        super(ActionType.TURN_WIFI_OFF, context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);;
     }
 
     @Override

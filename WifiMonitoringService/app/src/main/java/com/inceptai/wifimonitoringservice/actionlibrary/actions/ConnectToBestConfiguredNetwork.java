@@ -10,6 +10,7 @@ import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.NetworkActionLayer;
 import com.inceptai.wifimonitoringservice.utils.ServiceLog;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
@@ -30,8 +31,17 @@ public class ConnectToBestConfiguredNetwork extends FutureAction {
                                           NetworkActionLayer networkActionLayer,
                                           long actionTimeOutMs,
                                           List<String> offlineRouterIDs) {
-        super(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
+        super(ActionType.CONNECT_TO_BEST_CONFIGURED_NETWORK, context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
         this.offlineRouterIDs = offlineRouterIDs;
+    }
+
+    public ConnectToBestConfiguredNetwork(Context context,
+                                          Executor executor,
+                                          ScheduledExecutorService scheduledExecutorService,
+                                          NetworkActionLayer networkActionLayer,
+                                          long actionTimeOutMs) {
+        super(ActionType.CONNECT_TO_BEST_CONFIGURED_NETWORK, context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
+        this.offlineRouterIDs = new ArrayList<>();
     }
 
     @Override

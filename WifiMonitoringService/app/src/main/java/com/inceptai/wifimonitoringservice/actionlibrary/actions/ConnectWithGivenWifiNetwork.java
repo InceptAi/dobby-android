@@ -24,7 +24,7 @@ public class ConnectWithGivenWifiNetwork extends FutureAction {
                                        NetworkActionLayer networkActionLayer,
                                        long actionTimeOutMs,
                                        int networkId) {
-        super(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
+        super(ActionType.CONNECT_WITH_GIVEN_WIFI_NETWORK, context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
         this.networkId = networkId;
     }
 

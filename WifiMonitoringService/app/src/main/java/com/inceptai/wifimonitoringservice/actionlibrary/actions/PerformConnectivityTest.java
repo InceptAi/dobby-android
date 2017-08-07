@@ -24,7 +24,7 @@ public class PerformConnectivityTest extends FutureAction {
                                    ScheduledExecutorService scheduledExecutorService,
                                    NetworkActionLayer networkActionLayer,
                                    long actionTimeOutMs) {
-        super(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
+        super(ActionType.PERFORM_CONNECTIVITY_TEST, context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
         maxTests = 10;
         gapBetweenChecksMs = 300;
     }
@@ -36,7 +36,7 @@ public class PerformConnectivityTest extends FutureAction {
                                    long actionTimeOutMs,
                                    int maxTests,
                                    long gapBetweenChecksMs) {
-        super(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
+        super(ActionType.PERFORM_CONNECTIVITY_TEST, context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
         this.maxTests = maxTests;
         this.gapBetweenChecksMs = gapBetweenChecksMs;
     }

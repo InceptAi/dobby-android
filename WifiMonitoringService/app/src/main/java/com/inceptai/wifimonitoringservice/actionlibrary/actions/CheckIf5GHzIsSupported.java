@@ -22,7 +22,7 @@ public class CheckIf5GHzIsSupported extends FutureAction {
                                   ScheduledExecutorService scheduledExecutorService,
                                   NetworkActionLayer networkActionLayer,
                                   long actionTimeOutMs) {
-        super(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
+        super(ActionType.CHECK_IF_5GHz_IS_SUPPORTED, context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
     }
 
     @Override

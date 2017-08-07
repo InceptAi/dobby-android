@@ -24,6 +24,9 @@ import static com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.Conn
  */
 
 public class IterateAndConnectToBestNetwork extends FutureAction {
+    private static final int DEFAULT_MAX_NETWORKS_TO_ITERATE = 4;
+    private static final int DEFAULT_MAX_CONNECTIVITY_CHECKS = 10;
+    private static final int DEFAULT_GAP_BETWEEN_CHECKS_MS = 300;
     private int maxNetworksToIterate;
     private List<WifiConfiguration> wifiConfigurationListToTry;
     private int maxConnectivityChecks;
@@ -39,7 +42,7 @@ public class IterateAndConnectToBestNetwork extends FutureAction {
                                           int maxNetworksToIterate,
                                           int maxConnectivityChecks,
                                           long gapBetweenChecksMs) {
-        super(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
+        super(ActionType.ITERATE_AND_CONNECT_TO_BEST_NETWORK, context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
         this.maxNetworksToIterate = maxNetworksToIterate;
         this.maxConnectivityChecks = maxConnectivityChecks;
         this.gapBetweenChecksMs = gapBetweenChecksMs;
@@ -51,10 +54,10 @@ public class IterateAndConnectToBestNetwork extends FutureAction {
                                           ScheduledExecutorService scheduledExecutorService,
                                           NetworkActionLayer networkActionLayer,
                                           long actionTimeOutMs) {
-        super(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
-        this.maxNetworksToIterate = 2;
-        this.maxConnectivityChecks = 10;
-        this.gapBetweenChecksMs = 300;
+        super(ActionType.ITERATE_AND_CONNECT_TO_BEST_NETWORK, context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
+        this.maxNetworksToIterate = DEFAULT_MAX_NETWORKS_TO_ITERATE;
+        this.maxConnectivityChecks = DEFAULT_MAX_CONNECTIVITY_CHECKS;
+        this.gapBetweenChecksMs = DEFAULT_GAP_BETWEEN_CHECKS_MS;
         currentWifiConfigurationIndex = 0;
     }
 

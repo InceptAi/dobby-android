@@ -65,14 +65,6 @@ public class ServiceActionTaker {
     }
 
 
-    public FutureAction takeAction(ExpertAction.ActionRequest actionRequest) {
-        switch(actionRequest.getActionType()) {
-            case ExpertAction.ActionType.CHECK_IF_5GHz_IS_SUPPORTED:
-                return checkIf5GHzSupported();
-                break;
-
-        }
-    }
 
     public void turnWifiOff() {
         final FutureAction wifiOff = actionLibrary.turnWifiOff(ACTION_TIMEOUT_MS);

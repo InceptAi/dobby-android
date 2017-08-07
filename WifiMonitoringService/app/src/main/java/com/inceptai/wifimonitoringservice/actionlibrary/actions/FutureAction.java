@@ -32,12 +32,13 @@ public abstract class FutureAction extends Action {
     private FutureAction uponSuccessfulCompletion;
     private SettableFuture<ActionResult> settableFuture;
 
-    FutureAction(Context context,
+    FutureAction(@ActionType int actionType,
+                 Context context,
                  Executor executor,
                  ScheduledExecutorService scheduledExecutorService,
                  NetworkActionLayer networkActionLayer,
                  long actionTimeOutMs) {
-        super(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
+        super(actionType, context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
         settableFuture = SettableFuture.create();
         addCompletionWork();
     }
@@ -45,10 +46,6 @@ public abstract class FutureAction extends Action {
     public abstract void post();
 
     public abstract String getName();
-
-    public String getActionType() {
-        return this.getClass().getSimpleName();
-    }
 
     public void uponCompletion(FutureAction futureAction) {
         uponCompletion = futureAction;

@@ -19,6 +19,9 @@ import java.util.concurrent.ScheduledExecutorService;
  */
 
 public class ConnectAndTestGivenWifiNetwork extends FutureAction {
+    private static final int DEFAULT_MAX_NETWORKS_TO_ITERATE = 4;
+    private static final int DEFAULT_MAX_CONNECTIVITY_CHECKS = 10;
+    private static final int DEFAULT_GAP_BETWEEN_CHECKS_MS = 300;
     private int networkId;
     private long gapBetweenChecksMs;
     private int maxConnectivityChecks;
@@ -31,10 +34,22 @@ public class ConnectAndTestGivenWifiNetwork extends FutureAction {
                                           int networkId,
                                           int maxConnectivityChecks,
                                           long gapBetweenChecksMs) {
-        super(context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
+        super(ActionType.CONNECT_AND_TEST_GIVEN_WIFI_NETWORK, context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
         this.networkId = networkId;
         this.maxConnectivityChecks = maxConnectivityChecks;
         this.gapBetweenChecksMs = gapBetweenChecksMs;
+    }
+
+    public ConnectAndTestGivenWifiNetwork(Context context,
+                                          Executor executor,
+                                          ScheduledExecutorService scheduledExecutorService,
+                                          NetworkActionLayer networkActionLayer,
+                                          long actionTimeOutMs,
+                                          int networkId) {
+        super(ActionType.CONNECT_AND_TEST_GIVEN_WIFI_NETWORK, context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
+        this.networkId = networkId;
+        this.maxConnectivityChecks = DEFAULT_MAX_CONNECTIVITY_CHECKS;
+        this.gapBetweenChecksMs = DEFAULT_GAP_BETWEEN_CHECKS_MS;
     }
 
     @Override
