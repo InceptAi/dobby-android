@@ -30,14 +30,17 @@ public class BandwidthObserver implements BandwidthAnalyzer.ResultsCallback, Obs
     @ActionLibraryCodes.BandwidthTestMode
     private int testsDone;
     private ExecutorService executorService;
+    private ListeningScheduledExecutorService listeningScheduledExecutorService;
+    private Context context;
 
     public BandwidthObserver(Context context, ExecutorService executorService,
                              ListeningScheduledExecutorService listeningScheduledExecutorService) {
         this.testModeRequested = ActionLibraryCodes.BandwidthTestMode.IDLE;
-        testsDone = ActionLibraryCodes.BandwidthTestMode.IDLE;
-        bandwidthResultObservable = Observable.create(this).share();
-        bandwidthAnalyzer = new BandwidthAnalyzer(executorService, listeningScheduledExecutorService, context, this);
         this.executorService = executorService;
+        this.context = context;
+        this.listeningScheduledExecutorService = listeningScheduledExecutorService;
+        this.testsDone = ActionLibraryCodes.BandwidthTestMode.IDLE;
+        bandwidthResultObservable = Observable.create(this).share();
     }
 
     public synchronized void onCancelled() {
@@ -178,6 +181,7 @@ public class BandwidthObserver implements BandwidthAnalyzer.ResultsCallback, Obs
             markTestsAsRunning();
             testModeRequested = mode;
             result = new BandwidthResult(mode);
+            bandwidthAnalyzer = new BandwidthAnalyzer(executorService, listeningScheduledExecutorService, context, this);
             executorService.execute(new Runnable() {
                 @Override
                 public void run() {
@@ -198,7 +202,9 @@ public class BandwidthObserver implements BandwidthAnalyzer.ResultsCallback, Obs
         executorService.execute(new Runnable() {
             @Override
             public void run() {
-                bandwidthAnalyzer.cancelBandwidthTests();
+                if (bandwidthAnalyzer != null) {
+                    bandwidthAnalyzer.cancelBandwidthTests();
+                }
             }
         });
         ServiceLog.v("NL done with bw cancellation");
@@ -208,16 +214,23 @@ public class BandwidthObserver implements BandwidthAnalyzer.ResultsCallback, Obs
         if (testsRunning()) {
             cancelBandwidthTests();
         }
-        bandwidthAnalyzer.cleanup();
-        bandwidthAnalyzer = null;
+        if (bandwidthAnalyzer != null) {
+            bandwidthAnalyzer.cleanup();
+            bandwidthAnalyzer = null;
+        }
     }
     //Private stuff
 
     private void testsDone() {
         ServiceLog.v("Tests done");
         testsRunning = false;
+        testsDone = ActionLibraryCodes.BandwidthTestMode.IDLE;
         testModeRequested = ActionLibraryCodes.BandwidthTestMode.IDLE;
         result = null;
+        if (bandwidthAnalyzer != null) {
+            bandwidthAnalyzer.cleanup();
+            bandwidthAnalyzer = null;
+        }
     }
 
     private synchronized void markTestsAsRunning() {
