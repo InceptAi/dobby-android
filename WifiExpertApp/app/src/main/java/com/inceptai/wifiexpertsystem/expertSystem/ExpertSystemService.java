@@ -11,6 +11,7 @@ import com.inceptai.wifimonitoringservice.actionlibrary.actions.Action;
 import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLibraryCodes;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Created by vivek on 8/5/17.
@@ -18,14 +19,18 @@ import java.util.List;
 
 public class ExpertSystemService  {
     private ExpertSystemCallback callback;
+    private ExecutorService executorService;
 
     public interface ExpertSystemCallback {
         void onActionRequested(ActionRequest actionRequest);
         void onExpertMessage(ExpertMessage expertMessage);
     }
 
-    ExpertSystemService(String userId, Context context, @NonNull ExpertSystemCallback callback) {
+    ExpertSystemService(String userId, Context context,
+                        ExecutorService executorService,
+                        @NonNull ExpertSystemCallback callback) {
         this.callback = callback;
+        this.executorService = executorService;
     }
 
     //Public methods
@@ -36,13 +41,13 @@ public class ExpertSystemService  {
     }
 
     public void actionStarted(Action action) {
-        ExpertMessage expertMessage = ExpertMessage.create(action);
-        callback.onExpertMessage(expertMessage);
+        final ExpertMessage expertMessage = ExpertMessage.create(action);
+        sendCallbackWithExpertMessage(expertMessage);
     }
 
     public void actionFinished(Action action, ActionResult actionResult) {
-        ExpertMessage expertMessage = ExpertMessage.create(action, actionResult);
-        callback.onExpertMessage(expertMessage);
+        final ExpertMessage expertMessage = ExpertMessage.create(action, actionResult);
+        sendCallbackWithExpertMessage(expertMessage);
     }
 
 
@@ -63,6 +68,15 @@ public class ExpertSystemService  {
     }
 
     //TODO -- move this to cloud
+    private void sendCallbackWithExpertMessage(final ExpertMessage expertMessage) {
+        executorService.execute(new Runnable() {
+            @Override
+            public void run() {
+                callback.onExpertMessage(expertMessage);
+            }
+        });
+    }
+
     private ActionRequest parseMessageAndTakeActions(String message) {
         ActionRequest actionRequest = null;
         if (message.toLowerCase().contains("wifiscan") || message.toLowerCase().contains("wifinearby")) {

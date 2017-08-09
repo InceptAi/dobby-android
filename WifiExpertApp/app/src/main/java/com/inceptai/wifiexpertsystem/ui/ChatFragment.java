@@ -51,6 +51,7 @@ import javax.inject.Inject;
 
 import io.reactivex.Observable;
 import io.reactivex.observers.DisposableObserver;
+import io.reactivex.schedulers.Schedulers;
 
 import static com.inceptai.wifiexpertsystem.expertSystem.messages.StructuredUserResponse.ResponseType.CANCEL;
 import static com.inceptai.wifiexpertsystem.expertSystem.messages.StructuredUserResponse.ResponseType.CONTACT_HUMAN_EXPERT;
@@ -138,6 +139,7 @@ public class ChatFragment extends Fragment implements Handler.Callback {
 
     private boolean createdFirstTime = true;
 
+    private DisposableObserver disposableBandwidthObserver;
     @Inject
     DobbyAnalytics dobbyAnalytics;
 
@@ -334,6 +336,7 @@ public class ChatFragment extends Fragment implements Handler.Callback {
     public void onDestroy() {
         DobbyLog.v("CF: In onDestroy");
         super.onDestroy();
+        disposeExistingBandwidthObserver();
     }
 
     @Override
@@ -413,6 +416,8 @@ public class ChatFragment extends Fragment implements Handler.Callback {
     }
 
     public void observeBandwidthNonUi(final Observable bandwidthObservable) {
+        DobbyLog.v("CF: observeBandwidthNonUi");
+        observeBandwidthStats(bandwidthObservable);
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -667,7 +672,7 @@ public class ChatFragment extends Fragment implements Handler.Callback {
 
 
     private void showBandwidthGauge(Observable bandwidthObservable) {
-        updateBandwidthStats(bandwidthObservable);
+        DobbyLog.v("CF: showBandwidthGuage");
         uiStateChange(UI_STATE_SHOW_BW_GAUGE);
     }
 
@@ -793,27 +798,41 @@ public class ChatFragment extends Fragment implements Handler.Callback {
         downloadGaugeTv.setText(ZERO_POINT_ZERO);
     }
 
+    private void disposeExistingBandwidthObserver() {
+        if (disposableBandwidthObserver != null && !disposableBandwidthObserver.isDisposed()) {
+            disposableBandwidthObserver.dispose();
+        }
+    }
+
     //Replaced with observable
-    private void updateBandwidthStats(Observable bandwidthObservable) {
-        bandwidthObservable.subscribeWith(new DisposableObserver<BandwidthProgressSnapshot>() {
-                    @Override
-                    public void onNext(BandwidthProgressSnapshot bandwidthProgressSnapshot) {
-                        handleBandwidthProgressSnapshot(bandwidthProgressSnapshot);
-                    }
+    private void observeBandwidthStats(Observable bandwidthObservable) {
+        disposeExistingBandwidthObserver();
+        disposableBandwidthObserver = new DisposableObserver<BandwidthProgressSnapshot>() {
+            @Override
+            public void onNext(BandwidthProgressSnapshot bandwidthProgressSnapshot) {
+                DobbyLog.v("CF: OnNext");
+                handleBandwidthProgressSnapshot(bandwidthProgressSnapshot);
+            }
 
-                    @Override
-                    public void onError(Throwable e) {
-                        //finish the action here
-                        BandwidthObserver.BandwidthTestException bandwidthTestException = (BandwidthObserver.BandwidthTestException)e;
-                        onBandwidthTestError(bandwidthTestException.getTestMode(), bandwidthTestException.getErrorCode(), bandwidthTestException.getErrorMessage());
-                    }
+            @Override
+            public void onError(Throwable e) {
+                //finish the action here
+                DobbyLog.v("CF: Error");
+                BandwidthObserver.BandwidthTestException bandwidthTestException = (BandwidthObserver.BandwidthTestException)e;
+                onBandwidthTestError(bandwidthTestException.getTestMode(), bandwidthTestException.getErrorCode(), bandwidthTestException.getErrorMessage());
+            }
 
-                    @Override
-                    public void onComplete() {
-                        //finish it here too
-                        DobbyLog.v("CF: OnComplete");
-                    }
-                });
+            @Override
+            public void onComplete() {
+                //finish it here too
+                DobbyLog.v("CF: OnComplete");
+            }
+        };
+
+        DobbyLog.v("CF: In observeBandwidthStats");
+        bandwidthObservable
+                .subscribeOn(Schedulers.newThread())
+                .subscribeWith(disposableBandwidthObserver);
     }
 
     private void handleBandwidthProgressSnapshot(final BandwidthProgressSnapshot bandwidthProgressSnapshot) {

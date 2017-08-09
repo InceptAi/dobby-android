@@ -30,6 +30,7 @@ public class NetworkActionLayer {
     private ConnectivityTester connectivityTester;
     private BandwidthObserver bandwidthObserver;
 
+
     // Use Dagger to get a singleton instance of this class.
     public NetworkActionLayer(Context context, ExecutorService executorService,
                               ListeningScheduledExecutorService listeningScheduledExecutorService,

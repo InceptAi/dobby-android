@@ -220,7 +220,9 @@ public class DobbyActivity extends AppCompatActivity
     //Interaction manager callback
     @Override
     public void observeBandwidth(Observable bandwidthObservable) {
+        DobbyLog.v("DobbyActivity: In observerBandwidth callback");
         if (chatFragment != null) {
+            DobbyLog.v("DobbyActivity: Sending observerBandwidth to CF");
             chatFragment.observeBandwidthNonUi(bandwidthObservable);
         }
     }

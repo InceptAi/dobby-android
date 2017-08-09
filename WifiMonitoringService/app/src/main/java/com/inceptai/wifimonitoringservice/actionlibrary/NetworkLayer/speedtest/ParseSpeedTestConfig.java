@@ -68,6 +68,15 @@ public class ParseSpeedTestConfig {
             }
             return null;
         }
+
+        //Config is null for some reason, throw error
+        if (config == null) {
+            if (this.resultsCallback != null) {
+                this.resultsCallback.onConfigFetchError("Config returned null");
+            }
+            return null;
+        }
+
         return config;
     }
 

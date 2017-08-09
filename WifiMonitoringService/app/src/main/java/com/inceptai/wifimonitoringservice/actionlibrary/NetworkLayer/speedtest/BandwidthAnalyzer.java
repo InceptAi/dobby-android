@@ -124,7 +124,7 @@ public class BandwidthAnalyzer {
      * @param resultsCallback
      */
     public void registerCallback(ResultsCallback resultsCallback) {
-        this.resultsCallback = CallbackThreadSwitcher.wrap(
+        this.resultsCallback = BandwidthAnalyzerCallbackThreadSwitcher.wrap(
                 networkLayerExecutorService, resultsCallback);
     }
 
@@ -147,7 +147,7 @@ public class BandwidthAnalyzer {
             ServiceLog.v("Cancelling uploadAnalyzer");
             uploadAnalyzer.cancelAllTests(executorService);
         }
-        unRegisterCallback();
+        //unRegisterCallback();
         markTestsAsCancelled();
         ServiceLog.v("NBA done with bw cancellation");
     }
@@ -172,8 +172,6 @@ public class BandwidthAnalyzer {
             SpeedTestConfig speedTestConfig = parseSpeedTestConfig.getConfig(downloadMode);
             ServiceLog.v("NBA Fetched new config");
             if (speedTestConfig == null) {
-                reportBandwidthError(ActionLibraryCodes.BandwidthTestMode.CONFIG_FETCH,
-                        ActionLibraryCodes.ErrorCodes.ERROR_FETCHING_CONFIG, "Config fetch returned null");
                 return null;
             }
             //Update speed test config
@@ -329,8 +327,7 @@ public class BandwidthAnalyzer {
 
         @Override
         public void onError(@ActionLibraryCodes.BandwidthTestMode int callbackTestMode, SpeedTestError speedTestError, String errorMessage) {
-            reportBandwidthError(callbackTestMode,
-                    convertToBandwidthTestCodes(speedTestError), errorMessage);
+            reportBandwidthError(callbackTestMode, convertToBandwidthTestCodes(speedTestError), errorMessage);
             //Cancel bandwidth tests.
             cancelBandwidthTests();
         }
@@ -462,6 +459,7 @@ public class BandwidthAnalyzer {
                               @ActionLibraryCodes.ErrorCodes int errorCode,
                               @Nullable String errorMessage) {
         if (resultsCallback != null) {
+            ServiceLog.e("BA: Sending bw test error : mode " + testMode + " errorCode" + errorCode);
             resultsCallback.onBandwidthTestError(testMode, errorCode, errorMessage);
         }
     }

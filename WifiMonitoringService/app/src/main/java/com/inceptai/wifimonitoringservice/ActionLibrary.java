@@ -193,21 +193,33 @@ public class ActionLibrary {
     }
 
     //private stuff
-    private void startFutureAction(FutureAction futureAction) {
+    private void startFutureAction(final FutureAction futureAction) {
         if (futureAction != null) {
+            ServiceLog.v("Starting future action " + futureAction.getName());
             futureAction.post();
             if (actionCallback != null) {
-                actionCallback.actionStarted(futureAction);
+                executor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        actionCallback.actionStarted(futureAction);
+                    }
+                });
             }
             processFutureActionResults(futureAction);
         }
     }
 
-    private void startObservableAction(ObservableAction observableAction) {
+    private void startObservableAction(final ObservableAction observableAction) {
         if (observableAction != null) {
+            ServiceLog.v("Starting observable action " + observableAction.getName());
             observableAction.start();
             if (actionCallback != null) {
-                actionCallback.actionStarted(observableAction);
+                executor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        actionCallback.actionStarted(observableAction);
+                    }
+                });
             }
             processObservableActionResults(observableAction);
         }
@@ -223,20 +235,30 @@ public class ActionLibrary {
 
 
     synchronized private Action addAction(Action action) {
+        ServiceLog.v("Queueing action " + action.getName());
         actionArrayDeque.addLast(action);
         if (actionArrayDeque.size() == 1) { //First element -- only one action at a time
+            ServiceLog.v("Queue size is 1 so returning action " + action.getName());
             return action;
         }
+        ServiceLog.v("Queue size is: " + actionArrayDeque.size() + "so not starting right now " + action.getName());
         return null;
     }
 
-    synchronized private void finishAction(Action action, ActionResult result) {
+    synchronized private void finishAction(final Action action, final ActionResult result) {
+        ServiceLog.v("Removing action " + action.getName());
         actionArrayDeque.remove(action);
         if (actionCallback != null) {
-            actionCallback.actionCompleted(action, result);
+            executor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    actionCallback.actionCompleted(action, result);
+                }
+            });
         }
         Action nextActionToProcess = actionArrayDeque.peek();
         if (nextActionToProcess != null) {
+            ServiceLog.v("Starting pending action " + action.getName());
             if (action instanceof FutureAction) {
                 startFutureAction((FutureAction)nextActionToProcess);
             } else if (action instanceof ObservableAction) {
@@ -266,7 +288,8 @@ public class ActionLibrary {
     }
 
     private void processObservableActionResults(final ObservableAction observableAction) {
-        if (observableAction == null) {
+        if (observableAction == null || observableAction.getObservable() == null) {
+            ServiceLog.e("AL: Returning since observable action or getobservable is null");
             return;
         }
         observableAction.getObservable()
@@ -280,12 +303,14 @@ public class ActionLibrary {
             @Override
             public void onError(Throwable e) {
                 //finish the action here
+                ServiceLog.e("AL: OnError");
                 finishAction(observableAction, null);
             }
 
             @Override
             public void onComplete() {
                 //finish it here too
+                ServiceLog.v("AL: OnComplete");
                 ActionResult actionResult = observableAction.getFinalResult();
                 finishAction(observableAction, actionResult);
             }

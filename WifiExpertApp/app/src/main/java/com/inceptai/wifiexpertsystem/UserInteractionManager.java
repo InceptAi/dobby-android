@@ -233,6 +233,7 @@ public class UserInteractionManager implements
     private void handleActionStarted(Action action) {
         if (action.getActionType() == Action.ActionType.PERFORM_BANDWIDTH_TEST) {
             final ObservableAction observableAction = (ObservableAction)action;
+            DobbyLog.v("UIM: handleActionStarted: Sending observeBandwidth callback");
             interactionCallback.observeBandwidth(observableAction.getObservable());
         }
         expertChatService.sendActionStartedMessage();

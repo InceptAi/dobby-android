@@ -6,6 +6,7 @@ import android.support.annotation.NonNull;
 import com.google.common.util.concurrent.ListeningScheduledExecutorService;
 import com.inceptai.wifiexpertsystem.expertSystem.messages.ExpertMessage;
 import com.inceptai.wifiexpertsystem.expertSystem.messages.UserMessage;
+import com.inceptai.wifiexpertsystem.utils.DobbyLog;
 import com.inceptai.wifimonitoringservice.ActionLibrary;
 import com.inceptai.wifimonitoringservice.ActionRequest;
 import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
@@ -26,6 +27,7 @@ public class ExpertSystemClient implements
     private String userId;
     private Context context;
     private ExpertSystemClientCallback expertSystemClientCallback;
+    private ExecutorService executorService;
 
     public interface ExpertSystemClientCallback {
         void onExpertMessage(ExpertMessage expertMessage);
@@ -38,15 +40,16 @@ public class ExpertSystemClient implements
         this.context = context.getApplicationContext();
         this.userId = userId;
         this.expertSystemClientCallback = expertSystemClientCallback;
+        this.executorService = executorService;
         actionLibrary = new ActionLibrary(context, executorService, listeningScheduledExecutorService, scheduledExecutorService);
         actionLibrary.registerCallback(this);
-        expertSystemService = new ExpertSystemService(userId, context, this);
+        expertSystemService = new ExpertSystemService(userId, context, executorService, this);
     }
 
     // Connect to the expert system service.
-    public void connect() {
-        expertSystemService = new ExpertSystemService(userId, context, this);
-    }
+//    public void connect() {
+//        expertSystemService = new ExpertSystemService(userId, context, this);
+//    }
 
     public void onUserMessage(UserMessage userMessage) {
         expertSystemService.onUserMessage(userMessage);
@@ -58,24 +61,46 @@ public class ExpertSystemClient implements
 
     //Expert system service callbacks
     @Override
-    public void onActionRequested(ActionRequest actionRequest) {
+    public void onActionRequested(final ActionRequest actionRequest) {
         //Take action based on action request
-        actionLibrary.takeAction(actionRequest);
+        executorService.execute(new Runnable() {
+            @Override
+            public void run() {
+                actionLibrary.takeAction(actionRequest);
+            }
+        });
     }
 
     @Override
-    public void onExpertMessage(ExpertMessage expertMessage) {
-        expertSystemClientCallback.onExpertMessage(expertMessage);
+    public void onExpertMessage(final ExpertMessage expertMessage) {
+        executorService.execute(new Runnable() {
+            @Override
+            public void run() {
+                expertSystemClientCallback.onExpertMessage(expertMessage);
+            }
+        });
     }
 
     //Action Library callbacks
     @Override
-    public void actionStarted(Action action) {
-        expertSystemService.actionStarted(action);
+    public void actionStarted(final Action action) {
+        DobbyLog.v("Action started : " + action.getName());
+        executorService.execute(new Runnable() {
+            @Override
+            public void run() {
+                expertSystemService.actionStarted(action);
+            }
+        });
     }
 
     @Override
-    public void actionCompleted(Action action, ActionResult actionResult) {
-        expertSystemService.actionFinished(action, actionResult);
+    public void actionCompleted(final Action action, final ActionResult actionResult) {
+        DobbyLog.v("Action completed : " + action.getName());
+        executorService.execute(new Runnable() {
+            @Override
+            public void run() {
+                expertSystemService.actionFinished(action, actionResult);
+            }
+        });
     }
 }
