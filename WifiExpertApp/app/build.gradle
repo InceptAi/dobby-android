@@ -4,13 +4,17 @@ android {
     compileSdkVersion 25
     buildToolsVersion "25.0.3"
     defaultConfig {
-        applicationId "com.inceptai.wifiexpertapp"
+        applicationId "com.inceptai.wifiexpertsystem"
         minSdkVersion 16
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
+    }
+    productFlavors {
+        expertSystem {
+        }
     }
     buildTypes {
         release {
@@ -60,3 +64,5 @@ dependencies {
     annotationProcessor 'com.google.dagger:dagger-compiler:2.9'
     testCompile 'junit:junit:4.12'
 }
+
+apply plugin: 'com.google.gms.google-services'

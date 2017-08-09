@@ -1,7 +1,6 @@
 package com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.google.common.util.concurrent.ListeningScheduledExecutorService;
@@ -37,7 +36,6 @@ public class BandwidthObserver implements BandwidthAnalyzer.ResultsCallback, Obs
         this.testModeRequested = ActionLibraryCodes.BandwidthTestMode.IDLE;
         testsDone = ActionLibraryCodes.BandwidthTestMode.IDLE;
         bandwidthResultObservable = Observable.create(this).share();
-        markTestsAsRunning();
         bandwidthAnalyzer = new BandwidthAnalyzer(executorService, listeningScheduledExecutorService, context, this);
         this.executorService = executorService;
     }
@@ -142,6 +140,7 @@ public class BandwidthObserver implements BandwidthAnalyzer.ResultsCallback, Obs
     //Bandwidth Analyzer stuff
     public synchronized Observable<BandwidthProgressSnapshot> startBandwidthTest(final @ActionLibraryCodes.BandwidthTestMode int mode) {
         if (!testsRunning()) {
+            markTestsAsRunning();
             testModeRequested = mode;
             result = new BandwidthResult(mode);
             executorService.execute(new Runnable() {
@@ -209,7 +208,7 @@ public class BandwidthObserver implements BandwidthAnalyzer.ResultsCallback, Obs
     // ObservableOnSubscribe<> methods
 
     @Override
-    public void subscribe(@NonNull ObservableEmitter<BandwidthProgressSnapshot> e) throws Exception {
+    public void subscribe(ObservableEmitter<BandwidthProgressSnapshot> e) throws Exception {
         emitter = e;
     }
 

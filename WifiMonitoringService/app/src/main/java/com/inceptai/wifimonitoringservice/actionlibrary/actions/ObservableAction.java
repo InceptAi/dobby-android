@@ -4,13 +4,14 @@ import android.content.Context;
 
 import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.NetworkActionLayer;
+import com.inceptai.wifimonitoringservice.utils.ServiceLog;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
-import io.reactivex.observers.DisposableObserver;
+import io.reactivex.observers.DefaultObserver;
 import io.reactivex.schedulers.Schedulers;
 
 
@@ -46,19 +47,22 @@ public abstract class ObservableAction extends Action {
         }
         observable.subscribeOn(Schedulers.from(executor))
                 .timeout(actionTimeOutMs, TimeUnit.MILLISECONDS)
-                .subscribeWith(new DisposableObserver() {
+                .subscribeWith(new DefaultObserver() {
                     @Override
                     public void onNext(Object o) {
+                        ServiceLog.v("OA: OnNext");
                     }
 
                     @Override
                     public void onError(Throwable e) {
                         //finish the action here
+                        ServiceLog.e("OA: OnError: " + e.toString());
                     }
 
                     @Override
                     public void onComplete() {
                         //finish it here too
+                        ServiceLog.v("OA: OnCompleter");
                     }
                 });
     }

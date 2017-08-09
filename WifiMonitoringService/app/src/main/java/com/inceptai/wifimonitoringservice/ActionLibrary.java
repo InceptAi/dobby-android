@@ -37,7 +37,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 
-import io.reactivex.observers.DisposableObserver;
+import io.reactivex.observers.DefaultObserver;
 import io.reactivex.schedulers.Schedulers;
 
 /**
@@ -91,6 +91,10 @@ public class ActionLibrary {
     }
 
     public Action takeAction(ActionRequest actionRequest) {
+        if (actionRequest == null) {
+            return null;
+        }
+
         Action action = null;
         switch(actionRequest.getActionType()) {
             case Action.ActionType.CHECK_IF_5GHz_IS_SUPPORTED:
@@ -267,9 +271,10 @@ public class ActionLibrary {
         }
         observableAction.getObservable()
                 .subscribeOn(Schedulers.from(executor))
-                .subscribeWith(new DisposableObserver() {
+                .subscribeWith(new DefaultObserver() {
             @Override
             public void onNext(Object o) {
+                ServiceLog.v("AL: OnNext");
             }
 
             @Override

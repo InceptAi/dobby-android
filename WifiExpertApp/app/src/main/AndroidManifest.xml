@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.inceptai.wifiexpert">
+    package="com.inceptai.wifiexpertsystem">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
@@ -11,15 +11,15 @@
     <!-- Permission to start Alarm on device reboot -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
-    <application  tools:replace="android:label"
-        android:name=".DobbyApplication"
+    <application  tools:replace="android:label, android:theme"
+        android:name="com.inceptai.wifiexpertsystem.DobbyApplication"
         android:allowBackup="true"
         android:fullBackupContent="true"
         android:icon="@mipmap/wifi_expert_launcher"
         android:label="@string/wifi_expert_name"
         android:roundIcon="@mipmap/wifi_expert_launcher"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme.NoActionBar">
 
         <activity android:name=".DobbyActivity">
             <intent-filter>
@@ -29,12 +29,12 @@
             </intent-filter>
         </activity>
 
-        <receiver android:name="com.inceptai.wifiexpert.heartbeat.AlarmReceiver" android:enabled="true">
+        <receiver android:name=".heartbeat.AlarmReceiver" android:enabled="true">
             <intent-filter>
                 <action android:name="DAILY_HEARTBEAT_INTENT"/>
             </intent-filter>
         </receiver>
-        <receiver android:name="com.inceptai.wifiexpert.heartbeat.DeviceBootReceiver" android:enabled="true">
+        <receiver android:name=".heartbeat.DeviceBootReceiver" android:enabled="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
             </intent-filter>
