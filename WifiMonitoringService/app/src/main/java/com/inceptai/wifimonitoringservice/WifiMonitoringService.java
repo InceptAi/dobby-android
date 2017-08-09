@@ -11,6 +11,7 @@ import android.os.Message;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.Action;
 import com.inceptai.wifimonitoringservice.utils.ServiceAlarm;
 import com.inceptai.wifimonitoringservice.utils.ServiceLog;
 import com.inceptai.wifimonitoringservice.utils.Utils;
@@ -136,6 +137,10 @@ public class WifiMonitoringService extends Service {
         if (wifiServiceCore !=  null) {
             wifiServiceCore.sendStatusUpdateNotification();
         }
+    }
+
+    public Action takeAction(ActionRequest actionRequest) {
+        return wifiServiceCore.takeAction(actionRequest);
     }
 
     /**

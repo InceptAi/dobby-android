@@ -5,7 +5,11 @@ import android.support.annotation.Nullable;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.Action;
 import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLibraryCodes;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static com.inceptai.wifimonitoringservice.actionlibrary.actions.Action.ACTION_TIMEOUT_MS;
+import static com.inceptai.wifimonitoringservice.actionlibrary.actions.GetBestConfiguredNetworks.DEFAULT_NUMBER_OF_NETWORKS_TO_RETURN;
 
 /**
  * Created by vivek on 8/5/17.
@@ -18,6 +22,7 @@ public class ActionRequest {
     private int networkId = 0;
     private long actionTimeOutMs = ACTION_TIMEOUT_MS;
     private int numberOfConfiguredNetworksToReturn = 0;
+    private List<String> offlineWifiNetworks;
     @ActionLibraryCodes.BandwidthTestMode private int bandwidthTestMode = ActionLibraryCodes.BandwidthTestMode.DOWNLOAD_AND_UPLOAD;
 
     //Additional parameters
@@ -30,19 +35,20 @@ public class ActionRequest {
         this.networkId = networkId;
         this.actionTimeOutMs = actionTimeOutMs;
         this.numberOfConfiguredNetworksToReturn = numberOfConfiguredNetworksToReturn;
+        this.offlineWifiNetworks = new ArrayList<>();
     }
 
     private ActionRequest(@Action.ActionType int actionType, int networkId,
                           int numberOfConfiguredNetworksToReturn, long actionTimeOutMs,
                           @ActionLibraryCodes.BandwidthTestMode int bandwidthTestMode) {
-        if (actionTimeOutMs == 0) {
-            actionTimeOutMs = ACTION_TIMEOUT_MS;
-        }
-        this.actionType = actionType;
-        this.networkId = networkId;
-        this.actionTimeOutMs = actionTimeOutMs;
-        this.numberOfConfiguredNetworksToReturn = numberOfConfiguredNetworksToReturn;
+        this(actionType, networkId, numberOfConfiguredNetworksToReturn, actionTimeOutMs);
         this.bandwidthTestMode = bandwidthTestMode;
+    }
+
+    private ActionRequest(@Action.ActionType int actionType, List<String> offlineNetworks,
+                          long actionTimeOutMs) {
+        this(actionType, 0, 0, actionTimeOutMs);
+        this.offlineWifiNetworks = offlineNetworks;
     }
 
     /**
@@ -62,6 +68,17 @@ public class ActionRequest {
     public static ActionRequest connectToBestConfiguredNetworkRequest(long actionTimeOutMs) {
         return new ActionRequest(Action.ActionType.CONNECT_TO_BEST_CONFIGURED_NETWORK, 0, 0, actionTimeOutMs);
     }
+
+    @Nullable
+    public static ActionRequest connectToBestConfiguredNetworkRequest(List<String> listOfOfflineRouters, long actionTimeOutMs) {
+        return new ActionRequest(Action.ActionType.CONNECT_TO_BEST_CONFIGURED_NETWORK, listOfOfflineRouters, actionTimeOutMs);
+    }
+
+    @Nullable
+    public static ActionRequest connectToBestConfiguredNetworkRequest(List<String> listOfOfflineRouters) {
+        return new ActionRequest(Action.ActionType.CONNECT_TO_BEST_CONFIGURED_NETWORK, listOfOfflineRouters, 0);
+    }
+
 
     @Nullable
     public static ActionRequest connectWithGivenWifiNetworkRequest(long actionTimeOutMs) {
@@ -86,6 +103,11 @@ public class ActionRequest {
     @Nullable
     public static ActionRequest getBestConfiguredNetworksRequest(int numberOfConfiguredNetworksToReturn, long actionTimeOutMs) {
         return new ActionRequest(Action.ActionType.GET_BEST_CONFIGURED_NETWORKS, 0, numberOfConfiguredNetworksToReturn, actionTimeOutMs);
+    }
+
+    @Nullable
+    public static ActionRequest getBestConfiguredNetworksRequest(long actionTimeOutMs) {
+        return new ActionRequest(Action.ActionType.GET_BEST_CONFIGURED_NETWORKS, 0, DEFAULT_NUMBER_OF_NETWORKS_TO_RETURN, actionTimeOutMs);
     }
 
     @Nullable

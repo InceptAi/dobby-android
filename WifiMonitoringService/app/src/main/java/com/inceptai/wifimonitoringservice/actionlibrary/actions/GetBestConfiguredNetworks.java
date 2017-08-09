@@ -24,7 +24,7 @@ import java.util.concurrent.ScheduledExecutorService;
  */
 
 public class GetBestConfiguredNetworks extends FutureAction {
-    private static final int DEFAULT_NUMBER_OF_NETWORKS_TO_RETURN = 4;
+    public static final int DEFAULT_NUMBER_OF_NETWORKS_TO_RETURN = 4;
     private List<ScanResult> scanResultList;
     private List<WifiConfiguration> wifiConfigurationList;
     private List<WifiConfiguration> bestAvailableWifiConfigurations;

@@ -21,7 +21,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.inceptai.wifiexpert.BuildConfig;
-import com.inceptai.wifiexpert.DobbyApplication;
 import com.inceptai.wifiexpert.R;
 import com.inceptai.wifiexpert.analytics.DobbyAnalytics;
 import com.inceptai.wifiexpert.eventbus.DobbyEvent;
@@ -102,11 +101,11 @@ public class ExpertChatService implements
         void onEtaAvailable(long newEtaSeconds, boolean isPresent);
     }
 
-    public ExpertChatService(DobbyApplication dobbyApplication,
-                             DobbyAnalytics dobbyAnalytics,
-                             DobbyEventBus dobbyEventBus) {
-        this.userUuid = dobbyApplication.getUserUuid();
-        this.context = dobbyApplication.getApplicationContext();
+    public ExpertChatService(String userId,
+                             Context context,
+                             DobbyAnalytics dobbyAnalytics) {
+        this.userUuid = userId;
+        this.context = context.getApplicationContext();
         this.chatRoomPath =  CHAT_ROOM_CHILD + "/" + userUuid;
         this.userTokenPath = USER_ROOT + "/" + userUuid + "/" + FCM_KEY;
         this.recentsUpdatePath = CHAT_ROOM_RECENTS + "/" + userUuid;
@@ -116,7 +115,6 @@ public class ExpertChatService implements
         isChatEmpty = true;
         currentEtaSeconds = ETA_PRESENT;
         this.dobbyAnalytics = dobbyAnalytics;
-        this.eventBus = dobbyEventBus;
         chatNumber = getLastChatNumber();
         lastChatNumberDisplayedToUser = getLastDisplayedChatNumber();
         expertLastMessagedUserAtMs = getLastExpertMessageTs();
@@ -292,6 +290,13 @@ public class ExpertChatService implements
         getChatReference().push().setValue(expertChat);
     }
 
+    public void pushExpertChatMessage(String text) {
+        ExpertChat expertChat = new
+                ExpertChat(text, ExpertChat.MSG_TYPE_EXPERT_TEXT, false, getAndUpdateChatNumber());
+        DobbyLog.v("ECS: Created expert chat with # " + chatNumber + " text " + text);
+        getChatReference().push().setValue(expertChat);
+    }
+
     public void triggerContactWithHumanExpert(String message) {
         ExpertChat expertChat = new ExpertChat(message, ExpertChat.MSG_TYPE_META_SEND_MESSAGE_TO_EXPERT_FOR_HELP, true, getAndUpdateChatNumber());
         DobbyLog.v("ECS: Created misc chat with # " + chatNumber + " text " + message);
@@ -373,49 +378,6 @@ public class ExpertChatService implements
             sendExpertNotification(assignedExpertUsername, expertChat);
         }
     }
-
-    /*
-    private PendingIntent getPendingIntentForNotification(Context context, String source) {
-        boolean isWifiTester = false;
-
-        if (BuildConfig.FLAVOR.equals(WIFI_TESTER_BUILD_FLAVOR)) {
-            isWifiTester = true;
-        } else if (!(BuildConfig.FLAVOR.equals(WIFI_EXPERT_BUILD_FLAVOR))) {
-            DobbyLog.e("Unknown build flavor: " + BuildConfig.FLAVOR);
-            return null;
-        }
-        Intent intent = null;
-
-        if (isWifiTester) {
-            intent = new Intent(context, ExpertChatActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        } else {
-            intent = new Intent(context, MainActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        }
-
-        intent.putExtra(INTENT_NOTIF_SOURCE, source);
-
-        PendingIntent pendingIntent = null;
-        if (isWifiTester) {
-            TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
-
-            // Adds the back stack
-            stackBuilder.addParentStack(ExpertChatActivity.class);
-
-            // Adds the Intent to the top of the stack
-            stackBuilder.addNextIntent(intent);
-            // Gets a PendingIntent containing the entire back stack
-            pendingIntent =
-                    stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        } else {
-            pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_ONE_SHOT);
-        }
-
-        return pendingIntent;
-    }
-    */
 
     public boolean isExpertChatMessageFresh(ExpertChat expertChat) {
         return (ExpertChatUtil.isMessageFresh(expertChat, lastChatNumberDisplayedToUser));

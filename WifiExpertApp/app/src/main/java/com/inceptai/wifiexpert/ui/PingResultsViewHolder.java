@@ -6,17 +6,18 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.inceptai.dobby.R;
-import com.inceptai.dobby.ai.DataInterpreter;
-import com.inceptai.dobby.utils.DobbyLog;
-import com.inceptai.dobby.utils.Utils;
+import com.inceptai.wifiexpert.R;
+import com.inceptai.wifiexpert.expertSystem.inferencing.DataInterpreter;
+import com.inceptai.wifiexpert.utils.DobbyLog;
+import com.inceptai.wifiexpert.utils.Utils;
 
-import static com.inceptai.dobby.ai.DataInterpreter.MetricType.ABYSMAL;
-import static com.inceptai.dobby.ai.DataInterpreter.MetricType.AVERAGE;
-import static com.inceptai.dobby.ai.DataInterpreter.MetricType.EXCELLENT;
-import static com.inceptai.dobby.ai.DataInterpreter.MetricType.GOOD;
-import static com.inceptai.dobby.ai.DataInterpreter.MetricType.POOR;
-import static com.inceptai.dobby.utils.Utils.setImage;
+import static com.inceptai.wifiexpert.expertSystem.inferencing.DataInterpreter.MetricType.ABYSMAL;
+import static com.inceptai.wifiexpert.expertSystem.inferencing.DataInterpreter.MetricType.AVERAGE;
+import static com.inceptai.wifiexpert.expertSystem.inferencing.DataInterpreter.MetricType.EXCELLENT;
+import static com.inceptai.wifiexpert.expertSystem.inferencing.DataInterpreter.MetricType.GOOD;
+import static com.inceptai.wifiexpert.expertSystem.inferencing.DataInterpreter.MetricType.POOR;
+import static com.inceptai.wifiexpert.utils.Utils.setImage;
+
 
 /**
  * Created by arunesh on 5/22/17.

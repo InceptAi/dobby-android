@@ -4,7 +4,6 @@ package com.inceptai.wifiexpert.dagger;
 import com.inceptai.wifiexpert.DobbyApplication;
 import com.inceptai.wifiexpert.DobbyThreadPool;
 import com.inceptai.wifiexpert.analytics.DobbyAnalytics;
-import com.inceptai.wifiexpert.eventbus.DobbyEventBus;
 import com.inceptai.wifiexpert.expert.ExpertChatService;
 
 import javax.inject.Singleton;
@@ -36,17 +35,14 @@ public class ProdModule {
         return new DobbyThreadPool();
     }
 
-
     @Singleton
     @Provides
     public ExpertChatService providesExpertChatService(DobbyApplication application,
-                                                       DobbyAnalytics dobbyAnalytics,
-                                                       DobbyEventBus dobbyEventBus) {
-
+                                                       DobbyAnalytics dobbyAnalytics) {
         ExpertChatService expertChatService = new ExpertChatService(
-                application,
-                dobbyAnalytics,
-                dobbyEventBus);
+                application.getUserUuid(),
+                application.getApplicationContext(),
+                dobbyAnalytics);
         application.getProdComponent().inject(expertChatService);
         return expertChatService;
     }

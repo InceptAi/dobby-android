@@ -2,7 +2,7 @@ package com.inceptai.wifiexpert.database;
 
 import com.google.firebase.database.Exclude;
 import com.google.firebase.database.IgnoreExtraProperties;
-import com.inceptai.dobby.speedtest.BandwidthTestCodes;
+import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLibraryCodes;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,9 +18,9 @@ public class FailureRecord {
     public String appVersion;
     public String errorMessage;
     public long timestamp;
-    @BandwidthTestCodes.TestMode
+    @ActionLibraryCodes.BandwidthTestMode
     public int testMode;
-    @BandwidthTestCodes.ErrorCodes
+    @ActionLibraryCodes.ErrorCodes
     public int errorCode;
 
     public FailureRecord() {}

@@ -584,6 +584,15 @@ public class DataInterpreter {
             return 1.0 / (1.0 + Math.exp(-x + 4.0));
         }
 
+
+        public boolean isWifiOff() {
+            return (ConnectivityTester.isOff(wifiConnectivityMode));
+        }
+
+        public boolean isWifiDisconnected() {
+            return (ConnectivityTester.isDisconnected(wifiConnectivityMode));
+        }
+        
         public String getPrimaryApSsid() {
             return primaryApSsid;
         }

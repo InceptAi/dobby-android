@@ -7,13 +7,16 @@ import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 
 import com.google.common.util.concurrent.ListenableFuture;
-import com.inceptai.wifimonitoringservice.ServiceThreadPool;
+import com.google.common.util.concurrent.ListeningScheduledExecutorService;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest.BandwidthObserver;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest.BandwidthProgressSnapshot;
+import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest.BandwidthResult;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.wifi.WifiController;
 import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLibraryCodes;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
 
 import io.reactivex.Observable;
 
@@ -28,11 +31,13 @@ public class NetworkActionLayer {
     private BandwidthObserver bandwidthObserver;
 
     // Use Dagger to get a singleton instance of this class.
-    public NetworkActionLayer(Context context, ServiceThreadPool serviceThreadPool) {
-        this.wifiController = WifiController.create(context, serviceThreadPool.getExecutor());
-        this.connectivityTester = ConnectivityTester.create(context, serviceThreadPool.getExecutor(),
-                serviceThreadPool.getScheduledExecutorService());
-        this.bandwidthObserver = new BandwidthObserver(context, serviceThreadPool);
+    public NetworkActionLayer(Context context, ExecutorService executorService,
+                              ListeningScheduledExecutorService listeningScheduledExecutorService,
+                              ScheduledExecutorService scheduledExecutorService) {
+        this.wifiController = WifiController.create(context, executorService);
+        this.connectivityTester = ConnectivityTester.create(context, executorService,
+                scheduledExecutorService);
+        this.bandwidthObserver = new BandwidthObserver(context, executorService, listeningScheduledExecutorService);
     }
 
     public ListenableFuture<List<ScanResult>> getNearbyWifiNetworks() {
@@ -138,6 +143,9 @@ public class NetworkActionLayer {
         return bandwidthObserver.startBandwidthTest(mode);
     }
 
+    public BandwidthResult getLastBandwidthResult() {
+        return bandwidthObserver.getLastBandwidthResult();
+    }
 
     private boolean isWifiConnected() {
         return (wifiController != null && wifiController.isWifiConnected());

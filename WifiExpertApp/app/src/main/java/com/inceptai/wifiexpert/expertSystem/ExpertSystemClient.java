@@ -1,68 +1,79 @@
 package com.inceptai.wifiexpert.expertSystem;
 
-import com.inceptai.wifiexpert.expert.ExpertChat;
-import com.inceptai.wifiexpert.expert.ExpertChatService;
-import com.inceptai.wifimonitoringservice.ExpertAction;
+import android.content.Context;
+import android.support.annotation.NonNull;
 
-import io.reactivex.Observable;
+import com.google.common.util.concurrent.ListeningScheduledExecutorService;
+import com.inceptai.wifiexpert.expertSystem.messages.ExpertMessage;
+import com.inceptai.wifiexpert.expertSystem.messages.UserMessage;
+import com.inceptai.wifimonitoringservice.ActionLibrary;
+import com.inceptai.wifimonitoringservice.ActionRequest;
+import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.Action;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * Created by vivek on 8/4/17.
  */
-
 public class ExpertSystemClient implements
-        ExpertSystemService.Callback,
-        ExpertChatService.ChatCallback {
+        ExpertSystemService.ExpertSystemCallback,
+        ActionLibrary.ActionCallback {
 
-    ExpertSystemService expertSystemService;
+    private ExpertSystemService expertSystemService;
+    private ActionLibrary actionLibrary;
+    private String userId;
+    private Context context;
+    private ExpertSystemClientCallback expertSystemClientCallback;
 
-    public ExpertSystemClient() {
+    public interface ExpertSystemClientCallback {
+        void onExpertMessage(ExpertMessage expertMessage);
+    }
 
+    public ExpertSystemClient(String userId, Context context, ExecutorService executorService,
+                              ListeningScheduledExecutorService listeningScheduledExecutorService,
+                              ScheduledExecutorService scheduledExecutorService,
+                              @NonNull ExpertSystemClientCallback expertSystemClientCallback) {
+        this.context = context.getApplicationContext();
+        this.userId = userId;
+        this.expertSystemClientCallback = expertSystemClientCallback;
+        actionLibrary = new ActionLibrary(context, executorService, listeningScheduledExecutorService, scheduledExecutorService);
     }
 
     // Connect to the expert system service.
     public void connect() {
-        expertSystemService = new ExpertSystemService(this);
+        expertSystemService = new ExpertSystemService(userId, context, this);
     }
 
-    public onUserMessage(UserMessage userMessage) {
-        expertSystemService.onUserMessage();
+    public void onUserMessage(UserMessage userMessage) {
+        expertSystemService.onUserMessage(userMessage);
     }
 
-    public Observable<ExpertAction> getActionObservable() {
-
+    public void cleanup() {
+        expertSystemService.disconnect();
     }
 
     //Expert system service callbacks
-
     @Override
-    public void onActionRequested(ExpertAction.ActionRequest actionRequest) {
-
+    public void onActionRequested(ActionRequest actionRequest) {
+        //Take action based on action request
+        actionLibrary.takeAction(actionRequest);
     }
 
     @Override
     public void onExpertMessage(ExpertMessage expertMessage) {
-
+        expertSystemClientCallback.onExpertMessage(expertMessage);
     }
 
-    //Expert chat service callbacks
+    //Action Library callbacks
     @Override
-    public void onMessageAvailable(ExpertChat expertChat) {
-
-    }
-
-    @Override
-    public void onNoHistoryAvailable() {
-
+    public void actionStarted(Action action) {
+        expertSystemService.actionStarted(action);
     }
 
     @Override
-    public void onEtaUpdated(long newEtaSeconds, boolean isPresent) {
-
-    }
-
-    @Override
-    public void onEtaAvailable(long newEtaSeconds, boolean isPresent) {
-
+    public void actionCompleted(Action action, ActionResult actionResult) {
+        expertSystemService.actionFinished(action, actionResult);
     }
 }

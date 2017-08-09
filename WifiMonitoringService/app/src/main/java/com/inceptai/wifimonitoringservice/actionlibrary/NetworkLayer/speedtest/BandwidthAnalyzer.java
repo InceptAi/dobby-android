@@ -8,14 +8,15 @@ import android.content.Context;
 import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
 
+import com.google.common.util.concurrent.ListeningScheduledExecutorService;
 import com.inceptai.wifimonitoringservice.R;
-import com.inceptai.wifimonitoringservice.ServiceThreadPool;
 import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLibraryCodes;
 import com.inceptai.wifimonitoringservice.utils.ServiceLog;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 import fr.bmartel.speedtest.model.SpeedTestError;
 
@@ -48,10 +49,11 @@ public class BandwidthAnalyzer {
     private ServerInformation.ServerDetails bestServer;
     private DownloadAnalyzer downloadAnalyzer;
     private UploadAnalyzer uploadAnalyzer;
-    private ServiceThreadPool serviceThreadPool;
     private long lastConfigFetchTimestampMs;
     private long lastBestServerDeterminationTimestampMs;
     private boolean enableServerListFetch = true;
+    private ExecutorService executorService;
+    private ListeningScheduledExecutorService networkLayerExecutorService;
 
     private BandwidthTestListener bandwidthTestListener;
 
@@ -99,16 +101,17 @@ public class BandwidthAnalyzer {
     }
 
 
-    public BandwidthAnalyzer(ServiceThreadPool serviceThreadPool,
+    public BandwidthAnalyzer(ExecutorService executorService,
+                             ListeningScheduledExecutorService networkLayerExecutorService,
                              Context context,
                              ResultsCallback resultsCallback) {
         this.bandwidthTestListener = new BandwidthTestListener();
         this.testMode = ActionLibraryCodes.BandwidthTestMode.IDLE;
         this.parseSpeedTestConfig = new ParseSpeedTestConfig(this.bandwidthTestListener);
-        //this.parseServerInformation = new ParseServerInformation(this.bandwidthTestListener);
         this.parseServerInformation = new ParseServerInformation(R.xml.speed_test_server_list,
                 context.getApplicationContext(), this.bandwidthTestListener);
-        this.serviceThreadPool = serviceThreadPool;
+        this.networkLayerExecutorService = networkLayerExecutorService;
+        this.executorService = executorService;
         lastConfigFetchTimestampMs = 0;
         lastBestServerDeterminationTimestampMs = 0;
         this.enableServerListFetch = true;
@@ -122,7 +125,7 @@ public class BandwidthAnalyzer {
      */
     public void registerCallback(ResultsCallback resultsCallback) {
         this.resultsCallback = CallbackThreadSwitcher.wrap(
-                serviceThreadPool.getNetworkLayerExecutorService(), resultsCallback);
+                networkLayerExecutorService, resultsCallback);
     }
 
     public void startBandwidthTestSync(@ActionLibraryCodes.BandwidthTestMode int testMode) {
@@ -138,11 +141,11 @@ public class BandwidthAnalyzer {
         markTestsAsCancelling();
         if (downloadAnalyzer != null) {
             ServiceLog.v("Cancelling downloadAnalyzer");
-            downloadAnalyzer.cancelAllTests(serviceThreadPool.getExecutorService());
+            downloadAnalyzer.cancelAllTests(executorService);
         }
         if (uploadAnalyzer != null) {
             ServiceLog.v("Cancelling uploadAnalyzer");
-            uploadAnalyzer.cancelAllTests(serviceThreadPool.getExecutorService());
+            uploadAnalyzer.cancelAllTests(executorService);
         }
         unRegisterCallback();
         markTestsAsCancelled();
@@ -304,7 +307,7 @@ public class BandwidthAnalyzer {
             if (bandwidthAnalyzerState == BandwidthAnalyzerState.RUNNING &&
                     callbackTestMode == ActionLibraryCodes.BandwidthTestMode.DOWNLOAD &&
                     testMode == ActionLibraryCodes.BandwidthTestMode.DOWNLOAD_AND_UPLOAD) {
-                serviceThreadPool.submit(new Runnable() {
+                executorService.submit(new Runnable() {
                     @Override
                     public void run() {
                         performUpload();

@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.ConnectivityTester;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.Action;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.FutureAction;
 import com.inceptai.wifimonitoringservice.monitors.PeriodicCheckMonitor;
 import com.inceptai.wifimonitoringservice.monitors.ScreenStateMonitor;
@@ -32,7 +33,7 @@ public class WifiServiceCore implements
         WifiStateMonitor.WifiStateCallback,
         ScreenStateMonitor.ScreenStateCallback,
         PeriodicCheckMonitor.PeriodicCheckCallback,
-        ServiceActionTaker.ActionCallback {
+        ActionLibrary.ActionCallback {
     private final static int MAX_CONNECTIVITY_TEST_FAILURES = 2;
     private final static int WIFI_CHECK_INITIAL_CHECK_DELAY_ACTIVE_MS = 10 * 1000; // 5 sec
     private final static int WIFI_CHECK_INITIAL_CHECK_DELAY_INACTIVE_MS = 60 * 1000; // 60 sec
@@ -42,12 +43,10 @@ public class WifiServiceCore implements
     private final static boolean ENABLE_AGGRESSIVE_RECONNECT_WHEN_CONNECTION_DROPS = false;
     private final static long ACTION_PENDING_TIMEOUT = 60 * 1000; //60 secs
 
-
-
     //Key components
     private WifiStateMonitor wifiStateMonitor;
     private ScreenStateMonitor screenStateMonitor;
-    private ServiceActionTaker serviceActionTaker;
+    private ActionLibrary actionLibrary;
     private PeriodicCheckMonitor periodicCheckMonitor;
     private ServiceThreadPool serviceThreadPool;
     private Context context;
@@ -77,7 +76,11 @@ public class WifiServiceCore implements
         wifiStateMonitor = new WifiStateMonitor(context);
         screenStateMonitor = new ScreenStateMonitor(context);
         periodicCheckMonitor = new PeriodicCheckMonitor(context);
-        serviceActionTaker = new ServiceActionTaker(context, serviceThreadPool);
+        actionLibrary = new ActionLibrary(
+                context,
+                serviceThreadPool.getExecutorService(),
+                serviceThreadPool.getNetworkLayerExecutorService(),
+                serviceThreadPool.getScheduledExecutorService());
         numConsecutiveFailedConnectivityTests = 0;
         wifiCheckInitialDelayMs = WIFI_CHECK_INITIAL_CHECK_DELAY_ACTIVE_MS;
         wifiCheckPeriodMs = WIFI_CHECK_PERIOD_SCREEN_ACTIVE_MS;
@@ -118,7 +121,7 @@ public class WifiServiceCore implements
     void startMonitoring() {
         wifiStateMonitor.registerCallback(this);
         screenStateMonitor.registerCallback(this);
-        serviceActionTaker.registerCallback(this);
+        actionLibrary.registerCallback(this);
         ServiceLog.v("StartMonitoring ");
     }
 
@@ -126,35 +129,41 @@ public class WifiServiceCore implements
         wifiStateMonitor.cleanup();
         screenStateMonitor.cleanup();
         periodicCheckMonitor.cleanup();
-        serviceActionTaker.cleanup();
+        actionLibrary.cleanup();
         //serviceThreadPool.shutdown();
         ServiceLog.v("Cleanup ");
     }
 
     ListenableFuture<ActionResult> forceRepairWifiNetwork(long timeOutMs) {
         cancelChecksAndPendingActions();
-        return serviceActionTaker.iterateAndRepairConnection(timeOutMs);
+        ActionRequest repairRequest = ActionRequest.iterateAndRepairWifiNetworkRequest(timeOutMs);
+        FutureAction repairAction = (FutureAction) actionLibrary.takeAction(repairRequest);
+        if (repairAction != null) {
+            return repairAction.getFuture();
+        }
+        return null;
     }
 
     void cancelRepairOfWifiNetwork() {
         ServiceLog.v("WifiServiceCore:cancelRepairOfWifiNetwork");
-        serviceActionTaker.cancelIterateAndRepair();
+        actionLibrary.cancelActionOfType(Action.ActionType.ITERATE_AND_REPAIR_WIFI_NETWORK);
     }
 
     void sendStatusUpdateNotification() {
         sendWifiStatusNotification();
     }
 
-    //Overrides for periodic check
+    //Overrides for action library
+
     @Override
-    public void actionStarted(String actionName) {
-        ServiceLog.v("Action started  " + actionName);
+    public void actionStarted(Action action) {
+        ServiceLog.v("Action started  " + action.getName());
         markActionPending();
     }
 
     @Override
-    public void actionCompleted(String actionName, ActionResult actionResult) {
-        ServiceLog.v("Action finished  " + actionName);
+    public void actionCompleted(Action action, ActionResult actionResult) {
+        ServiceLog.v("Action finished  " + action.getName());
         if (actionResult == null) {
             ServiceLog.v("Action result: null");
         } else {
@@ -163,10 +172,12 @@ public class WifiServiceCore implements
         markActionDone();
         if (ActionResult.isSuccessful(actionResult)) {
             lastActionTimestampMs = System.currentTimeMillis();
-            lastActionTakenDescription = actionName;
+            lastActionTakenDescription = action.getName();
             sendWifiStatusNotification();
         }
     }
+
+    //Periodic check stuff
 
     @Override
     public void checkFired() {
@@ -256,7 +267,7 @@ public class WifiServiceCore implements
             ServiceLog.v("ConnectToBestWifi initiated");
             sendNotificationOfServiceActionStarted(context.getString(R.string.connect_to_best_wifi),
                     context.getString(R.string.wifi_signal_poor));
-            serviceActionTaker.connectToBestWifi(listOfOfflineRouterIDs);
+            actionLibrary.connectToBestWifi(listOfOfflineRouterIDs);
         }
     }
 
@@ -268,7 +279,7 @@ public class WifiServiceCore implements
             ServiceLog.v("RepairConnection initiated");
             sendNotificationOfServiceActionStarted(context.getString(R.string.repair_wifi_network),
                     context.getString(R.string.wifi_stuck_scanning));
-            serviceActionTaker.repairConnectionOneShot();
+            forceRepairWifiNetwork(0);
         }
     }
 
@@ -281,7 +292,7 @@ public class WifiServiceCore implements
             ServiceLog.v("RepairConnection initiated");
             sendNotificationOfServiceActionStarted(context.getString(R.string.reset_connection_to_current_wifi),
                     context.getString(R.string.wifi_stuck_ip));
-            serviceActionTaker.resetConnection();
+            actionLibrary.takeAction(ActionRequest.resetConnectionWithCurrentWifiRequest(0));
         }
     }
 
@@ -294,7 +305,7 @@ public class WifiServiceCore implements
             ServiceLog.v("ResetConnection initiated");
             sendNotificationOfServiceActionStarted(context.getString(R.string.reset_connection_to_current_wifi),
                     context.getString(R.string.wifi_stuck_authenticating));
-            serviceActionTaker.resetConnection();
+            actionLibrary.takeAction(ActionRequest.resetConnectionWithCurrentWifiRequest(0));
         }
     }
 
@@ -306,7 +317,7 @@ public class WifiServiceCore implements
             ServiceLog.v("ResetConnection initiated");
             sendNotificationOfServiceActionStarted(context.getString(R.string.reset_connection_to_current_wifi),
                     context.getString(R.string.wifi_stuck_connecting));
-            serviceActionTaker.resetConnection();
+            actionLibrary.takeAction(ActionRequest.resetConnectionWithCurrentWifiRequest(0));
         }
     }
 
@@ -324,7 +335,7 @@ public class WifiServiceCore implements
             ServiceLog.v("ConnectToBestWifi");
             sendNotificationOfServiceActionStarted(context.getString(R.string.connect_to_best_wifi),
                     context.getString(R.string.wifi_frequent_dropoff));
-            serviceActionTaker.connectToBestWifi(listOfOfflineRouterIDs);
+            actionLibrary.connectToBestWifi(listOfOfflineRouterIDs);
         }
     }
 
@@ -339,7 +350,7 @@ public class WifiServiceCore implements
             ServiceLog.v("ConnectToBestWifi");
             sendNotificationOfServiceActionStarted(context.getString(R.string.connect_to_best_wifi),
                     context.getString(R.string.wifi_authentication_error));
-            serviceActionTaker.connectToBestWifi(listOfOfflineRouterIDs);
+            actionLibrary.connectToBestWifi(listOfOfflineRouterIDs);
         }
     }
 
@@ -351,7 +362,7 @@ public class WifiServiceCore implements
             ServiceLog.v("repairConnectionOneShot");
             sendNotificationOfServiceActionStarted(context.getString(R.string.repair_wifi_network),
                     context.getString(R.string.wifi_bad_state));
-            serviceActionTaker.repairConnectionOneShot();
+            forceRepairWifiNetwork(0);
         }
     }
 
@@ -380,7 +391,7 @@ public class WifiServiceCore implements
             ServiceLog.v("toggleWifi");
             sendNotificationOfServiceActionStarted(context.getString(R.string.toggle_wifi_off_and_on),
                     context.getString(R.string.wifi_inactive_state));
-            serviceActionTaker.toggleWifi();
+            actionLibrary.takeAction(ActionRequest.toggleWifiRequest(0));
         }
     }
 
@@ -394,14 +405,18 @@ public class WifiServiceCore implements
                 ServiceLog.v("connectToBestWifi");
                 sendNotificationOfServiceActionStarted(context.getString(R.string.connect_to_best_wifi),
                         context.getString(R.string.wifi_disconnected_prematurely));
-                serviceActionTaker.connectToBestWifi(listOfOfflineRouterIDs);
+                actionLibrary.connectToBestWifi(listOfOfflineRouterIDs);
             }
         }
     }
 
+    public Action takeAction(ActionRequest actionRequest) {
+        return actionLibrary.takeAction(actionRequest);
+    }
+
     //private
     private void performConnectivityTest() {
-        final FutureAction connectivityAction = serviceActionTaker.performConnectivityTest();
+        final FutureAction connectivityAction = (FutureAction)actionLibrary.takeAction(ActionRequest.performConnectivityTestRequest(0));
         connectivityAction.getFuture().addListener(new Runnable() {
             @Override
             public void run() {
@@ -419,7 +434,6 @@ public class WifiServiceCore implements
             }
         }, serviceThreadPool.getExecutor());
     }
-
 
     private void onConnectivityTestDone(ActionResult connectivityResult) {
         @ConnectivityTester.WifiConnectivityMode int lastConnectivityMode = ConnectivityTester.WifiConnectivityMode.UNKNOWN;
@@ -454,7 +468,7 @@ public class WifiServiceCore implements
             if (!isActionPending() && ConnectivityTester.isOffline(lastConnectivityMode)) {
                 ServiceLog.v("WifiServiceCore: onConnectToBestWifi: list offline routers " + listOfOfflineRouterIDs.toString());
                 sendNotificationOfServiceActionStarted("Connect to best Wifi", "Max connectivity tests failed");
-                serviceActionTaker.connectToBestWifi(listOfOfflineRouterIDs);
+                actionLibrary.connectToBestWifi(listOfOfflineRouterIDs);
             }
         } else if (numConsecutiveFailedConnectivityTests > 0) {
             //Reschedule connectivity test
@@ -478,7 +492,7 @@ public class WifiServiceCore implements
 
     private void cancelChecksAndPendingActions() {
         numConsecutiveFailedConnectivityTests = 0;
-        serviceActionTaker.cancelPendingActions();
+        actionLibrary.cancelPendingActions();
         periodicCheckMonitor.disableCheck();
     }
 

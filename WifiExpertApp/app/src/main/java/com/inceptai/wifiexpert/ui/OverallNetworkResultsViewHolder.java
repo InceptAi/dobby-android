@@ -7,8 +7,14 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.inceptai.wifiexpert.R;
+import com.inceptai.wifiexpert.expertSystem.inferencing.DataInterpreter;
 import com.inceptai.wifiexpert.utils.Utils;
 
+import static com.inceptai.wifiexpert.expertSystem.inferencing.DataInterpreter.MetricType.ABYSMAL;
+import static com.inceptai.wifiexpert.expertSystem.inferencing.DataInterpreter.MetricType.AVERAGE;
+import static com.inceptai.wifiexpert.expertSystem.inferencing.DataInterpreter.MetricType.EXCELLENT;
+import static com.inceptai.wifiexpert.expertSystem.inferencing.DataInterpreter.MetricType.GOOD;
+import static com.inceptai.wifiexpert.expertSystem.inferencing.DataInterpreter.MetricType.POOR;
 import static com.inceptai.wifiexpert.utils.Utils.setImage;
 
 

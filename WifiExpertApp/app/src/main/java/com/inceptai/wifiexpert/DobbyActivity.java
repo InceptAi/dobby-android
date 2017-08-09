@@ -32,6 +32,9 @@ import android.widget.Toast;
 import com.inceptai.neoservice.NeoService;
 import com.inceptai.wifiexpert.analytics.DobbyAnalytics;
 import com.inceptai.wifiexpert.expert.ExpertChatService;
+import com.inceptai.wifiexpert.expertSystem.inferencing.DataInterpreter;
+import com.inceptai.wifiexpert.expertSystem.inferencing.SuggestionCreator;
+import com.inceptai.wifiexpert.expertSystem.messages.StructuredUserResponse;
 import com.inceptai.wifiexpert.heartbeat.HeartBeatManager;
 import com.inceptai.wifiexpert.notifications.DisplayAppNotification;
 import com.inceptai.wifiexpert.ui.ChatFragment;
@@ -39,7 +42,6 @@ import com.inceptai.wifiexpert.ui.WifiExpertDialogFragment;
 import com.inceptai.wifiexpert.utils.DobbyLog;
 import com.inceptai.wifiexpert.utils.Utils;
 import com.inceptai.wifimonitoringservice.WifiMonitoringService;
-import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest.BandwidthObserver;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,6 +50,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
+
+import io.reactivex.Observable;
 
 import static android.os.Build.VERSION_CODES.M;
 
@@ -214,7 +218,12 @@ public class DobbyActivity extends AppCompatActivity
     }
 
     //Interaction manager callback
-
+    @Override
+    public void observeBandwidth(Observable bandwidthObservable) {
+        if (chatFragment != null) {
+            chatFragment.observeBandwidthNonUi(bandwidthObservable);
+        }
+    }
 
     @Override
     public void showBotResponse(String text) {
@@ -266,7 +275,6 @@ public class DobbyActivity extends AppCompatActivity
         }
     }
 
-    /*
     @Override
     public void showBandwidthViewCard(DataInterpreter.BandwidthGrade bandwidthGrade) {
         if (chatFragment != null) {
@@ -289,13 +297,12 @@ public class DobbyActivity extends AppCompatActivity
         }
     }
 
-    */
 
     @Override
-    public void showUserActionOptions(List<Integer> userResponseTypes) {
-        DobbyLog.v("In showUserActionOptions of DobbyActivity: responseTypes: " + userResponseTypes);
+    public void showUserActionOptions(List<StructuredUserResponse> structuredUserResponses) {
+        DobbyLog.v("In showUserActionOptions of DobbyActivity: responseTypes: ");
         if (chatFragment != null) {
-            chatFragment.showUserActionOptions(userResponseTypes);
+            chatFragment.showUserActionOptions(structuredUserResponses);
         }
     }
 
@@ -478,15 +485,6 @@ public class DobbyActivity extends AppCompatActivity
         super.onStart();
         DobbyLog.v("DobbyActivity: onStart");
     }
-
-    /*
-    @Override
-    public void observeBandwidth(BandwidthObserver observer) {
-        if (chatFragment != null) {
-            chatFragment.observeBandwidthNonUi(observer);
-        }
-    }
-    */
 
     @Override
     public void onMicPressed() {

@@ -5,9 +5,9 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.inceptai.dobby.BuildConfig;
-import com.inceptai.dobby.DobbyThreadpool;
-import com.inceptai.dobby.utils.DobbyLog;
+import com.inceptai.wifiexpert.BuildConfig;
+import com.inceptai.wifiexpert.DobbyThreadPool;
+import com.inceptai.wifiexpert.utils.DobbyLog;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -30,9 +30,9 @@ public class FeedbackDatabaseWriter {
     private ExecutorService executorService;
 
     @Inject
-    public FeedbackDatabaseWriter(DobbyThreadpool dobbyThreadpool) {
+    public FeedbackDatabaseWriter(DobbyThreadPool dobbyThreadPool) {
         mDatabase = FirebaseDatabase.getInstance().getReference();
-        executorService = dobbyThreadpool.getExecutorService();
+        executorService = dobbyThreadPool.getExecutorService();
     }
 
     private void writeNewFeedback(FeedbackRecord feedbackRecord) {

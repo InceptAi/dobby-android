@@ -18,8 +18,8 @@ public class ExpertChatViewHolder extends RecyclerView.ViewHolder {
 
     public ExpertChatViewHolder(View itemView) {
         super(itemView);
-        expertInitialsTv = (TextView) itemView.findViewById(R.id.expertInitialsTv);
-        expertChatTv = (TextView) itemView.findViewById(R.id.expertTextTv);
+        expertInitialsTv = (TextView) itemView.findViewById(R.id.expert_initials_tv);
+        expertChatTv = (TextView) itemView.findViewById(R.id.expert_text_tv);
     }
 
     public TextView getInitialsTextView() {

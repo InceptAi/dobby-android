@@ -2,7 +2,7 @@ package com.inceptai.wifiexpert.database;
 
 import com.google.firebase.database.Exclude;
 import com.google.firebase.database.IgnoreExtraProperties;
-import com.inceptai.dobby.utils.Utils;
+import com.inceptai.wifiexpert.utils.Utils;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -151,19 +151,4 @@ public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
         return entryList.size();
     }
 
-//    @Override
-//    public void onViewRecycled(RecyclerView.ViewHolder holder) {
-//        super.onViewRecycled(holder);
-//        int position = holder.getAdapterPosition();
-//        if (position == RecyclerView.NO_POSITION) {
-//            return;
-//        }
-//        ChatEntry entry = entryList.get(position);
-//        if (entry != null && entry.getEntryType() == ChatEntry.RT_GRAPH) {
-//            // Special logic to unbind this view from its data source.
-//            if (holder instanceof RtGraphViewHolder) {
-//                ((RtGraphViewHolder) holder).unlinkDataSource();
-//            }
-//        }
-//     }
 }

@@ -3,8 +3,8 @@ package com.inceptai.wifiexpert.analytics;
 import android.os.Bundle;
 
 import com.google.firebase.analytics.FirebaseAnalytics;
-import com.inceptai.dobby.DobbyApplication;
-import com.inceptai.dobby.utils.Utils;
+import com.inceptai.wifiexpert.DobbyApplication;
+import com.inceptai.wifiexpert.utils.Utils;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;

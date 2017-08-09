@@ -4,7 +4,8 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.TextView;
 
-import com.inceptai.dobby.R;
+import com.inceptai.wifiexpert.R;
+
 
 /**
  * Created by arunesh on 3/29/17.

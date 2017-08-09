@@ -10,10 +10,9 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.support.v7.app.NotificationCompat;
 
-import com.inceptai.dobby.BuildConfig;
-import com.inceptai.dobby.R;
-import com.inceptai.dobby.utils.DobbyLog;
-import com.inceptai.dobby.utils.Utils;
+import com.inceptai.wifiexpert.R;
+import com.inceptai.wifiexpert.utils.DobbyLog;
+import com.inceptai.wifiexpert.utils.Utils;
 import com.inceptai.wifimonitoringservice.WifiMonitoringService;
 
 import static android.support.v4.app.NotificationCompat.VISIBILITY_PUBLIC;
@@ -47,7 +46,7 @@ public class DisplayAppNotification implements Runnable {
         if (title == null || body == null) {
             DobbyLog.v("Not showing notification since title/body is null");
         }
-        int iconResource = Utils.WIFIEXPERT_FLAVOR.equals(BuildConfig.FLAVOR) ? R.mipmap.wifi_expert_launcher : R.mipmap.wifi_doc_launcher;
+        int iconResource = R.mipmap.wifi_expert_launcher;
         PendingIntent pendingIntent = Utils.getPendingIntentForNotification(context, null);
         Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         NotificationCompat.Builder notificationBuilder = (NotificationCompat.Builder) new NotificationCompat.Builder(context)

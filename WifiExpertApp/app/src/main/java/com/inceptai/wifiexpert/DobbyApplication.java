@@ -1,8 +1,11 @@
 package com.inceptai.wifiexpert;
 
 import android.app.Application;
+import android.content.Context;
+import android.support.multidex.MultiDex;
 import android.util.Log;
 
+import com.inceptai.wifiexpert.dagger.DaggerProdComponent;
 import com.inceptai.wifiexpert.dagger.ProdComponent;
 import com.inceptai.wifiexpert.dagger.ProdModule;
 import com.inceptai.wifiexpert.utils.EmulatorDetector;
@@ -39,7 +42,7 @@ public class DobbyApplication extends Application {
 
     // Can be overridden by child classes, such as for testing.
     protected void setupDagger() {
-        prodComponent = DaggerProdComponent.builder().prodModule(new ProdModule(this)).build();
+        prodComponent =  DaggerProdComponent.builder().prodModule(new ProdModule(this)).build();
     }
 
     public ProdComponent getProdComponent() {
@@ -62,4 +65,9 @@ public class DobbyApplication extends Application {
         return EmulatorDetector.isEmulator();
     }
 
+    @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(base);
+        MultiDex.install(this);
+    }
 }

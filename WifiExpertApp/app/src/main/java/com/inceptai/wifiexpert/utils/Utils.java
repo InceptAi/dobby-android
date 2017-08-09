@@ -22,7 +22,7 @@ import com.google.common.net.InetAddresses;
 import com.google.gson.Gson;
 import com.inceptai.wifiexpert.BuildConfig;
 import com.inceptai.wifiexpert.DobbyActivity;
-import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest.BandwidthTestCodes;
+import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLibraryCodes;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -915,7 +915,7 @@ public class Utils {
     }
 
     public static class BandwidthValue {
-        @BandwidthTestCodes.TestMode
+        @ActionLibraryCodes.BandwidthTestMode
         public int mode;
         public double value;
         public static BandwidthValue from(int mode, double value) {

@@ -3,7 +3,16 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.inceptai.wifiexpert">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Permission to start Alarm on device reboot -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+
     <application  tools:replace="android:label"
+        android:name=".DobbyApplication"
         android:allowBackup="true"
         android:fullBackupContent="true"
         android:icon="@mipmap/wifi_expert_launcher"
@@ -11,13 +20,42 @@
         android:roundIcon="@mipmap/wifi_expert_launcher"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name="com.inceptai.wifiexpert.DobbyActivity">
+
+        <activity android:name=".DobbyActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <receiver android:name="com.inceptai.wifiexpert.heartbeat.AlarmReceiver" android:enabled="true">
+            <intent-filter>
+                <action android:name="DAILY_HEARTBEAT_INTENT"/>
+            </intent-filter>
+        </receiver>
+        <receiver android:name="com.inceptai.wifiexpert.heartbeat.DeviceBootReceiver" android:enabled="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
+
+        <service android:name=".notifications.DobbyMessagingService">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+            </intent-filter>
+        </service>
+        <service android:name=".notifications.FirebaseIdService">
+            <intent-filter>
+                <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
+            </intent-filter>
+        </service>
+
+        <service
+            android:name="com.inceptai.wifimonitoringservice.WifiMonitoringService"
+            android:exported="true">
+        </service>
+
     </application>
 
 </manifest>

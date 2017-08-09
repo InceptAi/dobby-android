@@ -1,4 +1,4 @@
-package com.inceptai.wifiexpert.expertSystem;
+package com.inceptai.wifiexpert.expertSystem.messages;
 
 import android.support.annotation.IntDef;
 
@@ -33,7 +33,7 @@ public class UserMessage {
     public UserMessage(StructuredUserResponse structuredUserResponse) {
         this.messageType = UserMessageType.STRUCTURED;
         this.structuredUserResponse = structuredUserResponse;
-        this.message = StructuredUserResponse.getStringForResponseType(structuredUserResponse.getResponse());
+        this.message = StructuredUserResponse.getStringForResponseType(structuredUserResponse.getResponseType());
     }
 
     public int getMessageType() {

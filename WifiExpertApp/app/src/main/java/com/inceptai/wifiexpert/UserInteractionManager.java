@@ -2,19 +2,27 @@ package com.inceptai.wifiexpert;
 
 import android.app.AlarmManager;
 import android.content.Context;
+import android.support.annotation.NonNull;
 
-import com.google.common.eventbus.Subscribe;
 import com.inceptai.neoservice.NeoService;
 import com.inceptai.wifiexpert.analytics.DobbyAnalytics;
 import com.inceptai.wifiexpert.config.RemoteConfig;
-import com.inceptai.wifiexpert.eventbus.DobbyEvent;
 import com.inceptai.wifiexpert.eventbus.DobbyEventBus;
 import com.inceptai.wifiexpert.expert.ExpertChat;
 import com.inceptai.wifiexpert.expert.ExpertChatService;
+import com.inceptai.wifiexpert.expertSystem.ExpertSystemClient;
+import com.inceptai.wifiexpert.expertSystem.inferencing.DataInterpreter;
+import com.inceptai.wifiexpert.expertSystem.inferencing.SuggestionCreator;
+import com.inceptai.wifiexpert.expertSystem.messages.ExpertMessage;
+import com.inceptai.wifiexpert.expertSystem.messages.StructuredUserResponse;
+import com.inceptai.wifiexpert.expertSystem.messages.UserMessage;
 import com.inceptai.wifiexpert.utils.DobbyLog;
 import com.inceptai.wifiexpert.utils.NeoServiceClient;
 import com.inceptai.wifiexpert.utils.Utils;
+import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest.BandwidthObserver;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.Action;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.ObservableAction;
 
 import java.util.HashSet;
 import java.util.List;
@@ -26,13 +34,16 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
+import io.reactivex.Observable;
+
 /**
  * Created by vivek on 6/30/17.
  */
 
 public class UserInteractionManager implements
-        DobbyAi.ResponseCallback,
-        ExpertChatService.ChatCallback, NeoService.Callback {
+        ExpertChatService.ChatCallback,
+        NeoService.Callback,
+        ExpertSystemClient.ExpertSystemClientCallback {
 
     private static final String PREF_CHAT_IN_EXPERT_MODE = "wifidoc_in_expert_mode";
     private static final String EXPERT_MODE_INITIATED_TIMESTAMP = "expert_mode_start_ts";
@@ -49,10 +60,8 @@ public class UserInteractionManager implements
     private boolean explicitHumanContactMode;
     private boolean historyAvailable;
     private ScheduledFuture<?> accessibilityCheckFuture;
-    //private NotificationInfoReceiver notificationInfoReceiver;
+    private ExpertSystemClient expertSystemClient;
 
-    @Inject
-    DobbyAi dobbyAi;
     @Inject
     ExpertChatService expertChatService;
     @Inject
@@ -70,7 +79,7 @@ public class UserInteractionManager implements
     private boolean isUserInChat;
     private boolean triggerAccessibilityDialogOnResume;
 
-    public UserInteractionManager(Context context, InteractionCallback interactionCallback, boolean showContactHumanAction) {
+    public UserInteractionManager(Context context, @NonNull InteractionCallback interactionCallback, boolean showContactHumanAction) {
         ((DobbyApplication) context.getApplicationContext()).getProdComponent().inject(this);
         this.context = context;
         currentEtaSeconds = 0;
@@ -79,14 +88,18 @@ public class UserInteractionManager implements
         this.interactionCallback = interactionCallback;
         this.explicitHumanContactMode = showContactHumanAction;
         expertChatService.setCallback(this);
-        dobbyAi.setResponseCallback(this);
-        dobbyAi.initChatToBotState(); //Resets booleans indicating which mode of expert are we in
-        dobbyAi.setShowContactHumanButton(showContactHumanAction);
         dobbyEventBus.registerListener(this);
         this.historyAvailable = false;
         neoServiceClient = new NeoServiceClient(remoteConfig, dobbyThreadPool, dobbyApplication, this);
         isUserInChat = false;
         triggerAccessibilityDialogOnResume = false;
+        expertSystemClient = new ExpertSystemClient(
+                dobbyApplication.getUserUuid(),
+                context,
+                dobbyThreadPool.getExecutorService(),
+                dobbyThreadPool.getListeningScheduledExecutorService(),
+                dobbyThreadPool.getScheduledExecutorService(),
+                this);
     }
 
     public interface InteractionCallback {
@@ -99,12 +112,12 @@ public class UserInteractionManager implements
 
 
         //Show user action options
-        void showUserActionOptions(List<Integer> userResponseTypes);
+        void showUserActionOptions(List<StructuredUserResponse> structuredUserResponses);
         void updateExpertIndicator(String text);
         void hideExpertIndicator();
 
         //Richer content UI stuff -- TODO extract out all bw/nl stuff -- send only numbers and text
-        void observeBandwidth(BandwidthObserver observer);
+        void observeBandwidth(Observable bandwidthObservable);
         void cancelTestsResponse();
         void showBandwidthViewCard(DataInterpreter.BandwidthGrade bandwidthGrade);
         void showNetworkInfoViewCard(DataInterpreter.WifiGrade wifiGrade, String isp, String ip);
@@ -120,7 +133,6 @@ public class UserInteractionManager implements
         expertChatService.registerToEventBusListener();
         expertChatService.sendUserEnteredMetaMessage();
         expertChatService.disableNotifications();
-        updateExpertIndicator();
         if (triggerAccessibilityDialogOnResume) {
             askForAccessibilityPermission();
             triggerAccessibilityDialogOnResume = false;
@@ -140,8 +152,8 @@ public class UserInteractionManager implements
         expertChatIdsDisplayed.clear();
         expertChatService.unregisterChatCallback();
         expertChatService.disconnect();
-        dobbyAi.cleanup();
         neoServiceClient.cleanup();
+        expertSystemClient.cleanup();
     }
 
     public void toggleNeoService() {
@@ -158,11 +170,13 @@ public class UserInteractionManager implements
     }
 
     public void onUserQuery(String text, boolean isButtonActionText) {
-        dobbyAi.sendQuery(text, isButtonActionText);
-    }
-
-    public void initChatToBotState() {
-        dobbyAi.initChatToBotState();
+        UserMessage userMessage = null;
+        if (isButtonActionText) {
+            userMessage = new UserMessage(new StructuredUserResponse(text));
+        } else {
+            userMessage = new UserMessage(text);
+        }
+        expertSystemClient.onUserMessage(userMessage);
     }
 
     public void resumeChatWithShortSuggestion() {
@@ -182,42 +196,45 @@ public class UserInteractionManager implements
                                         final boolean resumeWithWelcomeMessage) {
         final boolean resumingInExpertMode = checkSharedPrefForExpertModeResume();
         DobbyLog.v("DobbyActivity:onFirstTimeResumed");
-        final long delayForWelcomeMessage;
-        if (historyAvailable) {
-            delayForWelcomeMessage = 2 * DELAY_BEFORE_WELCOME_MESSAGE_MS;
-        } else {
-            delayForWelcomeMessage = DELAY_BEFORE_WELCOME_MESSAGE_MS;
+        interactionCallback.showExpertResponse("Welcome !");
+    }
+
+    @Override
+    public void onExpertMessage(ExpertMessage expertMessage) {
+        //Push the message to firebase
+        if (expertMessage.getMessage() != null) {
+            expertChatService.pushExpertChatMessage(expertMessage.getMessage());
         }
-        if (dobbyAi != null) {
-            if (resumeWithSuggestionIfAvailable) {
-                scheduledExecutorService.schedule(new Runnable() {
-                    @Override
-                    public void run() {
-                        dobbyAi.startUserInteractionWithShortSuggestion(resumingInExpertMode);
-                    }
-                }, delayForWelcomeMessage, TimeUnit.MILLISECONDS);
-            } else if (resumeWithWifiCheck) {
-                scheduledExecutorService.schedule(new Runnable() {
-                    @Override
-                    public void run() {
-                        dobbyAi.startUserInteractionWithWifiCheck(resumingInExpertMode);
-                    }
-                }, delayForWelcomeMessage, TimeUnit.MILLISECONDS);
-            } else if (resumeWithWelcomeMessage) {
-                scheduledExecutorService.schedule(new Runnable() {
-                    @Override
-                    public void run() {
-                        dobbyAi.startUserInteractionWithWelcome(resumingInExpertMode);
-                    }
-                }, delayForWelcomeMessage, TimeUnit.MILLISECONDS);
-            }
-            if (resumingInExpertMode) {
-                dobbyAi.contactExpert();
-            }
+        //Next step of UI to show
+        if (expertMessage.getUserResponseOptionsToShow() != null) {
+            interactionCallback.showUserActionOptions(expertMessage.getUserResponseOptionsToShow());
+        }
+
+        //Handle action start/finish
+        switch (expertMessage.getExpertMessageType()) {
+            case ExpertMessage.ExpertMessageType.ACTION_STARTED:
+                handleActionStarted(expertMessage.getExpertAction());
+                break;
+            case ExpertMessage.ExpertMessageType.ACTION_FINISHED:
+                handleActionFinished(expertMessage.getExpertAction(), expertMessage.getActionResult());
+                break;
+            default:
+                break;
         }
     }
 
+    private void handleActionStarted(Action action) {
+        if (action.getActionType() == Action.ActionType.PERFORM_BANDWIDTH_TEST) {
+            ObservableAction observableAction = (ObservableAction)action;
+            interactionCallback.observeBandwidth(observableAction.getObservable());
+        }
+        expertChatService.sendActionStartedMessage();
+    }
 
+    private void handleActionFinished(Action action, ActionResult actionResult) {
+        //TODO: Send final bandwidth results -- show the bandwidth card
+        expertChatService.sendActionCompletedMessage();
+    }
 
     //Expert chat service callback
     @Override
@@ -242,7 +259,7 @@ public class UserInteractionManager implements
                 //Set to expert mode on the first message received from expert
                 if (expertChat.isMessageFresh()) {
                     DobbyLog.v("UserInteractionManager: coming in fresh expert message, set chat to expert");
-                    dobbyAi.setChatInExpertMode();
+                    //dobbyAi.setChatInExpertMode();
                 }
                 neoServiceClient.setStatus(messageReceived);
                 DobbyLog.v("DobbyActivity:FirebaseMessage added mesg to ExpertChat");
@@ -275,6 +292,7 @@ public class UserInteractionManager implements
 
 
     //Dobby Ai callbacks
+    /*
     @Override
     public void startNeoByExpert() {
         //Stop notifications in onServiceReady
@@ -399,6 +417,8 @@ public class UserInteractionManager implements
         expertChatService.sendActionCompletedMessage();
     }
 
+    */
+
     public boolean isFirstChatAfterInstall() {
         return expertChatService.isFirstChatAfterInstall();
     }
@@ -425,23 +445,23 @@ public class UserInteractionManager implements
         expertChatService.triggerContactWithHumanExpert("Expert help needed here");
     }
 
-    private void updateExpertIndicator() {
-        if (interactionCallback != null) {
-            if (dobbyAi.getIsExpertListening()) {
-                interactionCallback.updateExpertIndicator(context.getString(R.string.you_are_now_talking_to_human_expert));
-            } else if (dobbyAi.getIsChatInExpertMode()){
-                if (currentEtaSeconds > 0) {
-                    interactionCallback.updateExpertIndicator(getEtaMessage());
-                } else {
-                    interactionCallback.updateExpertIndicator(context.getString(R.string.contacting_human_expert));
-                }
-            } else if (dobbyAi.getUserAskedForExpertMode() && !dobbyAi.getIsChatInExpertMode()){
-                interactionCallback.updateExpertIndicator(context.getString(R.string.pre_human_contact_tests));
-            } else {
-                interactionCallback.hideExpertIndicator();
-            }
-        }
-    }
+//    private void updateExpertIndicator() {
+//        if (interactionCallback != null) {
+//            if (dobbyAi.getIsExpertListening()) {
+//                interactionCallback.updateExpertIndicator(context.getString(R.string.you_are_now_talking_to_human_expert));
+//            } else if (dobbyAi.getIsChatInExpertMode()){
+//                if (currentEtaSeconds > 0) {
+//                    interactionCallback.updateExpertIndicator(getEtaMessage());
+//                } else {
+//                    interactionCallback.updateExpertIndicator(context.getString(R.string.contacting_human_expert));
+//                }
+//            } else if (dobbyAi.getUserAskedForExpertMode() && !dobbyAi.getIsChatInExpertMode()){
+//                interactionCallback.updateExpertIndicator(context.getString(R.string.pre_human_contact_tests));
+//            } else {
+//                interactionCallback.hideExpertIndicator();
+//            }
+//        }
+//    }
 
 
     private void saveSwitchedToBotMode() {
@@ -470,8 +490,8 @@ public class UserInteractionManager implements
     private void updateEta(long newEtaSeconds, boolean isPresent) {
         currentEtaSeconds = newEtaSeconds;
         expertIsPresent = isPresent;
-        dobbyAi.updatedEtaAvailable(currentEtaSeconds);
-        updateExpertIndicator();
+        //dobbyAi.updatedEtaAvailable(currentEtaSeconds);
+        //updateExpertIndicator();
     }
 
     private void fetchChatMessages() {
@@ -481,24 +501,7 @@ public class UserInteractionManager implements
         }
     }
 
-    //EventBus events
-    @Subscribe
-    public void listenToEventBus(final DobbyEvent event) {
-        if (event.getEventType() == DobbyEvent.EventType.EXPERT_ASKED_FOR_ACTION) {
-            //Switching thread so we don't block the event bus
-            scheduledExecutorService.schedule(new Runnable() {
-                @Override
-                public void run() {
-                    dobbyAi.parseMessageFromExpert((String) event.getPayload());
-                }
-            }, 0, TimeUnit.MILLISECONDS);
-        }
-    }
-
-
     //Neo callbacks
-
-
     @Override
     public void onRequestAccessibilitySettings() {
         if (isUserInChat) {

@@ -4,7 +4,7 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.inceptai.wifimonitoringservice.ServiceThreadPool;
+import com.google.common.util.concurrent.ListeningScheduledExecutorService;
 import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLibraryCodes;
 import com.inceptai.wifimonitoringservice.utils.ServiceLog;
 
@@ -32,13 +32,14 @@ public class BandwidthObserver implements BandwidthAnalyzer.ResultsCallback, Obs
     private int testsDone;
     private ExecutorService executorService;
 
-    public BandwidthObserver(Context context, ServiceThreadPool serviceThreadPool) {
+    public BandwidthObserver(Context context, ExecutorService executorService,
+                             ListeningScheduledExecutorService listeningScheduledExecutorService) {
         this.testModeRequested = ActionLibraryCodes.BandwidthTestMode.IDLE;
         testsDone = ActionLibraryCodes.BandwidthTestMode.IDLE;
         bandwidthResultObservable = Observable.create(this).share();
         markTestsAsRunning();
-        bandwidthAnalyzer = new BandwidthAnalyzer(serviceThreadPool, context, this);
-        executorService = serviceThreadPool.getExecutorService();
+        bandwidthAnalyzer = new BandwidthAnalyzer(executorService, listeningScheduledExecutorService, context, this);
+        this.executorService = executorService;
     }
 
     public synchronized void onCancelled() {
@@ -56,6 +57,10 @@ public class BandwidthObserver implements BandwidthAnalyzer.ResultsCallback, Obs
 
     public Observable<BandwidthProgressSnapshot> getBandwidthResultObservable() {
         return bandwidthResultObservable;
+    }
+
+    public BandwidthResult getLastBandwidthResult() {
+        return result;
     }
 
     // BandwidthAnalyzer.ResultsCallback overrides:
@@ -223,10 +228,12 @@ public class BandwidthObserver implements BandwidthAnalyzer.ResultsCallback, Obs
             this.errorMessage = errorMessage;
         }
 
+        @ActionLibraryCodes.BandwidthTestMode
         public int getTestMode() {
             return testMode;
         }
 
+        @ActionLibraryCodes.ErrorCodes
         public int getErrorCode() {
             return errorCode;
         }

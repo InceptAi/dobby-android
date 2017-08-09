@@ -93,7 +93,6 @@ public abstract class Action {
         return actionType;
     }
 
-
     public abstract String getName();
 
     public abstract void cancelAction();

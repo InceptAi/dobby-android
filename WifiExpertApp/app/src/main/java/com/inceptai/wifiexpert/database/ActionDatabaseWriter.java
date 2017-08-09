@@ -5,9 +5,9 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.inceptai.dobby.BuildConfig;
-import com.inceptai.dobby.DobbyThreadpool;
-import com.inceptai.dobby.utils.DobbyLog;
+import com.inceptai.wifiexpert.BuildConfig;
+import com.inceptai.wifiexpert.DobbyThreadPool;
+import com.inceptai.wifiexpert.utils.DobbyLog;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,7 +28,7 @@ public class ActionDatabaseWriter {
     private ExecutorService executorService;
 
     @Inject
-    public ActionDatabaseWriter(DobbyThreadpool dobbyThreadpool) {
+    public ActionDatabaseWriter(DobbyThreadPool dobbyThreadpool) {
         mDatabase = FirebaseDatabase.getInstance().getReference();
         executorService = dobbyThreadpool.getExecutorService();
     }

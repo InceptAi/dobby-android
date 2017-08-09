@@ -2,6 +2,7 @@ package com.inceptai.wifimonitoringservice;
 
 import android.content.Context;
 
+import com.google.common.util.concurrent.ListeningScheduledExecutorService;
 import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.NetworkActionLayer;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.Action;
@@ -30,7 +31,10 @@ import com.inceptai.wifimonitoringservice.utils.ServiceLog;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 
 import io.reactivex.observers.DisposableObserver;
@@ -46,20 +50,45 @@ public class ActionLibrary {
     private Executor executor;
     private ScheduledExecutorService scheduledExecutorService;
     private ArrayDeque<Action> actionArrayDeque;
+    private ActionCallback actionCallback;
 
-    public ActionLibrary(Context context, ServiceThreadPool serviceThreadPool) {
+    public interface ActionCallback {
+        void actionStarted(Action action);
+        void actionCompleted(Action action, ActionResult actionResult);
+    }
+
+    public ActionLibrary(Context context, ExecutorService executorService,
+                         ListeningScheduledExecutorService listeningScheduledExecutorService,
+                         ScheduledExecutorService scheduledExecutorService) {
         this.context = context;
-        this.executor = serviceThreadPool.getExecutor();
-        this.scheduledExecutorService = serviceThreadPool.getScheduledExecutorService();
-        networkActionLayer = new NetworkActionLayer(context, serviceThreadPool);
+        this.executor = executorService;
+        this.scheduledExecutorService = scheduledExecutorService;
+        networkActionLayer = new NetworkActionLayer(context, executorService,
+                listeningScheduledExecutorService, scheduledExecutorService);
         actionArrayDeque = new ArrayDeque<>();
     }
 
     public void cleanup() {
         networkActionLayer.cleanup();
         actionArrayDeque.clear();
+        unregisterCallback();
     }
 
+    public void registerCallback(ActionCallback actionCallback) {
+        this.actionCallback = actionCallback;
+    }
+
+    public void unregisterCallback() {
+        this.actionCallback = null;
+    }
+
+    public Action connectToBestWifi(Set<String> offlineRouterIds) {
+        List<String> offlineRouterIdList = new ArrayList<>();
+        if (offlineRouterIds != null) {
+            offlineRouterIdList.addAll(offlineRouterIds);
+        }
+        return takeAction(ActionRequest.connectToBestConfiguredNetworkRequest(offlineRouterIdList, 0));
+    }
 
     public Action takeAction(ActionRequest actionRequest) {
         Action action = null;
@@ -146,6 +175,15 @@ public class ActionLibrary {
         }
     }
 
+    void cancelActionOfType(@Action.ActionType int actionType) {
+        Action currentlyRunningAction = actionArrayDeque.peek();
+        for (Action futureAction: actionArrayDeque) {
+            if (futureAction != null && futureAction.getActionType() == actionType) {
+                futureAction.cancelAction();
+            }
+        }
+    }
+
     int numberOfPendingActions() {
         return actionArrayDeque.size();
     }
@@ -154,6 +192,9 @@ public class ActionLibrary {
     private void startFutureAction(FutureAction futureAction) {
         if (futureAction != null) {
             futureAction.post();
+            if (actionCallback != null) {
+                actionCallback.actionStarted(futureAction);
+            }
             processFutureActionResults(futureAction);
         }
     }
@@ -161,6 +202,9 @@ public class ActionLibrary {
     private void startObservableAction(ObservableAction observableAction) {
         if (observableAction != null) {
             observableAction.start();
+            if (actionCallback != null) {
+                actionCallback.actionStarted(observableAction);
+            }
             processObservableActionResults(observableAction);
         }
     }
@@ -182,13 +226,18 @@ public class ActionLibrary {
         return null;
     }
 
-    synchronized private void finishAction(Action action) {
+    synchronized private void finishAction(Action action, ActionResult result) {
         actionArrayDeque.remove(action);
+        if (actionCallback != null) {
+            actionCallback.actionCompleted(action, result);
+        }
         Action nextActionToProcess = actionArrayDeque.peek();
-        if (action instanceof FutureAction) {
-            startFutureAction((FutureAction)nextActionToProcess);
-        } else if (action instanceof ObservableAction) {
-            startObservableAction((ObservableAction)action);
+        if (nextActionToProcess != null) {
+            if (action instanceof FutureAction) {
+                startFutureAction((FutureAction)nextActionToProcess);
+            } else if (action instanceof ObservableAction) {
+                startObservableAction((ObservableAction)action);
+            }
         }
     }
 
@@ -206,7 +255,7 @@ public class ActionLibrary {
                     ServiceLog.w("ActionTaker: Exception getting wifi results: " + e.toString());
                     //Informing inference engine of the error.
                 } finally {
-                    finishAction(futureAction);
+                    finishAction(futureAction, result);
                 }
             }
         }, executor);
@@ -226,13 +275,14 @@ public class ActionLibrary {
             @Override
             public void onError(Throwable e) {
                 //finish the action here
-                finishAction(observableAction);
+                finishAction(observableAction, null);
             }
 
             @Override
             public void onComplete() {
                 //finish it here too
-                finishAction(observableAction);
+                ActionResult actionResult = observableAction.getFinalResult();
+                finishAction(observableAction, actionResult);
             }
         });
     }

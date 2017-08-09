@@ -2,6 +2,7 @@ package com.inceptai.wifimonitoringservice.actionlibrary.actions;
 
 import android.content.Context;
 
+import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.NetworkActionLayer;
 
 import java.util.concurrent.Executor;
@@ -92,6 +93,8 @@ public abstract class ObservableAction extends Action {
     public Observable getObservable() {
         return observable;
     }
+
+    public abstract ActionResult getFinalResult();
 
     private void addCompletionWork() {
         //Not sure how to sequence observables

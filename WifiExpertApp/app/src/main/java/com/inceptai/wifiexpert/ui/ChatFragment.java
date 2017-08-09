@@ -24,17 +24,21 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-
 import com.inceptai.wifiexpert.DobbyApplication;
+import com.inceptai.wifiexpert.R;
 import com.inceptai.wifiexpert.analytics.DobbyAnalytics;
 import com.inceptai.wifiexpert.expertSystem.inferencing.DataInterpreter;
 import com.inceptai.wifiexpert.expertSystem.inferencing.SuggestionCreator;
+import com.inceptai.wifiexpert.expertSystem.messages.StructuredUserResponse;
 import com.inceptai.wifiexpert.utils.DobbyLog;
 import com.inceptai.wifiexpert.utils.Utils;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest.BandwidthObserver;
+import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest.BandwidthProgressSnapshot;
+import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest.BandwidthResult;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest.BandwidthStats;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest.ServerInformation;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest.SpeedTestConfig;
+import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLibraryCodes;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
@@ -45,13 +49,26 @@ import java.util.Locale;
 
 import javax.inject.Inject;
 
+import io.reactivex.Observable;
+import io.reactivex.observers.DisposableObserver;
+
+import static com.inceptai.wifiexpert.expertSystem.messages.StructuredUserResponse.ResponseType.CANCEL;
+import static com.inceptai.wifiexpert.expertSystem.messages.StructuredUserResponse.ResponseType.CONTACT_HUMAN_EXPERT;
+import static com.inceptai.wifiexpert.expertSystem.messages.StructuredUserResponse.ResponseType.LIST_ALL_FUNCTIONS;
+import static com.inceptai.wifiexpert.expertSystem.messages.StructuredUserResponse.ResponseType.RUN_ALL_DIAGNOSTICS;
+import static com.inceptai.wifiexpert.expertSystem.messages.StructuredUserResponse.ResponseType.RUN_BW_TESTS;
+import static com.inceptai.wifiexpert.expertSystem.messages.StructuredUserResponse.ResponseType.RUN_WIFI_TESTS;
+import static com.inceptai.wifiexpert.expertSystem.messages.StructuredUserResponse.ResponseType.SHOW_LAST_SUGGESTION_DETAILS;
+import static com.inceptai.wifiexpert.utils.Utils.ZERO_POINT_ZERO;
+import static com.inceptai.wifiexpert.utils.Utils.nonLinearBwScale;
+
 
 /**
  * Fragment shows the UI for the chat-based interaction with the AI agent.
  * Use the {@link ChatFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class ChatFragment extends Fragment implements Handler.Callback, NewBandwidthAnalyzer.ResultsCallback {
+public class ChatFragment extends Fragment implements Handler.Callback {
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
 
@@ -375,7 +392,6 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     }
 
     //All the methods that show stuff to user
-
     public void addBandwidthResultsCardView(final DataInterpreter.BandwidthGrade bandwidthGrade) {
         dobbyAnalytics.wifiExpertBandwidthCardShown();
         handler.postDelayed(new Runnable() {
@@ -384,7 +400,6 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
                 Message.obtain(handler, MSG_SHOW_BANDWIDTH_RESULT_CARDVIEW, bandwidthGrade).sendToTarget();
             }
         }, botMessageDelay);
-        //Message.obtain(handler, MSG_SHOW_BANDWIDTH_RESULT_CARDVIEW, bandwidthGrade).sendToTarget();
     }
 
     public void addOverallNetworkResultsCardView(final DataInterpreter.WifiGrade wifiGrade, final String ispName, final String externalIp) {
@@ -395,22 +410,19 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
                 Message.obtain(handler, MSG_SHOW_OVERALL_NETWORK_STATUS, new OverallNetworkInfo(wifiGrade, ispName, externalIp)).sendToTarget();
             }
         }, botMessageDelay);
-        //Message.obtain(handler, MSG_SHOW_OVERALL_NETWORK_STATUS, new OverallNetworkInfo(wifiGrade, ispName, externalIp)).sendToTarget();
     }
 
-    public void observeBandwidthNonUi(final BandwidthObserver observer) {
+    public void observeBandwidthNonUi(final Observable bandwidthObservable) {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                Message.obtain(handler, MSG_SHOW_BW_GAUGE, observer).sendToTarget();
+                Message.obtain(handler, MSG_SHOW_BW_GAUGE, bandwidthObservable).sendToTarget();
             }
         }, botMessageDelay);
-        //Message.obtain(handler, MSG_SHOW_BW_GAUGE, observer).sendToTarget();
     }
 
     public void showBotResponse(final String text) {
         DobbyLog.v("ChatF: showBotResponse text " + text);
-        //showStatus(getString(R.string.agent_is_typing), 0);
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -423,7 +435,6 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
 //                Message.obtain(handler, MSG_SHOW_DOBBY_CHAT, text).sendToTarget();
 //            }
 //        }, computeDelayForNextBotMessage());
-        //Message.obtain(handler, MSG_SHOW_DOBBY_CHAT, text).sendToTarget();
     }
 
     public void showUserResponse(final String text) {
@@ -439,20 +450,14 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
 
 
     //No delay for following
-    public void showRtGraph(RtDataSource<Float, Integer> rtDataSource) {
-        Message.obtain(handler, MSG_SHOW_RT_GRAPH, rtDataSource).sendToTarget();
-    }
-
-    public void showUserActionOptions(final List<Integer> userResponseTypes) {
-        DobbyLog.v("In showUserActionOptions of CF: responseTypes: " + userResponseTypes);
-        //Show all the buttons programatically and tie the response to send the user query
+    public void showUserActionOptions(final List<StructuredUserResponse> structuredUserResponses) {
+        DobbyLog.v("In showUserActionOptions of CF: responseTypes: ");
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                Message.obtain(handler, MSG_SHOW_USER_ACTION_BUTTONS, userResponseTypes).sendToTarget();
+                Message.obtain(handler, MSG_SHOW_USER_ACTION_BUTTONS, structuredUserResponses).sendToTarget();
             }
         }, botMessageDelay);
-        //Message.obtain(handler, MSG_SHOW_USER_ACTION_BUTTONS, userResponseTypes).sendToTarget();
     }
 
     public void showExpertChatMessage(final String text) {
@@ -462,13 +467,10 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
                 Message.obtain(handler, MSG_SHOW_EXPERT_CHAT, text).sendToTarget();
             }
         }, botMessageDelay);
-        //Message.obtain(handler, MSG_SHOW_EXPERT_CHAT, text).sendToTarget();
     }
 
 
     public void cancelTests() {
-        //resetData();
-        //uiStateChange(UI_STATE_FULL_CHAT);
         dismissBandwidthGaugeNonUi();
     }
 
@@ -500,12 +502,8 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
                 String expertChatText = (String) msg.obj;
                 addExpertChat(expertChatText);
                 break;
-            case MSG_SHOW_RT_GRAPH:
-                RtDataSource<Float, Integer> rtDataSource = (RtDataSource<Float, Integer>) msg.obj;
-                addRtGraph(rtDataSource);
-                break;
             case MSG_SHOW_BW_GAUGE:
-                showBandwidthGauge((BandwidthObserver) msg.obj);
+                showBandwidthGauge((Observable) msg.obj);
                 break;
             case MSG_UPDATE_CIRCULAR_GAUGE:
                 updateBandwidthGauge(msg);
@@ -514,7 +512,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
                 uiStateChange((int)msg.obj);
                 break;
             case MSG_SHOW_USER_ACTION_BUTTONS:
-                showUserActionButtons((List<Integer>) msg.obj);
+                showUserActionButtons((List<StructuredUserResponse>) msg.obj);
                 break;
             case MSG_SHOW_BANDWIDTH_RESULT_CARDVIEW:
                 DataInterpreter.BandwidthGrade bandwidthGrade = (DataInterpreter.BandwidthGrade) msg.obj;
@@ -587,7 +585,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         if (suggestion == null) {
             DobbyLog.v("Attempting to show more suggestions when currentSuggestions are null.");
         }
-        WifiDocDialogFragment fragment = WifiDocDialogFragment.forSuggestion(suggestion.getTitle(),
+        WifiExpertDialogFragment fragment = WifiExpertDialogFragment.forSuggestion(suggestion.getTitle(),
                 suggestion.getLongSuggestionList());
         fragment.show(getActivity().getSupportFragmentManager(), "Suggestions");
         dobbyAnalytics.moreSuggestionsShown(suggestion.getTitle(),
@@ -668,8 +666,8 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     }
 
 
-    private void showBandwidthGauge(BandwidthObserver observer) {
-        observer.registerCallback(this);
+    private void showBandwidthGauge(Observable bandwidthObservable) {
+        updateBandwidthStats(bandwidthObservable);
         uiStateChange(UI_STATE_SHOW_BW_GAUGE);
     }
 
@@ -699,10 +697,10 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         }
     }
 
-    private void showUserActionButtons(List<Integer> userResponseTypes) {
+    private void showUserActionButtons(List<StructuredUserResponse> structuredUserResponses) {
         actionMenu.removeAllViewsInLayout();
-        for (final int userResponseType: userResponseTypes) {
-            final String buttonText = UserResponse.getStringForResponseType(userResponseType);
+        for (final StructuredUserResponse structuredUserResponse: structuredUserResponses) {
+            final String buttonText = structuredUserResponse.getResponseString();
             //Returning if context is null
             if (buttonText == null || buttonText.equals(Utils.EMPTY_STRING) || getContext() == null) {
                 continue;
@@ -721,7 +719,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
             button.setClickable(true);
             button.setAllCaps(false);
 
-            if (userResponseType == UserResponse.ResponseType.CONTACT_HUMAN_EXPERT) {
+            if (structuredUserResponse.getResponseType() == StructuredUserResponse.ResponseType.CONTACT_HUMAN_EXPERT) {
                 button.setBackgroundResource(R.drawable.rounded_shape_action_button_contact_expert);
                 button.setTextColor(Color.DKGRAY); // light gray
             } else {
@@ -733,7 +731,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
             button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    logUserResponseButtonClickedEvent(userResponseType);
+                    logUserResponseButtonClickedEvent(structuredUserResponse.getResponseType());
                     processTextQuery(buttonText, true);
                 }
             });
@@ -763,14 +761,6 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         makeUiChanges(getView());
     }
 
-    private void addRtGraph(RtDataSource<Float, Integer> rtDataSource) {
-        DobbyLog.i("Adding GRAPH entry.");
-        ChatEntry entry = new ChatEntry(Utils.EMPTY_STRING, ChatEntry.RT_GRAPH);
-        entry.addGraph(new GraphData<Float, Integer>(rtDataSource, BandwidthTestCodes.TestMode.DOWNLOAD));
-        recyclerViewAdapter.addEntryAtBottom(entry);
-        chatRv.scrollToPosition(recyclerViewAdapter.getItemCount() - 1);
-    }
-
     private int getBwTestState() {
         return bwTestState;
     }
@@ -787,10 +777,10 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
 
     private void updateBandwidthGauge(Message msg) {
         Utils.BandwidthValue bandwidthValue = (Utils.BandwidthValue) msg.obj;
-        if (bandwidthValue.mode == BandwidthTestCodes.TestMode.UPLOAD) {
+        if (bandwidthValue.mode == ActionLibraryCodes.BandwidthTestMode.UPLOAD) {
             uploadCircularGauge.setValue((int) nonLinearBwScale(bandwidthValue.value));
             uploadGaugeTv.setText(String.format("%2.2f", bandwidthValue.value));
-        } else if (bandwidthValue.mode == BandwidthTestCodes.TestMode.DOWNLOAD) {
+        } else if (bandwidthValue.mode == ActionLibraryCodes.BandwidthTestMode.DOWNLOAD) {
             downloadCircularGauge.setValue((int) nonLinearBwScale(bandwidthValue.value));
             downloadGaugeTv.setText(String.format("%2.2f", bandwidthValue.value));
         }
@@ -803,8 +793,59 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         downloadGaugeTv.setText(ZERO_POINT_ZERO);
     }
 
+    //Replaced with observable
+    private void updateBandwidthStats(Observable bandwidthObservable) {
+        bandwidthObservable.subscribeWith(new DisposableObserver<BandwidthProgressSnapshot>() {
+                    @Override
+                    public void onNext(BandwidthProgressSnapshot bandwidthProgressSnapshot) {
+                        handleBandwidthProgressSnapshot(bandwidthProgressSnapshot);
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        //finish the action here
+                        BandwidthObserver.BandwidthTestException bandwidthTestException = (BandwidthObserver.BandwidthTestException)e;
+                        onBandwidthTestError(bandwidthTestException.getTestMode(), bandwidthTestException.getErrorCode(), bandwidthTestException.getErrorMessage());
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        //finish it here too
+                    }
+                });
+    }
+
+    private void handleBandwidthProgressSnapshot(final BandwidthProgressSnapshot bandwidthProgressSnapshot) {
+        if (bandwidthProgressSnapshot == null) {
+            return;
+        }
+        switch (bandwidthProgressSnapshot.getResultType()) {
+            case ActionLibraryCodes.BandwidthTestSnapshotType.SPEED_TEST_CONFIG:
+                onConfigFetch(bandwidthProgressSnapshot.getSpeedTestConfig());
+                break;
+            case ActionLibraryCodes.BandwidthTestSnapshotType.SERVER_INFORMATION:
+                onServerInformationFetch(bandwidthProgressSnapshot.getServerInformation());
+                break;
+            case ActionLibraryCodes.BandwidthTestSnapshotType.CLOSEST_SERVERS:
+                onClosestServersSelected(bandwidthProgressSnapshot.getClosestServers());
+                break;
+            case ActionLibraryCodes.BandwidthTestSnapshotType.BEST_SERVER_DETAILS:
+                onBestServerSelected(bandwidthProgressSnapshot.getBestServerDetails());
+                break;
+            case ActionLibraryCodes.BandwidthTestSnapshotType.INSTANTANEOUS_BANDWIDTH:
+                onTestProgress(bandwidthProgressSnapshot.getTestMode(), bandwidthProgressSnapshot.getBandwidth());
+                break;
+            case ActionLibraryCodes.BandwidthTestSnapshotType.FINAL_BANDWIDTH:
+                BandwidthResult finalResult = bandwidthProgressSnapshot.getFinalBandwidthResult();
+                if (finalResult.getUploadStats() != null) {
+                    onTestFinished(ActionLibraryCodes.BandwidthTestMode.UPLOAD, finalResult.getUploadStats());
+                }
+                if (finalResult.getDownloadStats() != null) {
+                    onTestFinished(ActionLibraryCodes.BandwidthTestMode.DOWNLOAD, finalResult.getDownloadStats());
+                }
+        }
+    }
     //  NewBandwidthAnalyzer.ResultCallback methods -------
-    @Override
     public void onConfigFetch(SpeedTestConfig config) {
         if (getBwTestState() == BW_TEST_INITIATED) {
             showStatus(R.string.status_fetching_server_list);
@@ -813,7 +854,6 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         DobbyLog.v("WifiDoc: Fetched config");
     }
 
-    @Override
     public void onServerInformationFetch(ServerInformation serverInformation) {
         if (getBwTestState() == BW_CONFIG_FETCHED) {
             String constructedString = getResources().getString(R.string.status_closest_servers, serverInformation.serverList.size());
@@ -823,12 +863,10 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         DobbyLog.v("WifiExpert: Fetched server info");
     }
 
-    @Override
     public void onClosestServersSelected(List<ServerInformation.ServerDetails> closestServers) {
         DobbyLog.v("WifiExpert Closest servers");
     }
 
-    @Override
     public void onBestServerSelected(ServerInformation.ServerDetails bestServer) {
         if (getBwTestState() == BW_SERVER_INFO_FETCHED) {
             String constructedMessage = getResources().getString(R.string.status_found_closest_server, bestServer.name, bestServer.latencyMs);
@@ -838,29 +876,28 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         DobbyLog.v("WifiExpert: Best server");
     }
 
-    @Override
-    public void onTestFinished(@BandwidthTestCodes.TestMode int testMode, BandwidthStats stats) {
-        Message.obtain(handler, MSG_UPDATE_CIRCULAR_GAUGE, Utils.BandwidthValue.from(testMode, (stats.getOverallBandwidth() / 1.0e6))).sendToTarget();
-        if (testMode == BandwidthTestCodes.TestMode.UPLOAD) {
-            showStatus(R.string.status_finished_bw_tests);
-            dismissBandwidthGaugeNonUi();
-        }
-    }
-
-    @Override
-    public void onTestProgress(@BandwidthTestCodes.TestMode int testMode, double instantBandwidth) {
-        if (testMode == BandwidthTestCodes.TestMode.DOWNLOAD && getBwTestState() != BW_DOWNLOAD_RUNNING) {
+    public void onTestProgress(@ActionLibraryCodes.BandwidthTestMode int testMode, double instantBandwidth) {
+        if (testMode == ActionLibraryCodes.BandwidthTestMode.DOWNLOAD && getBwTestState() != BW_DOWNLOAD_RUNNING) {
             setBwTestState(BW_DOWNLOAD_RUNNING);
             showStatus(R.string.status_running_download_tests);
-        } else if (testMode == BandwidthTestCodes.TestMode.UPLOAD && getBwTestState() != BW_UPLOAD_RUNNING) {
+        } else if (testMode == ActionLibraryCodes.BandwidthTestMode.UPLOAD && getBwTestState() != BW_UPLOAD_RUNNING) {
             setBwTestState(BW_UPLOAD_RUNNING);
             showStatus(R.string.status_running_upload_tests);
         }
         Message.obtain(handler, MSG_UPDATE_CIRCULAR_GAUGE, Utils.BandwidthValue.from(testMode, (instantBandwidth / 1.0e6))).sendToTarget();
     }
 
-    @Override
-    public void onBandwidthTestError(@BandwidthTestCodes.TestMode int testMode, @BandwidthTestCodes.ErrorCodes int errorCode, @Nullable String errorMessage) {
+    public void onTestFinished(@ActionLibraryCodes.BandwidthTestMode int testMode, BandwidthStats stats) {
+        Message.obtain(handler, MSG_UPDATE_CIRCULAR_GAUGE, Utils.BandwidthValue.from(testMode, (stats.getOverallBandwidth() / 1.0e6))).sendToTarget();
+        if (testMode == ActionLibraryCodes.BandwidthTestMode.UPLOAD) {
+            showStatus(R.string.status_finished_bw_tests);
+            dismissBandwidthGaugeNonUi();
+        }
+    }
+
+    public void onBandwidthTestError(@ActionLibraryCodes.BandwidthTestMode int testMode,
+                                     @ActionLibraryCodes.ErrorCodes int errorCode,
+                                     @Nullable String errorMessage) {
         showStatus(R.string.status_error_bw_tests);
         dismissBandwidthGaugeNonUi();
     }

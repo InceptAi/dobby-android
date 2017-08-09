@@ -52,5 +52,40 @@ public class BandwidthProgressSnapshot {
         this.resultType = ActionLibraryCodes.BandwidthTestSnapshotType.CLOSEST_SERVERS;
     }
 
+    public int getResultType() {
+        return resultType;
+    }
 
+    public double getBandwidth() {
+        return bandwidth;
+    }
+
+    public long getTimeStampMs() {
+        return timeStampMs;
+    }
+
+    @ActionLibraryCodes.BandwidthTestMode
+    public int getTestMode() {
+        return testMode;
+    }
+
+    public SpeedTestConfig getSpeedTestConfig() {
+        return speedTestConfig;
+    }
+
+    public ServerInformation.ServerDetails getBestServerDetails() {
+        return bestServerDetails;
+    }
+
+    public BandwidthResult getFinalBandwidthResult() {
+        return finalBandwidthResult;
+    }
+
+    public ServerInformation getServerInformation() {
+        return serverInformation;
+    }
+
+    public List<ServerInformation.ServerDetails> getClosestServers() {
+        return closestServers;
+    }
 }
