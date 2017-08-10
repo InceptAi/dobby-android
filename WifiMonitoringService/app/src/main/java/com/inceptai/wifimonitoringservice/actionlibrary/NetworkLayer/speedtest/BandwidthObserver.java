@@ -45,6 +45,7 @@ public class BandwidthObserver implements BandwidthAnalyzer.ResultsCallback, Obs
         this.listeningScheduledExecutorService = listeningScheduledExecutorService;
         this.testsDone = ActionLibraryCodes.BandwidthTestMode.IDLE;
         bandwidthResultObservable = Observable.create(this).share();
+        bandwidthAnalyzer = new BandwidthAnalyzer(executorService, listeningScheduledExecutorService, context, this);
     }
 
     public synchronized boolean testsRunning() {
@@ -172,7 +173,7 @@ public class BandwidthObserver implements BandwidthAnalyzer.ResultsCallback, Obs
             markTestsAsRunning();
             testModeRequested = mode;
             bandwidthResult = new BandwidthResult(mode);
-            bandwidthAnalyzer = new BandwidthAnalyzer(executorService, listeningScheduledExecutorService, context, this);
+//            bandwidthAnalyzer = new BandwidthAnalyzer(executorService, listeningScheduledExecutorService, context, this);
             executorService.execute(new Runnable() {
                 @Override
                 public void run() {
@@ -217,9 +218,9 @@ public class BandwidthObserver implements BandwidthAnalyzer.ResultsCallback, Obs
             return speedTestConfigSettableFuture;
         }
         speedTestConfigSettableFuture = SettableFuture.create();
-        if (bandwidthAnalyzer == null) {
-            bandwidthAnalyzer = new BandwidthAnalyzer(executorService, listeningScheduledExecutorService, context, this);
-        }
+//        if (bandwidthAnalyzer == null) {
+//            bandwidthAnalyzer = new BandwidthAnalyzer(executorService, listeningScheduledExecutorService, context, this);
+//        }
         executorService.execute(new Runnable() {
             @Override
             public void run() {
@@ -245,10 +246,10 @@ public class BandwidthObserver implements BandwidthAnalyzer.ResultsCallback, Obs
         testsRunning = false;
         testsDone = ActionLibraryCodes.BandwidthTestMode.IDLE;
         testModeRequested = ActionLibraryCodes.BandwidthTestMode.IDLE;
-        if (bandwidthAnalyzer != null) {
-            bandwidthAnalyzer.cleanup();
-            bandwidthAnalyzer = null;
-        }
+//        if (bandwidthAnalyzer != null) {
+//            bandwidthAnalyzer.cleanup();
+//            bandwidthAnalyzer = null;
+//        }
     }
 
     private synchronized void markTestsAsRunning() {
