@@ -42,6 +42,7 @@ import com.inceptai.wifiexpertsystem.ui.WifiExpertDialogFragment;
 import com.inceptai.wifiexpertsystem.utils.DobbyLog;
 import com.inceptai.wifiexpertsystem.utils.Utils;
 import com.inceptai.wifimonitoringservice.WifiMonitoringService;
+import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.wifi.WifiNetworkOverview;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -285,9 +286,9 @@ public class DobbyActivity extends AppCompatActivity
     }
 
     @Override
-    public void showNetworkInfoViewCard(DataInterpreter.WifiGrade wifiGrade, String isp, String ip) {
+    public void showNetworkInfoViewCard(WifiNetworkOverview wifiNetworkOverview) {
         if (chatFragment != null) {
-            chatFragment.addOverallNetworkResultsCardView(wifiGrade, isp, ip);
+            chatFragment.addOverallNetworkResultsCardView(wifiNetworkOverview);
         }
     }
 

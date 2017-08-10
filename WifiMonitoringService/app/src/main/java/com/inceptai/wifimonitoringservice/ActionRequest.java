@@ -192,6 +192,11 @@ public class ActionRequest {
         return new ActionRequest(Action.ActionType.PERFORM_PING_FOR_DHCP_INFO, actionTimeOutMs);
     }
 
+    @Nullable
+    public static ActionRequest getOverallInfoRequest(long actionTimeOutMs) {
+        return new ActionRequest(Action.ActionType.GET_OVERALL_NETWORK_INFO, actionTimeOutMs);
+    }
+
     @Action.ActionType
     public int getActionType() {
         return actionType;

@@ -38,6 +38,7 @@ import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest.B
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest.BandwidthStats;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest.ServerInformation;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest.SpeedTestConfig;
+import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.wifi.WifiNetworkOverview;
 import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLibraryCodes;
 
 import java.io.FileDescriptor;
@@ -380,11 +381,13 @@ public class ChatFragment extends Fragment implements Handler.Callback {
     }
 
 
-    public void showNetworkResultsCardView(DataInterpreter.WifiGrade wifiGrade, String ispName, String routerIp) {
+    public void showNetworkResultsCardView(WifiNetworkOverview wifiNetworkOverview) {
         ChatEntry chatEntry = new ChatEntry(Utils.EMPTY_STRING, ChatEntry.OVERALL_NETWORK_CARDVIEW);
-        chatEntry.setWifiGrade(wifiGrade);
-        chatEntry.setIspName(ispName);
-        chatEntry.setRouterIp(routerIp);
+        chatEntry.setPrimarySSID(wifiNetworkOverview.getSsid());
+        chatEntry.setPrimarySignal(wifiNetworkOverview.getSignal());
+        chatEntry.setPrimarySignalMetric(wifiNetworkOverview.getSignalMetric());
+        chatEntry.setIspName(wifiNetworkOverview.getIsp());
+        chatEntry.setRouterIp(wifiNetworkOverview.getExternalIP());
         recyclerViewAdapter.addEntryAtBottom(chatEntry);
         chatRv.scrollToPosition(recyclerViewAdapter.getItemCount() - 1);
     }
@@ -411,12 +414,12 @@ public class ChatFragment extends Fragment implements Handler.Callback {
         }, botMessageDelay);
     }
 
-    public void addOverallNetworkResultsCardView(final DataInterpreter.WifiGrade wifiGrade, final String ispName, final String externalIp) {
+    public void addOverallNetworkResultsCardView(final WifiNetworkOverview wifiNetworkOverview) {
         dobbyAnalytics.wifiExpertWifiCardShown();
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                Message.obtain(handler, MSG_SHOW_OVERALL_NETWORK_STATUS, new OverallNetworkInfo(wifiGrade, ispName, externalIp)).sendToTarget();
+                Message.obtain(handler, MSG_SHOW_OVERALL_NETWORK_STATUS, wifiNetworkOverview).sendToTarget();
             }
         }, botMessageDelay);
     }
@@ -536,13 +539,11 @@ public class ChatFragment extends Fragment implements Handler.Callback {
                 showPingResultsCardView(pingGrade);
                 break;
             case MSG_SHOW_OVERALL_NETWORK_STATUS:
-                OverallNetworkInfo overallNetworkInfo = (OverallNetworkInfo) msg.obj;
-                if (!(overallNetworkInfo.getWifiGrade().isWifiDisconnected() || overallNetworkInfo.getWifiGrade().isWifiOff())) {
+                WifiNetworkOverview wifiNetworkOverview = (WifiNetworkOverview) msg.obj;
+                if (!Utils.isNullOrEmpty(wifiNetworkOverview.getSsid())) {
                     addDobbyChat(getString(R.string.wifi_status_view_message), false);
-                    showNetworkResultsCardView(overallNetworkInfo.getWifiGrade(),
-                            overallNetworkInfo.getIsp(), overallNetworkInfo.getIp());
+                    showNetworkResultsCardView(wifiNetworkOverview);
                 }
-                //addDobbyChat(overallNetworkInfo.getWifiGrade().userReadableInterpretation(), false);
                 break;
             case MSG_SHOW_DETAILED_SUGGESTIONS:
                 SuggestionCreator.Suggestion suggestionToShow = (SuggestionCreator.Suggestion) msg.obj;
@@ -942,30 +943,6 @@ public class ChatFragment extends Fragment implements Handler.Callback {
                                      @Nullable String errorMessage) {
         showStatus(R.string.status_error_bw_tests);
         dismissBandwidthGaugeNonUi();
-    }
-
-    private class OverallNetworkInfo {
-        public DataInterpreter.WifiGrade wifiGrade;
-        public String isp;
-        public String ip;
-
-        OverallNetworkInfo(DataInterpreter.WifiGrade wifiGrade, String isp, String ip) {
-            this.wifiGrade = wifiGrade;
-            this.isp = isp;
-            this.ip = ip;
-        }
-
-        public DataInterpreter.WifiGrade getWifiGrade() {
-            return wifiGrade;
-        }
-
-        public String getIsp() {
-            return isp;
-        }
-
-        public String getIp() {
-            return ip;
-        }
     }
 
     private class BandwidthCardInfo {

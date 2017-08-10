@@ -35,6 +35,7 @@ public class BandwidthObserver implements BandwidthAnalyzer.ResultsCallback, Obs
     private ListeningScheduledExecutorService listeningScheduledExecutorService;
     private Context context;
     private SettableFuture<Boolean> cancelBandwidthTestFuture;
+    private SettableFuture<SpeedTestConfig> speedTestConfigSettableFuture;
 
     public BandwidthObserver(Context context, ExecutorService executorService,
                              ListeningScheduledExecutorService listeningScheduledExecutorService) {
@@ -209,6 +210,23 @@ public class BandwidthObserver implements BandwidthAnalyzer.ResultsCallback, Obs
         ServiceLog.v("NL done with bw cancellation");
         cancelBandwidthTestFuture.set(true);
         return cancelBandwidthTestFuture;
+    }
+
+    public ListenableFuture<SpeedTestConfig> getSpeedTestConfig() {
+        if (speedTestConfigSettableFuture != null && !speedTestConfigSettableFuture.isDone()) {
+            return speedTestConfigSettableFuture;
+        }
+        speedTestConfigSettableFuture = SettableFuture.create();
+        if (bandwidthAnalyzer == null) {
+            bandwidthAnalyzer = new BandwidthAnalyzer(executorService, listeningScheduledExecutorService, context, this);
+        }
+        executorService.execute(new Runnable() {
+            @Override
+            public void run() {
+                speedTestConfigSettableFuture.set(bandwidthAnalyzer.fetchSpeedTestConfigIfNeeded());
+            }
+        });
+        return speedTestConfigSettableFuture;
     }
 
     public void cleanup() {

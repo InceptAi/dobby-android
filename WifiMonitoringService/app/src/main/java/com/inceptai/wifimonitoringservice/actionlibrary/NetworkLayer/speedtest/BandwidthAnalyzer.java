@@ -164,7 +164,7 @@ public class BandwidthAnalyzer {
         return bestServer;
     }
 
-    private SpeedTestConfig fetchSpeedTestConfigIfNeeded() {
+    public SpeedTestConfig fetchSpeedTestConfigIfNeeded() {
         final String downloadMode = "http";
         //Get config if not fresh
         if (getSpeedTestConfig() == null || System.currentTimeMillis() - lastConfigFetchTimestampMs > MAX_AGE_FOR_FRESHNESS_MS) {

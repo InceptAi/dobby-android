@@ -10,6 +10,7 @@ import com.inceptai.wifimonitoringservice.ActionRequest;
 import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.ping.PingStats;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest.BandwidthResult;
+import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.wifi.WifiNetworkOverview;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.Action;
 import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLibraryCodes;
 
@@ -67,6 +68,11 @@ public class ExpertSystemService  {
                 HashMap<String, PingStats> pingStatsHashMap = (HashMap<String, PingStats>) actionResult.getPayload();
                 ExpertMessage expertMessageForPingInfo = ExpertMessage.createPingActionCompleted(action, DataInterpreter.interpret(pingStatsHashMap));
                 sendCallbackWithExpertMessage(expertMessageForPingInfo);
+            } else if (action.getActionType() == Action.ActionType.GET_OVERALL_NETWORK_INFO) {
+                WifiNetworkOverview wifiNetworkOverview = (WifiNetworkOverview)actionResult.getPayload();
+                wifiNetworkOverview.setSignalMetric(DataInterpreter.getSignalMetric(wifiNetworkOverview.getSignal()));
+                ExpertMessage expertMessageForWifiInfo = ExpertMessage.createShowNetworkOverview(action, wifiNetworkOverview);
+                sendCallbackWithExpertMessage(expertMessageForWifiInfo);
             }
         }
     }
@@ -136,6 +142,8 @@ public class ExpertSystemService  {
             actionRequest = ActionRequest.cancelBandwidthTestsRequest(1000);
         } else if (message.toLowerCase().contains("pingtest")) {
             actionRequest = ActionRequest.performPingForDhcpInfoRequest(0);
+        } else if (message.toLowerCase().contains("overall")) {
+            actionRequest = ActionRequest.getOverallInfoRequest(0);
         }
         return actionRequest;
     }

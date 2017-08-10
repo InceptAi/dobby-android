@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.inceptai.wifiexpertsystem.R;
+import com.inceptai.wifiexpertsystem.expertSystem.inferencing.DataInterpreter;
 
 import java.util.List;
 
@@ -142,7 +143,9 @@ public class ChatRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.V
 
     private void configureOverallNetworkResultsViewHolder(Context context, OverallNetworkResultsViewHolder viewHolder, int position) {
         ChatEntry entry = entryList.get(position);
-        viewHolder.setResults(context, entry.getWifiGrade(), entry.getIspName(), entry.getRouterIp());
+        @DataInterpreter.MetricType int signalMetric = entry.getPrimarySignalMetric();
+        viewHolder.setResults(context, entry.getPrimarySSID(), entry.getPrimarySignal(),
+                signalMetric, entry.getIspName(), entry.getRouterIp());
     }
 
     @Override

@@ -42,7 +42,7 @@ public class ActionResult {
 
     public static String actionResultCodeToString(@ActionResultCodes int code) {
         switch (code) {
-            case SUCCESS:
+            case ActionResultCodes.SUCCESS:
                 return "SUCCESS";
             case ActionResultCodes.IN_PROGRESS:
                 return "IN_PROGRESS";

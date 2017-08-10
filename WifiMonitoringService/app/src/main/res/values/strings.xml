@@ -16,6 +16,7 @@
     <string name="get_nearby_wifi_networks">Get Nearby Wifi Networks</string>
     <string name="get_dhcp_info">Get DHCP Info</string>
     <string name="get_wifi_info">Get Current Link Info</string>
+    <string name="get_overall_network_info">Get Overall Network Info</string>
     <string name="check_5GHz_supported">Check 5GHz supported</string>
     <string name="cancel_bw_tests">Cancel Bandwidth Tests</string>
     <string name="repair_wifi_network">Repair Wifi Network</string>

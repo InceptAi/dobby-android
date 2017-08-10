@@ -12,6 +12,7 @@ import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.ping.PingSt
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest.BandwidthObserver;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest.BandwidthProgressSnapshot;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest.BandwidthResult;
+import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest.SpeedTestConfig;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.wifi.WifiController;
 import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLibraryCodes;
 
@@ -149,6 +150,13 @@ public class NetworkActionLayer {
         return bandwidthObserver.getLastBandwidthResult();
     }
 
+    public ListenableFuture<SpeedTestConfig> getSpeedTestConfig() {
+        if (isWifiConnected()) {
+            return bandwidthObserver.getSpeedTestConfig();
+        } else {
+            return null;
+        }
+    }
 
     //ping
     public ListenableFuture<HashMap<String, PingStats>> pingTest(List<String> ipAddressList,
@@ -173,6 +181,7 @@ public class NetworkActionLayer {
         connectivityTester.cleanup();
         bandwidthObserver.cleanup();
     }
+
 
 
     private boolean isWifiConnected() {

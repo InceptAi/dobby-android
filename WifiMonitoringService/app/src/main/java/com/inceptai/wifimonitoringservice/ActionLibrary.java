@@ -18,6 +18,7 @@ import com.inceptai.wifimonitoringservice.actionlibrary.actions.GetBestConfigure
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.GetBestConfiguredNetworks;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.GetConfiguredNetworks;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.GetDHCPInfo;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.GetOverallNetworkInfo;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.GetWifiInfo;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.IterateAndConnectToBestNetwork;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.IterateAndRepairWifiNetwork;
@@ -165,6 +166,9 @@ public class ActionLibrary {
                 break;
             case Action.ActionType.PERFORM_PING_FOR_DHCP_INFO:
                 action = new PerformPingTestForDHCPInfo(context, executor, scheduledExecutorService, networkActionLayer, actionRequest.getActionTimeOutMs());
+                break;
+            case Action.ActionType.GET_OVERALL_NETWORK_INFO:
+                action = new GetOverallNetworkInfo(context, executor, scheduledExecutorService, networkActionLayer, actionRequest.getActionTimeOutMs());
                 break;
             default:
                 ServiceLog.e("UNKNOWN Action Type: " + actionRequest.getActionType() + " Not submitting action");

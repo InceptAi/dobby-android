@@ -5,6 +5,7 @@ import android.support.annotation.IntDef;
 import com.inceptai.wifiexpertsystem.expertSystem.inferencing.DataInterpreter;
 import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest.BandwidthResult;
+import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.wifi.WifiNetworkOverview;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.Action;
 
 import java.lang.annotation.Retention;
@@ -37,7 +38,7 @@ public class ExpertMessage {
     private ActionResult actionResult;
     private List<StructuredUserResponse> userResponseOptionsToShow;
     private DataInterpreter.PingGrade pingGrade;
-    private DataInterpreter.WifiGrade wifiGrade;
+    private WifiNetworkOverview wifiNetworkOverview;
     private BandwidthResult bandwidthResult;
     @ExpertMessageType private int expertMessageType;
 
@@ -46,7 +47,7 @@ public class ExpertMessage {
                           ActionResult actionResult,
                           List<StructuredUserResponse> userResponseOptionsToShow,
                           DataInterpreter.PingGrade pingGrade,
-                          DataInterpreter.WifiGrade wifiGrade,
+                          WifiNetworkOverview wifiNetworkOverview,
                           BandwidthResult bandwidthResult) {
         this.expertMessageType = expertMessageType;
         this.message = message;
@@ -54,7 +55,7 @@ public class ExpertMessage {
         this.expertAction = action;
         this.userResponseOptionsToShow = userResponseOptionsToShow;
         this.pingGrade = pingGrade;
-        this.wifiGrade = wifiGrade;
+        this.wifiNetworkOverview = wifiNetworkOverview;
         this.bandwidthResult = bandwidthResult;
     }
 
@@ -81,14 +82,13 @@ public class ExpertMessage {
         return new ExpertMessage(ExpertMessageType.SHOW_PING_INFO, null, action, null,  null, pingGrade, null, null);
     }
 
-    public static ExpertMessage createWifiActionCompleted(Action action, DataInterpreter.WifiGrade wifiGrade) {
-        return new ExpertMessage(ExpertMessageType.SHOW_WIFI_INFO, null, action, null, null, null, wifiGrade, null);
-    }
-
     public static ExpertMessage createBandwidthActionCompleted(Action action, BandwidthResult bandwidthResult) {
         return new ExpertMessage(ExpertMessageType.SHOW_BANDWIDTH_INFO, null, action, null, null, null, null, bandwidthResult);
     }
 
+    public static ExpertMessage createShowNetworkOverview(Action action, WifiNetworkOverview wifiNetworkOverview) {
+        return new ExpertMessage(ExpertMessageType.SHOW_WIFI_INFO, null, action, null,  null, null, wifiNetworkOverview, null);
+    }
 
     public String getMessage() {
         return message;
@@ -114,8 +114,8 @@ public class ExpertMessage {
         return pingGrade;
     }
 
-    public DataInterpreter.WifiGrade getWifiGrade() {
-        return wifiGrade;
+    public WifiNetworkOverview getWifiNetworkOverview() {
+        return wifiNetworkOverview;
     }
 
     public BandwidthResult getBandwidthResult() {

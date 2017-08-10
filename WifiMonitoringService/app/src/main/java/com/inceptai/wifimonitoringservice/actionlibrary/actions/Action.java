@@ -43,7 +43,8 @@ public abstract class Action {
             ActionType.TURN_WIFI_ON,
             ActionType.CANCEL_BANDWIDTH_TESTS,
             ActionType.PERFORM_PING_TEST,
-            ActionType.PERFORM_PING_FOR_DHCP_INFO})
+            ActionType.PERFORM_PING_FOR_DHCP_INFO,
+            ActionType.GET_OVERALL_NETWORK_INFO})
 
     public @interface ActionType {
         int CHECK_IF_5GHz_IS_SUPPORTED = 0;
@@ -69,6 +70,7 @@ public abstract class Action {
         int CANCEL_BANDWIDTH_TESTS = 21;
         int PERFORM_PING_TEST = 22;
         int PERFORM_PING_FOR_DHCP_INFO = 23;
+        int GET_OVERALL_NETWORK_INFO = 24;
     }
 
     @ActionType

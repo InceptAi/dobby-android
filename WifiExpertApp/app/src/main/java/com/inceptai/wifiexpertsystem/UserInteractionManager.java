@@ -20,6 +20,7 @@ import com.inceptai.wifiexpertsystem.utils.DobbyLog;
 import com.inceptai.wifiexpertsystem.utils.NeoServiceClient;
 import com.inceptai.wifiexpertsystem.utils.Utils;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest.BandwidthResult;
+import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.wifi.WifiNetworkOverview;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.Action;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.ObservableAction;
 
@@ -128,7 +129,7 @@ public class UserInteractionManager implements
         void observeBandwidth(Observable bandwidthObservable);
         void cancelTestsResponse();
         void showBandwidthViewCard(double downloadMbps, double uploadMbps);
-        void showNetworkInfoViewCard(DataInterpreter.WifiGrade wifiGrade, String isp, String ip);
+        void showNetworkInfoViewCard(WifiNetworkOverview wifiNetworkOverview);
         void showPingInfoViewCard(DataInterpreter.PingGrade pingGrade);
         void showDetailedSuggestions(SuggestionCreator.Suggestion suggestion);
         void requestAccessibilityPermission();
@@ -241,6 +242,10 @@ public class UserInteractionManager implements
                 }
                 break;
             case ExpertMessage.ExpertMessageType.SHOW_WIFI_INFO:
+                WifiNetworkOverview wifiNetworkOverview = expertMessage.getWifiNetworkOverview();
+                if (wifiNetworkOverview != null) {
+                    interactionCallback.showNetworkInfoViewCard(wifiNetworkOverview);
+                }
                 break;
             default:
                 break;

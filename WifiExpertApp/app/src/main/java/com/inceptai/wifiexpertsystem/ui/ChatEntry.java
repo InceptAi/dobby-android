@@ -25,21 +25,22 @@ public class ChatEntry {
     private int entryType = UNKNOWN;
     private double uploadMbps, downloadMbps;
     private boolean isTestStatusMessage;
-
-    private DataInterpreter.PingGrade pingGrade;
-
-    // Overall network card has 3 data items:
-    private DataInterpreter.WifiGrade wifiGrade;
+    private String primarySSID;
+    private int primarySignal;
+    @DataInterpreter.MetricType private int primarySignalMetric;
     private String ispName;
     private String routerIp;
+    //TODO replace ping grade with latency values
+    private DataInterpreter.PingGrade pingGrade;
 
-    public ChatEntry(String text, int entryType) {
+
+    ChatEntry(String text, int entryType) {
         this.text = text;
         this.entryType = entryType;
         isTestStatusMessage = false;
     }
 
-    public ChatEntry(String text, int entryType, boolean isTestStatusMessage) {
+    ChatEntry(String text, int entryType, boolean isTestStatusMessage) {
         this.text = text;
         this.entryType = entryType;
         this.isTestStatusMessage = isTestStatusMessage;
@@ -48,56 +49,71 @@ public class ChatEntry {
     public String getText() {
         return text;
     }
-
-    public int getEntryType() {
-        return entryType;
-    }
-
-    public void setBandwidthResults(double uploadMbps, double downloadMbps) {
-        this.uploadMbps = uploadMbps;
-        this.downloadMbps = downloadMbps;
-    }
-
-    public double getUploadMbps() {
-        return uploadMbps;
-    }
-
-    public double getDownloadMbps() {
-        return downloadMbps;
-    }
-
-    public boolean isTestStatusMessage() { return isTestStatusMessage; }
-    
     public DataInterpreter.PingGrade getPingGrade() {
         return pingGrade;
     }
-
     public void setPingGrade(DataInterpreter.PingGrade pingGrade) {
         this.pingGrade = pingGrade;
     }
 
-    public DataInterpreter.WifiGrade getWifiGrade() {
-        return wifiGrade;
+    //package private
+
+    int getEntryType() {
+        return entryType;
     }
 
-    public void setWifiGrade(DataInterpreter.WifiGrade wifiGrade) {
-        this.wifiGrade = wifiGrade;
+    void setBandwidthResults(double uploadMbps, double downloadMbps) {
+        this.uploadMbps = uploadMbps;
+        this.downloadMbps = downloadMbps;
     }
 
-    public String getIspName() {
+    double getUploadMbps() {
+        return uploadMbps;
+    }
+
+    double getDownloadMbps() {
+        return downloadMbps;
+    }
+
+    boolean isTestStatusMessage() { return isTestStatusMessage; }
+
+    String getIspName() {
         return ispName;
     }
 
-    public void setIspName(String ispName) {
+    void setIspName(String ispName) {
         this.ispName = ispName;
     }
 
-    public String getRouterIp() {
+    String getRouterIp() {
         return routerIp;
     }
 
-    public void setRouterIp(String routerIp) {
+    void setRouterIp(String routerIp) {
         this.routerIp = routerIp;
     }
 
+    public String getPrimarySSID() {
+        return primarySSID;
+    }
+
+    public void setPrimarySSID(String primarySSID) {
+        this.primarySSID = primarySSID;
+    }
+
+    public int getPrimarySignal() {
+        return primarySignal;
+    }
+
+    public void setPrimarySignal(int primarySignal) {
+        this.primarySignal = primarySignal;
+    }
+
+    public int getPrimarySignalMetric() {
+        return primarySignalMetric;
+    }
+
+    public void setPrimarySignalMetric(int primarySignalMetric) {
+        this.primarySignalMetric = primarySignalMetric;
+    }
 }

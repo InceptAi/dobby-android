@@ -3,6 +3,7 @@ package com.inceptai.wifiexpertsystem;
 import com.inceptai.wifiexpertsystem.expertSystem.inferencing.DataInterpreter;
 import com.inceptai.wifiexpertsystem.expertSystem.inferencing.SuggestionCreator;
 import com.inceptai.wifiexpertsystem.expertSystem.messages.StructuredUserResponse;
+import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.wifi.WifiNetworkOverview;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -130,11 +131,11 @@ public class UserInteractionManagerCallbackThreadSwitcher implements UserInterac
     }
 
     @Override
-    public void showNetworkInfoViewCard(final DataInterpreter.WifiGrade wifiGrade, final String isp, final String ip) {
+    public void showNetworkInfoViewCard(final WifiNetworkOverview wifiNetworkOverview) {
         executorService.submit(new Runnable() {
             @Override
             public void run() {
-                resultsCallback.showNetworkInfoViewCard(wifiGrade, isp, isp);
+                resultsCallback.showNetworkInfoViewCard(wifiNetworkOverview);
             }
         });
     }

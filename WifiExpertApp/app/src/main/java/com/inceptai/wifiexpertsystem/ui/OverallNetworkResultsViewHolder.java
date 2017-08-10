@@ -48,14 +48,18 @@ public class OverallNetworkResultsViewHolder extends RecyclerView.ViewHolder {
 
     }
 
-    public void setResults(Context context, DataInterpreter.WifiGrade wifiGrade, String ispName, String routerIp) {
-        String ssid = wifiGrade.getPrimaryApSsid();
+    public void setResults(Context context,
+                           String ssid,
+                           int signal,
+                           @DataInterpreter.MetricType int primaryApSignalMetric,
+                           String ispName,
+                           String routerIp) {
         if (ssid != null && !ssid.isEmpty()) {
             ssid = Utils.limitSsid(ssid);
             wifiSsidTv.setText(ssid);
         }
-        setWifiResult(context, wifiSignalValueTv, String.valueOf(wifiGrade.getPrimaryApSignal()),
-                wifiSignalIconIv, wifiGrade.getPrimaryApSignalMetric());
+        setWifiResult(context, wifiSignalValueTv, String.valueOf(signal),
+                wifiSignalIconIv, primaryApSignalMetric);
         ispNameTv.setText(ispName);
         routerIpTv.setText(routerIp);
         rootView.requestLayout();
