@@ -24,10 +24,10 @@ import com.google.common.base.Preconditions;
 import com.inceptai.wifiexpertsystem.BuildConfig;
 import com.inceptai.wifiexpertsystem.DobbyActivity;
 import com.inceptai.wifiexpertsystem.DobbyApplication;
+import com.inceptai.wifiexpertsystem.database.DobbyDatabaseBackend;
 import com.inceptai.wifiexpertsystem.R;
 import com.inceptai.wifiexpertsystem.analytics.DobbyAnalytics;
-import com.inceptai.wifiexpertsystem.database.FeedbackDatabaseWriter;
-import com.inceptai.wifiexpertsystem.database.FeedbackRecord;
+import com.inceptai.wifiexpertsystem.database.model.FeedbackRecord;
 
 import java.util.ArrayList;
 
@@ -55,7 +55,7 @@ public class WifiExpertDialogFragment extends DialogFragment {
     private ArrayList<String> suggestionList;
 
     @Inject
-    FeedbackDatabaseWriter feedbackDatabaseWriter;
+    DobbyDatabaseBackend dobbyDatabaseBackend;
     @Inject
     DobbyAnalytics dobbyAnalytics;
 
@@ -273,7 +273,7 @@ public class WifiExpertDialogFragment extends DialogFragment {
             public void onClick(View v) {
                 //Write the feedback to database
                 FeedbackRecord feedbackRecord = createFeedbackRecord(rootView);
-                feedbackDatabaseWriter.writeFeedbackToDatabase(feedbackRecord);
+                dobbyDatabaseBackend.writeFeedbackToDatabase(feedbackRecord);
                 dismiss();
             }
         });

@@ -1,7 +1,8 @@
-package com.inceptai.wifiexpertsystem.database;
+package com.inceptai.wifiexpertsystem.database.model;
 
 import com.google.firebase.database.Exclude;
 import com.google.firebase.database.IgnoreExtraProperties;
+import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLibraryCodes;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -11,27 +12,29 @@ import java.util.Map;
  */
 
 @IgnoreExtraProperties
-public class RepairRecord {
+public class FailureRecord {
     public String uid;
     public String phoneInfo;
     public String appVersion;
-    public String repairStatusMessage;
-    public String repairStatusString;
-    public String failureReason;
+    public String errorMessage;
     public long timestamp;
+    @ActionLibraryCodes.BandwidthTestMode
+    public int testMode;
+    @ActionLibraryCodes.ErrorCodes
+    public int errorCode;
 
-    public RepairRecord() {}
+    public FailureRecord() {}
 
     @Exclude
     public Map<String, Object> toMap() {
         HashMap<String, Object> result = new HashMap<>();
         result.put("uid", uid);
         result.put("phoneInfo", phoneInfo);
-        result.put("repairStatus", repairStatusString);
-        result.put("repairStatusString", repairStatusMessage);
+        result.put("errorMessage", errorMessage);
         result.put("appVersion", appVersion);
         result.put("timestamp", timestamp);
-        result.put("failureReason", failureReason);
+        result.put("testMode", testMode);
+        result.put("errorCode", errorCode);
         return result;
     }
 
@@ -43,6 +46,10 @@ public class RepairRecord {
         return phoneInfo;
     }
 
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+
     public long getTimestamp() {
         return timestamp;
     }
@@ -51,15 +58,11 @@ public class RepairRecord {
         return appVersion;
     }
 
-    public String getRepairStatusMessage() {
-        return repairStatusMessage;
+    public int getTestMode() {
+        return testMode;
     }
 
-    public String getRepairStatusString() {
-        return repairStatusString;
-    }
-
-    public String getFailureReason() {
-        return failureReason;
+    public int getErrorCode() {
+        return errorCode;
     }
 }

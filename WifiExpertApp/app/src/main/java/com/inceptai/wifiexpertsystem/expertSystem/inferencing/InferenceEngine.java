@@ -5,10 +5,10 @@ import android.net.wifi.WifiConfiguration;
 import android.support.annotation.IntDef;
 
 import com.inceptai.wifiexpertsystem.DobbyApplication;
-import com.inceptai.wifiexpertsystem.database.FailureDatabaseWriter;
-import com.inceptai.wifiexpertsystem.database.FailureRecord;
-import com.inceptai.wifiexpertsystem.database.InferenceDatabaseWriter;
-import com.inceptai.wifiexpertsystem.database.InferenceRecord;
+import com.inceptai.wifiexpertsystem.database.writer.FailureDatabaseWriter;
+import com.inceptai.wifiexpertsystem.database.model.FailureRecord;
+import com.inceptai.wifiexpertsystem.database.writer.InferenceDatabaseWriter;
+import com.inceptai.wifiexpertsystem.database.model.InferenceRecord;
 import com.inceptai.wifiexpertsystem.utils.DobbyLog;
 import com.inceptai.wifiexpertsystem.utils.Utils;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.ConnectivityTester;

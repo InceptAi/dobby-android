@@ -1,4 +1,4 @@
-package com.inceptai.wifiexpertsystem.database;
+package com.inceptai.wifiexpertsystem.database.writer;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -7,6 +7,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.inceptai.wifiexpertsystem.BuildConfig;
 import com.inceptai.wifiexpertsystem.DobbyThreadPool;
+import com.inceptai.wifiexpertsystem.database.model.FeedbackRecord;
 import com.inceptai.wifiexpertsystem.utils.DobbyLog;
 
 import java.util.Date;
@@ -14,13 +15,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
 /**
  * Created by vivek on 4/30/17.
  */
-@Singleton
 public class FeedbackDatabaseWriter {
     private static final String FEEDBACK_NODE_NAME = "feedbacks";
     private static final String USERS_NODE_NAME = "users";
@@ -29,7 +26,6 @@ public class FeedbackDatabaseWriter {
     private DatabaseReference mDatabase;
     private ExecutorService executorService;
 
-    @Inject
     public FeedbackDatabaseWriter(DobbyThreadPool dobbyThreadPool) {
         mDatabase = FirebaseDatabase.getInstance().getReference();
         executorService = dobbyThreadPool.getExecutorService();

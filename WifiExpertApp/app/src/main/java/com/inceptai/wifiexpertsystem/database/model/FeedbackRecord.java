@@ -1,4 +1,4 @@
-package com.inceptai.wifiexpertsystem.database;
+package com.inceptai.wifiexpertsystem.database.model;
 
 import android.support.annotation.IntDef;
 
