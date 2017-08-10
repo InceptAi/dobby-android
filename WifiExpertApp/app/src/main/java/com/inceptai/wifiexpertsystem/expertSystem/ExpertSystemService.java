@@ -3,13 +3,17 @@ package com.inceptai.wifiexpertsystem.expertSystem;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
+import com.inceptai.wifiexpertsystem.expertSystem.inferencing.DataInterpreter;
 import com.inceptai.wifiexpertsystem.expertSystem.messages.ExpertMessage;
 import com.inceptai.wifiexpertsystem.expertSystem.messages.UserMessage;
 import com.inceptai.wifimonitoringservice.ActionRequest;
 import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
+import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.ping.PingStats;
+import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest.BandwidthResult;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.Action;
 import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLibraryCodes;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
@@ -41,13 +45,30 @@ public class ExpertSystemService  {
     }
 
     public void actionStarted(Action action) {
-        final ExpertMessage expertMessage = ExpertMessage.create(action);
+        final ExpertMessage expertMessage = ExpertMessage.createMessageForActionStarted(action);
         sendCallbackWithExpertMessage(expertMessage);
     }
 
     public void actionFinished(Action action, ActionResult actionResult) {
-        final ExpertMessage expertMessage = ExpertMessage.create(action, actionResult);
-        sendCallbackWithExpertMessage(expertMessage);
+        ExpertMessage expertMessageForActionEnded;
+        if (ActionResult.isSuccessful(actionResult)) {
+            expertMessageForActionEnded = ExpertMessage.createMessageForActionEnded(action, actionResult);
+        } else {
+            expertMessageForActionEnded = ExpertMessage.createMessageForActionEndedWithoutSuccess(action, actionResult);
+        }
+        sendCallbackWithExpertMessage(expertMessageForActionEnded);
+
+        if (ActionResult.isSuccessful(actionResult)) {
+            if (action.getActionType() == Action.ActionType.PERFORM_BANDWIDTH_TEST) {
+                BandwidthResult bandwidthResult = (BandwidthResult)actionResult.getPayload();
+                ExpertMessage expertMessageForBandwidthInfo = ExpertMessage.createBandwidthActionCompleted(action, bandwidthResult);
+                sendCallbackWithExpertMessage(expertMessageForBandwidthInfo);
+            } else if (action.getActionType() == Action.ActionType.PERFORM_PING_FOR_DHCP_INFO) {
+                HashMap<String, PingStats> pingStatsHashMap = (HashMap<String, PingStats>) actionResult.getPayload();
+                ExpertMessage expertMessageForPingInfo = ExpertMessage.createPingActionCompleted(action, DataInterpreter.interpret(pingStatsHashMap));
+                sendCallbackWithExpertMessage(expertMessageForPingInfo);
+            }
+        }
     }
 
 
@@ -112,7 +133,9 @@ public class ExpertSystemService  {
         }  else if (message.toLowerCase().contains("bwtest") && !message.toLowerCase().contains("cancel")) {
             actionRequest = ActionRequest.performBandwidthTestRequest(ActionLibraryCodes.BandwidthTestMode.DOWNLOAD_AND_UPLOAD, 40000);
         } else if (message.toLowerCase().contains("cancelbwtest")) {
-            actionRequest = ActionRequest.cancelBandwidthTests(1000);
+            actionRequest = ActionRequest.cancelBandwidthTestsRequest(1000);
+        } else if (message.toLowerCase().contains("pingtest")) {
+            actionRequest = ActionRequest.performPingForDhcpInfoRequest(0);
         }
         return actionRequest;
     }

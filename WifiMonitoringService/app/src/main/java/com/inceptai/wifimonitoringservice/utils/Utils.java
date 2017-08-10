@@ -18,6 +18,7 @@ import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLibraryCodes
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -29,6 +30,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import static android.os.Build.VERSION.SDK_INT;
 import static android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1;
@@ -542,4 +546,51 @@ public class Utils {
         return returnValue;
     }
 
+    /**
+     * Run linux system command with timeout
+     *
+     * @param command
+     */
+    public static String runSystemCommand(final String command,
+                                          ScheduledExecutorService scheduledExecutorService,
+                                          long timeoutMs) throws Exception {
+        StringBuilder outputStringBuilder = new StringBuilder();
+        final Process process = executeSystemCommand(command);
+        ScheduledFuture<?> commandTerminationFuture = scheduledExecutorService.schedule(new Runnable() {
+            @Override
+            public void run() {
+                ServiceLog.v("Utils: KILLING process " + process.toString() + " for command " + command);
+                process.destroy();
+            }
+        }, timeoutMs, TimeUnit.MILLISECONDS);
+
+        try {
+            BufferedReader inputStream = new BufferedReader(
+                    new InputStreamReader(process.getInputStream()));
+            String s;
+            // reading output stream of the command
+            while ((s = inputStream.readLine()) != null) {
+                outputStringBuilder.append(s);
+                ServiceLog.v("Ping RunSystemCommand: " + s);
+            }
+        } finally {
+            ServiceLog.v("Utils: Cancelling pingCommandFuture");
+            commandTerminationFuture.cancel(true);
+        }
+        return outputStringBuilder.toString();
+    }
+
+    /**
+     * Run linux system command
+     *
+     * @param command
+     */
+    public static Process executeSystemCommand(String command) throws Exception {
+        try {
+            return Runtime.getRuntime().exec(command);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
+    }
 }

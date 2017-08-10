@@ -105,6 +105,7 @@
     <string name="feedback_button_title">Feedback</string>
     <string name="about_button_title">About</string>
     <string name="wifi_expert_name">Wifi Expert</string>
+    <string name="ping_card_view_message">Here is how your ping results look like: </string>
     <string name="bandwidth_card_view_message">Here is how your current bandwidth looks like: </string>
     <string name="wifi_status_view_message">Here is your current wifi network snapshot: </string>
     <string name="detailed_suggestion_tip">You can see the detailed suggestion anytime by typing `show details` or `last details` &#8230;</string>

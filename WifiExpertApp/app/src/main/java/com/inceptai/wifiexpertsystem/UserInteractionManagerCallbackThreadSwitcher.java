@@ -154,4 +154,14 @@ public class UserInteractionManagerCallbackThreadSwitcher implements UserInterac
         //Don't wrap this one
         requestAccessibilityPermission();
     }
+
+    @Override
+    public void showPingInfoViewCard(final DataInterpreter.PingGrade pingGrade) {
+        executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+                resultsCallback.showPingInfoViewCard(pingGrade);
+            }
+        });
+    }
 }

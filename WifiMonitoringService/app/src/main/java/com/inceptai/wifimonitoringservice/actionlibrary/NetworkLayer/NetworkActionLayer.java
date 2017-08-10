@@ -8,12 +8,14 @@ import android.net.wifi.WifiInfo;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningScheduledExecutorService;
+import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.ping.PingStats;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest.BandwidthObserver;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest.BandwidthProgressSnapshot;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest.BandwidthResult;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.wifi.WifiController;
 import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLibraryCodes;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
@@ -133,13 +135,8 @@ public class NetworkActionLayer {
         return null;
     }
 
-    public void cleanup() {
-        wifiController.cleanup();
-        connectivityTester.cleanup();
-        bandwidthObserver.cleanup();
-    }
 
-
+    //Bw test
     public Observable<BandwidthProgressSnapshot> startBandwidthTest(@ActionLibraryCodes.BandwidthTestMode int mode) {
         return bandwidthObserver.startBandwidthTest(mode);
     }
@@ -151,6 +148,32 @@ public class NetworkActionLayer {
     public BandwidthResult getLastBandwidthResult() {
         return bandwidthObserver.getLastBandwidthResult();
     }
+
+
+    //ping
+    public ListenableFuture<HashMap<String, PingStats>> pingTest(List<String> ipAddressList,
+                                                                 int numPings,
+                                                                 long pingTimeOutMs) {
+        if (connectivityTester != null) {
+            return connectivityTester.pingTest(ipAddressList, numPings, pingTimeOutMs, isWifiConnected());
+        }
+        return null;
+    }
+
+    public HashMap<String, PingStats> getLastPingResults() {
+        if (connectivityTester != null) {
+            return connectivityTester.getLastPingResults();
+        }
+        return null;
+    }
+
+
+    public void cleanup() {
+        wifiController.cleanup();
+        connectivityTester.cleanup();
+        bandwidthObserver.cleanup();
+    }
+
 
     private boolean isWifiConnected() {
         return (wifiController != null && wifiController.isWifiConnected());

@@ -19,7 +19,7 @@ import static com.inceptai.wifiexpertsystem.utils.Utils.convertSignalDbmToPercen
  */
 public class SuggestionCreator {
     private static final String MULTIPLE_CONDITIONS_PREFIX = "There a few things which can be causing problems for your network.";
-    private static final String NO_CONDITION_MESSAGE = "We performed speed tests, DNS pings and wifi tests on your network and did not see anything amiss.";
+    private static final String NO_CONDITION_MESSAGE = "We performed speed tests, PRIMARY_DNS pings and wifi tests on your network and did not see anything amiss.";
 
     public static class Suggestion {
         String title;
@@ -272,7 +272,7 @@ public class SuggestionCreator {
 
     private static String getAlternateDNSMessage(SuggestionCreatorParams params) {
         if (isAlternateDNSBetter(params)) {
-            return "Try changing your primary DNS to " +  params.pingGrade.getAlternativeDns() +
+            return "Try changing your primary PRIMARY_DNS to " +  params.pingGrade.getAlternativeDns() +
                     " which has much lower latency (" + params.pingGrade.getAlternativeDnsLatencyMs() +
                     " ms vs. " + params.pingGrade.getDnsServerLatencyMs() + " ms) " +
                     "and see if things are faster to load. ";
@@ -397,31 +397,31 @@ public class SuggestionCreator {
                         "upload speed is slow (esp. compared to download).";
                 break;
             case Condition.DNS_RESPONSE_SLOW:
-                baseMessage = "Your current DNS server is acting slow to respond to queries, " +
+                baseMessage = "Your current PRIMARY_DNS server is acting slow to respond to queries, " +
                         "which can cause an initial lag during the load time of an app or a new webpage.";
                 if (isAlternateDNSBetter(params)) {
                     conditionalMessage = "Our tests show that using other public DNSs than the one you " +
                             "are currently configured for can speed up your load times. Try changing " +
-                            "your DNS server with " + params.pingGrade.getAlternativeDns() + " and re-run the test. " +
-                            "You can change your DNS settings just for your phone first and see if that improves things.";
+                            "your PRIMARY_DNS server with " + params.pingGrade.getAlternativeDns() + " and re-run the test. " +
+                            "You can change your PRIMARY_DNS settings just for your phone first and see if that improves things.";
                 }
                 break;
             case Condition.DNS_SLOW_TO_REACH:
-                baseMessage = "Your current DNS server has a high latency, " +
+                baseMessage = "Your current PRIMARY_DNS server has a high latency, " +
                         "which can cause an initial lag during the load time of an app or a " +
                         "webpage.";
                 break;
             case Condition.DNS_UNREACHABLE:
                 if (DataInterpreter.isNonFunctionalOrUnknown(params.bandwidthGrade.getDownloadBandwidthMetric()) &&
                         DataInterpreter.isNonFunctionalOrUnknown(params.bandwidthGrade.getUploadBandwidthMetric())) {
-                    baseMessage = "We are unable to reach your DNS server, which means you can't access " +
-                            "the Internet on your phone and other devices. This could be because the DNS " +
+                    baseMessage = "We are unable to reach your PRIMARY_DNS server, which means you can't access " +
+                            "the Internet on your phone and other devices. This could be because the PRIMARY_DNS " +
                             "server you have configured is down. ";
                     if (isAlternateDNSBetter(params)) {
                         conditionalMessage = "Our tests show that using other public DNSs than the one you " +
                                 "are currently configured for can speed up your load times. Try changing " +
-                                "your DNS server with " + params.pingGrade.getAlternativeDns() + " and re-run the test. " +
-                                "You can change your DNS settings just for your phone first and see if " +
+                                "your PRIMARY_DNS server with " + params.pingGrade.getAlternativeDns() + " and re-run the test. " +
+                                "You can change your PRIMARY_DNS settings just for your phone first and see if " +
                                 "that improves things.";
                     }
                 }
@@ -628,7 +628,7 @@ public class SuggestionCreator {
                 }
                 break;
             case Condition.DNS_RESPONSE_SLOW:
-                baseMessage = "Your current DNS server is acting slow to respond to queries. ";
+                baseMessage = "Your current PRIMARY_DNS server is acting slow to respond to queries. ";
                 conditionalMessage = getAlternateDNSMessage(params);
                 break;
             case Condition.DNS_SLOW_TO_REACH:
@@ -638,7 +638,7 @@ public class SuggestionCreator {
                 } else {
                     baseMessage = "Your ";
                 }
-                baseMessage += "current DNS server has a high latency, " +
+                baseMessage += "current PRIMARY_DNS server has a high latency, " +
                         "which can cause an initial lag during the load time of an app or a " +
                         "webpage. ";
                 conditionalMessage = getAlternateDNSMessage(params);
@@ -650,7 +650,7 @@ public class SuggestionCreator {
                 } else {
                     baseMessage += "We ";
                 }
-                baseMessage += "are unable to reach your DNS server, which means you can't access " +
+                baseMessage += "are unable to reach your PRIMARY_DNS server, which means you can't access " +
                         "the Internet on your phone and other devices.";
                 conditionalMessage = getAlternateDNSMessage(params);
                 break;
@@ -758,7 +758,7 @@ public class SuggestionCreator {
                 } else {
                     baseMessage = "Your ";
                 }
-                baseMessage += "current DNS server is acting slow to respond to queries. ";
+                baseMessage += "current PRIMARY_DNS server is acting slow to respond to queries. ";
                 conditionalMessage = getAlternateDNSMessage(params);
                 break;
             case Condition.DNS_SLOW_TO_REACH:
@@ -767,14 +767,14 @@ public class SuggestionCreator {
                 } else {
                     baseMessage = "Your ";
                 }
-                baseMessage += "current DNS server has a high latency, " +
+                baseMessage += "current PRIMARY_DNS server has a high latency, " +
                         "which can cause an initial lag during the load time of an app or a " +
                         "webpage.";
                 break;
             case Condition.DNS_UNREACHABLE:
                 if (DataInterpreter.isNonFunctionalOrUnknown(params.bandwidthGrade.getDownloadBandwidthMetric()) &&
                         DataInterpreter.isNonFunctionalOrUnknown(params.bandwidthGrade.getUploadBandwidthMetric())) {
-                    baseMessage = "We are unable to reach your DNS server, which means you can't access " +
+                    baseMessage = "We are unable to reach your PRIMARY_DNS server, which means you can't access " +
                             "the Internet on your phone and other devices.";
                 }
                 conditionalMessage = getAlternateDNSMessage(params);

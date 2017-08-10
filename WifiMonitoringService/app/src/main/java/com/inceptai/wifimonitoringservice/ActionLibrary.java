@@ -24,6 +24,8 @@ import com.inceptai.wifimonitoringservice.actionlibrary.actions.IterateAndRepair
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.ObservableAction;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.PerformBandwidthTest;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.PerformConnectivityTest;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.PerformPingTest;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.PerformPingTestForDHCPInfo;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.ResetConnectionWithCurrentWifi;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.ToggleWifi;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.TurnWifiOff;
@@ -105,7 +107,7 @@ public class ActionLibrary {
                 action = new ConnectAndTestGivenWifiNetwork(context, executor, scheduledExecutorService, networkActionLayer, actionRequest.getActionTimeOutMs(), actionRequest.getNetworkId());
                 break;
             case Action.ActionType.CONNECT_TO_BEST_CONFIGURED_NETWORK:
-                action = new ConnectToBestConfiguredNetwork(context, executor, scheduledExecutorService, networkActionLayer, actionRequest.getActionTimeOutMs());
+                action = new ConnectToBestConfiguredNetwork(context, executor, scheduledExecutorService, networkActionLayer, actionRequest.getOfflineWifiNetworks(), actionRequest.getActionTimeOutMs());
                 break;
             case Action.ActionType.CONNECT_WITH_GIVEN_WIFI_NETWORK:
                 action = new ConnectWithGivenWifiNetwork(context, executor, scheduledExecutorService, networkActionLayer, actionRequest.getActionTimeOutMs(), actionRequest.getNetworkId());
@@ -158,8 +160,14 @@ public class ActionLibrary {
             case Action.ActionType.CANCEL_BANDWIDTH_TESTS:
                 action = new CancelBandwidthTests(context, executor, scheduledExecutorService, networkActionLayer, actionRequest.getActionTimeOutMs());
                 break;
+            case Action.ActionType.PERFORM_PING_TEST:
+                action = new PerformPingTest(context, executor, scheduledExecutorService, networkActionLayer, actionRequest.getIpAddressListToPing(), actionRequest.getActionTimeOutMs());
+                break;
+            case Action.ActionType.PERFORM_PING_FOR_DHCP_INFO:
+                action = new PerformPingTestForDHCPInfo(context, executor, scheduledExecutorService, networkActionLayer, actionRequest.getActionTimeOutMs());
+                break;
             default:
-                ServiceLog.e("UNKNOWN Action Type: " + actionRequest.getActionType());
+                ServiceLog.e("UNKNOWN Action Type: " + actionRequest.getActionType() + " Not submitting action");
                 break;
         }
         //Submit action and return the action

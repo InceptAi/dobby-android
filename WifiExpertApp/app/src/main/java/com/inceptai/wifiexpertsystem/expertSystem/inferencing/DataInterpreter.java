@@ -759,10 +759,12 @@ public class DataInterpreter {
         return grade;
     }
 
-    public static PingGrade interpret(HashMap<String, PingStats> pingStatsHashMap, IPLayerInfo ipLayerInfo) {
+
+
+    public static PingGrade interpret(HashMap<String, PingStats> pingStatsHashMap) {
         PingGrade pingGrade = new PingGrade();
         pingGrade.errorCode = ActionLibraryCodes.ErrorCodes.NO_ERROR;
-
+        IPLayerInfo ipLayerInfo = getIPLayerInfoFromPingStats(pingStatsHashMap);
         if (ipLayerInfo != null) {
             pingGrade.ownIp = ipLayerInfo.ownIPAddress;
             pingGrade.netmask = ipLayerInfo.netMask;
@@ -787,35 +789,37 @@ public class DataInterpreter {
 
         //Get external server stats
         HashMap<String, PingStats> externalServerStats = new HashMap<>();
-        if (ipLayerInfo.referenceExternalAddress1 != null) {
+        if (!Utils.isNullOrEmpty(ipLayerInfo.referenceExternalAddress1)) {
             externalServerStats.put(ipLayerInfo.referenceExternalAddress1,
-                    pingStatsHashMap.get(ipLayerInfo.referenceExternalAddress1));
+                    safeAccessHashMap(pingStatsHashMap, ipLayerInfo.referenceExternalAddress1));
         }
-        if (ipLayerInfo.referenceExternalAddress2 != null) {
+        if (!Utils.isNullOrEmpty(ipLayerInfo.referenceExternalAddress2)) {
             externalServerStats.put(ipLayerInfo.referenceExternalAddress2,
-                    pingStatsHashMap.get(ipLayerInfo.referenceExternalAddress2));
+                    safeAccessHashMap(pingStatsHashMap, ipLayerInfo.referenceExternalAddress2));
         }
 
-        //Get alternative DNS stats
-        PingStats alternativeDnsStats1 = pingStatsHashMap.get(ipLayerInfo.publicDns1);
-        PingStats alternativeDnsStats2 = pingStatsHashMap.get(ipLayerInfo.publicDns2);
+        //Get alternative PRIMARY_DNS stats
+        PingStats alternativeDnsStats1 = safeAccessHashMap(pingStatsHashMap, ipLayerInfo.publicDns1);
+        PingStats alternativeDnsStats2 = safeAccessHashMap(pingStatsHashMap, ipLayerInfo.publicDns2);
         PingStats lowerAlternativeDnsStats = new PingStats(ipLayerInfo.publicDns1);
-        if (alternativeDnsStats1.avgLatencyMs > 0) {
-            lowerAlternativeDnsStats = alternativeDnsStats1;
-            pingGrade.alternativeDns = ipLayerInfo.publicDns1;
-        }
-        if (alternativeDnsStats2.avgLatencyMs > 0) {
-            if (alternativeDnsStats1.avgLatencyMs < 0 ||
-                    alternativeDnsStats2.avgLatencyMs < alternativeDnsStats1.avgLatencyMs) {
-                lowerAlternativeDnsStats = alternativeDnsStats2;
-                pingGrade.alternativeDns = ipLayerInfo.publicDns2;
+        if (alternativeDnsStats2 != null) {
+            if (alternativeDnsStats1.avgLatencyMs > 0) {
+                lowerAlternativeDnsStats = alternativeDnsStats1;
+                pingGrade.alternativeDns = ipLayerInfo.publicDns1;
+            }
+            if (alternativeDnsStats2.avgLatencyMs > 0) {
+                if (alternativeDnsStats1.avgLatencyMs < 0 ||
+                        alternativeDnsStats2.avgLatencyMs < alternativeDnsStats1.avgLatencyMs) {
+                    lowerAlternativeDnsStats = alternativeDnsStats2;
+                    pingGrade.alternativeDns = ipLayerInfo.publicDns2;
+                }
             }
         }
 
         //Router stats
-        PingStats routerStats = pingStatsHashMap.get(ipLayerInfo.gateway);
-        //Primary DNS stats
-        PingStats primaryDnsStats = pingStatsHashMap.get(ipLayerInfo.dns1);
+        PingStats routerStats = safeAccessHashMap(pingStatsHashMap, ipLayerInfo.gateway);
+        //Primary PRIMARY_DNS stats
+        PingStats primaryDnsStats = safeAccessHashMap(pingStatsHashMap, ipLayerInfo.dns1);
 
         double avgExternalServerLatencyMs = 0.0;
         double avgExternalServerLossPercent = 0.0;
@@ -978,4 +982,47 @@ public class DataInterpreter {
         }
         return latencyMs * (1.0 / (1.0 - (lossRatePercent/100)));
     }
+
+    private static IPLayerInfo getIPLayerInfoFromPingStats(HashMap<String, PingStats> pingStatsHashMap) {
+        IPLayerInfo ipLayerInfo = null;
+        if (pingStatsHashMap != null) {
+            ipLayerInfo = new IPLayerInfo();
+            for (PingStats pingStats : pingStatsHashMap.values()) {
+                switch (pingStats.ipAddressType) {
+                    case PingStats.IPAddressType.PRIMARY_IP:
+                        ipLayerInfo.ownIPAddress = pingStats.ipAddress;
+                        break;
+                    case PingStats.IPAddressType.PRIMARY_DNS:
+                        ipLayerInfo.dns1 = pingStats.ipAddress;
+                        break;
+                    case  PingStats.IPAddressType.GATEWAY:
+                        ipLayerInfo.gateway = pingStats.ipAddress;
+                        break;
+                    case PingStats.IPAddressType.EXTERNAL_DNS:
+                        ipLayerInfo.dns1 = pingStats.ipAddress;
+                        break;
+                    case PingStats.IPAddressType.EXTERNAL_SERVER:
+                        ipLayerInfo.referenceExternalAddress1 = pingStats.ipAddress;
+                        break;
+                    case PingStats.IPAddressType.UNINITIALIZED:
+                    case PingStats.IPAddressType.UNKNOWN:
+                    default:
+                        break;
+                }
+            }
+        }
+        return ipLayerInfo;
+    }
+
+    private static PingStats safeAccessHashMap(HashMap<String, PingStats> pingStatsHashMap, String ipAddress) {
+        if (pingStatsHashMap == null || ipAddress == null) {
+            return null;
+        }
+        PingStats pingStats = pingStatsHashMap.get(ipAddress);
+        if (pingStats == null) {
+            return new PingStats(ipAddress);
+        }
+        return pingStats;
+    }
+
 }

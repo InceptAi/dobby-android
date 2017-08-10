@@ -806,6 +806,10 @@ public class Utils {
         return roundToPlaces(bwMbps, 2);
     }
 
+    public static boolean isNullOrEmpty(String stringToTest) {
+        return stringToTest == null || stringToTest.equals(Utils.EMPTY_STRING);
+    }
+
     public static double toMbps(double bwBytes) {
         return bwBytes * 1.0e-6;
     }

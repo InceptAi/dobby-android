@@ -29,8 +29,8 @@ public class ConnectToBestConfiguredNetwork extends FutureAction {
                                           Executor executor,
                                           ScheduledExecutorService scheduledExecutorService,
                                           NetworkActionLayer networkActionLayer,
-                                          long actionTimeOutMs,
-                                          List<String> offlineRouterIDs) {
+                                          List<String> offlineRouterIDs,
+                                          long actionTimeOutMs) {
         super(ActionType.CONNECT_TO_BEST_CONFIGURED_NETWORK, context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
         this.offlineRouterIDs = offlineRouterIDs;
     }

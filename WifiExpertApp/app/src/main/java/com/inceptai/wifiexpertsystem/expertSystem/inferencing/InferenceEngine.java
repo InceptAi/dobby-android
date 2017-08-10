@@ -12,7 +12,6 @@ import com.inceptai.wifiexpertsystem.database.InferenceRecord;
 import com.inceptai.wifiexpertsystem.utils.DobbyLog;
 import com.inceptai.wifiexpertsystem.utils.Utils;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.ConnectivityTester;
-import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.ping.IPLayerInfo;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.ping.PingStats;
 import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLibraryCodes;
 import com.inceptai.wifimonitoringservice.utils.WifiStateData;
@@ -102,19 +101,6 @@ public class InferenceEngine {
         metricsDb.clearAllGrades();
         currentConditions.clearConditions();
     }
-//
-//
-//    private String testModeToString(@BandwidthTestCodes.TestMode int testMode) {
-//        String testModeString = "UNKNOWN";
-//        if (testMode == BandwidthTestCodes.TestMode.DOWNLOAD) {
-//            testModeString = "DOWNLOAD";
-//        } else if (testMode == BandwidthTestCodes.TestMode.UPLOAD) {
-//            testModeString = "UPLOAD";
-//        }
-//        return testModeString;
-//    }
-
-
 
     synchronized public DataInterpreter.WifiGrade notifyWifiState(int primaryApSignal,
                                                                   String primaryApSSID,
@@ -139,8 +125,8 @@ public class InferenceEngine {
         return wifiGrade;
     }
 
-    synchronized public DataInterpreter.PingGrade notifyPingStats(HashMap<String, PingStats> pingStatsMap, IPLayerInfo ipLayerInfo) {
-        DataInterpreter.PingGrade pingGrade = DataInterpreter.interpret(pingStatsMap, ipLayerInfo);
+    synchronized public DataInterpreter.PingGrade notifyPingStats(HashMap<String, PingStats> pingStatsMap) {
+        DataInterpreter.PingGrade pingGrade = DataInterpreter.interpret(pingStatsMap);
         metricsDb.updatePingGrade(pingGrade);
         PossibleConditions conditions = InferenceMap.getPossibleConditionsFor(pingGrade);
         currentConditions.mergeIn(conditions);

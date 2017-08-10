@@ -316,6 +316,13 @@ public class DobbyActivity extends AppCompatActivity
         }
     }
 
+    @Override
+    public void showPingInfoViewCard(DataInterpreter.PingGrade pingGrade) {
+        if (chatFragment != null) {
+            chatFragment.addPingResultsCardView(pingGrade);
+        }
+    }
+
     //From chatFragment onInteractionListener
     @Override
     public void onUserQuery(String text, boolean isButtonActionText) {

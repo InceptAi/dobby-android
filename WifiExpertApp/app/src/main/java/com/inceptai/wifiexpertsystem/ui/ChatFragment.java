@@ -93,6 +93,7 @@ public class ChatFragment extends Fragment implements Handler.Callback {
     private static final int MSG_SHOW_EXPERT_INDICATOR = 12;
     private static final int MSG_HIDE_EXPERT_INDICATOR = 13;
     private static final int MSG_SHOW_USER_CHAT = 14;
+    private static final int MSG_SHOW_PING_RESULT_CARDVIEW = 15;
 
 
     private static final int BW_TEST_INITIATED = 200;
@@ -378,12 +379,6 @@ public class ChatFragment extends Fragment implements Handler.Callback {
         }
     }
 
-    public void addPingResultsCardview(DataInterpreter.PingGrade pingGrade) {
-        ChatEntry chatEntry = new ChatEntry(Utils.EMPTY_STRING, ChatEntry.PING_RESULTS_CARDVIEW);
-        chatEntry.setPingGrade(pingGrade);
-        recyclerViewAdapter.addEntryAtBottom(chatEntry);
-        chatRv.scrollToPosition(recyclerViewAdapter.getItemCount() - 1);
-    }
 
     public void showNetworkResultsCardView(DataInterpreter.WifiGrade wifiGrade, String ispName, String routerIp) {
         ChatEntry chatEntry = new ChatEntry(Utils.EMPTY_STRING, ChatEntry.OVERALL_NETWORK_CARDVIEW);
@@ -395,6 +390,16 @@ public class ChatFragment extends Fragment implements Handler.Callback {
     }
 
     //All the methods that show stuff to user
+    public void addPingResultsCardView(final DataInterpreter.PingGrade pingGrade) {
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                Message.obtain(handler, MSG_SHOW_PING_RESULT_CARDVIEW,  pingGrade).sendToTarget();
+            }
+        }, botMessageDelay);
+    }
+
+
     public void addBandwidthResultsCardView(final double downloadMpbs, final double uploadMpbs) {
         dobbyAnalytics.wifiExpertBandwidthCardShown();
         final BandwidthCardInfo bandwidthCardInfo = new BandwidthCardInfo(downloadMpbs, uploadMpbs);
@@ -525,6 +530,11 @@ public class ChatFragment extends Fragment implements Handler.Callback {
                 addDobbyChat(getString(R.string.bandwidth_card_view_message), false);
                 showBandwidthResultsCardView(bandwidthCardInfo.getUploadMbps(), bandwidthCardInfo.getDownloadMbps());
                 break;
+            case MSG_SHOW_PING_RESULT_CARDVIEW:
+                DataInterpreter.PingGrade pingGrade = (DataInterpreter.PingGrade) msg.obj;
+                addDobbyChat(getString(R.string.ping_card_view_message), false);
+                showPingResultsCardView(pingGrade);
+                break;
             case MSG_SHOW_OVERALL_NETWORK_STATUS:
                 OverallNetworkInfo overallNetworkInfo = (OverallNetworkInfo) msg.obj;
                 if (!(overallNetworkInfo.getWifiGrade().isWifiDisconnected() || overallNetworkInfo.getWifiGrade().isWifiOff())) {
@@ -578,6 +588,13 @@ public class ChatFragment extends Fragment implements Handler.Callback {
         }
         lastBotMessageScheduledAt = currentSystemTimeInMillis + delay;
         return delay;
+    }
+
+    private void showPingResultsCardView(DataInterpreter.PingGrade pingGrade) {
+        ChatEntry chatEntry = new ChatEntry(Utils.EMPTY_STRING, ChatEntry.PING_RESULTS_CARDVIEW);
+        chatEntry.setPingGrade(pingGrade);
+        recyclerViewAdapter.addEntryAtBottom(chatEntry);
+        chatRv.scrollToPosition(recyclerViewAdapter.getItemCount() - 1);
     }
 
     private void showBandwidthResultsCardView(double uploadMbps, double downloadMbps) {

@@ -30,7 +30,7 @@ public class ActionTaker {
 
     public ActionTaker(Context applicationContext, DobbyThreadpool threadpool) {
         this.threadpool = threadpool;
-        actionLibrary = new ActionLibrary(applicationContext, threadpool.getExecutor(), threadpool.getScheduledExecutorServiceForActions());
+        actionLibrary = new ActionLibrary(applicationContext, threadpool.getExecutorService(), threadpool.getListeningScheduledExecutorService(), threadpool.getScheduledExecutorServiceForActions());
     }
 
     public void setActionCallback(ActionCallback actionCallback) {

@@ -19,7 +19,6 @@ import com.inceptai.wifiexpertsystem.expertSystem.messages.UserMessage;
 import com.inceptai.wifiexpertsystem.utils.DobbyLog;
 import com.inceptai.wifiexpertsystem.utils.NeoServiceClient;
 import com.inceptai.wifiexpertsystem.utils.Utils;
-import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest.BandwidthResult;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.Action;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.ObservableAction;
@@ -130,6 +129,7 @@ public class UserInteractionManager implements
         void cancelTestsResponse();
         void showBandwidthViewCard(double downloadMbps, double uploadMbps);
         void showNetworkInfoViewCard(DataInterpreter.WifiGrade wifiGrade, String isp, String ip);
+        void showPingInfoViewCard(DataInterpreter.PingGrade pingGrade);
         void showDetailedSuggestions(SuggestionCreator.Suggestion suggestion);
         void requestAccessibilityPermission();
     }
@@ -224,7 +224,23 @@ public class UserInteractionManager implements
                 handleActionStarted(expertMessage.getExpertAction());
                 break;
             case ExpertMessage.ExpertMessageType.ACTION_FINISHED:
-                handleActionFinished(expertMessage.getExpertAction(), expertMessage.getActionResult());
+                expertChatService.sendActionCompletedMessage();
+                break;
+            case ExpertMessage.ExpertMessageType.SHOW_BANDWIDTH_INFO:
+                BandwidthResult bandwidthResult = expertMessage.getBandwidthResult();
+                if (bandwidthResult != null) {
+                    interactionCallback.showBandwidthViewCard(
+                            Utils.toMbps(bandwidthResult.getDownloadStats().getPercentile75(), 2),
+                            Utils.toMbps(bandwidthResult.getUploadStats().getPercentile75(), 2));
+                }
+                break;
+            case ExpertMessage.ExpertMessageType.SHOW_PING_INFO:
+                DataInterpreter.PingGrade pingGrade = expertMessage.getPingGrade();
+                if (pingGrade != null) {
+                    interactionCallback.showPingInfoViewCard(pingGrade);
+                }
+                break;
+            case ExpertMessage.ExpertMessageType.SHOW_WIFI_INFO:
                 break;
             default:
                 break;
@@ -238,24 +254,6 @@ public class UserInteractionManager implements
             interactionCallback.observeBandwidth(observableAction.getObservable());
         }
         expertChatService.sendActionStartedMessage();
-    }
-
-    private void handleActionFinished(Action action, ActionResult actionResult) {
-        //TODO: Send final bandwidth results -- show the bandwidth card
-        if (action.getActionType() == Action.ActionType.PERFORM_BANDWIDTH_TEST) {
-            if (ActionResult.isSuccessful(actionResult)) {
-                //Show bandwidth card here
-                BandwidthResult bandwidthResult = (BandwidthResult)actionResult.getPayload();
-                interactionCallback.showBandwidthViewCard(
-                        Utils.toMbps(bandwidthResult.getDownloadStats().getPercentile75(), 2),
-                        Utils.toMbps(bandwidthResult.getUploadStats().getPercentile75(), 2));
-            } else {
-                //Show an error
-            }
-        } else if (action.getActionType() == Action.ActionType.CANCEL_BANDWIDTH_TESTS) {
-            interactionCallback.cancelTestsResponse();
-        }
-        expertChatService.sendActionCompletedMessage();
     }
 
     //Expert chat service callback

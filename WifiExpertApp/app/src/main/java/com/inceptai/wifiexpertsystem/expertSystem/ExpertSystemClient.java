@@ -62,7 +62,6 @@ public class ExpertSystemClient implements
     //Expert system service callbacks
     @Override
     public void onActionRequested(final ActionRequest actionRequest) {
-        //Take action based on action request
         executorService.execute(new Runnable() {
             @Override
             public void run() {

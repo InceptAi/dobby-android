@@ -23,7 +23,9 @@ public class ActionRequest {
     private long actionTimeOutMs = ACTION_TIMEOUT_MS;
     private int numberOfConfiguredNetworksToReturn = 0;
     private List<String> offlineWifiNetworks;
-    @ActionLibraryCodes.BandwidthTestMode private int bandwidthTestMode = ActionLibraryCodes.BandwidthTestMode.DOWNLOAD_AND_UPLOAD;
+    private List<String> ipAddressListToPing;
+    @ActionLibraryCodes.BandwidthTestMode private int bandwidthTestMode =
+            ActionLibraryCodes.BandwidthTestMode.DOWNLOAD_AND_UPLOAD;
 
     //Additional parameters
     private ActionRequest(@Action.ActionType int actionType, int networkId,
@@ -36,6 +38,7 @@ public class ActionRequest {
         this.actionTimeOutMs = actionTimeOutMs;
         this.numberOfConfiguredNetworksToReturn = numberOfConfiguredNetworksToReturn;
         this.offlineWifiNetworks = new ArrayList<>();
+        this.ipAddressListToPing = new ArrayList<>();
     }
 
     private ActionRequest(@Action.ActionType int actionType, int networkId,
@@ -46,10 +49,17 @@ public class ActionRequest {
     }
 
     private ActionRequest(@Action.ActionType int actionType, List<String> offlineNetworks,
-                          long actionTimeOutMs) {
+                          List<String> ipAddressListToPing, long actionTimeOutMs) {
         this(actionType, 0, 0, actionTimeOutMs);
         this.offlineWifiNetworks = offlineNetworks;
+        this.ipAddressListToPing = ipAddressListToPing;
     }
+
+    private ActionRequest(@Action.ActionType int actionType, long actionTimeOutMs) {
+        this(actionType, 0, 0, actionTimeOutMs);
+    }
+
+
 
     /**
      * Factory constructor to create an instance
@@ -71,23 +81,23 @@ public class ActionRequest {
 
     @Nullable
     public static ActionRequest connectToBestConfiguredNetworkRequest(List<String> listOfOfflineRouters, long actionTimeOutMs) {
-        return new ActionRequest(Action.ActionType.CONNECT_TO_BEST_CONFIGURED_NETWORK, listOfOfflineRouters, actionTimeOutMs);
+        return new ActionRequest(Action.ActionType.CONNECT_TO_BEST_CONFIGURED_NETWORK, listOfOfflineRouters, null, actionTimeOutMs);
     }
 
     @Nullable
     public static ActionRequest connectToBestConfiguredNetworkRequest(List<String> listOfOfflineRouters) {
-        return new ActionRequest(Action.ActionType.CONNECT_TO_BEST_CONFIGURED_NETWORK, listOfOfflineRouters, 0);
+        return new ActionRequest(Action.ActionType.CONNECT_TO_BEST_CONFIGURED_NETWORK, listOfOfflineRouters, null, 0);
     }
 
 
     @Nullable
     public static ActionRequest connectWithGivenWifiNetworkRequest(long actionTimeOutMs) {
-        return new ActionRequest(Action.ActionType.CONNECT_WITH_GIVEN_WIFI_NETWORK, 0, 0, actionTimeOutMs);
+        return new ActionRequest(Action.ActionType.CONNECT_WITH_GIVEN_WIFI_NETWORK, actionTimeOutMs);
     }
 
     @Nullable
     public static ActionRequest disconnectWithCurrentWifiNetworkRequest(long actionTimeOutMs) {
-        return new ActionRequest(Action.ActionType.DISCONNECT_FROM_CURRENT_WIFI, 0, 0, actionTimeOutMs);
+        return new ActionRequest(Action.ActionType.DISCONNECT_FROM_CURRENT_WIFI, actionTimeOutMs);
     }
 
     @Nullable
@@ -97,7 +107,7 @@ public class ActionRequest {
 
     @Nullable
     public static ActionRequest getBestConfiguredNetworkRequest(long actionTimeOutMs) {
-        return new ActionRequest(Action.ActionType.GET_BEST_CONFIGURED_NETWORK, 0, 0, actionTimeOutMs);
+        return new ActionRequest(Action.ActionType.GET_BEST_CONFIGURED_NETWORK, actionTimeOutMs);
     }
 
     @Nullable
@@ -112,53 +122,53 @@ public class ActionRequest {
 
     @Nullable
     public static ActionRequest getDhcpInfoRequest(long actionTimeOutMs) {
-        return new ActionRequest(Action.ActionType.GET_DHCP_INFO, 0, 0, actionTimeOutMs);
+        return new ActionRequest(Action.ActionType.GET_DHCP_INFO, actionTimeOutMs);
     }
 
     @Nullable
     public static ActionRequest getNearbyWifiNetworksRequest(long actionTimeOutMs) {
-        return new ActionRequest(Action.ActionType.GET_NEARBY_WIFI_NETWORKS, 0, 0, actionTimeOutMs);
+        return new ActionRequest(Action.ActionType.GET_NEARBY_WIFI_NETWORKS, actionTimeOutMs);
     }
 
     @Nullable
     public static ActionRequest getWifiInfoRequest(long actionTimeOutMs) {
-        return new ActionRequest(Action.ActionType.GET_WIFI_INFO, 0, 0, actionTimeOutMs);
+        return new ActionRequest(Action.ActionType.GET_WIFI_INFO, actionTimeOutMs);
     }
 
     @Nullable
     public static ActionRequest iterateAndConnectToBestNetworkRequest(long actionTimeOutMs) {
-        return new ActionRequest(Action.ActionType.ITERATE_AND_CONNECT_TO_BEST_NETWORK, 0, 0, actionTimeOutMs);
+        return new ActionRequest(Action.ActionType.ITERATE_AND_CONNECT_TO_BEST_NETWORK, actionTimeOutMs);
     }
 
 
     @Nullable
     public static ActionRequest iterateAndRepairWifiNetworkRequest(long actionTimeOutMs) {
-        return new ActionRequest(Action.ActionType.ITERATE_AND_REPAIR_WIFI_NETWORK, 0, 0, actionTimeOutMs);
+        return new ActionRequest(Action.ActionType.ITERATE_AND_REPAIR_WIFI_NETWORK, actionTimeOutMs);
     }
 
     @Nullable
     public static ActionRequest performConnectivityTestRequest(long actionTimeOutMs) {
-        return new ActionRequest(Action.ActionType.PERFORM_CONNECTIVITY_TEST, 0, 0, actionTimeOutMs);
+        return new ActionRequest(Action.ActionType.PERFORM_CONNECTIVITY_TEST, actionTimeOutMs);
     }
 
     @Nullable
     public static ActionRequest resetConnectionWithCurrentWifiRequest(long actionTimeOutMs) {
-        return new ActionRequest(Action.ActionType.RESET_CONNECTION_WITH_CURRENT_WIFI, 0, 0, actionTimeOutMs);
+        return new ActionRequest(Action.ActionType.RESET_CONNECTION_WITH_CURRENT_WIFI, actionTimeOutMs);
     }
 
     @Nullable
     public static ActionRequest toggleWifiRequest(long actionTimeOutMs) {
-        return new ActionRequest(Action.ActionType.TOGGLE_WIFI, 0, 0, actionTimeOutMs);
+        return new ActionRequest(Action.ActionType.TOGGLE_WIFI, actionTimeOutMs);
     }
 
     @Nullable
     public static ActionRequest turnWifiOffRequest(long actionTimeOutMs) {
-        return new ActionRequest(Action.ActionType.TURN_WIFI_OFF, 0, 0, actionTimeOutMs);
+        return new ActionRequest(Action.ActionType.TURN_WIFI_OFF, actionTimeOutMs);
     }
 
     @Nullable
     public static ActionRequest turnWifiOnRequest(long actionTimeOutMs) {
-        return new ActionRequest(Action.ActionType.TURN_WIFI_ON, 0, 0, actionTimeOutMs);
+        return new ActionRequest(Action.ActionType.TURN_WIFI_ON, actionTimeOutMs);
     }
 
     //Observable action request
@@ -168,10 +178,19 @@ public class ActionRequest {
     }
 
     @Nullable
-    public static ActionRequest cancelBandwidthTests(long actionTimeOutMs) {
-        return new ActionRequest(Action.ActionType.CANCEL_BANDWIDTH_TESTS, 0, 0, actionTimeOutMs);
+    public static ActionRequest cancelBandwidthTestsRequest(long actionTimeOutMs) {
+        return new ActionRequest(Action.ActionType.CANCEL_BANDWIDTH_TESTS, actionTimeOutMs);
     }
 
+    @Nullable
+    public static ActionRequest performPingTestRequest(List<String> ipAddressList, long actionTimeOutMs) {
+        return new ActionRequest(Action.ActionType.PERFORM_PING_TEST, null, ipAddressList, actionTimeOutMs);
+    }
+
+    @Nullable
+    public static ActionRequest performPingForDhcpInfoRequest(long actionTimeOutMs) {
+        return new ActionRequest(Action.ActionType.PERFORM_PING_FOR_DHCP_INFO, actionTimeOutMs);
+    }
 
     @Action.ActionType
     public int getActionType() {
@@ -193,5 +212,13 @@ public class ActionRequest {
     @ActionLibraryCodes.BandwidthTestMode
     public int getBandwidthTestMode() {
         return bandwidthTestMode;
+    }
+
+    public List<String> getOfflineWifiNetworks() {
+        return offlineWifiNetworks;
+    }
+
+    public List<String> getIpAddressListToPing() {
+        return ipAddressListToPing;
     }
 }
