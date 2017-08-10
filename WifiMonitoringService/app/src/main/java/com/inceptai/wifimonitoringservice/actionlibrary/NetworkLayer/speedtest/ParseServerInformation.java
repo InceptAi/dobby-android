@@ -73,10 +73,13 @@ public class ParseServerInformation {
 
     private void initializeServerInformation(int xmlFileId) {
         XmlResourceParser xmlResourceParser = this.context.getResources().getXml(xmlFileId);
-        this.serverInformation = new ServerInformation(xmlResourceParser);
+        serverInformation = new ServerInformation(xmlResourceParser);
+        if (serverInformation.serverList == null || serverInformation.serverList.isEmpty()) {
+            fetchServerInfo();
+        }
     }
 
-    ServerInformation fetchServerInfo() {
+    private ServerInformation fetchServerInfo() {
         ServerInformation info = null;
         try {
             info = downloadAndParseServerInformation(defaultServerListUrl1);
@@ -105,11 +108,10 @@ public class ParseServerInformation {
 
     ServerInformation getServerInfo(boolean enableFetchIfNeeded) {
         //No fetch, just return what we have
-        initializeServerInformation(defaultXmlListId);
-        if (! enableFetchIfNeeded || serverInformation != null) {
-            return serverInformation;
+        if (serverInformation == null) {
+            initializeServerInformation(defaultXmlListId);
         }
-        return fetchServerInfo();
+        return serverInformation;
     }
 
     public ServerInformation getServerInfoFromUrlString (String urlString) {

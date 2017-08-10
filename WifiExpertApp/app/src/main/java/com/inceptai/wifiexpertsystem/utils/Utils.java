@@ -32,6 +32,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Collections;
@@ -799,6 +801,11 @@ public class Utils {
         return dp;
     }
 
+    public static double toMbps(double bwBytes, int places) {
+        double bwMbps = bwBytes * 1.0e-6;
+        return roundToPlaces(bwMbps, 2);
+    }
+
     public static double toMbps(double bwBytes) {
         return bwBytes * 1.0e-6;
     }
@@ -1034,5 +1041,12 @@ public class Utils {
         Intent i = new Intent(context, DobbyActivity.class);
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         context.startActivity(i);
+    }
+
+    public static double roundToPlaces(double value, int places) {
+        if (places < 0) throw new IllegalArgumentException();
+        BigDecimal bd = new BigDecimal(value);
+        bd = bd.setScale(places, RoundingMode.HALF_UP);
+        return bd.doubleValue();
     }
 }

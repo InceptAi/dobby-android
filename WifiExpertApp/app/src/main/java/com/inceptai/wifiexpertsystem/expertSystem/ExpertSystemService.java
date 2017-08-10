@@ -109,8 +109,10 @@ public class ExpertSystemService  {
             actionRequest = ActionRequest.iterateAndRepairWifiNetworkRequest(0);
         } else if (message.toLowerCase().contains("connectiontest")) {
             actionRequest = ActionRequest.performConnectivityTestRequest(0);
-        }  else if (message.toLowerCase().contains("bwtest")) {
+        }  else if (message.toLowerCase().contains("bwtest") && !message.toLowerCase().contains("cancel")) {
             actionRequest = ActionRequest.performBandwidthTestRequest(ActionLibraryCodes.BandwidthTestMode.DOWNLOAD_AND_UPLOAD, 40000);
+        } else if (message.toLowerCase().contains("cancelbwtest")) {
+            actionRequest = ActionRequest.cancelBandwidthTests(1000);
         }
         return actionRequest;
     }

@@ -148,4 +148,9 @@ public class IterateAndRepairWifiNetwork extends FutureAction {
             this.repairFailureReason = repairFailureReason;
         }
     }
+
+    @Override
+    public boolean shouldBlockOnOtherActions() {
+        return true;
+    }
 }

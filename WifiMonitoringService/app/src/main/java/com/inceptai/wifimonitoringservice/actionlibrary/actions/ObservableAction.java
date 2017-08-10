@@ -45,7 +45,7 @@ public abstract class ObservableAction extends Action {
         if (observable == null) {
             return;
         }
-        observable.subscribeOn(Schedulers.from(executor))
+        this.observable.subscribeOn(Schedulers.from(executor))
                 .timeout(actionTimeOutMs, TimeUnit.MILLISECONDS)
                 .subscribeWith(new DefaultObserver() {
                     @Override
@@ -56,6 +56,7 @@ public abstract class ObservableAction extends Action {
                     @Override
                     public void onError(Throwable e) {
                         //finish the action here
+                        cancelAction();
                         ServiceLog.e("OA: OnError: " + e.toString());
                     }
 

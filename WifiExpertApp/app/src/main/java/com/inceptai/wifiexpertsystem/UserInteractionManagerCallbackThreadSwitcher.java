@@ -117,14 +117,16 @@ public class UserInteractionManagerCallbackThreadSwitcher implements UserInterac
         });
     }
 
+
     @Override
-    public void showBandwidthViewCard(final DataInterpreter.BandwidthGrade bandwidthGrade) {
+    public void showBandwidthViewCard(final double downloadMbps, final double uploadMbps) {
         executorService.submit(new Runnable() {
             @Override
             public void run() {
-                resultsCallback.showBandwidthViewCard(bandwidthGrade);
+                resultsCallback.showBandwidthViewCard(downloadMbps, uploadMbps);
             }
         });
+
     }
 
     @Override

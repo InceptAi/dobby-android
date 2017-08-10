@@ -15,24 +15,24 @@ import java.util.concurrent.ScheduledExecutorService;
  * Created by vivek on 7/5/17.
  */
 
-public class GetConfiguredNetworks extends FutureAction {
+public class CancelBandwidthTests extends FutureAction {
 
-    public GetConfiguredNetworks(Context context,
-                                 Executor executor,
-                                 ScheduledExecutorService scheduledExecutorService,
-                                 NetworkActionLayer networkActionLayer,
-                                 long actionTimeOutMs) {
-        super(ActionType.GET_CONFIGURED_NETWORKS, context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
+    public CancelBandwidthTests(Context context,
+                                Executor executor,
+                                ScheduledExecutorService scheduledExecutorService,
+                                NetworkActionLayer networkActionLayer,
+                                long actionTimeOutMs) {
+        super(ActionType.CANCEL_BANDWIDTH_TESTS, context, executor, scheduledExecutorService, networkActionLayer, actionTimeOutMs);
     }
 
     @Override
     public void post() {
-        setFuture(networkActionLayer.getConfiguredWifiNetworks());
+        setFuture(networkActionLayer.cancelBandwidthTest());
     }
 
     @Override
     public String getName() {
-        return context.getString(R.string.get_configured_wifi_networks);
+        return context.getString(R.string.cancel_bw_tests);
     }
 
     @Override
@@ -57,6 +57,6 @@ public class GetConfiguredNetworks extends FutureAction {
 
     @Override
     public boolean shouldBlockOnOtherActions() {
-        return true;
+        return false;
     }
 }

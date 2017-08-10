@@ -40,7 +40,8 @@ public abstract class Action {
             ActionType.RESET_CONNECTION_WITH_CURRENT_WIFI,
             ActionType.TOGGLE_WIFI,
             ActionType.TURN_WIFI_OFF,
-            ActionType.TURN_WIFI_ON})
+            ActionType.TURN_WIFI_ON,
+            ActionType.CANCEL_BANDWIDTH_TESTS})
 
     public @interface ActionType {
         int CHECK_IF_5GHz_IS_SUPPORTED = 0;
@@ -63,6 +64,7 @@ public abstract class Action {
         int TOGGLE_WIFI = 18;
         int TURN_WIFI_OFF = 19;
         int TURN_WIFI_ON = 20;
+        int CANCEL_BANDWIDTH_TESTS = 21;
     }
 
     @ActionType
@@ -73,6 +75,7 @@ public abstract class Action {
     Context context;
     NetworkActionLayer networkActionLayer;
     protected ActionResult actionResult;
+    private boolean shouldBlockOnOtherActions;
 
     Action(@ActionType int actionType,
            Context context,
@@ -96,5 +99,7 @@ public abstract class Action {
     public abstract String getName();
 
     public abstract void cancelAction();
+
+    public abstract boolean shouldBlockOnOtherActions();
 
 }

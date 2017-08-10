@@ -13,6 +13,7 @@ public class BandwidthResult {
     @ActionLibraryCodes.BandwidthTestMode
     private int testMode;
 
+
     public BandwidthResult(int testMode) {
         this.testMode = testMode;
     }
@@ -32,4 +33,13 @@ public class BandwidthResult {
     public void setDownloadStats(BandwidthStats downloadStats) {
         this.downloadStats = downloadStats;
     }
+
+    public int getTestMode() {
+        return testMode;
+    }
+
+    public void setTestMode(int testMode) {
+        this.testMode = testMode;
+    }
+
 }

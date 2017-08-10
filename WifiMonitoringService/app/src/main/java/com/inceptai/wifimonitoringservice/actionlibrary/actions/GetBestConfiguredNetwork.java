@@ -156,4 +156,9 @@ public class GetBestConfiguredNetwork extends FutureAction {
         bestAvailableWifiConfiguration = null;
     }
 
+    @Override
+    public boolean shouldBlockOnOtherActions() {
+        return true;
+    }
+
 }

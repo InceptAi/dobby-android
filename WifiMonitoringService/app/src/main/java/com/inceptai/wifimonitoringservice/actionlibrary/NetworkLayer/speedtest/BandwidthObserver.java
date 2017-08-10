@@ -3,7 +3,9 @@ package com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest;
 import android.content.Context;
 import android.support.annotation.Nullable;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningScheduledExecutorService;
+import com.google.common.util.concurrent.SettableFuture;
 import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLibraryCodes;
 import com.inceptai.wifimonitoringservice.utils.ServiceLog;
 
@@ -22,7 +24,7 @@ public class BandwidthObserver implements BandwidthAnalyzer.ResultsCallback, Obs
     @Nullable
     private ObservableEmitter<BandwidthProgressSnapshot> emitter;
     private boolean testsRunning = false;
-    private BandwidthResult result;
+    private BandwidthResult bandwidthResult;
     private Observable<BandwidthProgressSnapshot> bandwidthResultObservable;
     private BandwidthAnalyzer bandwidthAnalyzer;
     @ActionLibraryCodes.BandwidthTestMode
@@ -32,6 +34,7 @@ public class BandwidthObserver implements BandwidthAnalyzer.ResultsCallback, Obs
     private ExecutorService executorService;
     private ListeningScheduledExecutorService listeningScheduledExecutorService;
     private Context context;
+    private SettableFuture<Boolean> cancelBandwidthTestFuture;
 
     public BandwidthObserver(Context context, ExecutorService executorService,
                              ListeningScheduledExecutorService listeningScheduledExecutorService) {
@@ -43,20 +46,6 @@ public class BandwidthObserver implements BandwidthAnalyzer.ResultsCallback, Obs
         bandwidthResultObservable = Observable.create(this).share();
     }
 
-    public synchronized void onCancelled() {
-        // Tests cancelled.
-        executorService.submit(new Runnable() {
-            @Override
-            public void run() {
-                if (isEmitterValid()) {
-                    emitter.onError(new BandwidthTestException(testModeRequested,
-                            ActionLibraryCodes.ErrorCodes.ERROR_TEST_INTERRUPTED, "Tests cancelled"));
-                }
-            }
-        });
-        testsDone();
-    }
-
     public synchronized boolean testsRunning() {
         return testsRunning;
     }
@@ -66,7 +55,7 @@ public class BandwidthObserver implements BandwidthAnalyzer.ResultsCallback, Obs
     }
 
     public BandwidthResult getLastBandwidthResult() {
-        return result;
+        return bandwidthResult;
     }
 
     // BandwidthAnalyzer.ResultsCallback overrides:
@@ -118,26 +107,27 @@ public class BandwidthObserver implements BandwidthAnalyzer.ResultsCallback, Obs
     @Override
     public synchronized void onTestFinished(@ActionLibraryCodes.BandwidthTestMode int testMode, BandwidthStats stats) {
         ServiceLog.v("BandwidthObserver onTestFinished");
-        if (testMode == ActionLibraryCodes.BandwidthTestMode.UPLOAD && result != null)  {
-            result.setUploadStats(stats);
-        } else if (testMode == ActionLibraryCodes.BandwidthTestMode.DOWNLOAD && result != null) {
-            result.setDownloadStats(stats);
+        if (testMode == ActionLibraryCodes.BandwidthTestMode.UPLOAD && bandwidthResult != null)  {
+            bandwidthResult.setUploadStats(stats);
+        } else if (testMode == ActionLibraryCodes.BandwidthTestMode.DOWNLOAD && bandwidthResult != null) {
+            bandwidthResult.setDownloadStats(stats);
         }
 
         if (areTestsDone(testMode)) {
             ServiceLog.v("Calling tests Done with testmode: " + testMode);
-            testsDone();
-                executorService.submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (isEmitterValid()) {
-                            if (result != null) {
-                                emitter.onNext(new BandwidthProgressSnapshot(result));
-                            }
-                            emitter.onComplete();
+            executorService.submit(new Runnable() {
+                @Override
+                public void run() {
+                    if (isEmitterValid()) {
+                        if (bandwidthResult != null) {
+                            ServiceLog.v("BO: onNext: Sending final bw results");
+                            emitter.onNext(new BandwidthProgressSnapshot(bandwidthResult));
                         }
+                        emitter.onComplete();
                     }
-                });
+                }
+            });
+            testsDone();
         } else {
             ServiceLog.v("Tests not done.");
         }
@@ -180,7 +170,7 @@ public class BandwidthObserver implements BandwidthAnalyzer.ResultsCallback, Obs
         if (!testsRunning()) {
             markTestsAsRunning();
             testModeRequested = mode;
-            result = new BandwidthResult(mode);
+            bandwidthResult = new BandwidthResult(mode);
             bandwidthAnalyzer = new BandwidthAnalyzer(executorService, listeningScheduledExecutorService, context, this);
             executorService.execute(new Runnable() {
                 @Override
@@ -196,18 +186,29 @@ public class BandwidthObserver implements BandwidthAnalyzer.ResultsCallback, Obs
         return testsRunning();
     }
 
-    public synchronized void cancelBandwidthTests() {
+    public synchronized ListenableFuture<Boolean> cancelBandwidthTests() {
         ServiceLog.v("NL cancel bw test");
-        onCancelled();
+        cancelBandwidthTestFuture = SettableFuture.create();
+        if (!testsRunning()) {
+            cancelBandwidthTestFuture.set(false);
+            return cancelBandwidthTestFuture;
+        }
         executorService.execute(new Runnable() {
             @Override
             public void run() {
                 if (bandwidthAnalyzer != null) {
                     bandwidthAnalyzer.cancelBandwidthTests();
+                    if (isEmitterValid()) {
+                        emitter.onError(new BandwidthTestException(testModeRequested,
+                                ActionLibraryCodes.ErrorCodes.ERROR_TEST_INTERRUPTED, "Tests cancelled"));
+                    }
                 }
             }
         });
+        testsDone();
         ServiceLog.v("NL done with bw cancellation");
+        cancelBandwidthTestFuture.set(true);
+        return cancelBandwidthTestFuture;
     }
 
     public void cleanup() {
@@ -226,7 +227,6 @@ public class BandwidthObserver implements BandwidthAnalyzer.ResultsCallback, Obs
         testsRunning = false;
         testsDone = ActionLibraryCodes.BandwidthTestMode.IDLE;
         testModeRequested = ActionLibraryCodes.BandwidthTestMode.IDLE;
-        result = null;
         if (bandwidthAnalyzer != null) {
             bandwidthAnalyzer.cleanup();
             bandwidthAnalyzer = null;

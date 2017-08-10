@@ -144,6 +144,10 @@ public class NetworkActionLayer {
         return bandwidthObserver.startBandwidthTest(mode);
     }
 
+    public ListenableFuture<Boolean> cancelBandwidthTest() {
+        return bandwidthObserver.cancelBandwidthTests();
+    }
+
     public BandwidthResult getLastBandwidthResult() {
         return bandwidthObserver.getLastBandwidthResult();
     }

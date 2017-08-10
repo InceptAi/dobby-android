@@ -278,9 +278,9 @@ public class DobbyActivity extends AppCompatActivity
     }
 
     @Override
-    public void showBandwidthViewCard(DataInterpreter.BandwidthGrade bandwidthGrade) {
+    public void showBandwidthViewCard(double downloadMbps, double uploadMbps) {
         if (chatFragment != null) {
-            chatFragment.addBandwidthResultsCardView(bandwidthGrade);
+            chatFragment.addBandwidthResultsCardView(downloadMbps, uploadMbps);
         }
     }
 

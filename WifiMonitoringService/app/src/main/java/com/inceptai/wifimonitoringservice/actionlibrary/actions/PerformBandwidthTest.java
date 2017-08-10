@@ -53,4 +53,15 @@ public class PerformBandwidthTest extends ObservableAction {
         actionResult = new ActionResult(ActionResult.ActionResultCodes.SUCCESS, networkActionLayer.getLastBandwidthResult());
         return actionResult;
     }
+
+    @Override
+    public void cancelAction() {
+        networkActionLayer.cancelBandwidthTest();
+        super.cancelAction();
+    }
+
+    @Override
+    public boolean shouldBlockOnOtherActions() {
+        return false;
+    }
 }

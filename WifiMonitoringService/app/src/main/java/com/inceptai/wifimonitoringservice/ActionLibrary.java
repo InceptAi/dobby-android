@@ -6,6 +6,7 @@ import com.google.common.util.concurrent.ListeningScheduledExecutorService;
 import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.NetworkActionLayer;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.Action;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.CancelBandwidthTests;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.CheckIf5GHzIsSupported;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.ConnectAndTestGivenWifiNetwork;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.ConnectToBestConfiguredNetwork;
@@ -154,6 +155,12 @@ public class ActionLibrary {
             case Action.ActionType.TURN_WIFI_OFF:
                 action = new TurnWifiOff(context, executor, scheduledExecutorService, networkActionLayer, actionRequest.getActionTimeOutMs());
                 break;
+            case Action.ActionType.CANCEL_BANDWIDTH_TESTS:
+                action = new CancelBandwidthTests(context, executor, scheduledExecutorService, networkActionLayer, actionRequest.getActionTimeOutMs());
+                break;
+            default:
+                ServiceLog.e("UNKNOWN Action Type: " + actionRequest.getActionType());
+                break;
         }
         //Submit action and return the action
         if (action != null) {
@@ -237,16 +244,21 @@ public class ActionLibrary {
     synchronized private Action addAction(Action action) {
         ServiceLog.v("Queueing action " + action.getName());
         actionArrayDeque.addLast(action);
-        if (actionArrayDeque.size() == 1) { //First element -- only one action at a time
-            ServiceLog.v("Queue size is 1 so returning action " + action.getName());
+        if (!action.shouldBlockOnOtherActions() || actionArrayDeque.size() == 1) { //First element -- only one action at a time
+            ServiceLog.v("Non blocking action or Queue size is 1 so returning action " + action.getName());
             return action;
         }
-        ServiceLog.v("Queue size is: " + actionArrayDeque.size() + "so not starting right now " + action.getName());
+        ServiceLog.v("Queue size is: " + actionArrayDeque.size() + " and blocking action so not starting right now " + action.getName());
         return null;
     }
 
     synchronized private void finishAction(final Action action, final ActionResult result) {
         ServiceLog.v("Removing action " + action.getName());
+        boolean isActionHeadOfQueue = false;
+        if (action.equals(actionArrayDeque.peek())) {
+            //this action is top of the queue
+            isActionHeadOfQueue = true;
+        }
         actionArrayDeque.remove(action);
         if (actionCallback != null) {
             executor.execute(new Runnable() {
@@ -256,13 +268,16 @@ public class ActionLibrary {
                 }
             });
         }
-        Action nextActionToProcess = actionArrayDeque.peek();
-        if (nextActionToProcess != null) {
-            ServiceLog.v("Starting pending action " + action.getName());
-            if (action instanceof FutureAction) {
-                startFutureAction((FutureAction)nextActionToProcess);
-            } else if (action instanceof ObservableAction) {
-                startObservableAction((ObservableAction)action);
+
+        if (isActionHeadOfQueue) {
+            Action nextActionToProcess = actionArrayDeque.peek();
+            if (nextActionToProcess != null) {
+                ServiceLog.v("Starting pending action " + action.getName());
+                if (action instanceof FutureAction) {
+                    startFutureAction((FutureAction)nextActionToProcess);
+                } else if (action instanceof ObservableAction) {
+                    startObservableAction((ObservableAction)action);
+                }
             }
         }
     }

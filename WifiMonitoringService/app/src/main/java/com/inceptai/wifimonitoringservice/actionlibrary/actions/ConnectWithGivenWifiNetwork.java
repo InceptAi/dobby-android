@@ -57,4 +57,9 @@ public class ConnectWithGivenWifiNetwork extends FutureAction {
     public ListenableFuture<ActionResult> getFuture() {
         return super.getFuture();
     }
+
+    @Override
+    public boolean shouldBlockOnOtherActions() {
+        return true;
+    }
 }

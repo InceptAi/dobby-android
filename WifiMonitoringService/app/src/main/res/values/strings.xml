@@ -17,6 +17,7 @@
     <string name="get_dhcp_info">Got DHCP Info</string>
     <string name="get_wifi_info">Got Current Link Info</string>
     <string name="check_5GHz_supported">Checked 5GHz supported</string>
+    <string name="cancel_bw_tests">Cancel Bandwidth Tests</string>
     <string name="repair_wifi_network">Repaired Wifi Network</string>
     <string name="perform_connectivity_test">Performed Connectivity Test</string>
     <string name="perform_bandwidth_test">Performed Bandwidth Test</string>

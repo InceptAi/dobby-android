@@ -395,12 +395,13 @@ public class ChatFragment extends Fragment implements Handler.Callback {
     }
 
     //All the methods that show stuff to user
-    public void addBandwidthResultsCardView(final DataInterpreter.BandwidthGrade bandwidthGrade) {
+    public void addBandwidthResultsCardView(final double downloadMpbs, final double uploadMpbs) {
         dobbyAnalytics.wifiExpertBandwidthCardShown();
+        final BandwidthCardInfo bandwidthCardInfo = new BandwidthCardInfo(downloadMpbs, uploadMpbs);
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                Message.obtain(handler, MSG_SHOW_BANDWIDTH_RESULT_CARDVIEW, bandwidthGrade).sendToTarget();
+                Message.obtain(handler, MSG_SHOW_BANDWIDTH_RESULT_CARDVIEW,  bandwidthCardInfo).sendToTarget();
             }
         }, botMessageDelay);
     }
@@ -520,9 +521,9 @@ public class ChatFragment extends Fragment implements Handler.Callback {
                 showUserActionButtons((List<StructuredUserResponse>) msg.obj);
                 break;
             case MSG_SHOW_BANDWIDTH_RESULT_CARDVIEW:
-                DataInterpreter.BandwidthGrade bandwidthGrade = (DataInterpreter.BandwidthGrade) msg.obj;
+                BandwidthCardInfo bandwidthCardInfo = (BandwidthCardInfo)msg.obj;
                 addDobbyChat(getString(R.string.bandwidth_card_view_message), false);
-                showBandwidthResultsCardView(bandwidthGrade.getUploadMbps(), bandwidthGrade.getDownloadMbps());
+                showBandwidthResultsCardView(bandwidthCardInfo.getUploadMbps(), bandwidthCardInfo.getDownloadMbps());
                 break;
             case MSG_SHOW_OVERALL_NETWORK_STATUS:
                 OverallNetworkInfo overallNetworkInfo = (OverallNetworkInfo) msg.obj;
@@ -856,13 +857,17 @@ public class ChatFragment extends Fragment implements Handler.Callback {
                 onTestProgress(bandwidthProgressSnapshot.getTestMode(), bandwidthProgressSnapshot.getBandwidth());
                 break;
             case ActionLibraryCodes.BandwidthTestSnapshotType.FINAL_BANDWIDTH:
+                DobbyLog.v("CF: In BandwidthTestSnapshotType.FINAL_BANDWIDTH");
                 BandwidthResult finalResult = bandwidthProgressSnapshot.getFinalBandwidthResult();
-                if (finalResult.getUploadStats() != null) {
-                    onTestFinished(ActionLibraryCodes.BandwidthTestMode.UPLOAD, finalResult.getUploadStats());
-                }
                 if (finalResult.getDownloadStats() != null) {
+                    DobbyLog.v("CF: In BandwidthTestSnapshotType.FINAL_BANDWIDTH download stats");
                     onTestFinished(ActionLibraryCodes.BandwidthTestMode.DOWNLOAD, finalResult.getDownloadStats());
                 }
+                if (finalResult.getUploadStats() != null) {
+                    DobbyLog.v("CF: In BandwidthTestSnapshotType.FINAL_BANDWIDTH upload stats");
+                    onTestFinished(ActionLibraryCodes.BandwidthTestMode.UPLOAD, finalResult.getUploadStats());
+                }
+                break;
         }
     }
     //  NewBandwidthAnalyzer.ResultCallback methods -------
@@ -927,7 +932,7 @@ public class ChatFragment extends Fragment implements Handler.Callback {
         public String isp;
         public String ip;
 
-        public OverallNetworkInfo(DataInterpreter.WifiGrade wifiGrade, String isp, String ip) {
+        OverallNetworkInfo(DataInterpreter.WifiGrade wifiGrade, String isp, String ip) {
             this.wifiGrade = wifiGrade;
             this.isp = isp;
             this.ip = ip;
@@ -943,6 +948,24 @@ public class ChatFragment extends Fragment implements Handler.Callback {
 
         public String getIp() {
             return ip;
+        }
+    }
+
+    private class BandwidthCardInfo {
+        private double downloadMbps;
+        private double uploadMbps;
+
+        BandwidthCardInfo(double downloadMbps, double uploadMbps) {
+            this.downloadMbps = downloadMbps;
+            this.uploadMbps = uploadMbps;
+        }
+
+        public double getDownloadMbps() {
+            return downloadMbps;
+        }
+
+        public double getUploadMbps() {
+            return uploadMbps;
         }
     }
 }

@@ -167,6 +167,11 @@ public class ActionRequest {
         return new ActionRequest(Action.ActionType.PERFORM_BANDWIDTH_TEST, 0, 0, actionTimeOutMs, mode);
     }
 
+    @Nullable
+    public static ActionRequest cancelBandwidthTests(long actionTimeOutMs) {
+        return new ActionRequest(Action.ActionType.CANCEL_BANDWIDTH_TESTS, 0, 0, actionTimeOutMs);
+    }
+
 
     @Action.ActionType
     public int getActionType() {

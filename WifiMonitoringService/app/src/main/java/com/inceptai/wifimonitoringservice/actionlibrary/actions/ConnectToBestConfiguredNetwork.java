@@ -101,4 +101,9 @@ public class ConnectToBestConfiguredNetwork extends FutureAction {
         return super.getFuture();
     }
 
+    @Override
+    public boolean shouldBlockOnOtherActions() {
+        return true;
+    }
+
 }

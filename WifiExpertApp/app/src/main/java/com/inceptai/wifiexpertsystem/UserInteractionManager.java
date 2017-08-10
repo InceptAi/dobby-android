@@ -20,6 +20,7 @@ import com.inceptai.wifiexpertsystem.utils.DobbyLog;
 import com.inceptai.wifiexpertsystem.utils.NeoServiceClient;
 import com.inceptai.wifiexpertsystem.utils.Utils;
 import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
+import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest.BandwidthResult;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.Action;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.ObservableAction;
 
@@ -127,7 +128,7 @@ public class UserInteractionManager implements
         //Richer content UI stuff -- TODO extract out all bw/nl stuff -- send only numbers and text
         void observeBandwidth(Observable bandwidthObservable);
         void cancelTestsResponse();
-        void showBandwidthViewCard(DataInterpreter.BandwidthGrade bandwidthGrade);
+        void showBandwidthViewCard(double downloadMbps, double uploadMbps);
         void showNetworkInfoViewCard(DataInterpreter.WifiGrade wifiGrade, String isp, String ip);
         void showDetailedSuggestions(SuggestionCreator.Suggestion suggestion);
         void requestAccessibilityPermission();
@@ -241,6 +242,19 @@ public class UserInteractionManager implements
 
     private void handleActionFinished(Action action, ActionResult actionResult) {
         //TODO: Send final bandwidth results -- show the bandwidth card
+        if (action.getActionType() == Action.ActionType.PERFORM_BANDWIDTH_TEST) {
+            if (ActionResult.isSuccessful(actionResult)) {
+                //Show bandwidth card here
+                BandwidthResult bandwidthResult = (BandwidthResult)actionResult.getPayload();
+                interactionCallback.showBandwidthViewCard(
+                        Utils.toMbps(bandwidthResult.getDownloadStats().getPercentile75(), 2),
+                        Utils.toMbps(bandwidthResult.getUploadStats().getPercentile75(), 2));
+            } else {
+                //Show an error
+            }
+        } else if (action.getActionType() == Action.ActionType.CANCEL_BANDWIDTH_TESTS) {
+            interactionCallback.cancelTestsResponse();
+        }
         expertChatService.sendActionCompletedMessage();
     }
 

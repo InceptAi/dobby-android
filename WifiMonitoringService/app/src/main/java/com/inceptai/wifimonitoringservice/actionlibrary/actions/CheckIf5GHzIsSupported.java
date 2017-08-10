@@ -55,5 +55,8 @@ public class CheckIf5GHzIsSupported extends FutureAction {
         return super.getFuture();
     }
 
-
+    @Override
+    public boolean shouldBlockOnOtherActions() {
+        return false;
+    }
 }

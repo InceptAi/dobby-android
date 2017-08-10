@@ -167,4 +167,9 @@ public class IterateAndConnectToBestNetwork extends FutureAction {
         }, executor);
         connectAndTestGivenNetworkAction.post();
     }
+
+    @Override
+    public boolean shouldBlockOnOtherActions() {
+        return true;
+    }
 }
