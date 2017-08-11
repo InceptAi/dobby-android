@@ -186,6 +186,7 @@ public class UserInteractionManager implements
             userMessage = new UserMessage(text);
         }
         expertSystemClient.onUserMessage(userMessage);
+        expertChatService.pushUserChatMessage(text, isButtonActionText);
     }
 
     public void resumeChatWithShortSuggestion() {

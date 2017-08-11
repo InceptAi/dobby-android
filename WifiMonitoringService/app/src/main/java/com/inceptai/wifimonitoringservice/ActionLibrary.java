@@ -254,13 +254,13 @@ public class ActionLibrary {
 
 
     synchronized private Action addAction(Action action) {
-        ServiceLog.v("Queueing action " + action.getName());
+        ServiceLog.v("AL: Queueing action " + action.getName());
         actionArrayDeque.addLast(action);
         if (!action.shouldBlockOnOtherActions() || actionArrayDeque.size() == 1) { //First element -- only one action at a time
             ServiceLog.v("Non blocking action or Queue size is 1 so returning action " + action.getName());
             return action;
         }
-        ServiceLog.v("Queue size is: " + actionArrayDeque.size() + " and blocking action so not starting right now " + action.getName());
+        ServiceLog.v("AL: Queue size is: " + actionArrayDeque.size() + " and blocking action so not starting right now " + action.getName());
         return null;
     }
 
@@ -283,7 +283,7 @@ public class ActionLibrary {
 
         if (isActionHeadOfQueue) {
             Action nextActionToProcess = actionArrayDeque.peek();
-            if (nextActionToProcess != null) {
+            if (nextActionToProcess != null && nextActionToProcess.shouldBlockOnOtherActions()) {
                 ServiceLog.v("Starting pending action " + action.getName());
                 if (action instanceof FutureAction) {
                     startFutureAction((FutureAction)nextActionToProcess);

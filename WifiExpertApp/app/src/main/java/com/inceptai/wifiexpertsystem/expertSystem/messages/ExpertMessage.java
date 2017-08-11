@@ -121,4 +121,8 @@ public class ExpertMessage {
     public BandwidthResult getBandwidthResult() {
         return bandwidthResult;
     }
+
+    public void setUserResponseOptionsToShow(List<StructuredUserResponse> userResponseOptionsToShow) {
+        this.userResponseOptionsToShow = userResponseOptionsToShow;
+    }
 }

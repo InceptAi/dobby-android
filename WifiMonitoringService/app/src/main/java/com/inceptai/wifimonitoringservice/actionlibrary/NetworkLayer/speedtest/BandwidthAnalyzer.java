@@ -364,7 +364,7 @@ public class BandwidthAnalyzer {
     //TODO write a checkAndSet function for bandwidthAnalyzerState
 
     //Helper functions for state
-    synchronized public boolean testsCurrentlyRunning() {
+    synchronized private boolean testsCurrentlyRunning() {
         return bandwidthAnalyzerState == BandwidthAnalyzerState.RUNNING;
     }
 

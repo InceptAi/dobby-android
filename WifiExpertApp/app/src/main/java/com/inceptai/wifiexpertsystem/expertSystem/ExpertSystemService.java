@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 
 import com.inceptai.wifiexpertsystem.expertSystem.inferencing.DataInterpreter;
 import com.inceptai.wifiexpertsystem.expertSystem.messages.ExpertMessage;
+import com.inceptai.wifiexpertsystem.expertSystem.messages.StructuredUserResponse;
 import com.inceptai.wifiexpertsystem.expertSystem.messages.UserMessage;
 import com.inceptai.wifimonitoringservice.ActionRequest;
 import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
@@ -14,6 +15,7 @@ import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.wifi.WifiNe
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.Action;
 import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLibraryCodes;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -46,7 +48,14 @@ public class ExpertSystemService  {
     }
 
     public void actionStarted(Action action) {
-        final ExpertMessage expertMessage = ExpertMessage.createMessageForActionStarted(action);
+        ExpertMessage expertMessage = ExpertMessage.createMessageForActionStarted(action);
+        //TODO -- moved to flow chart based UI
+        if (action.getActionType() == Action.ActionType.PERFORM_BANDWIDTH_TEST) {
+            StructuredUserResponse cancelResponse = new StructuredUserResponse(StructuredUserResponse.ResponseType.CANCEL);
+            List<StructuredUserResponse> structuredUserResponseList = new ArrayList<>();
+            structuredUserResponseList.add(cancelResponse);
+            expertMessage.setUserResponseOptionsToShow(structuredUserResponseList);
+        }
         sendCallbackWithExpertMessage(expertMessage);
     }
 
@@ -56,6 +65,10 @@ public class ExpertSystemService  {
             expertMessageForActionEnded = ExpertMessage.createMessageForActionEnded(action, actionResult);
         } else {
             expertMessageForActionEnded = ExpertMessage.createMessageForActionEndedWithoutSuccess(action, actionResult);
+        }
+        //TODO -- moved to flow chart based UI
+        if (action.getActionType() == Action.ActionType.PERFORM_BANDWIDTH_TEST) {
+            expertMessageForActionEnded.setUserResponseOptionsToShow(new ArrayList<StructuredUserResponse>());
         }
         sendCallbackWithExpertMessage(expertMessageForActionEnded);
 
@@ -138,7 +151,7 @@ public class ExpertSystemService  {
             actionRequest = ActionRequest.performConnectivityTestRequest(0);
         }  else if (message.toLowerCase().contains("bwtest") && !message.toLowerCase().contains("cancel")) {
             actionRequest = ActionRequest.performBandwidthTestRequest(ActionLibraryCodes.BandwidthTestMode.DOWNLOAD_AND_UPLOAD, 40000);
-        } else if (message.toLowerCase().contains("cancelbwtest")) {
+        } else if (message.toLowerCase().contains("cancel")) {
             actionRequest = ActionRequest.cancelBandwidthTestsRequest(1000);
         } else if (message.toLowerCase().contains("pingtest")) {
             actionRequest = ActionRequest.performPingForDhcpInfoRequest(0);

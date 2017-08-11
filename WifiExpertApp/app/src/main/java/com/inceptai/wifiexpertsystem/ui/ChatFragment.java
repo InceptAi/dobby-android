@@ -768,9 +768,7 @@ public class ChatFragment extends Fragment implements Handler.Callback {
         if (text.equals(Utils.EMPTY_STRING)) {
             return;
         }
-        //addUserChat(text);
         useVoiceOutput = false;
-        // Parent activity callback.
         if (mListener != null) {
             mListener.onUserQuery(text, isButtonActionText);
         }
