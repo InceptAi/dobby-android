@@ -230,9 +230,15 @@ public class UserInteractionManager implements
             DobbyLog.v("Ignoring since empty text " + expertChat.getText());
             return;
         }
+
         expertChatIdsDisplayed.add(expertChat.getId());
         String messageReceived = expertChat.getText();
         DobbyLog.v("MainActivity:FirebaseMessage recvd from firebase: " + messageReceived);
+
+        if (messageReceived.equals(Utils.EMPTY_STRING)) {
+            DobbyLog.v("Ignoring empty string");
+            return;
+        }
 
         if (interactionCallback == null) {
             DobbyLog.v("callback is null, so ignoring message from firebase");

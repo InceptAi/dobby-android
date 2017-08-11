@@ -65,10 +65,11 @@ public class MainActivity extends AppCompatActivity
 
     private static final boolean RESUME_WITH_SUGGESTION_IF_AVAILABLE = false;
     private static final int SPEECH_RECOGNITION_REQUEST_CODE = 102;
-    private static final long BOT_MESSAGE_DELAY_MS = 500;
+    private static final long BOT_MESSAGE_DELAY_MS = 50;
 
-    private static final boolean SHOW_CONTACT_HUMAN_BUTTON = true;
+    private static final boolean SHOW_CONTACT_HUMAN_BUTTON = false;
     private static final boolean ENABLE_WIFI_MONITORING_SERVICE = false;
+    private static final boolean ENABLE_OVERLAY_PERMISSION = false;
 
 
     private UserInteractionManager userInteractionManager;
@@ -486,8 +487,11 @@ public class MainActivity extends AppCompatActivity
     public void onRecyclerViewReady() {
         //Get the welcome message
         DobbyLog.v("MainActivity:onRecyclerViewReady");
-        //showLocationPermissionRequest();
-        showLocationAndOverdrawPermissionRequest();
+        if (ENABLE_OVERLAY_PERMISSION) {
+            showLocationAndOverdrawPermissionRequest();
+        } else {
+            showLocationPermissionRequest();
+        }
     }
 
     @Override
