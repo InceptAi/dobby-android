@@ -1,14 +1,271 @@
 package com.inceptai.dobby;
 
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.net.wifi.WifiInfo;
+import android.os.IBinder;
 
+import com.google.common.util.concurrent.ListenableFuture;
+import com.inceptai.dobby.analytics.DobbyAnalytics;
+import com.inceptai.dobby.database.RepairDatabaseWriter;
+import com.inceptai.dobby.database.RepairRecord;
+import com.inceptai.dobby.utils.DobbyLog;
+import com.inceptai.dobby.utils.Utils;
+import com.inceptai.wifimonitoringservice.ActionRequest;
 import com.inceptai.wifimonitoringservice.WifiMonitoringService;
+import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.Action;
+import com.inceptai.wifimonitoringservice.actionlibrary.actions.IterateAndRepairWifiNetwork;
+
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+
+import javax.inject.Inject;
+
+import static com.inceptai.dobby.ui.WifiDocActivity.REPAIR_TIMEOUT_MS;
+
 
 /**
  * Created by vivek on 8/11/17.
  */
-
 public class WifiMonitoringServiceClient {
     private WifiMonitoringService wifiMonitoringService;
+    private WifiServiceConnection wifiServiceConnection;
     private Context context;
+    private boolean boundToWifiService = false;
+    private ListenableFuture<ActionResult> repairFuture;
+    private boolean isNotificationReceiverRegistered;
+    private String userId;
+    private String phoneInfo;
+    private Executor executor;
+    private WifiMonitoringCallback wifiMonitoringCallback;
+
+    @Inject
+    RepairDatabaseWriter repairDatabaseWriter;
+    @Inject
+    DobbyAnalytics dobbyAnalytics;
+
+    public interface WifiMonitoringCallback {
+        void repairStarted(boolean started);
+        void repairFinished(WifiInfo repairedWifiInfo, String repairSummary);
+    }
+
+    public WifiMonitoringServiceClient(Context context, String userId,
+                                       String phoneInfo, Executor executor) {
+        this.context = context;
+        this.userId = userId;
+        this.phoneInfo = phoneInfo;
+        this.executor = executor;
+    }
+
+    public void connect(WifiMonitoringCallback wifiMonitoringCallback) {
+        this.wifiMonitoringCallback = wifiMonitoringCallback;
+        bindWithWifiService();
+    }
+
+    public void disconnect() {
+        this.wifiMonitoringCallback = null;
+        unbindWithWifiService();
+    }
+
+    public void cleanup() {
+        disconnect();
+    }
+
+    //Private stuff
+    private void bindWithWifiService() {
+        // Bind to LocalService
+        Intent intent = new Intent(context, WifiMonitoringService.class);
+        try {
+            if (context.bindService(intent, wifiServiceConnection, Context.BIND_AUTO_CREATE)) {
+                DobbyLog.v("bindService to  wifiServiceConnection succeeded");
+                dobbyAnalytics.setWifiServiceBindingSuccessful();
+            } else {
+                DobbyLog.v("bindService to wifiServiceConnection failed");
+                dobbyAnalytics.setWifiServiceBindingFailed();
+            }
+        } catch (SecurityException e) {
+            dobbyAnalytics.setWifiServiceBindingSecurityException();
+            DobbyLog.v("App does not have permission to bind to WifiMonitoring service");
+        }
+    }
+
+    private void unbindWithWifiService() {
+        // Unbind from the service
+        if (boundToWifiService) {
+            DobbyLog.v("Unbinding Service");
+            context.unbindService(wifiServiceConnection);
+            boundToWifiService = false;
+            wifiMonitoringService = null;
+            dobbyAnalytics.setWifiServiceUnbindingCalled();
+        }
+    }
+
+    public void repairWifiNetwork(long timeOutMs) {
+        if (repairFuture == null || repairFuture.isDone()) {
+            //Start fresh repair
+            dobbyAnalytics.setWifiRepairInitiated();
+            if (boundToWifiService && wifiMonitoringService != null) {
+                //Listening for repair to finish on a different thread
+                //Start animation for repair button
+                repairFuture = wifiMonitoringService.repairWifiNetwork(REPAIR_TIMEOUT_MS);
+                if (repairFuture != null) {
+                    waitForRepair();
+                } else {
+                    processRepairResult(null);
+                }
+                if (wifiMonitoringCallback != null) {
+                    wifiMonitoringCallback.repairStarted(true);
+                }
+            } else {
+                //Change text for repair button
+                //Notify error to WifiDocMainFragment
+                DobbyLog.e("Repair failed -- Service unavailable -- boundToService " + (boundToWifiService ? Utils.TRUE_STRING : Utils.FALSE_STRING));
+                if (wifiMonitoringCallback != null) {
+                    wifiMonitoringCallback.repairStarted(false);
+                }
+                dobbyAnalytics.setWifiServiceUnavailableForRepair();
+                processRepairResult(null);
+            }
+        }
+    }
+
+    public void cancelWifiRepair() {
+        wifiMonitoringService.cancelRepairOfWifiNetwork();
+    }
+
+
+    public Action takeAction(ActionRequest actionRequest) {
+        return wifiMonitoringService.takeAction(actionRequest);
+    }
+
+    public void cancelAction(Action action) {
+        action.cancelAction();
+    }
+
+    private void waitForRepair() {
+        repairFuture.addListener(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    processRepairResult((IterateAndRepairWifiNetwork.RepairResult)repairFuture.get());
+                } catch (InterruptedException | ExecutionException | CancellationException e) {
+                    //Notify error to WifiDocMainFragment
+                    DobbyLog.e("Interrupted  while repairing");
+                }
+            }
+        }, executor);
+    }
+
+    private void processRepairResult(IterateAndRepairWifiNetwork.RepairResult repairResult) {
+        int textId = R.string.repair_wifi_failure;
+        WifiInfo repairedWifiInfo = null;
+        boolean repairSuccessful = false;
+        boolean toggleSuccessful = true;
+        String repairSummary = Utils.EMPTY_STRING;
+        dobbyAnalytics.setWifiRepairFinished();
+        if (ActionResult.isSuccessful(repairResult)) {
+            textId = R.string.repair_wifi_success;
+            repairSuccessful = true;
+            repairedWifiInfo = (WifiInfo) repairResult.getPayload();
+            dobbyAnalytics.setWifiRepairSuccessful();
+        } else if (ActionResult.failedToComplete(repairResult)){
+            repairedWifiInfo = (WifiInfo) repairResult.getPayload();
+            if (repairedWifiInfo == null) {
+                toggleSuccessful = false;
+            }
+            dobbyAnalytics.setWifiRepairFailed(repairResult.getStatus());
+        } else if (repairResult != null){
+            dobbyAnalytics.setWifiRepairFailed(repairResult.getStatus());
+        } else {
+            dobbyAnalytics.setWifiRepairFailed(ActionResult.ActionResultCodes.UNKNOWN);
+        }
+
+        if (repairResult != null) {
+            repairSummary = repairResult.getStatusString();
+        }
+
+        if (wifiMonitoringCallback != null) {
+            wifiMonitoringCallback.repairFinished(repairedWifiInfo, repairSummary);
+            //mainFragment.handleRepairFinished(repairedWifiInfo, textId, repairSummary);
+        }
+        writeRepairRecord(createRepairRecord(repairResult));
+        addWifiFailureReasonToAnalytics(repairResult);
+    }
+
+    private void addWifiFailureReasonToAnalytics(IterateAndRepairWifiNetwork.RepairResult repairResult) {
+        if (repairResult == null) {
+            dobbyAnalytics.setWifiRepairUnknownFailure();
+            return;
+        }
+        switch (repairResult.getRepairFailureReason()) {
+            case IterateAndRepairWifiNetwork.RepairResult.NO_NEARBY_CONFIGURED_NETWORKS:
+                dobbyAnalytics.setWifiRepairNoNearbyConfiguredNetworks();
+                break;
+            case IterateAndRepairWifiNetwork.RepairResult.NO_NETWORK_WITH_ONLINE_CONNECTIVITY_MODE:
+                dobbyAnalytics.setWifiRepairNoNetworkWithOnlineConnectivityMode();
+                break;
+            case IterateAndRepairWifiNetwork.RepairResult.UNABLE_TO_CONNECT_TO_ANY_NETWORK:
+                dobbyAnalytics.setWifiRepairUnableToConnectToAnyNetwork();
+                break;
+            case IterateAndRepairWifiNetwork.RepairResult.UNABLE_TO_TOGGLE_WIFI:
+                dobbyAnalytics.setWifiRepairUnableToToggleWifi();
+                break;
+            case IterateAndRepairWifiNetwork.RepairResult.TIMED_OUT:
+                dobbyAnalytics.setWifiRepairTimedOut();
+                break;
+            case IterateAndRepairWifiNetwork.RepairResult.UNKNOWN:
+            default:
+                dobbyAnalytics.setWifiRepairUnknownFailure();
+                break;
+        }
+    }
+
+    private RepairRecord createRepairRecord(IterateAndRepairWifiNetwork.RepairResult repairResult) {
+        RepairRecord repairRecord = new RepairRecord();
+        repairRecord.uid = userId;
+        repairRecord.phoneInfo = phoneInfo;
+        repairRecord.appVersion = DobbyApplication.getAppVersion();
+        if (repairResult != null) {
+            repairRecord.repairStatusString = ActionResult.actionResultCodeToString(repairResult.getStatus());
+            repairRecord.repairStatusMessage = repairResult.getStatusString();
+            repairRecord.failureReason = repairResult.getRepairFailureReason();
+        } else {
+            repairRecord.repairStatusString = ActionResult.actionResultCodeToString(ActionResult.ActionResultCodes.UNKNOWN);
+            repairRecord.repairStatusString = Utils.EMPTY_STRING;
+            repairRecord.failureReason = Utils.EMPTY_STRING;
+        }
+        repairRecord.timestamp = System.currentTimeMillis();
+        return repairRecord;
+    }
+
+
+    private void writeRepairRecord(final RepairRecord repairRecord) {
+        repairDatabaseWriter.writeRepairToDatabase(repairRecord);
+    }
+
+    /** Defines callbacks for service binding, passed to bindService() */
+    private class WifiServiceConnection implements ServiceConnection {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            // We've bound to LocalService, cast the IBinder and get LocalService instance
+            WifiMonitoringService.WifiServiceBinder binder = (WifiMonitoringService.WifiServiceBinder) service;
+            DobbyLog.v("In onServiceConnected for bind service");
+            wifiMonitoringService = binder.getService();
+            boundToWifiService = true;
+            dobbyAnalytics.setWifiServiceConnected();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            DobbyLog.v("WifiDocActivity: onServiceDisconnected");
+            boundToWifiService = false;
+            dobbyAnalytics.setWifiServiceDisconnected();
+        }
+    }
+
+
 }

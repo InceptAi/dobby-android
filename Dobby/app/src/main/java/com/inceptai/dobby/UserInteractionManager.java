@@ -534,9 +534,22 @@ public class UserInteractionManager implements
         super();
     }
 
+
+    //Neo callbacks
+
     @Override
     public void onServiceStopped() {
         sendServiceStoppedDueToErrorsMetaMessage();
+    }
+
+    @Override
+    public void onServiceStopped(int reason) {
+
+    }
+
+    @Override
+    public void onStopClickedByUser() {
+
     }
 
     @Override
