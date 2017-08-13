@@ -1,5 +1,6 @@
 package com.inceptai.wifimonitoringservice;
 
+import android.app.PendingIntent;
 import android.content.Context;
 import android.support.annotation.Nullable;
 
@@ -11,6 +12,7 @@ import com.inceptai.wifimonitoringservice.actionlibrary.actions.FutureAction;
 import com.inceptai.wifimonitoringservice.monitors.PeriodicCheckMonitor;
 import com.inceptai.wifimonitoringservice.monitors.ScreenStateMonitor;
 import com.inceptai.wifimonitoringservice.monitors.WifiStateMonitor;
+import com.inceptai.wifimonitoringservice.utils.DisplayNotification;
 import com.inceptai.wifimonitoringservice.utils.ServiceLog;
 import com.inceptai.wifimonitoringservice.utils.Utils;
 
@@ -51,7 +53,7 @@ public class WifiServiceCore implements
     private ServiceThreadPool serviceThreadPool;
     private Context context;
     private Set<String> listOfOfflineRouterIDs;
-    private String notificationIntentToBroadcast;
+    private PendingIntent pendingIntentForLaunchingNotification;
     private String lastActionTakenDescription;
     private long lastActionTimestampMs;
     private String lastWifiEventDescription;
@@ -62,6 +64,7 @@ public class WifiServiceCore implements
 
     private long wifiCheckInitialDelayMs;
     private long wifiCheckPeriodMs;
+    private String notificationIntentToBroadcast;
     private boolean notifiedOfConnectivityPass;
     @ConnectivityTester.WifiConnectivityMode
     private int wifiConnectivityMode;
@@ -93,6 +96,7 @@ public class WifiServiceCore implements
         actionPendingTimestampMs = 0;
         lastNotificationBody = Utils.EMPTY_STRING;
         lastNotificationTitle = Utils.EMPTY_STRING;
+        wifiConnectivityMode = ConnectivityTester.WifiConnectivityMode.UNKNOWN;
     }
 
     /**
@@ -112,9 +116,9 @@ public class WifiServiceCore implements
         return WIFI_SERVICE_CORE;
     }
 
-    public void setNotificationIntent(String notificationIntent) {
-        if (notificationIntent != null) {
-            notificationIntentToBroadcast = notificationIntent;
+    public void setPendingIntentForLaunchingNotification(PendingIntent pendingIntent) {
+        if (pendingIntent != null) {
+            pendingIntentForLaunchingNotification = pendingIntent;
         }
     }
 
@@ -551,11 +555,13 @@ public class WifiServiceCore implements
         }
         lastNotificationTitle = title;
         lastNotificationBody = body;
-        Utils.sendNotificationInfo(context, title, body, WifiMonitoringService.WIFI_STATUS_NOTIFICATION_ID);
+        serviceThreadPool.submit(new DisplayNotification(context, title, body, WifiMonitoringService.WIFI_STATUS_NOTIFICATION_ID, pendingIntentForLaunchingNotification));
+        //Utils.sendNotificationInfo(context, title, body, WifiMonitoringService.WIFI_STATUS_NOTIFICATION_ID);
     }
 
     private void sendNotificationOfUserActionNeeded(String actionNeeded, String reason) {
-        Utils.sendNotificationInfo(context, actionNeeded, reason, WifiMonitoringService.WIFI_ISSUE_NOTIFICATION_ID);
+        serviceThreadPool.submit(new DisplayNotification(context, actionNeeded, reason, WifiMonitoringService.WIFI_ISSUE_NOTIFICATION_ID, pendingIntentForLaunchingNotification));
+        //Utils.sendNotificationInfo(context, actionNeeded, reason, WifiMonitoringService.WIFI_ISSUE_NOTIFICATION_ID);
     }
 
     private boolean didActionComplete(ActionResult actionResult) {

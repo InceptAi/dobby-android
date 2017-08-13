@@ -2,14 +2,13 @@ package com.inceptai.dobby;
 
 import android.app.AlarmManager;
 import android.content.Context;
+import android.net.wifi.WifiInfo;
 
-import com.google.common.eventbus.Subscribe;
 import com.inceptai.dobby.ai.DataInterpreter;
 import com.inceptai.dobby.ai.DobbyAi;
 import com.inceptai.dobby.ai.RtDataSource;
 import com.inceptai.dobby.ai.SuggestionCreator;
 import com.inceptai.dobby.analytics.DobbyAnalytics;
-import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.expert.ExpertChat;
 import com.inceptai.dobby.expert.ExpertChatService;
@@ -35,7 +34,9 @@ import javax.inject.Inject;
 
 public class UserInteractionManager implements
         DobbyAi.ResponseCallback,
-        ExpertChatService.ChatCallback, NeoService.Callback {
+        ExpertChatService.ChatCallback,
+        NeoService.Callback,
+        WifiMonitoringServiceClient.WifiMonitoringCallback {
 
     private static final String PREF_CHAT_IN_EXPERT_MODE = "wifidoc_in_expert_mode";
     private static final String EXPERT_MODE_INITIATED_TIMESTAMP = "expert_mode_start_ts";
@@ -70,6 +71,7 @@ public class UserInteractionManager implements
     RemoteConfig remoteConfig;
 
     private NeoServiceClient neoServiceClient;
+    private WifiMonitoringServiceClient wifiMonitoringServiceClient;
     private boolean isUserInChat;
     private boolean triggerAccessibilityDialogOnResume;
 
@@ -88,6 +90,9 @@ public class UserInteractionManager implements
         dobbyEventBus.registerListener(this);
         this.historyAvailable = false;
         neoServiceClient = new NeoServiceClient(remoteConfig, dobbyThreadpool, dobbyApplication, this);
+        wifiMonitoringServiceClient = new WifiMonitoringServiceClient(context,
+                dobbyApplication.getUserUuid(), dobbyApplication.getPhoneInfo(),
+                dobbyThreadpool.getExecutor(), this);
         isUserInChat = false;
         triggerAccessibilityDialogOnResume = false;
     }
@@ -145,6 +150,7 @@ public class UserInteractionManager implements
         expertChatService.disconnect();
         dobbyAi.cleanup();
         neoServiceClient.cleanup();
+        wifiMonitoringServiceClient.cleanup();
     }
 
     public void toggleNeoService() {
@@ -408,6 +414,20 @@ public class UserInteractionManager implements
         expertChatService.sendActionCompletedMessage();
     }
 
+
+    //Wifi monitoring callbacks
+
+
+    @Override
+    public void repairStarted(boolean started) {
+
+    }
+
+    @Override
+    public void repairFinished(boolean success, WifiInfo repairedWifiInfo, String repairSummary) {
+
+    }
+
     public boolean isFirstChatAfterInstall() {
         return expertChatService.isFirstChatAfterInstall();
     }
@@ -490,24 +510,7 @@ public class UserInteractionManager implements
         }
     }
 
-    //EventBus events
-    @Subscribe
-    public void listenToEventBus(final DobbyEvent event) {
-        if (event.getEventType() == DobbyEvent.EventType.EXPERT_ASKED_FOR_ACTION) {
-            //Switching thread so we don't block the event bus
-            scheduledExecutorService.schedule(new Runnable() {
-                @Override
-                public void run() {
-                    dobbyAi.parseMessageFromExpert((String) event.getPayload());
-                }
-            }, 0, TimeUnit.MILLISECONDS);
-        }
-    }
-
-
     //Neo callbacks
-
-
     @Override
     public void onRequestAccessibilitySettings() {
         if (isUserInChat) {
@@ -540,16 +543,6 @@ public class UserInteractionManager implements
     @Override
     public void onServiceStopped() {
         sendServiceStoppedDueToErrorsMetaMessage();
-    }
-
-    @Override
-    public void onServiceStopped(int reason) {
-
-    }
-
-    @Override
-    public void onStopClickedByUser() {
-
     }
 
     @Override

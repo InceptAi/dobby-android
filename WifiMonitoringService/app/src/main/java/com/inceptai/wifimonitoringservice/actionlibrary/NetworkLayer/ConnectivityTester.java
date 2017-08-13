@@ -305,10 +305,15 @@ public class ConnectivityTester {
 
     @WifiConnectivityMode
     private int forceTestOverWifiPreLollipop() {
-        connectivityManager.setNetworkPreference(ConnectivityManager.TYPE_WIFI);
-        int mode = testUrl();
-        //Remove your preference
-        connectivityManager.setNetworkPreference(ConnectivityManager.DEFAULT_NETWORK_PREFERENCE);
+        @WifiConnectivityMode int mode = WifiConnectivityMode.UNKNOWN;
+        try {
+            connectivityManager.setNetworkPreference(ConnectivityManager.TYPE_WIFI);
+            mode = testUrl();
+            //Remove your preference
+            connectivityManager.setNetworkPreference(ConnectivityManager.DEFAULT_NETWORK_PREFERENCE);
+        } catch (SecurityException e) {
+            ServiceLog.e("Security exception in forceTestOverWifiPreLollipop");
+        }
         return mode;
     }
 

@@ -9,7 +9,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.NetworkLayer;
-import com.inceptai.dobby.actions.ActionTaker;
 import com.inceptai.dobby.analytics.DobbyAnalytics;
 import com.inceptai.dobby.database.ActionDatabaseWriter;
 import com.inceptai.dobby.database.ActionRecord;
@@ -17,14 +16,12 @@ import com.inceptai.dobby.database.FailureDatabaseWriter;
 import com.inceptai.dobby.database.InferenceDatabaseWriter;
 import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
-import com.inceptai.dobby.expert.ExpertChat;
 import com.inceptai.dobby.model.PingStats;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.speedtest.BandwidthResult;
 import com.inceptai.dobby.speedtest.BandwidthTestCodes;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
-import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -71,7 +68,7 @@ import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_WIFI_CHECK;
 
 @Singleton
 public class DobbyAi implements ApiAiClient.ResultListener,
-        ActionTaker.ActionCallback, InferenceEngine.ActionListener {
+        InferenceEngine.ActionListener {
     private static final boolean CLEAR_STATS_EVERY_TIME_USER_ASKS_TO_RUN_TESTS = true;
     private static final long MAX_ETA_TO_MARK_EXPERT_AS_LISTENING_SECONDS = 180;
     private static final boolean USE_API_AI_FOR_WIFIDOC = true;
@@ -80,7 +77,6 @@ public class DobbyAi implements ApiAiClient.ResultListener,
     private Context context;
     private DobbyThreadpool threadpool;
     private ApiAiClient apiAiClient;
-    private ActionTaker actionTaker;
 
     @Nullable private ResponseCallback responseCallback;
     private InferenceEngine inferenceEngine;
@@ -134,8 +130,7 @@ public class DobbyAi implements ApiAiClient.ResultListener,
     public DobbyAi(DobbyThreadpool threadpool,
                    InferenceDatabaseWriter inferenceDatabaseWriter,
                    FailureDatabaseWriter failureDatabaseWriter,
-                   DobbyApplication dobbyApplication,
-                   ActionTaker actionTaker) {
+                   DobbyApplication dobbyApplication) {
         this.context = dobbyApplication.getApplicationContext();
         this.threadpool = threadpool;
         useApiAi = DobbyApplication.isDobbyFlavor() || (USE_API_AI_FOR_WIFIDOC && DobbyApplication.isWifiDocFlavor());
@@ -147,8 +142,6 @@ public class DobbyAi implements ApiAiClient.ResultListener,
         repeatBwWifiPingAction = new AtomicBoolean(false);
         lastAction = ACTION_TYPE_UNKNOWN;
         initChatToBotState();
-        this.actionTaker = actionTaker;
-        this.actionTaker.setActionCallback(this);
     }
 
     @Action.ActionType
@@ -512,29 +505,6 @@ public class DobbyAi implements ApiAiClient.ResultListener,
             apiAiClient.cleanup();
         }
         responseCallback = null;
-    }
-
-    public void parseMessageFromExpert(String expertMessage) {
-        if (expertMessage.startsWith(ExpertChat.SPECIAL_MESSAGE_PREFIX)) {
-            parseExpertTextAndTakeActionIfNeeded(expertMessage);
-        }
-    }
-
-    @Override
-    public void actionStarted(String actionName) {
-        if (responseCallback != null) {
-            DobbyLog.v("DobbyAi: action: " + actionName + " started");
-            responseCallback.expertActionStarted();
-        }
-    }
-
-    @Override
-    public void actionCompleted(String actionName, ActionResult actionResult) {
-        if (responseCallback != null) {
-            DobbyLog.v("DobbyAi: action: " + actionName + " resultCode " + actionResult.getStatusString());
-            responseCallback.expertActionCompleted();
-        }
-
     }
 
     //private methods
@@ -1067,93 +1037,4 @@ public class DobbyAi implements ApiAiClient.ResultListener,
         actionDatabaseWriter.writeActionToDatabase(actionRecord);
     }
 
-    private void startNeo() {
-        //Send neo start intent
-        if (responseCallback != null) {
-            responseCallback.startNeoByExpert();
-        }
-//        Intent intent = new Intent();
-//        intent.setAction("com.inceptai.neo.ACTION");
-//        context.sendBroadcast(intent);
-    }
-
-    private void endNeo() {
-        //End neo intent
-        if (responseCallback != null) {
-            responseCallback.stopNeoByExpert();
-        }
-//
-//        Intent intent = new Intent();
-//        intent.setAction("com.inceptai.neo.ACTION");
-//        context.sendBroadcast(intent);
-    }
-
-    private void parseExpertTextAndTakeActionIfNeeded(String expertMessage) {
-        if (expertMessage.toLowerCase().contains("wifiscan")) {
-            performAndRecordWifiAction();
-        } else if (expertMessage.toLowerCase().contains("ping")) {
-            performAndRecordPingAction();
-        } else if (expertMessage.toLowerCase().contains("feedback")) {
-            triggerFeedbackRequest();
-        } else if (expertMessage.toLowerCase().contains("bot")) {
-            triggerSwitchToBotMode();
-        } else if (expertMessage.toLowerCase().contains("human")) {
-            setChatInExpertMode();
-        } else if (expertMessage.toLowerCase().contains("left") ||
-                expertMessage.toLowerCase().contains("early") ||
-                expertMessage.toLowerCase().contains("dropped")) {
-            dobbyAnalytics.setExpertSaysUserDroppedOff();
-        } else if (expertMessage.toLowerCase().contains("good")) {
-            dobbyAnalytics.setExpertSaysGoodInferencing();
-        } else if (expertMessage.toLowerCase().contains("bad")) {
-            dobbyAnalytics.setExpertSaysBadInferencing();
-        }  else if (expertMessage.toLowerCase().contains("unresolved") ||
-                expertMessage.toLowerCase().contains("unsolved")) {
-            dobbyAnalytics.setExpertSaysIssueUnResolved();
-        } else if (expertMessage.toLowerCase().contains("solved") ||
-                expertMessage.toLowerCase().contains("resolved")) {
-            dobbyAnalytics.setExpertSaysIssueResolved();
-        } else if (expertMessage.toLowerCase().contains("more") ||
-                expertMessage.toLowerCase().contains("data")) {
-            dobbyAnalytics.setExpertSaysMoreDataNeeded();
-        } else if (expertMessage.toLowerCase().contains("better")) {
-            dobbyAnalytics.setExpertSaysInferencingCanBeBetter();
-        } else if (expertMessage.toLowerCase().contains("wifioff")) {
-            actionTaker.turnWifiOff();
-        } else if (expertMessage.toLowerCase().contains("wifion")) {
-            actionTaker.turnWifiOn();
-        } else if (expertMessage.toLowerCase().contains("wifitoggle")) {
-            actionTaker.toggleWifi();
-        } else if (expertMessage.toLowerCase().contains("wifidisconnect")) {
-            actionTaker.disconnect();
-        } else if (expertMessage.toLowerCase().contains("wifireset")) {
-            actionTaker.resetConnection();
-        } else if (expertMessage.toLowerCase().contains("wificonfigured") &&
-                !expertMessage.toLowerCase().contains("best")) {
-            actionTaker.getConfiguredNetworks();
-        } else if (expertMessage.toLowerCase().contains("wificonfigured") &&
-                expertMessage.toLowerCase().contains("best")) {
-            actionTaker.getBestConfiguredNetwork();
-        } else if (expertMessage.toLowerCase().contains("check5ghz")) {
-            actionTaker.checkIf5GHzSupported();
-        } else if (expertMessage.toLowerCase().contains("wificonnect")) {
-            actionTaker.connectToBestWifi();
-        } else if (expertMessage.toLowerCase().contains("wifinearby")) {
-            actionTaker.getNearbyWifiNetworks();
-        } else if (expertMessage.toLowerCase().contains("wifidhcp")) {
-            actionTaker.getDhcpInfo();
-        } else if (expertMessage.toLowerCase().contains("wifiinfo")) {
-            actionTaker.getWifiInfo();
-        } else if (expertMessage.toLowerCase().contains("wifirepair")) {
-            actionTaker.repairConnection();
-        } else if (expertMessage.toLowerCase().contains("connectiontest")) {
-            actionTaker.performConnectivityTest();
-        } else if (expertMessage.toLowerCase().contains("startneo")) {
-            startNeo();
-        } else if (expertMessage.toLowerCase().contains("endneo") || expertMessage.toLowerCase().contains("stopneo")) {
-            endNeo();
-        } else if (expertMessage.toLowerCase().contains("launchexpert")) {
-            Utils.launchWifiExpertMainActivity(context.getApplicationContext());
-        }
-    }
 }

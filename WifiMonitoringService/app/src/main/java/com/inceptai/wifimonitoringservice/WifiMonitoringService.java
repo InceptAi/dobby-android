@@ -1,5 +1,6 @@
 package com.inceptai.wifimonitoringservice;
 
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
@@ -31,6 +32,7 @@ public class WifiMonitoringService extends Service {
     public static final int WIFI_STATUS_NOTIFICATION_ID = 1000;
     public static final int WIFI_ISSUE_NOTIFICATION_ID = 1001;
     public static final int WIFI_ACTION_NOTIFICATION_ID = 1002;
+    public static final String EXTRA_PENDING_INTENT_NAME = "EXTRA_PENDING_INTENT_NAME";
 
     private Looper mServiceLooper;
     private ServiceHandler mServiceHandler;
@@ -47,9 +49,9 @@ public class WifiMonitoringService extends Service {
         public void handleMessage(Message msg) {
             // Normally we would do some work here, like download a file.
             // For our sample, we just sleep for 5 seconds.
-            String notificationInfoIntent = (String)msg.obj;
-            if (notificationInfoIntent != null) {
-                wifiServiceCore.setNotificationIntent(notificationInfoIntent);
+            PendingIntent pendingIntent = (PendingIntent)msg.obj;
+            if (pendingIntent != null) {
+                wifiServiceCore.setPendingIntentForLaunchingNotification(pendingIntent);
             }
             wifiServiceCore.startMonitoring();
         }
@@ -77,6 +79,7 @@ public class WifiMonitoringService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         String notificationInfoIntent = null;
+        PendingIntent pendingIntent = null;
         if (intent != null) {
             if (intent.hasExtra(ServiceAlarm.ALARM_START_TYPE)) {
                 ServiceLog.v("Service started with alarm");
@@ -84,12 +87,13 @@ public class WifiMonitoringService extends Service {
                 ServiceLog.v("Service started with start intent");
             }
             notificationInfoIntent = intent.getStringExtra(EXTRA_INTENT_NAME);
+            pendingIntent = intent.getParcelableExtra(EXTRA_PENDING_INTENT_NAME);
         }
         // For each start request, send a message to start a job and deliver the
         // start ID so we know which request we're stopping when we finish the job
         Message msg = mServiceHandler.obtainMessage();
         msg.arg1 = startId;
-        msg.obj = notificationInfoIntent;
+        msg.obj = pendingIntent;
         mServiceHandler.sendMessage(msg);
         // If we get killed, after returning from here, restart
         ServiceAlarm.setRepeatingServiceWatchDogAlarmWithNoDelay(this);
