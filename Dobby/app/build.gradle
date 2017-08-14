@@ -27,6 +27,7 @@ android {
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
+        multiDexEnabled  true
         // testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         testInstrumentationRunner "com.inceptai.dobby.MyAndroidJUnitRunner"
     }
@@ -60,14 +61,10 @@ android {
         release {
             productFlavors.wifidoc.signingConfig signingConfigs.wifidoc_config
             productFlavors.dobby.signingConfig signingConfigs.wifiexpert_config
-            minifyEnabled false
-            useProguard false
-            shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
         debug {
             applicationIdSuffix ".debug"
-            useProguard false
         }
     }
 
@@ -183,6 +180,9 @@ dependencies {
     compile project(':neo-service')
     compile project(':wifimonitoring-service')
     annotationProcessor 'org.parceler:parceler:1.1.6'
+
+    //Multi-dex
+    compile 'com.android.support:multidex:1.0.1'
     //For ManagementFactory classes
     //compile group: 'com.sun', name: 'rt', version: '1.5.0_06'
     //FutureAction library compile

@@ -61,6 +61,7 @@ public class WifiMonitoringServiceClient {
     public WifiMonitoringServiceClient(Context context, String userId,
                                        String phoneInfo, Executor executor,
                                        WifiMonitoringCallback wifiMonitoringCallback) {
+        ((DobbyApplication) context.getApplicationContext()).getProdComponent().inject(this);
         this.context = context;
         this.userId = userId;
         this.phoneInfo = phoneInfo;

@@ -1,6 +1,8 @@
 package com.inceptai.dobby;
 
 import android.app.Application;
+import android.content.Context;
+import android.support.multidex.MultiDex;
 import android.util.Log;
 
 import com.inceptai.dobby.dagger.DaggerProdComponent;
@@ -75,4 +77,9 @@ public class DobbyApplication extends Application {
         return EmulatorDetector.isEmulator();
     }
 
+    @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(base);
+        MultiDex.install(this);
+    }
 }
