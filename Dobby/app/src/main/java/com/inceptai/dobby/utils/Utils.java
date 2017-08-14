@@ -7,9 +7,11 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.content.res.XmlResourceParser;
+import android.location.Location;
 import android.net.wifi.WifiInfo;
 import android.os.Build;
 import android.provider.Settings;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -22,8 +24,10 @@ import android.widget.ImageView;
 import com.google.common.net.InetAddresses;
 import com.google.gson.Gson;
 import com.inceptai.dobby.BuildConfig;
+import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.MainActivity;
 import com.inceptai.dobby.ai.DataInterpreter;
+import com.inceptai.dobby.database.ActionRecord;
 import com.inceptai.dobby.speedtest.BandwidthTestCodes;
 import com.inceptai.dobby.ui.WifiDocActivity;
 
@@ -1059,4 +1063,58 @@ public class Utils {
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         context.startActivity(i);
     }
+
+    public static ActionRecord createActionRecord(String userId, String phoneInfo,
+                                            @Nullable DataInterpreter.BandwidthGrade bandwidthGrade,
+                                            @Nullable DataInterpreter.WifiGrade wifiGrade,
+                                            @Nullable DataInterpreter.PingGrade pingGrade,
+                                            @Nullable DataInterpreter.HttpGrade httpGrade,
+                                            @Nullable Location location) {
+        ActionRecord actionRecord = new ActionRecord();
+        actionRecord.uid = userId;
+        actionRecord.phoneInfo = phoneInfo;
+        actionRecord.appVersion = DobbyApplication.getAppVersion();
+        actionRecord.actionType = "UNKNOWN";
+
+        int count = 0;
+        //Assign all the grades
+        if (bandwidthGrade != null) {
+            actionRecord.bandwidthGradeJson = bandwidthGrade.toJson();
+            actionRecord.actionType = "BWTEST";
+            count++;
+        }
+
+        if (wifiGrade != null) {
+            actionRecord.wifiGradeJson = wifiGrade.toJson();
+            actionRecord.actionType = "WIFI";
+            count++;
+        }
+
+        if (pingGrade != null) {
+            actionRecord.pingGradeJson = pingGrade.toJson();
+            actionRecord.actionType = "PING";
+            count++;
+        }
+
+        if (httpGrade != null) {
+            actionRecord.httpGradeJson = httpGrade.toJson();
+            actionRecord.actionType = "HTTP";
+            count++;
+        }
+
+        if (count > 1) {
+            actionRecord.actionType = "MIXED";
+        }
+
+        if (location != null) {
+            actionRecord.lat = location.getLatitude();
+            actionRecord.lon = location.getLongitude();
+            actionRecord.accuracy = location.getAccuracy();
+        }
+        //Assign the timestamp
+        actionRecord.timestamp = System.currentTimeMillis();
+        return actionRecord;
+    }
+
+
 }

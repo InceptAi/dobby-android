@@ -84,8 +84,11 @@ public class WifiDocActivity extends AppCompatActivity implements
          *
          */
 
-        if (!isTaskRoot()) {
-            finish();
+        if (!isTaskRoot()
+                && getIntent().hasCategory(Intent.CATEGORY_LAUNCHER)
+                && getIntent().getAction() != null
+                && getIntent().getAction().equals(Intent.ACTION_MAIN)) {
+                finish();
             DobbyLog.v("Finishing since this is not root task");
             return;
         }
@@ -218,7 +221,9 @@ public class WifiDocActivity extends AppCompatActivity implements
 
     @Override
     protected void onDestroy() {
-        wifiMonitoringServiceClient.disconnect();
+        if (wifiMonitoringServiceClient != null) {
+            wifiMonitoringServiceClient.disconnect();
+        }
         super.onDestroy();
     }
 

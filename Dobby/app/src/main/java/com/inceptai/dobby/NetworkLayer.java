@@ -15,6 +15,8 @@ import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.dobby.ai.DataInterpreter;
 import com.inceptai.dobby.connectivity.ConnectivityAnalyzer;
+import com.inceptai.dobby.database.ActionDatabaseWriter;
+import com.inceptai.dobby.database.ActionRecord;
 import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.model.DobbyWifiInfo;
@@ -66,6 +68,12 @@ public class NetworkLayer implements LocationListener {
 
     @Inject
     NewBandwidthAnalyzer bandwidthAnalyzer;
+
+    @Inject
+    ActionDatabaseWriter actionDatabaseWriter;
+
+    @Inject
+    DobbyApplication dobbyApplication;
 
     // Use Dagger to get a singleton instance of this class.
     public NetworkLayer(Context context, DobbyThreadpool threadpool, DobbyEventBus eventBus) {
@@ -292,6 +300,10 @@ public class NetworkLayer implements LocationListener {
             case DobbyEvent.EventType.DHCP_INFO_AVAILABLE:
                 ipLayerInfo = new IPLayerInfo(getWifiAnalyzerInstance().getDhcpInfo());
                 getPingAnalyzerInstance().updateIPLayerInfo(ipLayerInfo);
+                //Write dhcp info to database
+                DataInterpreter.PingGrade pingGrade = DataInterpreter.interpret(null, ipLayerInfo, BandwidthTestCodes.ErrorCodes.NO_ERROR);
+                DataInterpreter.WifiGrade wifiGrade = getCurrentWifiGrade();
+                writeActionRecord(null, wifiGrade, pingGrade, null);
                 if (RETRIGGER_PING_AUTOMATICALLY) {
                     startPing();
                 }
@@ -306,6 +318,7 @@ public class NetworkLayer implements LocationListener {
                 break;
             case DobbyEvent.EventType.PING_INFO_AVAILABLE:
             case DobbyEvent.EventType.PING_FAILED:
+                //Write ping info to database
                 startGatewayDownloadLatencyTest();
                 break;
             case DobbyEvent.EventType.WIFI_CONNECTED:
@@ -378,6 +391,9 @@ public class NetworkLayer implements LocationListener {
     private void initLocation() {
         locationManager = (LocationManager) context.getApplicationContext().getSystemService(LOCATION_SERVICE);
         List<String> providers = locationManager.getProviders(true);
+        if (providers == null) {
+            return;
+        }
         Location bestLocation = null;
         for (String provider : providers) {
             Location l = locationManager.getLastKnownLocation(provider);
@@ -436,5 +452,21 @@ public class NetworkLayer implements LocationListener {
     @Override
     public void onProviderDisabled(String provider) {
 
+    }
+
+    private void writeActionRecord(@Nullable DataInterpreter.BandwidthGrade bandwidthGrade,
+                                   @Nullable DataInterpreter.WifiGrade wifiGrade,
+                                   @Nullable DataInterpreter.PingGrade pingGrade,
+                                   @Nullable DataInterpreter.HttpGrade httpGrade) {
+        ActionRecord actionRecord = Utils.createActionRecord(
+                dobbyApplication.getUserUuid(),
+                dobbyApplication.getPhoneInfo(),
+                bandwidthGrade,
+                wifiGrade,
+                pingGrade,
+                httpGrade,
+                fetchLastKnownLocation());
+        //Write to db.
+        actionDatabaseWriter.writeActionToDatabase(actionRecord);
     }
 }

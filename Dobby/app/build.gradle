@@ -48,8 +48,8 @@ android {
     productFlavors {
         wifidoc {
             applicationId  "com.inceptai.dobby.wifidoc"
-            versionCode 51
-            versionName "3.0.1-wifitester-repair"
+            versionCode 52
+            versionName "3.0.2-wifitester-repair"
         }
         dobby {
             applicationId "com.inceptai.wifiexpert"
@@ -59,6 +59,8 @@ android {
     }
     buildTypes {
         release {
+            minifyEnabled true
+            shrinkResources true
             productFlavors.wifidoc.signingConfig signingConfigs.wifidoc_config
             productFlavors.dobby.signingConfig signingConfigs.wifiexpert_config
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
@@ -138,7 +140,7 @@ android.productFlavors.all { flavour ->
 */
 
 dependencies {
-    compile files('libs/jspeedtest-1.26.jar')
+    //compile files('libs/jspeedtest-1.26.jar')
     compile fileTree(include: ['*.jar'], dir: 'libs')
     // API.AI Gradle dependencies.
     //  api.ai SDK dependencies

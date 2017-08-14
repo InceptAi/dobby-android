@@ -762,6 +762,13 @@ public class DataInterpreter {
         return grade;
     }
 
+    public static PingGrade interpret(HashMap<String, PingStats> pingStatsHashMap, IPLayerInfo ipLayerInfo,
+                                      @BandwidthTestCodes.ErrorCodes int errorCode) {
+        PingGrade pingGrade = interpret(pingStatsHashMap, ipLayerInfo);
+        pingGrade.errorCode = errorCode;
+        return pingGrade;
+    }
+
     public static PingGrade interpret(HashMap<String, PingStats> pingStatsHashMap, IPLayerInfo ipLayerInfo) {
         PingGrade pingGrade = new PingGrade();
         pingGrade.errorCode = BandwidthTestCodes.ErrorCodes.NO_ERROR;

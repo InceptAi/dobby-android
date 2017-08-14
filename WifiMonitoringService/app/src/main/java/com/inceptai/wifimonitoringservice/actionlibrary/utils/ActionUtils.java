@@ -48,7 +48,7 @@ public class ActionUtils {
         return null;
     }
 
-    public static WifiConfiguration findWifiConfigurationForGivenScanResult(
+    private static WifiConfiguration findWifiConfigurationForGivenScanResult(
             List<WifiConfiguration> wifiConfigurationList, ScanResult scanResult) {
         if (wifiConfigurationList == null || scanResult == null) {
             return null;
@@ -61,7 +61,7 @@ public class ActionUtils {
         return null;
     }
 
-    public static boolean matchWifiConfigurationWithScanResult(WifiConfiguration wifiConfiguration,
+    private static boolean matchWifiConfigurationWithScanResult(WifiConfiguration wifiConfiguration,
                                                                ScanResult scanResult) {
         if (wifiConfiguration == null || scanResult == null) {
             return false;
@@ -78,7 +78,7 @@ public class ActionUtils {
         return false;
     }
 
-    public static boolean compareSSIDs(String ssid1, String ssid2) {
+    private static boolean compareSSIDs(String ssid1, String ssid2) {
         String cleanSSID1 = CharMatcher.is('\"').trimFrom(ssid1);
         String cleanSSID2 = CharMatcher.is('\"').trimFrom(ssid2);
         return cleanSSID1.equals(cleanSSID2);

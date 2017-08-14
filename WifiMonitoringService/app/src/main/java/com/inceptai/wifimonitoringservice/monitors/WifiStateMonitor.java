@@ -268,11 +268,14 @@ public class WifiStateMonitor {
                     onWifiStateChanged(newWifiState);
                     break;
                 case WifiManager.NETWORK_STATE_CHANGED_ACTION:
-                    detailedState = ((NetworkInfo)intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO)).getDetailedState();
-                    if (detailedState == NetworkInfo.DetailedState.CONNECTED) {
-                        wifiInfo = intent.getParcelableExtra(WifiManager.EXTRA_WIFI_INFO);
+                    networkInfo = intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
+                    if (networkInfo != null) {
+                        detailedState = networkInfo.getDetailedState();
+                        if (detailedState == NetworkInfo.DetailedState.CONNECTED) {
+                            wifiInfo = intent.getParcelableExtra(WifiManager.EXTRA_WIFI_INFO);
+                        }
+                        onDetailedStateChanged(detailedState, wifiInfo);
                     }
-                    onDetailedStateChanged(detailedState, wifiInfo);
                     break;
                 case ConnectivityManager.CONNECTIVITY_ACTION:
                     networkInfo = intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);

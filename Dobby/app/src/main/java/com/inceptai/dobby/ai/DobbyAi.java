@@ -985,54 +985,17 @@ public class DobbyAi implements ApiAiClient.ResultListener,
 
 
     private void writeActionRecord(@Nullable DataInterpreter.BandwidthGrade bandwidthGrade,
-                                            @Nullable DataInterpreter.WifiGrade wifiGrade,
-                                            @Nullable DataInterpreter.PingGrade pingGrade,
-                                            @Nullable DataInterpreter.HttpGrade httpGrade) {
-        ActionRecord actionRecord = new ActionRecord();
-        HashMap<String, String> phoneInfo = new HashMap<>();
-        actionRecord.uid = dobbyApplication.getUserUuid();
-        actionRecord.phoneInfo = dobbyApplication.getPhoneInfo();
-        actionRecord.appVersion = DobbyApplication.getAppVersion();
-        actionRecord.actionType = "UNKNOWN";
-
-        int count = 0;
-        //Assign all the grades
-        if (bandwidthGrade != null) {
-            actionRecord.bandwidthGradeJson = bandwidthGrade.toJson();
-            actionRecord.actionType = "BWTEST";
-            count++;
-        }
-
-        if (wifiGrade != null) {
-            actionRecord.wifiGradeJson = wifiGrade.toJson();
-            actionRecord.actionType = "WIFI";
-            count++;
-        }
-
-        if (pingGrade != null) {
-            actionRecord.pingGradeJson = pingGrade.toJson();
-            actionRecord.actionType = "PING";
-            count++;
-        }
-
-        if (httpGrade != null) {
-            actionRecord.httpGradeJson = httpGrade.toJson();
-            actionRecord.actionType = "HTTP";
-            count++;
-        }
-
-        if (count > 1) {
-            actionRecord.actionType = "MIXED";
-        }
-
-        Location location = networkLayer.fetchLastKnownLocation();
-        if (location != null) {
-            actionRecord.lat = location.getLatitude();
-            actionRecord.lon = location.getLongitude();
-            actionRecord.accuracy = location.getAccuracy();
-        }
-        //Assign the timestamp
-        actionRecord.timestamp = System.currentTimeMillis();
+                                   @Nullable DataInterpreter.WifiGrade wifiGrade,
+                                   @Nullable DataInterpreter.PingGrade pingGrade,
+                                   @Nullable DataInterpreter.HttpGrade httpGrade) {
+        ActionRecord actionRecord = Utils.createActionRecord(
+                dobbyApplication.getUserUuid(),
+                dobbyApplication.getPhoneInfo(),
+                bandwidthGrade,
+                wifiGrade,
+                pingGrade,
+                httpGrade,
+                networkLayer.fetchLastKnownLocation());
         //Write to db.
         actionDatabaseWriter.writeActionToDatabase(actionRecord);
     }

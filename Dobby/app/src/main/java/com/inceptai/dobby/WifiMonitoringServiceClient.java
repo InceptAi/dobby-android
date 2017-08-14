@@ -1,5 +1,6 @@
 package com.inceptai.dobby;
 
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -30,6 +31,7 @@ import java.util.concurrent.Executor;
 import javax.inject.Inject;
 
 import static com.inceptai.dobby.ui.WifiDocActivity.REPAIR_TIMEOUT_MS;
+import static com.inceptai.wifimonitoringservice.WifiMonitoringService.NOTIFICATION_INFO_INTENT_VALUE;
 
 
 /**
@@ -163,11 +165,13 @@ public class WifiMonitoringServiceClient {
     //Private stuff
 
     private void startWifiMonitoringServiceIfEnabled() {
-        //Intent serviceStartIntent = new Intent(this, WifiMonitoringService.class);
-        //serviceStartIntent.putExtra(NotificationInfoKeys., NOTIFICATION_INFO_INTENT_VALUE);
+        Intent serviceStartIntent = new Intent(context, WifiMonitoringService.class);
+        PendingIntent pendingIntentToLaunchOnNotificationClick = Utils.getPendingIntentForNotification(context, null);
+        serviceStartIntent.putExtra(WifiMonitoringService.EXTRA_PENDING_INTENT_NAME, pendingIntentToLaunchOnNotificationClick);
         if (Utils.checkIsWifiMonitoringEnabled(context)) {
             dobbyAnalytics.setWifiServiceStarted();
-            context.startService(new Intent(context, WifiMonitoringService.class));
+            //context.startService(new Intent(context, WifiMonitoringService.class));
+            context.startService(serviceStartIntent);
         }
     }
 
@@ -345,7 +349,7 @@ public class WifiMonitoringServiceClient {
     }
 
     private void registerNotificationInfoReceiver() {
-        IntentFilter intentFilter = new IntentFilter(WifiMonitoringService.NOTIFICATION_INFO_INTENT_VALUE);
+        IntentFilter intentFilter = new IntentFilter(NOTIFICATION_INFO_INTENT_VALUE);
         LocalBroadcastManager.getInstance(context).registerReceiver(
                 notificationInfoReceiver, intentFilter);
         isNotificationReceiverRegistered = true;

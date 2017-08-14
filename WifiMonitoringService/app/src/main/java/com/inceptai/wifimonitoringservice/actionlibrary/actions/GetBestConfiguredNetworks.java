@@ -146,7 +146,7 @@ public class GetBestConfiguredNetworks extends FutureAction {
         }
     }
 
-    private void clearResults() {
+    synchronized private void clearResults() {
         scanResultList = null;
         wifiConfigurationList = null;
         bestAvailableWifiConfigurations = null;
