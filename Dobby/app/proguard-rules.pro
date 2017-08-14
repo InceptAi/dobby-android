@@ -43,12 +43,13 @@
 -dontwarn org.slf4j.**
 -dontwarn org.json.*
 
--keep class com.inceptai.** { *; }
--keep class com.google.common.** { *; }
--keep class fr.bmartel.** { *; }
--keep class javax.** { *; }
--keep class ai.api.** { *; }
--keep class commons-io.** { *; }
+-keep,includedescriptorclasses class com.inceptai.** { *; }
+-keep,includedescriptorclasses class com.google.common.** { *; }
+-keep,includedescriptorclasses class fr.bmartel.** { *; }
+-keep,includedescriptorclasses class javax.** { *; }
+-keep,includedescriptorclasses class ai.api.** { *; }
+-keep,includedescriptorclasses class commons-io.** { *; }
+-keep,includedescriptorclasses class javax.annotation.** { *; }
 #-keep class java.** { *; }
 
 

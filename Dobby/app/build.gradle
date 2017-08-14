@@ -48,7 +48,7 @@ android {
     productFlavors {
         wifidoc {
             applicationId  "com.inceptai.dobby.wifidoc"
-            versionCode 52
+            versionCode 53
             versionName "3.0.2-wifitester-repair"
         }
         dobby {
@@ -59,8 +59,6 @@ android {
     }
     buildTypes {
         release {
-            minifyEnabled true
-            shrinkResources true
             productFlavors.wifidoc.signingConfig signingConfigs.wifidoc_config
             productFlavors.dobby.signingConfig signingConfigs.wifiexpert_config
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'

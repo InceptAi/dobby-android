@@ -5,7 +5,6 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.support.v7.app.NotificationCompat;
 
 import com.inceptai.wifimonitoringservice.R;
@@ -60,7 +59,7 @@ public class DisplayNotification implements Runnable {
         // Vibration
         //notificationBuilder.setVibrate(new long[] { 1000, 1000, 1000, 1000, 1000 });
         // LED
-        notificationBuilder.setLights(Color.WHITE, 3000, 3000);
+        //notificationBuilder.setLights(Color.WHITE, 3000, 3000);
         //notificationBuilder.setOngoing(true);
         Notification notification = notificationBuilder.build();
         if (notificationId == WifiMonitoringService.WIFI_STATUS_NOTIFICATION_ID) {
