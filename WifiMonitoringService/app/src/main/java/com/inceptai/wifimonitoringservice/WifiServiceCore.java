@@ -42,7 +42,7 @@ public class WifiServiceCore implements
     private final static int WIFI_CHECK_PERIOD_SCREEN_ACTIVE_MS = 60 * 1000; //30 secs
     private final static int WIFI_CHECK_PERIOD_SCREEN_INACTIVE_MS = 5 * 60 * 1000; //5 mins
     private final static boolean ENABLE_CHECK_WHEN_SCREEN_INACTIVE = true;
-    private final static boolean ENABLE_AGGRESSIVE_RECONNECT_WHEN_CONNECTION_DROPS = false;
+    private final static boolean ENABLE_AGGRESSIVE_RECONNECT_WHEN_CONNECTION_DROPS = true;
     private final static long ACTION_PENDING_TIMEOUT = 60 * 1000; //60 secs
 
     //Key components

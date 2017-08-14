@@ -51,7 +51,7 @@ public class DisplayNotification implements Runnable {
         NotificationCompat.Builder notificationBuilder = (NotificationCompat.Builder) new NotificationCompat.Builder(context)
                 .setAutoCancel(true)   //Automatically delete the notification
                 .setSmallIcon(R.drawable.ic_wifimonitoring_notif) //Notification icon
-                .setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_wifi_service_icon))
+                .setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_wifi_service_launcher))
                 .setContentIntent(pendingIntent)
                 .setContentTitle(title)
                 .setContentText(body)
