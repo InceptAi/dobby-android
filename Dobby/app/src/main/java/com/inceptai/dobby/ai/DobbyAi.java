@@ -56,6 +56,7 @@ import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_RUN_TESTS_FOR_
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_SET_CHAT_TO_BOT_MODE;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_SHOW_LONG_SUGGESTION;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_SHOW_SHORT_SUGGESTION;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_START_REPAIR_DIALOGUE;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_TURN_OFF_WIFI_SERVICE;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_TURN_ON_WIFI_SERVICE;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_UNKNOWN;
@@ -305,14 +306,19 @@ public class DobbyAi implements
                 dobbyAnalytics.wifiExpertAskForLongSuggestion();
                 break;
             case ACTION_TYPE_WIFI_CHECK:
+                DataInterpreter.WifiGrade wifiGrade = getCurrentWifiGrade();
                 if (responseCallback != null) {
-                    responseCallback.showNetworkInfoViewCard(getCurrentWifiGrade(), getCurrentIsp(), getCurrentIp());
+                    responseCallback.showNetworkInfoViewCard(wifiGrade, getCurrentIsp(), getCurrentIp());
+                    //TODO : Check if we are connected and online -- if not -- suggest wifi repair action
                 }
+
                 //We only proceed with bw tests requests if wifi is online -- otherwise there is no point.
                 // We can actually analyze this further and run the tests to show detailed analysis.
                 //if (networkLayer.isWifiOnline()) {
                 //Insert repair wifi button here if wifi is on but not online
-                if (!networkLayer.isWifiOff()) {
+                if (!wifiGrade.isWifiOnline()) {
+                    sendEvent(ApiAiClient.APIAI_SHOW_REPAIR_RECOMMENDATION_EVENT);
+                } else {
                     sendEvent(ApiAiClient.APIAI_WIFI_ANALYSIS_SHOWN_EVENT);
                 }
                 wifiCheckDone = true;
@@ -432,6 +438,9 @@ public class DobbyAi implements
                 if (responseCallback != null) {
                     responseCallback.startWifiMonitoringService();
                 }
+                break;
+            case ACTION_TYPE_START_REPAIR_DIALOGUE:
+                sendEvent(ApiAiClient.APIAI_START_WIFI_REPAIR_EVENT);
                 break;
             default:
                 DobbyLog.i("Unknown FutureAction");
@@ -576,9 +585,9 @@ public class DobbyAi implements
                 responseList.add(UserResponse.ResponseType.CANCEL);
                 break;
             case ACTION_TYPE_WIFI_CHECK:
-                //responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
-                responseList.add(monitoringControlToShow());
+                responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
                 responseList.add(UserResponse.ResponseType.START_WIFI_REPAIR);
+                responseList.add(monitoringControlToShow());
                 break;
             case ACTION_TYPE_DIAGNOSE_SLOW_INTERNET:
             case ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS:
@@ -587,11 +596,11 @@ public class DobbyAi implements
             case ACTION_TYPE_SHOW_SHORT_SUGGESTION:
                 break;
             case ACTION_TYPE_LIST_DOBBY_FUNCTIONS:
-                responseList.add(UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS);
-                //responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
+                //responseList.add(UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS);
+                responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
                 responseList.add(UserResponse.ResponseType.RUN_WIFI_TESTS);
-                responseList.add(monitoringControlToShow());
                 responseList.add(UserResponse.ResponseType.START_WIFI_REPAIR);
+                responseList.add(monitoringControlToShow());
                 break;
             case ACTION_TYPE_ASK_FOR_BW_TESTS:
                 responseList.add(UserResponse.ResponseType.YES);
@@ -608,11 +617,11 @@ public class DobbyAi implements
                 responseList.add(UserResponse.ResponseType.NO);
                 break;
             case ACTION_TYPE_CONTACT_HUMAN_EXPERT:
-                responseList.add(UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS);
-                //responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
+                //responseList.add(UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS);
+                responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
                 responseList.add(UserResponse.ResponseType.RUN_WIFI_TESTS);
-                responseList.add(monitoringControlToShow());
                 responseList.add(UserResponse.ResponseType.START_WIFI_REPAIR);
+                responseList.add(monitoringControlToShow());
                 break;
             case ACTION_TYPE_WELCOME:
             case ACTION_TYPE_NONE:
@@ -622,11 +631,11 @@ public class DobbyAi implements
             case ACTION_TYPE_CANCEL_BANDWIDTH_TEST:
             case ACTION_TYPE_SET_CHAT_TO_BOT_MODE:
             default:
-                responseList.add(UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS);
-                //responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
+                //responseList.add(UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS);
+                responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
                 responseList.add(UserResponse.ResponseType.RUN_WIFI_TESTS);
-                responseList.add(monitoringControlToShow());
                 responseList.add(UserResponse.ResponseType.START_WIFI_REPAIR);
+                responseList.add(monitoringControlToShow());
                 break;
         }
         //Get detailed suggestions by pressing a button
@@ -661,9 +670,9 @@ public class DobbyAi implements
 
         //Just an insurance that user will always have a button to press.
         if (responseList.isEmpty()) {
-            //responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
-            responseList.add(monitoringControlToShow());
+            responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
             responseList.add(UserResponse.ResponseType.START_WIFI_REPAIR);
+            responseList.add(monitoringControlToShow());
         }
 
         return responseList;

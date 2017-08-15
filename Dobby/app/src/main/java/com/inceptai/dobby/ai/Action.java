@@ -18,7 +18,7 @@ public class Action {
     public static final Action ACTION_NONE = new Action(Utils.EMPTY_STRING, ACTION_TYPE_NONE);
 
     @IntDef({ActionType.ACTION_TYPE_BANDWIDTH_TEST,
-            ACTION_TYPE_NONE,
+            ActionType.ACTION_TYPE_NONE,
             ActionType.ACTION_TYPE_WIFI_CHECK,
             ActionType.ACTION_TYPE_CANCEL_BANDWIDTH_TEST,
             ActionType.ACTION_TYPE_DIAGNOSE_SLOW_INTERNET,
@@ -46,7 +46,8 @@ public class Action {
             ActionType.ACTION_TYPE_REPAIR_WIFI,
             ActionType.ACTION_TYPE_CANCEL_REPAIR_WIFI,
             ActionType.ACTION_TYPE_TURN_OFF_WIFI_SERVICE,
-            ActionType.ACTION_TYPE_TURN_ON_WIFI_SERVICE
+            ActionType.ACTION_TYPE_TURN_ON_WIFI_SERVICE,
+            ActionType.ACTION_TYPE_START_REPAIR_DIALOGUE
     })
     @Retention(RetentionPolicy.SOURCE)
     public @interface ActionType {
@@ -80,6 +81,7 @@ public class Action {
         int ACTION_TYPE_CANCEL_REPAIR_WIFI = 27;
         int ACTION_TYPE_TURN_ON_WIFI_SERVICE = 28;
         int ACTION_TYPE_TURN_OFF_WIFI_SERVICE = 29;
+        int ACTION_TYPE_START_REPAIR_DIALOGUE = 30;
     }
 
     /* User response to be shown, null for no response. */

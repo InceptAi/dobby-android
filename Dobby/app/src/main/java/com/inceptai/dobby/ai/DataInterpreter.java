@@ -559,6 +559,10 @@ public class DataInterpreter {
             return builder.toString();
         }
 
+        public boolean isWifiOnline() {
+            return (wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.CONNECTED_AND_ONLINE);
+        }
+
         public boolean isWifiOff() {
             return (wifiConnectivityMode == ConnectivityAnalyzer.WifiConnectivityMode.OFF);
         }

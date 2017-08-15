@@ -39,6 +39,8 @@ public class ApiAiClient implements AIListener {
     public static final String APIAI_WIFI_ANALYSIS_SHOWN_EVENT = "wifi_analysis_shown_event";
     public static final String APIAI_RUN_TESTS_FOR_EXPERT_EVENT = "run_tests_for_expert_event";
     public static final String APIAI_WELCOME_AND_RESUME_EXPERT_EVENT = "ask_user_for_resuming_expert_chat_event";
+    public static final String APIAI_SHOW_REPAIR_RECOMMENDATION_EVENT = "show_repair_recommendation_event";
+    public static final String APIAI_START_WIFI_REPAIR_EVENT = "start_wifi_repair_event";
 
 
     //API AI actions
@@ -64,6 +66,7 @@ public class ApiAiClient implements AIListener {
     public static final String APIAI_ACTION_CANCEL_REPAIR_WIFI = "cancel-repair-wifi-action";
     public static final String APIAI_ACTION_TURN_ON_WIFI_SERVICE = "turn-wifi-service-on-action";
     public static final String APIAI_ACTION_TURN_OFF_WIFI_SERVICE = "turn-wifi-service-off-action";
+    public static final String APIAI_ACTION_USER_SAYS_YES_TO_REPAIR_RECOMMENDATION = "user-says-yes-to-repair-recommendation-action";
 
 
     //private static final String CLIENT_ACCESS_TOKEN = "81dbd5289ee74637bf582fc3112b7dcb";
@@ -330,6 +333,9 @@ public class ApiAiClient implements AIListener {
                 break;
             case APIAI_ACTION_TURN_ON_WIFI_SERVICE:
                 actionInt = Action.ActionType.ACTION_TYPE_TURN_ON_WIFI_SERVICE;
+                break;
+            case APIAI_ACTION_USER_SAYS_YES_TO_REPAIR_RECOMMENDATION:
+                actionInt = Action.ActionType.ACTION_TYPE_START_REPAIR_DIALOGUE;
                 break;
         }
         if (listener != null) {

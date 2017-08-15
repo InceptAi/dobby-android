@@ -20,7 +20,6 @@ import com.inceptai.dobby.WifiMonitoringServiceClient;
 import com.inceptai.dobby.ai.Action;
 import com.inceptai.dobby.ai.DobbyAi;
 import com.inceptai.dobby.ai.suggest.LocalSummary;
-import com.inceptai.dobby.analytics.DobbyAnalytics;
 import com.inceptai.dobby.database.RepairDatabaseWriter;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.fake.FakeDataIntentReceiver;
@@ -54,8 +53,6 @@ public class WifiDocActivity extends AppCompatActivity implements
     NetworkLayer networkLayer;
     @Inject
     DobbyEventBus eventBus;
-    @Inject
-    DobbyAnalytics dobbyAnalytics;
     @Inject
     RepairDatabaseWriter repairDatabaseWriter;
 
