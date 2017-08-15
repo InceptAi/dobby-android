@@ -79,6 +79,7 @@ public class MainActivity extends AppCompatActivity
     private NeoCustomIntentReceiver neoCustomIntentReceiver;
     private boolean askedForOverlayPermission;
     private boolean needOverlayPermission;
+    private boolean wifiMonitoringEnabled;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -110,7 +111,7 @@ public class MainActivity extends AppCompatActivity
             DobbyLog.v("Finishing since this is not root task");
             return;
         }
-
+        wifiMonitoringEnabled = false;
         needOverlayPermission = false;
         userInteractionManager = new UserInteractionManager(getApplicationContext(), this, SHOW_CONTACT_HUMAN_BUTTON);
         heartBeatManager.setDailyHeartBeat();
@@ -207,13 +208,9 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void showWifiMonitoringStatusChange(boolean status) {
-        if (chatFragment != null) {
-            if (status) {
-                chatFragment.showExpertIndicatorWithText("Wifi Monitoring Service is ON");
-            } else {
-                chatFragment.hideExpertIndicator();
-            }
-        }
+        wifiMonitoringEnabled = status;
+        DobbyLog.v("MainActivity: showWifiMonitoringStatusChange");
+        showServiceIndicatorForWifiService();
     }
 
     @Override
@@ -273,9 +270,10 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void hideExpertIndicator() {
-        if (chatFragment != null) {
-            chatFragment.hideExpertIndicator();
-        }
+        //No-op
+//        if (chatFragment != null) {
+//            chatFragment.hideExpertIndicator();
+//        }
     }
 
     @Override
@@ -533,10 +531,23 @@ public class MainActivity extends AppCompatActivity
         DobbyLog.v("MainActivity:onFragmentReady Setting chatFragment based on tag");
         //Setting chat fragment here
         chatFragment = getChatFragmentFromTag();
+        showServiceIndicatorForWifiService();
         if (chatFragment != null) {
             chatFragment.setBotMessageDelay(BOT_MESSAGE_DELAY_MS);
         }
         //Don't do resume stuff for now
+    }
+
+    private void showServiceIndicatorForWifiService() {
+        if (chatFragment != null) {
+            if (wifiMonitoringEnabled) {
+                DobbyLog.v("MainActivity: showWifiMonitoringStatusChange -- status ON");
+                chatFragment.showExpertIndicatorWithText("Automatic WiFi Repair is ON");
+            } else {
+                DobbyLog.v("MainActivity: showWifiMonitoringStatusChange -- status OFF");
+                chatFragment.hideExpertIndicator();
+            }
+        }
     }
 
     private void showAboutAndPrivacyPolicy() {
