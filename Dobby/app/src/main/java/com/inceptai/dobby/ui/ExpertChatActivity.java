@@ -2,6 +2,7 @@ package com.inceptai.dobby.ui;
 
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.net.wifi.WifiInfo;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.support.v4.app.Fragment;
@@ -88,6 +89,17 @@ public class ExpertChatActivity extends AppCompatActivity implements
     }
 
     //Interaction Manager callbacks
+
+
+    @Override
+    public void showWifiRepairResult(boolean success, WifiInfo wifiInfo, String repairSummary) {
+        //No-op
+    }
+
+    @Override
+    public void showRepairCancelled() {
+        //No-op
+    }
 
     @Override
     public void requestAccessibilityPermission() {

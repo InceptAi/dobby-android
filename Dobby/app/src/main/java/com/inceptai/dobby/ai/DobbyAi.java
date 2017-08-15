@@ -41,6 +41,7 @@ import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_ASK_FOR_RESUMI
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_BANDWIDTH_TEST;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_CANCEL_BANDWIDTH_TEST;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_CANCEL_REPAIR_WIFI;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_CANCEL_TESTS_FOR_EXPERT;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_CONTACT_HUMAN_EXPERT;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_DEFAULT_FALLBACK;
@@ -50,10 +51,13 @@ import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_NEGATIVE_FEEDB
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_NONE;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_NO_FEEDBACK;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_POSITIVE_FEEDBACK;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_REPAIR_WIFI;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_RUN_TESTS_FOR_EXPERT;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_SET_CHAT_TO_BOT_MODE;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_SHOW_LONG_SUGGESTION;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_SHOW_SHORT_SUGGESTION;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_TURN_OFF_WIFI_SERVICE;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_TURN_ON_WIFI_SERVICE;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_UNKNOWN;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_UNSTRUCTURED_FEEDBACK;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_USER_ASKS_FOR_HUMAN_EXPERT;
@@ -67,7 +71,8 @@ import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_WIFI_CHECK;
  */
 
 @Singleton
-public class DobbyAi implements ApiAiClient.ResultListener,
+public class DobbyAi implements
+        ApiAiClient.ResultListener,
         InferenceEngine.ActionListener {
     private static final boolean CLEAR_STATS_EVERY_TIME_USER_ASKS_TO_RUN_TESTS = true;
     private static final long MAX_ETA_TO_MARK_EXPERT_AS_LISTENING_SECONDS = 180;
@@ -91,6 +96,8 @@ public class DobbyAi implements ApiAiClient.ResultListener,
     private boolean chatInExpertMode = false;
     private boolean isExpertListening = false;
     private boolean showContactHumanButton = true;
+    private boolean wifiServiceEnabled = false;
+
 
     @Inject
     NetworkLayer networkLayer;
@@ -124,6 +131,10 @@ public class DobbyAi implements ApiAiClient.ResultListener,
         void expertActionCompleted();
         void startNeoByExpert();
         void stopNeoByExpert();
+        void startWifiRepair();
+        void cancelWifiRepair();
+        void startWifiMonitoringService();
+        void stopWifiMonitoringService();
     }
 
     @Inject
@@ -199,6 +210,15 @@ public class DobbyAi implements ApiAiClient.ResultListener,
 
     public boolean getUserAskedForExpertMode() {
         return userAskedForHumanExpert;
+    }
+
+    public void wifiMonitoringStatusChanged(boolean started) {
+        wifiServiceEnabled = started;
+        takeAction(new Action(Utils.EMPTY_STRING, ACTION_TYPE_NONE));
+    }
+
+    public void handleRepairFinished(boolean success) {
+        takeAction(new Action(Utils.EMPTY_STRING, ACTION_TYPE_NONE));
     }
 
     /**
@@ -394,6 +414,25 @@ public class DobbyAi implements ApiAiClient.ResultListener,
             case ACTION_TYPE_SET_CHAT_TO_BOT_MODE:
                 setChatInBotMode();
                 break;
+            case ACTION_TYPE_REPAIR_WIFI:
+                if (responseCallback != null) {
+                    responseCallback.startWifiRepair();
+                }
+                break;
+            case ACTION_TYPE_CANCEL_REPAIR_WIFI:
+                if (responseCallback != null) {
+                    responseCallback.cancelWifiRepair();
+                }
+            case ACTION_TYPE_TURN_OFF_WIFI_SERVICE:
+                if (responseCallback != null) {
+                    responseCallback.stopWifiMonitoringService();
+                }
+                break;
+            case ACTION_TYPE_TURN_ON_WIFI_SERVICE:
+                if (responseCallback != null) {
+                    responseCallback.startWifiMonitoringService();
+                }
+                break;
             default:
                 DobbyLog.i("Unknown FutureAction");
                 break;
@@ -512,6 +551,15 @@ public class DobbyAi implements ApiAiClient.ResultListener,
         return (text.toLowerCase().contains("contact human"));
     }
 
+    @UserResponse.ResponseType
+    private int monitoringControlToShow() {
+        if (wifiServiceEnabled) {
+            return UserResponse.ResponseType.TURN_OFF_WIFI_MONITORING;
+        } else {
+            return UserResponse.ResponseType.TURN_ON_WIFI_MONITORING;
+        }
+    }
+
     private List<Integer> getPotentialUserResponses(@Action.ActionType int lastActionShownToUser) {
         List<Integer> responseList = new ArrayList<>();
         switch (lastActionShownToUser) {
@@ -519,12 +567,15 @@ public class DobbyAi implements ApiAiClient.ResultListener,
                 responseList.add(UserResponse.ResponseType.YES);
                 responseList.add(UserResponse.ResponseType.NO);
                 break;
+            case ACTION_TYPE_REPAIR_WIFI:
             case ACTION_TYPE_BANDWIDTH_TEST:
             case ACTION_TYPE_RUN_TESTS_FOR_EXPERT:
                 responseList.add(UserResponse.ResponseType.CANCEL);
                 break;
             case ACTION_TYPE_WIFI_CHECK:
-                responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
+                //responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
+                responseList.add(monitoringControlToShow());
+                responseList.add(UserResponse.ResponseType.START_WIFI_REPAIR);
                 break;
             case ACTION_TYPE_DIAGNOSE_SLOW_INTERNET:
             case ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS:
@@ -534,8 +585,10 @@ public class DobbyAi implements ApiAiClient.ResultListener,
                 break;
             case ACTION_TYPE_LIST_DOBBY_FUNCTIONS:
                 responseList.add(UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS);
-                responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
+                //responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
                 responseList.add(UserResponse.ResponseType.RUN_WIFI_TESTS);
+                responseList.add(monitoringControlToShow());
+                responseList.add(UserResponse.ResponseType.START_WIFI_REPAIR);
                 break;
             case ACTION_TYPE_ASK_FOR_BW_TESTS:
                 responseList.add(UserResponse.ResponseType.YES);
@@ -550,14 +603,13 @@ public class DobbyAi implements ApiAiClient.ResultListener,
             case ACTION_TYPE_ASK_FOR_RESUMING_EXPERT_CHAT:
                 responseList.add(UserResponse.ResponseType.YES);
                 responseList.add(UserResponse.ResponseType.NO);
-//                responseList.add(UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS);
-//                responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
-//                responseList.add(UserResponse.ResponseType.RUN_WIFI_TESTS);
                 break;
             case ACTION_TYPE_CONTACT_HUMAN_EXPERT:
                 responseList.add(UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS);
-                responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
+                //responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
                 responseList.add(UserResponse.ResponseType.RUN_WIFI_TESTS);
+                responseList.add(monitoringControlToShow());
+                responseList.add(UserResponse.ResponseType.START_WIFI_REPAIR);
                 break;
             case ACTION_TYPE_WELCOME:
             case ACTION_TYPE_NONE:
@@ -568,8 +620,10 @@ public class DobbyAi implements ApiAiClient.ResultListener,
             case ACTION_TYPE_SET_CHAT_TO_BOT_MODE:
             default:
                 responseList.add(UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS);
-                responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
+                //responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
                 responseList.add(UserResponse.ResponseType.RUN_WIFI_TESTS);
+                responseList.add(monitoringControlToShow());
+                responseList.add(UserResponse.ResponseType.START_WIFI_REPAIR);
                 break;
         }
         //Get detailed suggestions by pressing a button
@@ -604,7 +658,9 @@ public class DobbyAi implements ApiAiClient.ResultListener,
 
         //Just an insurance that user will always have a button to press.
         if (responseList.isEmpty()) {
-            responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
+            //responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
+            responseList.add(monitoringControlToShow());
+            responseList.add(UserResponse.ResponseType.START_WIFI_REPAIR);
         }
 
         return responseList;

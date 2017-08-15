@@ -16,10 +16,13 @@ import static com.inceptai.dobby.ai.UserResponse.ResponseType.LIST_ALL_FUNCTIONS
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.NO;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.NO_COMMENTS;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.NO_RESPONSE;
+import static com.inceptai.dobby.ai.UserResponse.ResponseType.START_WIFI_REPAIR;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.RUN_BW_TESTS;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.RUN_WIFI_TESTS;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.SHOW_LAST_SUGGESTION_DETAILS;
+import static com.inceptai.dobby.ai.UserResponse.ResponseType.TURN_OFF_WIFI_MONITORING;
+import static com.inceptai.dobby.ai.UserResponse.ResponseType.TURN_ON_WIFI_MONITORING;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.YES;
 
 /**
@@ -40,7 +43,10 @@ public class UserResponse {
             NO_RESPONSE,
             SHOW_LAST_SUGGESTION_DETAILS,
             NO_COMMENTS,
-            CONTACT_HUMAN_EXPERT
+            CONTACT_HUMAN_EXPERT,
+            START_WIFI_REPAIR,
+            TURN_ON_WIFI_MONITORING,
+            TURN_OFF_WIFI_MONITORING
     })
 
 
@@ -58,6 +64,9 @@ public class UserResponse {
         int SHOW_LAST_SUGGESTION_DETAILS = 9;
         int NO_COMMENTS = 10;
         int CONTACT_HUMAN_EXPERT = 11;
+        int START_WIFI_REPAIR = 12;
+        int TURN_ON_WIFI_MONITORING = 13;
+        int TURN_OFF_WIFI_MONITORING = 14;
     }
 
     /* User response to be shown, null for no response. */
@@ -112,6 +121,12 @@ public class UserResponse {
                 return "Cancel";
             case CONTACT_HUMAN_EXPERT:
                 return "Contact Human Expert";
+            case TURN_ON_WIFI_MONITORING:
+                return "Turn on wifi monitoring";
+            case TURN_OFF_WIFI_MONITORING:
+                return "Turn off wifi monitoring";
+            case START_WIFI_REPAIR:
+                return "Repair wifi";
             case NO_RESPONSE:
             default:
                 return Utils.EMPTY_STRING;

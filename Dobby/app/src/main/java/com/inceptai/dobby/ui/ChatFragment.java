@@ -737,6 +737,12 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
             if (userResponseType == UserResponse.ResponseType.CONTACT_HUMAN_EXPERT) {
                 button.setBackgroundResource(R.drawable.rounded_shape_action_button_contact_expert);
                 button.setTextColor(Color.DKGRAY); // light gray
+            } else if (userResponseType == UserResponse.ResponseType.TURN_ON_WIFI_MONITORING) {
+                button.setBackgroundResource(R.drawable.rounded_shape_action_button_contact_expert);
+                button.setTextColor(Color.DKGRAY); // light gray
+            } else if (userResponseType == UserResponse.ResponseType.START_WIFI_REPAIR) {
+                button.setBackgroundResource(R.drawable.rounded_shape_action_button_contact_expert);
+                button.setTextColor(Color.DKGRAY); // light gray
             } else {
                 button.setBackgroundResource(R.drawable.rounded_shape_action_button);
                 button.setTextColor(Color.LTGRAY); // light gray

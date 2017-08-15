@@ -147,6 +147,15 @@ public class WifiDocActivity extends AppCompatActivity implements
     }
 
 
+    @Override
+    public void wifiMonitoringStarted() {
+        //No-op
+    }
+
+    @Override
+    public void wifiMonitoringStopped() {
+        //No-op
+    }
 
     @Override
     public void onFragmentInteraction(Uri uri) {

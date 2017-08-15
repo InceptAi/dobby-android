@@ -56,6 +56,8 @@ public class WifiMonitoringServiceClient {
     DobbyAnalytics dobbyAnalytics;
 
     public interface WifiMonitoringCallback {
+        void wifiMonitoringStarted();
+        void wifiMonitoringStopped();
         void repairStarted(boolean started);
         void repairFinished(boolean success, WifiInfo repairedWifiInfo, String repairSummary);
     }
@@ -77,9 +79,6 @@ public class WifiMonitoringServiceClient {
         connect();
     }
 
-    public void connect() {
-        bindWithWifiService();
-    }
 
     public void disconnect() {
         unbindWithWifiService();
@@ -162,7 +161,12 @@ public class WifiMonitoringServiceClient {
     public void pauseNotifications() {
         unRegisterNotificationInfoReceiver();
     }
+
     //Private stuff
+
+    private void connect() {
+        bindWithWifiService();
+    }
 
     private void startWifiMonitoringServiceIfEnabled() {
         Intent serviceStartIntent = new Intent(context, WifiMonitoringService.class);
@@ -172,6 +176,9 @@ public class WifiMonitoringServiceClient {
             dobbyAnalytics.setWifiServiceStarted();
             //context.startService(new Intent(context, WifiMonitoringService.class));
             context.startService(serviceStartIntent);
+            if (wifiMonitoringCallback != null) {
+                wifiMonitoringCallback.wifiMonitoringStarted();
+            }
         }
     }
 
@@ -180,6 +187,9 @@ public class WifiMonitoringServiceClient {
         //serviceStartIntent.putExtra(NotificationInfoKeys., NOTIFICATION_INFO_INTENT_VALUE);
         dobbyAnalytics.setWifiServiceStopped();
         context.stopService(new Intent(context, WifiMonitoringService.class));
+        if (wifiMonitoringCallback != null) {
+            wifiMonitoringCallback.wifiMonitoringStopped();
+        }
     }
 
     private void bindWithWifiService() {

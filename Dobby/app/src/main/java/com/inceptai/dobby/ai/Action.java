@@ -42,7 +42,11 @@ public class Action {
             ActionType.ACTION_TYPE_RUN_TESTS_FOR_EXPERT,
             ActionType.ACTION_TYPE_CANCEL_TESTS_FOR_EXPERT,
             ActionType.ACTION_TYPE_ASK_FOR_RESUMING_EXPERT_CHAT,
-            ActionType.ACTION_TYPE_SET_CHAT_TO_BOT_MODE
+            ActionType.ACTION_TYPE_SET_CHAT_TO_BOT_MODE,
+            ActionType.ACTION_TYPE_REPAIR_WIFI,
+            ActionType.ACTION_TYPE_CANCEL_REPAIR_WIFI,
+            ActionType.ACTION_TYPE_TURN_OFF_WIFI_SERVICE,
+            ActionType.ACTION_TYPE_TURN_ON_WIFI_SERVICE
     })
     @Retention(RetentionPolicy.SOURCE)
     public @interface ActionType {
@@ -72,6 +76,10 @@ public class Action {
         int ACTION_TYPE_CANCEL_TESTS_FOR_EXPERT = 23;
         int ACTION_TYPE_ASK_FOR_RESUMING_EXPERT_CHAT = 24;
         int ACTION_TYPE_SET_CHAT_TO_BOT_MODE = 25;
+        int ACTION_TYPE_REPAIR_WIFI = 26;
+        int ACTION_TYPE_CANCEL_REPAIR_WIFI = 27;
+        int ACTION_TYPE_TURN_ON_WIFI_SERVICE = 28;
+        int ACTION_TYPE_TURN_OFF_WIFI_SERVICE = 29;
     }
 
     /* User response to be shown, null for no response. */

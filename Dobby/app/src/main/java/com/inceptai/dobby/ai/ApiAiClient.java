@@ -60,6 +60,10 @@ public class ApiAiClient implements AIListener {
     public static final String APIAI_ACTION_CANCEL_TESTS_FOR_EXPERT = "cancel-expert-tests";
     public static final String APIAI_ACTION_SET_TO_BOT_MODE = "set-chat-to-bot-mode-action";
     public static final String APIAI_ACTION_WELCOME_AND_ASK_USER_FOR_RESUMING_EXPERT_CHAT = "ask-user-for-resuming-expert-chat-action";
+    public static final String APIAI_ACTION_REPAIR_WIFI = "repair-wifi-action";
+    public static final String APIAI_ACTION_CANCEL_REPAIR_WIFI = "cancel-repair-wifi-action";
+    public static final String APIAI_ACTION_TURN_ON_WIFI_SERVICE = "turn-wifi-service-on-action";
+    public static final String APIAI_ACTION_TURN_OFF_WIFI_SERVICE = "turn-wifi-service-off-action";
 
 
     //private static final String CLIENT_ACCESS_TOKEN = "81dbd5289ee74637bf582fc3112b7dcb";
@@ -314,6 +318,18 @@ public class ApiAiClient implements AIListener {
                 break;
             case APIAI_ACTION_WELCOME_AND_ASK_USER_FOR_RESUMING_EXPERT_CHAT:
                 actionInt = Action.ActionType.ACTION_TYPE_ASK_FOR_RESUMING_EXPERT_CHAT;
+                break;
+            case APIAI_ACTION_REPAIR_WIFI:
+                actionInt = Action.ActionType.ACTION_TYPE_REPAIR_WIFI;
+                break;
+            case APIAI_ACTION_CANCEL_REPAIR_WIFI:
+                actionInt = Action.ActionType.ACTION_TYPE_CANCEL_REPAIR_WIFI;
+                break;
+            case APIAI_ACTION_TURN_OFF_WIFI_SERVICE:
+                actionInt = Action.ActionType.ACTION_TYPE_TURN_OFF_WIFI_SERVICE;
+                break;
+            case APIAI_ACTION_TURN_ON_WIFI_SERVICE:
+                actionInt = Action.ActionType.ACTION_TYPE_TURN_ON_WIFI_SERVICE;
                 break;
         }
         if (listener != null) {

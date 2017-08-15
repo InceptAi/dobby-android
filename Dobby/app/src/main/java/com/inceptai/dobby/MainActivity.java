@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.net.wifi.WifiInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -19,7 +20,6 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -34,14 +34,12 @@ import com.inceptai.dobby.ai.SuggestionCreator;
 import com.inceptai.dobby.analytics.DobbyAnalytics;
 import com.inceptai.dobby.expert.ExpertChatService;
 import com.inceptai.dobby.heartbeat.HeartBeatManager;
-import com.inceptai.dobby.notifications.DisplayAppNotification;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.ui.ChatFragment;
 import com.inceptai.dobby.ui.WifiDocDialogFragment;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 import com.inceptai.neoservice.NeoService;
-import com.inceptai.wifimonitoringservice.WifiMonitoringService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -78,7 +76,6 @@ public class MainActivity extends AppCompatActivity
     @Inject DobbyThreadpool dobbyThreadpool;
     private ChatFragment chatFragment;
     private boolean isTaskRoot = true;
-    private NotificationInfoReceiver notificationInfoReceiver;
     private NeoCustomIntentReceiver neoCustomIntentReceiver;
     private boolean askedForOverlayPermission;
     private boolean needOverlayPermission;
@@ -117,7 +114,6 @@ public class MainActivity extends AppCompatActivity
         needOverlayPermission = false;
         userInteractionManager = new UserInteractionManager(getApplicationContext(), this, SHOW_CONTACT_HUMAN_BUTTON);
         heartBeatManager.setDailyHeartBeat();
-        notificationInfoReceiver = new NotificationInfoReceiver();
 
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -138,9 +134,6 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
         setupChatFragment();
         registerNeoCustomIntentReceiver();
-        if (ENABLE_WIFI_MONITORING_SERVICE) {
-            startWifiMonitoringService();
-        }
     }
 
 
@@ -211,6 +204,25 @@ public class MainActivity extends AppCompatActivity
 
     //Interaction manager callback
 
+
+    @Override
+    public void showRepairCancelled() {
+        if (chatFragment != null) {
+            chatFragment.showBotResponse(getString(R.string.repair_wifi_cancelled));
+        }
+    }
+
+    @Override
+    public void showWifiRepairResult(boolean success, WifiInfo wifiInfo, String repairSummary) {
+        String repairTitle = getString(R.string.repair_wifi_success);
+        if (!success) {
+            repairTitle = getString(R.string.repair_wifi_failure);
+        }
+        if (chatFragment != null) {
+            chatFragment.showBotResponse(repairTitle);
+            chatFragment.showBotResponse(repairSummary);
+        }
+    }
 
     @Override
     public void showBotResponse(String text) {
@@ -437,7 +449,6 @@ public class MainActivity extends AppCompatActivity
         super.onResume();
         DobbyLog.v("MainActivity: onResume");
         userInteractionManager.onUserEnteredChat();
-        unRegisterNotificationInfoReceiver();
         processIntent(getIntent());
     }
 
@@ -462,7 +473,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onPause() {
         super.onPause();
-        registerNotificationInfoReceiver();
     }
 
     @Override
@@ -518,13 +528,6 @@ public class MainActivity extends AppCompatActivity
         //Don't do resume stuff for now
     }
 
-
-    private void startWifiMonitoringService() {
-        Intent serviceStartIntent = new Intent(this, WifiMonitoringService.class);
-        //serviceStartIntent.putExtra(NotificationInfoKeys., NOTIFICATION_INFO_INTENT_VALUE);
-        startService(new Intent(this, WifiMonitoringService.class));
-    }
-
     private void showAboutAndPrivacyPolicy() {
         WifiDocDialogFragment fragment = WifiDocDialogFragment.forAboutAndPrivacyPolicy();
         fragment.show(getSupportFragmentManager(), "About");
@@ -558,28 +561,6 @@ public class MainActivity extends AppCompatActivity
 
     // Our handler for received Intents. This will be called whenever an Intent
     // with an action named "custom-event-name" is broadcasted.
-    private class NotificationInfoReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            // Get extra data included in the Intent
-            String notificationTitle = intent.getStringExtra(WifiMonitoringService.EXTRA_NOTIFICATION_TITLE);
-            String notificationBody = intent.getStringExtra(WifiMonitoringService.EXTRA_NOTIFICATION_BODY);
-            int notificationId = intent.getIntExtra(WifiMonitoringService.EXTRA_NOTIFICATION_ID, 0);
-            dobbyThreadpool.getExecutor().execute(new DisplayAppNotification(context, notificationTitle, notificationBody, notificationId));
-        }
-    }
-
-    private void registerNotificationInfoReceiver() {
-        IntentFilter intentFilter = new IntentFilter(WifiMonitoringService.NOTIFICATION_INFO_INTENT_VALUE);
-        LocalBroadcastManager.getInstance(this).registerReceiver(
-                notificationInfoReceiver, intentFilter);
-    }
-
-    private void unRegisterNotificationInfoReceiver() {
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(
-                notificationInfoReceiver);
-    }
-
     private class NeoCustomIntentReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {

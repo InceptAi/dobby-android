@@ -43,6 +43,7 @@ public class UserInteractionManager implements
     private static final long MAX_TIME_ELAPSED_FOR_RESUMING_EXPERT_MODE_MS = AlarmManager.INTERVAL_DAY;
     private static final long DELAY_BEFORE_WELCOME_MESSAGE_MS = 500;
     private static final long ACCESSIBILITY_SETTING_CHECKER_TIMEOUT_MS = 10000;
+    private static final long WIFI_REPAIR_TIMEOUT_MS = 30000;
 
     private long currentEtaSeconds;
     private InteractionCallback interactionCallback;
@@ -117,6 +118,8 @@ public class UserInteractionManager implements
         void showBandwidthViewCard(DataInterpreter.BandwidthGrade bandwidthGrade);
         void showNetworkInfoViewCard(DataInterpreter.WifiGrade wifiGrade, String isp, String ip);
         void showDetailedSuggestions(SuggestionCreator.Suggestion suggestion);
+        void showWifiRepairResult(boolean success, WifiInfo wifiInfo, String repairSummary);
+        void showRepairCancelled();
         void requestAccessibilityPermission();
     }
 
@@ -129,6 +132,7 @@ public class UserInteractionManager implements
         expertChatService.sendUserEnteredMetaMessage();
         expertChatService.disableNotifications();
         updateExpertIndicator();
+        wifiMonitoringServiceClient.pauseNotifications();
         if (triggerAccessibilityDialogOnResume) {
             askForAccessibilityPermission();
             triggerAccessibilityDialogOnResume = false;
@@ -140,7 +144,7 @@ public class UserInteractionManager implements
         expertChatService.sendUserLeftMetaMessage();
         expertChatService.enableNotifications();
         expertChatService.saveState();
-        //registerNotificationInfoReceiver();
+        wifiMonitoringServiceClient.resumeNotificationIfNeeded();
     }
 
     public void cleanup() {
@@ -290,6 +294,31 @@ public class UserInteractionManager implements
 
 
     //Dobby Ai callbacks
+
+
+    @Override
+    public void startWifiRepair() {
+        wifiMonitoringServiceClient.repairWifiNetwork(WIFI_REPAIR_TIMEOUT_MS);
+    }
+
+    @Override
+    public void cancelWifiRepair() {
+        wifiMonitoringServiceClient.cancelWifiRepair();
+
+    }
+
+    @Override
+    public void startWifiMonitoringService() {
+        wifiMonitoringServiceClient.enableWifiService();
+
+    }
+
+    @Override
+    public void stopWifiMonitoringService() {
+        wifiMonitoringServiceClient.disableWifiService();
+
+    }
+
     @Override
     public void startNeoByExpert() {
         //Stop notifications in onServiceReady
@@ -419,13 +448,27 @@ public class UserInteractionManager implements
 
 
     @Override
+    public void wifiMonitoringStarted() {
+        dobbyAi.wifiMonitoringStatusChanged(true);
+    }
+
+    @Override
+    public void wifiMonitoringStopped() {
+        dobbyAi.wifiMonitoringStatusChanged(false);
+    }
+
+    @Override
     public void repairStarted(boolean started) {
+        //No-op for now
 
     }
 
     @Override
     public void repairFinished(boolean success, WifiInfo repairedWifiInfo, String repairSummary) {
-
+        dobbyAi.handleRepairFinished(success);
+        if (interactionCallback != null) {
+            interactionCallback.showWifiRepairResult(success, repairedWifiInfo, repairSummary);
+        }
     }
 
     public boolean isFirstChatAfterInstall() {
