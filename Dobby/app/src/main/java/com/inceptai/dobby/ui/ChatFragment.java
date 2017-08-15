@@ -16,6 +16,9 @@ import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.LinearInterpolator;
+import android.view.animation.RotateAnimation;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
@@ -123,6 +126,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
 
     private TextToSpeech textToSpeech;
     private TextView expertIndicatorTextView;
+    private Button animatedRepairButton;
 
     private boolean useVoiceOutput = false;
 
@@ -713,6 +717,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     }
 
     private void showUserActionButtons(List<Integer> userResponseTypes) {
+        stopRotatingRepairButtonIfSet();
         actionMenu.removeAllViewsInLayout();
         for (final int userResponseType: userResponseTypes) {
             final String buttonText = UserResponse.getStringForResponseType(userResponseType);
@@ -743,6 +748,12 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
             } else if (userResponseType == UserResponse.ResponseType.START_WIFI_REPAIR) {
                 button.setBackgroundResource(R.drawable.rounded_shape_action_button_contact_expert);
                 button.setTextColor(Color.DKGRAY); // light gray
+            } else if (userResponseType == UserResponse.ResponseType.REPAIRING) {
+                button.setClickable(false);
+                button.setText(Utils.EMPTY_STRING);
+                button.setBackgroundResource(R.drawable.ic_repair);
+                //button.setTextColor(Color.DKGRAY); // light gray
+                animatedRepairButton = button;
             } else {
                 button.setBackgroundResource(R.drawable.rounded_shape_action_button);
                 button.setTextColor(Color.LTGRAY); // light gray
@@ -758,6 +769,27 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
             });
             actionMenu.addView(button);
         }
+        rotateRepairButtonIfSet();
+    }
+
+    private void rotateRepairButtonIfSet() {
+        if (animatedRepairButton == null) {
+            return;
+        }
+        RotateAnimation anim = new RotateAnimation(0.0f, 360.0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+        //Setup anim with desired properties
+        anim.setInterpolator(new LinearInterpolator());
+        anim.setRepeatCount(Animation.INFINITE); //Repeat animation indefinitely
+        anim.setDuration(700); //Put desired duration per anim cycle here, in milliseconds
+        animatedRepairButton.startAnimation(anim);
+    }
+
+    private void stopRotatingRepairButtonIfSet() {
+        if (animatedRepairButton == null) {
+            return;
+        }
+        animatedRepairButton.setAnimation(null);
+        animatedRepairButton = null;
     }
 
     private void processTextQuery(String text, boolean isButtonActionText) {

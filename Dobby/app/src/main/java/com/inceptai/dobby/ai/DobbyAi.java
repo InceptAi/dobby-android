@@ -568,6 +568,9 @@ public class DobbyAi implements
                 responseList.add(UserResponse.ResponseType.NO);
                 break;
             case ACTION_TYPE_REPAIR_WIFI:
+                responseList.add(UserResponse.ResponseType.CANCEL);
+                responseList.add(UserResponse.ResponseType.REPAIRING);
+                break;
             case ACTION_TYPE_BANDWIDTH_TEST:
             case ACTION_TYPE_RUN_TESTS_FOR_EXPERT:
                 responseList.add(UserResponse.ResponseType.CANCEL);

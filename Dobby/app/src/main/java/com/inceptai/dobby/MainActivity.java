@@ -206,6 +206,17 @@ public class MainActivity extends AppCompatActivity
 
 
     @Override
+    public void showWifiMonitoringStatusChange(boolean status) {
+        if (chatFragment != null) {
+            if (status) {
+                chatFragment.showExpertIndicatorWithText("Wifi Monitoring Service is ON");
+            } else {
+                chatFragment.hideExpertIndicator();
+            }
+        }
+    }
+
+    @Override
     public void showRepairCancelled() {
         if (chatFragment != null) {
             chatFragment.showBotResponse(getString(R.string.repair_wifi_cancelled));

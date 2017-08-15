@@ -120,6 +120,7 @@ public class UserInteractionManager implements
         void showDetailedSuggestions(SuggestionCreator.Suggestion suggestion);
         void showWifiRepairResult(boolean success, WifiInfo wifiInfo, String repairSummary);
         void showRepairCancelled();
+        void showWifiMonitoringStatusChange(boolean status);
         void requestAccessibilityPermission();
     }
 
@@ -304,7 +305,9 @@ public class UserInteractionManager implements
     @Override
     public void cancelWifiRepair() {
         wifiMonitoringServiceClient.cancelWifiRepair();
-
+        if (interactionCallback != null) {
+            interactionCallback.showRepairCancelled();
+        }
     }
 
     @Override
@@ -449,11 +452,17 @@ public class UserInteractionManager implements
 
     @Override
     public void wifiMonitoringStarted() {
+        if (interactionCallback != null) {
+            interactionCallback.showWifiMonitoringStatusChange(true);
+        }
         dobbyAi.wifiMonitoringStatusChanged(true);
     }
 
     @Override
     public void wifiMonitoringStopped() {
+        if (interactionCallback != null) {
+            interactionCallback.showWifiMonitoringStatusChange(false);
+        }
         dobbyAi.wifiMonitoringStatusChanged(false);
     }
 

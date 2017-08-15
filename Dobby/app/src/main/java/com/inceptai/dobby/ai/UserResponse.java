@@ -16,6 +16,7 @@ import static com.inceptai.dobby.ai.UserResponse.ResponseType.LIST_ALL_FUNCTIONS
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.NO;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.NO_COMMENTS;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.NO_RESPONSE;
+import static com.inceptai.dobby.ai.UserResponse.ResponseType.REPAIRING;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.START_WIFI_REPAIR;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.RUN_BW_TESTS;
@@ -46,7 +47,8 @@ public class UserResponse {
             CONTACT_HUMAN_EXPERT,
             START_WIFI_REPAIR,
             TURN_ON_WIFI_MONITORING,
-            TURN_OFF_WIFI_MONITORING
+            TURN_OFF_WIFI_MONITORING,
+            REPAIRING
     })
 
 
@@ -67,6 +69,7 @@ public class UserResponse {
         int START_WIFI_REPAIR = 12;
         int TURN_ON_WIFI_MONITORING = 13;
         int TURN_OFF_WIFI_MONITORING = 14;
+        int REPAIRING = 15;
     }
 
     /* User response to be shown, null for no response. */
@@ -127,6 +130,8 @@ public class UserResponse {
                 return "Turn off wifi monitoring";
             case START_WIFI_REPAIR:
                 return "Repair wifi";
+            case REPAIRING:
+                return "Repairing";
             case NO_RESPONSE:
             default:
                 return Utils.EMPTY_STRING;
