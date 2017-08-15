@@ -335,6 +335,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         void onMainButtonClick();
         void cancelTests();
         void onLocationPermissionGranted();
+        void onLocationPermissionDenied();
         void onWifiRepairInitiated();
         void onWifiMonitoringServiceDisabled();
         void onWifiMonitoringServiceEnabled();
@@ -371,7 +372,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                     }
                     //Trigger a scan here if needed
                 } else {
-                    Utils.buildSimpleDialog(getContext(), "Functionality limited",
+                    Utils.buildSimpleDialog(getContext(), "Functionality limited -- Repair functionality will not work ",
                             "Since location access has not been granted, this app will not be able to analyze your wifi network. You can still use all the other features.");
                 }
                 return;

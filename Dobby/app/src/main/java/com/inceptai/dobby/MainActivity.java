@@ -80,6 +80,7 @@ public class MainActivity extends AppCompatActivity
     private boolean askedForOverlayPermission;
     private boolean needOverlayPermission;
     private boolean wifiMonitoringEnabled;
+    private boolean locationPermissionGranted;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -221,15 +222,20 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void showWifiRepairResult(boolean success, WifiInfo wifiInfo, String repairSummary) {
-        String repairTitle = getString(R.string.repair_wifi_success);
-        if (!success) {
-            repairTitle = getString(R.string.repair_wifi_failure);
+    public void showWifiRepairCard(boolean success, WifiInfo wifiInfo, String repairSummary) {
+        if (chatFragment != null && wifiInfo != null) {
+            chatFragment.addRepairResultsCardView(wifiInfo);
         }
-        if (chatFragment != null) {
-            chatFragment.showBotResponse(repairTitle);
-            chatFragment.showBotResponse(repairSummary);
-        }
+    //No -op for now till we show the card
+//        String repairTitle = getString(R.string.repair_wifi_success);
+//        if (!success) {
+//            repairTitle = getString(R.string.repair_wifi_failure);
+//        }
+//        if (chatFragment != null) {
+//            chatFragment.showNetworkResultsCardView();
+//            chatFragment.showBotResponse(repairTitle);
+//            chatFragment.showBotResponse(repairSummary);
+//        }
     }
 
     @Override
@@ -441,9 +447,11 @@ public class MainActivity extends AppCompatActivity
             case PERMISSION_COARSE_LOCATION_REQUEST_CODE:
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     DobbyLog.i("Coarse location permission granted.");
+                    userInteractionManager.setLocationPermissionGranted(true);
                 } else {
-                    Utils.buildSimpleDialog(this, "Functionality limited",
-                            "Since location access has not been granted, this app will not be able to analyze your wifi network.");
+                    userInteractionManager.setLocationPermissionGranted(false);
+                    Utils.buildSimpleDialog(this, "Functionality limited -- Repair functionality will not work ",
+                            "Since location access has not been granted, this app will not be able to analyze and repair your wifi network.");
                 }
                 if (needOverlayPermission) {
                     askForOverlayPermission();

@@ -2,6 +2,7 @@ package com.inceptai.dobby.ui;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.net.wifi.WifiInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -91,6 +92,7 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     private static final int MSG_SHOW_EXPERT_INDICATOR = 12;
     private static final int MSG_HIDE_EXPERT_INDICATOR = 13;
     private static final int MSG_SHOW_USER_CHAT = 14;
+    private static final int MSG_SHOW_REPAIR_STATUS = 15;
 
 
     private static final int BW_TEST_INITIATED = 200;
@@ -382,6 +384,19 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
         chatRv.scrollToPosition(recyclerViewAdapter.getItemCount() - 1);
     }
 
+    public void showWifiRepairCardView(WifiInfo wifiInfo) {
+        if (wifiInfo == null) {
+            return;
+        }
+        ChatEntry chatEntry = new ChatEntry(Utils.EMPTY_STRING, ChatEntry.OVERALL_NETWORK_CARDVIEW);
+        DataInterpreter.WifiGrade wifiGrade = DataInterpreter.interpret(wifiInfo.getRssi(), wifiInfo.getSSID(), wifiInfo.getLinkSpeed(), 0);
+        chatEntry.setWifiGrade(wifiGrade);
+        chatEntry.setIspName(Utils.EMPTY_STRING);
+        chatEntry.setRouterIp(Utils.EMPTY_STRING);
+        recyclerViewAdapter.addEntryAtBottom(chatEntry);
+        chatRv.scrollToPosition(recyclerViewAdapter.getItemCount() - 1);
+    }
+
     public void showNetworkResultsCardView(DataInterpreter.WifiGrade wifiGrade, String ispName, String routerIp) {
         ChatEntry chatEntry = new ChatEntry(Utils.EMPTY_STRING, ChatEntry.OVERALL_NETWORK_CARDVIEW);
         chatEntry.setWifiGrade(wifiGrade);
@@ -392,6 +407,14 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     }
 
     //All the methods that show stuff to user
+    public void addRepairResultsCardView(final WifiInfo wifiInfo) {
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                Message.obtain(handler, MSG_SHOW_REPAIR_STATUS, wifiInfo).sendToTarget();
+            }
+        }, botMessageDelay);
+    }
 
     public void addBandwidthResultsCardView(final DataInterpreter.BandwidthGrade bandwidthGrade) {
         dobbyAnalytics.wifiExpertBandwidthCardShown();
@@ -401,7 +424,6 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
                 Message.obtain(handler, MSG_SHOW_BANDWIDTH_RESULT_CARDVIEW, bandwidthGrade).sendToTarget();
             }
         }, botMessageDelay);
-        //Message.obtain(handler, MSG_SHOW_BANDWIDTH_RESULT_CARDVIEW, bandwidthGrade).sendToTarget();
     }
 
     public void addOverallNetworkResultsCardView(final DataInterpreter.WifiGrade wifiGrade, final String ispName, final String externalIp) {
@@ -546,6 +568,12 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
                             overallNetworkInfo.getIsp(), overallNetworkInfo.getIp());
                 }
                 //addDobbyChat(overallNetworkInfo.getWifiGrade().userReadableInterpretation(), false);
+                break;
+            case MSG_SHOW_REPAIR_STATUS:
+                WifiInfo wifiInfo = (WifiInfo)msg.obj;
+                if (wifiInfo != null) {
+                    showWifiRepairCardView(wifiInfo);
+                }
                 break;
             case MSG_SHOW_DETAILED_SUGGESTIONS:
                 SuggestionCreator.Suggestion suggestionToShow = (SuggestionCreator.Suggestion) msg.obj;

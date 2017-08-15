@@ -59,6 +59,7 @@ public class WifiDocActivity extends AppCompatActivity implements
     private FakeDataIntentReceiver fakeDataIntentReceiver;
     private Handler handler;
     private WifiMonitoringServiceClient wifiMonitoringServiceClient;
+    private boolean isLocationPermissionGranted;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,6 +95,7 @@ public class WifiDocActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_wifi_doc);
         setupMainFragment();
         networkLayer.fetchLastKnownLocation();
+        isLocationPermissionGranted = true;
         wifiMonitoringServiceClient = new WifiMonitoringServiceClient(
                 this,
                 dobbyApplication.getUserUuid(),
@@ -143,6 +145,14 @@ public class WifiDocActivity extends AppCompatActivity implements
         fragmentTransaction.commit();
     }
 
+
+    public boolean isLocationPermissionGranted() {
+        return isLocationPermissionGranted;
+    }
+
+    public void setLocationPermissionGranted(boolean locationPermissionGranted) {
+        isLocationPermissionGranted = locationPermissionGranted;
+    }
 
     @Override
     public void wifiMonitoringStarted() {
@@ -204,8 +214,14 @@ public class WifiDocActivity extends AppCompatActivity implements
     }
 
     @Override
+    public void onLocationPermissionDenied() {
+        setLocationPermissionGranted(false);
+    }
+
+    @Override
     public void onLocationPermissionGranted() {
         //Trigger a wifiScan when permission is granted
+        setLocationPermissionGranted(true);
         networkLayer.wifiScan();
     }
 
@@ -258,7 +274,7 @@ public class WifiDocActivity extends AppCompatActivity implements
 
     @Override
     public void onWifiRepairInitiated() {
-        wifiMonitoringServiceClient.repairWifiNetwork(0);
+        wifiMonitoringServiceClient.repairWifiNetwork(0, isLocationPermissionGranted());
     }
 
     @Override

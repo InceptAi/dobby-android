@@ -147,7 +147,19 @@ public class ApiAiClient implements AIListener {
         Action actionToReturn = new Action(Utils.EMPTY_STRING, Action.ActionType.ACTION_TYPE_NONE);
         if (query != null && ! query.equals(Utils.EMPTY_STRING)) {
             DobbyLog.v("Submitting offline query with text " + query);
-            if (Utils.grepForString(query, Arrays.asList("contact"))) {
+            if (Utils.grepForString(query, Arrays.asList("Turn on wifi monitoring"))) {
+                actionToReturn = new Action("Sure, I will turn ON Automatic WiFi repair for you. " +
+                        "It will automatically find and fix WiFi problems for you. " +
+                        "You can turn it off anytime by typing \"Turn off Wifi monitoring\"",
+                        Action.ActionType.ACTION_TYPE_REPAIR_WIFI);
+            } else if (Utils.grepForString(query, Arrays.asList("Turn off wifi monitoring"))) {
+                actionToReturn = new Action("Sure, I will turn OFF Automatic WiFi repair for you. " +
+                        "You can turn it on anytime by typing \"Turn on Wifi monitoring\"",
+                        Action.ActionType.ACTION_TYPE_REPAIR_WIFI);
+            } else if (Utils.grepForString(query, Arrays.asList("Repair wifi"))) {
+                actionToReturn = new Action("Sure, I will try to initiate WiFi repair for you. " +
+                        "It can take between 20-30 sec ...", Action.ActionType.ACTION_TYPE_REPAIR_WIFI);
+            } else if (Utils.grepForString(query, Arrays.asList("contact"))) {
                 actionToReturn = new Action(Utils.EMPTY_STRING,
                         Action.ActionType.ACTION_TYPE_USER_ASKS_FOR_HUMAN_EXPERT);
             } else if (Utils.grepForString(query, Arrays.asList("run", "test", "bandwidth", "find"))) {
@@ -183,6 +195,11 @@ public class ApiAiClient implements AIListener {
                             "your network. You can say things like \"run tests\" or  " +
                             "or \"why is my wifi slow\" etc." ,
                             Action.ActionType.ACTION_TYPE_SET_CHAT_TO_BOT_MODE);
+                } else if (lastAction == Action.ActionType.ACTION_TYPE_REPAIR_WIFI) {
+                    actionToReturn = new Action("No worries, I am cancelling the repair. " +
+                                "You can try it any time you face issues.", Action.ActionType.ACTION_TYPE_CANCEL_REPAIR_WIFI);
+                } else if (lastAction == Action.ActionType.ACTION_TYPE_ASK_FOR_WIFI_REPAIR) {
+                    actionToReturn = new Action("No worries, you can try WiFi repair anytime", Action.ActionType.ACTION_TYPE_NONE);
                 } else {
                         actionToReturn = new Action("No worries, I am cancelling the tests. " +
                                 "Let me know if I can be of any other help ",
@@ -204,6 +221,9 @@ public class ApiAiClient implements AIListener {
                 } else if (lastAction == ACTION_TYPE_ASK_FOR_RESUMING_EXPERT_CHAT) {
                     actionToReturn = new Action(Utils.EMPTY_STRING,
                             Action.ActionType.ACTION_TYPE_USER_ASKS_FOR_HUMAN_EXPERT);
+                } else if (lastAction == Action.ActionType.ACTION_TYPE_ASK_FOR_WIFI_REPAIR) {
+                    actionToReturn = new Action("Sure, I will try to initiate WiFi repair for you. " +
+                            "It can take between 20-30 sec ...", Action.ActionType.ACTION_TYPE_REPAIR_WIFI);
                 }
             } else if (Utils.grepForString(query, Arrays.asList("details", "more", "summary"))) {
                 //Show long suggestion
@@ -245,6 +265,11 @@ public class ApiAiClient implements AIListener {
             } else if (event.equals(APIAI_WELCOME_AND_RESUME_EXPERT_EVENT)) {
                 actionToReturn = new Action("Hi, welcome back. You can ask me any question about your network. Do you want to resume your chat with the Wifi experts ?",
                         ACTION_TYPE_ASK_FOR_RESUMING_EXPERT_CHAT);
+            } else if (event.equals(APIAI_SHOW_REPAIR_RECOMMENDATION_EVENT)) {
+                actionToReturn = new Action("Would you like to try WiFi repair to see if we can connect you to a good network ?", Action.ActionType.ACTION_TYPE_ASK_FOR_WIFI_REPAIR);
+            } else if (event.equals(APIAI_ACTION_REPAIR_WIFI)) {
+                actionToReturn = new Action("Sure, I will try to initiate WiFi repair for you. " +
+                        "It can take between 20-30 sec ...", Action.ActionType.ACTION_TYPE_REPAIR_WIFI);
             }
         }
         DobbyLog.v("Sending action to listeners" + actionToReturn.getAction() + " with user response: " + actionToReturn.getUserResponse());
@@ -335,7 +360,7 @@ public class ApiAiClient implements AIListener {
                 actionInt = Action.ActionType.ACTION_TYPE_TURN_ON_WIFI_SERVICE;
                 break;
             case APIAI_ACTION_USER_SAYS_YES_TO_REPAIR_RECOMMENDATION:
-                actionInt = Action.ActionType.ACTION_TYPE_START_REPAIR_DIALOGUE;
+                actionInt = Action.ActionType.ACTION_TYPE_USER_SAYS_YES_TO_REPAIR_RECOMMENDATION;
                 break;
         }
         if (listener != null) {

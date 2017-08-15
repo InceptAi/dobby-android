@@ -38,6 +38,7 @@ import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_ASK_FOR_BW_TES
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_ASK_FOR_FEEDBACK;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_ASK_FOR_LONG_SUGGESTION;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_ASK_FOR_RESUMING_EXPERT_CHAT;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_ASK_FOR_WIFI_REPAIR;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_BANDWIDTH_TEST;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_CANCEL_BANDWIDTH_TEST;
@@ -56,7 +57,7 @@ import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_RUN_TESTS_FOR_
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_SET_CHAT_TO_BOT_MODE;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_SHOW_LONG_SUGGESTION;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_SHOW_SHORT_SUGGESTION;
-import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_START_REPAIR_DIALOGUE;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_USER_SAYS_YES_TO_REPAIR_RECOMMENDATION;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_TURN_OFF_WIFI_SERVICE;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_TURN_ON_WIFI_SERVICE;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_UNKNOWN;
@@ -439,7 +440,7 @@ public class DobbyAi implements
                     responseCallback.startWifiMonitoringService();
                 }
                 break;
-            case ACTION_TYPE_START_REPAIR_DIALOGUE:
+            case ACTION_TYPE_USER_SAYS_YES_TO_REPAIR_RECOMMENDATION:
                 sendEvent(ApiAiClient.APIAI_START_WIFI_REPAIR_EVENT);
                 break;
             default:
@@ -573,6 +574,7 @@ public class DobbyAi implements
         List<Integer> responseList = new ArrayList<>();
         switch (lastActionShownToUser) {
             case ACTION_TYPE_ASK_FOR_LONG_SUGGESTION:
+            case ACTION_TYPE_ASK_FOR_WIFI_REPAIR:
                 responseList.add(UserResponse.ResponseType.YES);
                 responseList.add(UserResponse.ResponseType.NO);
                 break;

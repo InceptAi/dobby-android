@@ -54,6 +54,7 @@ public class UserInteractionManager implements
     private boolean explicitHumanContactMode;
     private boolean historyAvailable;
     private ScheduledFuture<?> accessibilityCheckFuture;
+    private boolean locationPermissionGranted;
     //private NotificationInfoReceiver notificationInfoReceiver;
 
     @Inject
@@ -96,6 +97,7 @@ public class UserInteractionManager implements
                 dobbyThreadpool.getExecutor(), this);
         isUserInChat = false;
         triggerAccessibilityDialogOnResume = false;
+        locationPermissionGranted = true;
     }
 
     public interface InteractionCallback {
@@ -118,7 +120,7 @@ public class UserInteractionManager implements
         void showBandwidthViewCard(DataInterpreter.BandwidthGrade bandwidthGrade);
         void showNetworkInfoViewCard(DataInterpreter.WifiGrade wifiGrade, String isp, String ip);
         void showDetailedSuggestions(SuggestionCreator.Suggestion suggestion);
-        void showWifiRepairResult(boolean success, WifiInfo wifiInfo, String repairSummary);
+        void showWifiRepairCard(boolean success, WifiInfo wifiInfo, String repairSummary);
         void showRepairCancelled();
         void showWifiMonitoringStatusChange(boolean status);
         void requestAccessibilityPermission();
@@ -231,7 +233,13 @@ public class UserInteractionManager implements
         }
     }
 
+    public boolean isLocationPermissionGranted() {
+        return locationPermissionGranted;
+    }
 
+    public void setLocationPermissionGranted(boolean locationPermissionGranted) {
+        this.locationPermissionGranted = locationPermissionGranted;
+    }
 
     //Expert chat service callback
     @Override
@@ -299,7 +307,7 @@ public class UserInteractionManager implements
 
     @Override
     public void startWifiRepair() {
-        wifiMonitoringServiceClient.repairWifiNetwork(WIFI_REPAIR_TIMEOUT_MS);
+        wifiMonitoringServiceClient.repairWifiNetwork(WIFI_REPAIR_TIMEOUT_MS, isLocationPermissionGranted());
     }
 
     @Override
@@ -475,9 +483,16 @@ public class UserInteractionManager implements
     @Override
     public void repairFinished(boolean success, WifiInfo repairedWifiInfo, String repairSummary) {
         dobbyAi.handleRepairFinished(success);
-        if (interactionCallback != null) {
-            interactionCallback.showWifiRepairResult(success, repairedWifiInfo, repairSummary);
+        String repairTitle = context.getString(R.string.repair_wifi_success);
+        if (!success) {
+            repairTitle = context.getString(R.string.repair_wifi_failure);
         }
+        if (interactionCallback != null) {
+            interactionCallback.showWifiRepairCard(success, repairedWifiInfo, repairSummary);
+        }
+        expertChatService.pushBotChatMessage(repairTitle);
+        expertChatService.pushBotChatMessage(repairSummary);
+
     }
 
     public boolean isFirstChatAfterInstall() {

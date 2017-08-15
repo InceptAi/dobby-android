@@ -1,5 +1,6 @@
 package com.inceptai.wifimonitoringservice;
 
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.support.annotation.Nullable;
@@ -60,6 +61,7 @@ public class WifiServiceCore implements
     private long lastWifiEventTimestampMs;
     //Key state
     private int numConsecutiveFailedConnectivityTests;
+    private boolean notificationsEnabled;
     private static WifiServiceCore WIFI_SERVICE_CORE;
 
     private long wifiCheckInitialDelayMs;
@@ -71,6 +73,7 @@ public class WifiServiceCore implements
     private long actionPendingTimestampMs;
     private String lastNotificationTitle;
     private String lastNotificationBody;
+    private NotificationManager notificationManager;
 
     //TODO: Move to repair if reset doesn't work for n number of times
     private WifiServiceCore(Context context, ServiceThreadPool serviceThreadPool) {
@@ -97,6 +100,9 @@ public class WifiServiceCore implements
         lastNotificationBody = Utils.EMPTY_STRING;
         lastNotificationTitle = Utils.EMPTY_STRING;
         wifiConnectivityMode = ConnectivityTester.WifiConnectivityMode.UNKNOWN;
+        notificationsEnabled = true;
+        notificationManager = (NotificationManager)
+                context.getSystemService(Context.NOTIFICATION_SERVICE);
     }
 
     /**
@@ -114,6 +120,14 @@ public class WifiServiceCore implements
             return new WifiServiceCore(context, serviceThreadPool);
         }
         return WIFI_SERVICE_CORE;
+    }
+
+    public boolean isNotificationsEnabled() {
+        return notificationsEnabled;
+    }
+
+    public void setNotificationsEnabled(boolean notificationsEnabled) {
+        this.notificationsEnabled = notificationsEnabled;
     }
 
     public void setPendingIntentForLaunchingNotification(PendingIntent pendingIntent) {
@@ -134,7 +148,7 @@ public class WifiServiceCore implements
         screenStateMonitor.cleanup();
         periodicCheckMonitor.cleanup();
         actionLibrary.cleanup();
-        //serviceThreadPool.shutdown();
+        cancelNotifications();
         ServiceLog.v("Cleanup ");
     }
 
@@ -147,6 +161,12 @@ public class WifiServiceCore implements
         }
         return null;
     }
+
+    void cancelNotifications() {
+        setNotificationsEnabled(false);
+        notificationManager.cancelAll();
+    }
+
 
     void cancelRepairOfWifiNetwork() {
         ServiceLog.v("WifiServiceCore:cancelRepairOfWifiNetwork");
@@ -553,15 +573,24 @@ public class WifiServiceCore implements
             //No change in notification so don't send
             return;
         }
-        lastNotificationTitle = title;
-        lastNotificationBody = body;
-        serviceThreadPool.submit(new DisplayNotification(context, title, body, WifiMonitoringService.WIFI_STATUS_NOTIFICATION_ID, pendingIntentForLaunchingNotification));
-        //Utils.sendNotificationInfo(context, title, body, WifiMonitoringService.WIFI_STATUS_NOTIFICATION_ID);
+        boolean notificationSent = sendNotificationIfEnabled(new DisplayNotification(context, notificationManager, title, body, WifiMonitoringService.WIFI_STATUS_NOTIFICATION_ID, pendingIntentForLaunchingNotification));
+        if (notificationSent) {
+            lastNotificationBody = body;
+            lastNotificationTitle = title;
+        }
     }
 
     private void sendNotificationOfUserActionNeeded(String actionNeeded, String reason) {
-        serviceThreadPool.submit(new DisplayNotification(context, actionNeeded, reason, WifiMonitoringService.WIFI_ISSUE_NOTIFICATION_ID, pendingIntentForLaunchingNotification));
-        //Utils.sendNotificationInfo(context, actionNeeded, reason, WifiMonitoringService.WIFI_ISSUE_NOTIFICATION_ID);
+        sendNotificationIfEnabled(new DisplayNotification(context, notificationManager, actionNeeded, reason, WifiMonitoringService.WIFI_ISSUE_NOTIFICATION_ID, pendingIntentForLaunchingNotification));
+    }
+
+    private boolean sendNotificationIfEnabled(DisplayNotification displayNotification) {
+        if (notificationsEnabled) {
+            serviceThreadPool.submit(displayNotification);
+        } else {
+            ServiceLog.v("Not showing notifications since notifications disabled");
+        }
+        return notificationsEnabled;
     }
 
     private boolean didActionComplete(ActionResult actionResult) {

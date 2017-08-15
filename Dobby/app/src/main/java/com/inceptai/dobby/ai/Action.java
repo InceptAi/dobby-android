@@ -47,7 +47,8 @@ public class Action {
             ActionType.ACTION_TYPE_CANCEL_REPAIR_WIFI,
             ActionType.ACTION_TYPE_TURN_OFF_WIFI_SERVICE,
             ActionType.ACTION_TYPE_TURN_ON_WIFI_SERVICE,
-            ActionType.ACTION_TYPE_START_REPAIR_DIALOGUE
+            ActionType.ACTION_TYPE_USER_SAYS_YES_TO_REPAIR_RECOMMENDATION,
+            ActionType.ACTION_TYPE_ASK_FOR_WIFI_REPAIR
     })
     @Retention(RetentionPolicy.SOURCE)
     public @interface ActionType {
@@ -81,7 +82,8 @@ public class Action {
         int ACTION_TYPE_CANCEL_REPAIR_WIFI = 27;
         int ACTION_TYPE_TURN_ON_WIFI_SERVICE = 28;
         int ACTION_TYPE_TURN_OFF_WIFI_SERVICE = 29;
-        int ACTION_TYPE_START_REPAIR_DIALOGUE = 30;
+        int ACTION_TYPE_USER_SAYS_YES_TO_REPAIR_RECOMMENDATION = 30;
+        int ACTION_TYPE_ASK_FOR_WIFI_REPAIR = 31;
     }
 
     /* User response to be shown, null for no response. */

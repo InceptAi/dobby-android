@@ -1,21 +1,17 @@
 package com.inceptai.dobby;
 
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.net.wifi.WifiInfo;
 import android.os.IBinder;
-import android.support.v4.content.LocalBroadcastManager;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.inceptai.dobby.analytics.DobbyAnalytics;
 import com.inceptai.dobby.database.RepairDatabaseWriter;
 import com.inceptai.dobby.database.RepairRecord;
-import com.inceptai.dobby.notifications.DisplayAppNotification;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 import com.inceptai.wifimonitoringservice.ActionRequest;
@@ -31,7 +27,6 @@ import java.util.concurrent.Executor;
 import javax.inject.Inject;
 
 import static com.inceptai.dobby.ui.WifiDocActivity.REPAIR_TIMEOUT_MS;
-import static com.inceptai.wifimonitoringservice.WifiMonitoringService.NOTIFICATION_INFO_INTENT_VALUE;
 
 
 /**
@@ -40,7 +35,6 @@ import static com.inceptai.wifimonitoringservice.WifiMonitoringService.NOTIFICAT
 public class WifiMonitoringServiceClient {
     private WifiMonitoringService wifiMonitoringService;
     private WifiServiceConnection wifiServiceConnection;
-    private NotificationInfoReceiver notificationInfoReceiver;
     private Context context;
     private boolean boundToWifiService = false;
     private ListenableFuture<ActionResult> repairFuture;
@@ -71,7 +65,6 @@ public class WifiMonitoringServiceClient {
         this.phoneInfo = phoneInfo;
         this.executor = executor;
         this.wifiMonitoringCallback = wifiMonitoringCallback;
-        notificationInfoReceiver = new NotificationInfoReceiver();
         wifiServiceConnection = new WifiServiceConnection();
         isNotificationReceiverRegistered = false;
         //TODO find a better place to connect
@@ -102,10 +95,20 @@ public class WifiMonitoringServiceClient {
     }
 
     public void repairWifiNetwork(long timeOutMs) {
+        repairWifiNetwork(timeOutMs, true);
+    }
+
+    public void repairWifiNetwork(long timeOutMs, boolean isLocationPermissionGranted) {
         if (repairFuture == null || repairFuture.isDone()) {
             //Start fresh repair
             dobbyAnalytics.setWifiRepairInitiated();
-            if (boundToWifiService && wifiMonitoringService != null) {
+            if (!isLocationPermissionGranted) {
+                //We can't scan hence can't connect to a network
+                dobbyAnalytics.setWifiServiceUnavailableForRepair();
+                processRepairResult(null, "Sorry but we are unable to perform repair without location permission -- " +
+                        "we need it to scan for nearby WiFi networks that your phone can connect to. " +
+                        "Please give location permission to this app and retry.");
+            } else if (boundToWifiService && wifiMonitoringService != null) {
                 //Listening for repair to finish on a different thread
                 //Start animation for repair button
                 repairFuture = wifiMonitoringService.repairWifiNetwork(REPAIR_TIMEOUT_MS);
@@ -152,14 +155,15 @@ public class WifiMonitoringServiceClient {
 
 
     public void resumeNotificationIfNeeded() {
-        if (Utils.checkIsWifiMonitoringEnabled(context)) {
-            registerNotificationInfoReceiver();
-            initiateStatusNotification();
+        if (boundToWifiService && wifiMonitoringService != null) {
+            wifiMonitoringService.resumeNotifications();
         }
     }
 
     public void pauseNotifications() {
-        unRegisterNotificationInfoReceiver();
+        if (boundToWifiService && wifiMonitoringService != null) {
+            wifiMonitoringService.pauseNotifications();
+        }
     }
 
     //Private stuff
@@ -179,13 +183,17 @@ public class WifiMonitoringServiceClient {
             if (wifiMonitoringCallback != null) {
                 wifiMonitoringCallback.wifiMonitoringStarted();
             }
+            if (boundToWifiService && wifiMonitoringService != null) {
+                wifiMonitoringService.resumeNotifications();
+            }
         }
     }
 
     private void stopWifiMonitoringService() {
-        //Intent serviceStartIntent = new Intent(this, WifiMonitoringService.class);
-        //serviceStartIntent.putExtra(NotificationInfoKeys., NOTIFICATION_INFO_INTENT_VALUE);
         dobbyAnalytics.setWifiServiceStopped();
+        if (boundToWifiService && wifiMonitoringService != null) {
+            wifiMonitoringService.cancelNotifications();
+        }
         context.stopService(new Intent(context, WifiMonitoringService.class));
         if (wifiMonitoringCallback != null) {
             wifiMonitoringCallback.wifiMonitoringStopped();
@@ -236,12 +244,11 @@ public class WifiMonitoringServiceClient {
         }, executor);
     }
 
-    private void processRepairResult(IterateAndRepairWifiNetwork.RepairResult repairResult) {
+    private void processRepairResult(IterateAndRepairWifiNetwork.RepairResult repairResult, String repairSummary) {
         int textId = R.string.repair_wifi_failure;
         WifiInfo repairedWifiInfo = null;
         boolean repairSuccessful = false;
         boolean toggleSuccessful = true;
-        String repairSummary = Utils.EMPTY_STRING;
         dobbyAnalytics.setWifiRepairFinished();
         if (ActionResult.isSuccessful(repairResult)) {
             textId = R.string.repair_wifi_success;
@@ -269,6 +276,11 @@ public class WifiMonitoringServiceClient {
         }
         writeRepairRecord(createRepairRecord(repairResult));
         addWifiFailureReasonToAnalytics(repairResult);
+    }
+
+
+    private void processRepairResult(IterateAndRepairWifiNetwork.RepairResult repairResult) {
+        processRepairResult(repairResult, Utils.EMPTY_STRING);
     }
 
     private void addWifiFailureReasonToAnalytics(IterateAndRepairWifiNetwork.RepairResult repairResult) {
@@ -339,37 +351,6 @@ public class WifiMonitoringServiceClient {
             DobbyLog.v("WifiDocActivity: onServiceDisconnected");
             boundToWifiService = false;
             dobbyAnalytics.setWifiServiceDisconnected();
-        }
-    }
-
-
-    //Notification stuff
-    // Our handler for received Intents. This will be called whenever an Intent
-    // with an action named "custom-event-name" is broadcasted.
-    private class NotificationInfoReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            // Get extra data included in the Intent
-            String notificationTitle = intent.getStringExtra(WifiMonitoringService.EXTRA_NOTIFICATION_TITLE);
-            String notificationBody = intent.getStringExtra(WifiMonitoringService.EXTRA_NOTIFICATION_BODY);
-            int notificationId = intent.getIntExtra(WifiMonitoringService.EXTRA_NOTIFICATION_ID, 0);
-            dobbyAnalytics.setWifiServiceNotificationShown();
-            executor.execute(new DisplayAppNotification(context, notificationTitle, notificationBody, notificationId));
-        }
-    }
-
-    private void registerNotificationInfoReceiver() {
-        IntentFilter intentFilter = new IntentFilter(NOTIFICATION_INFO_INTENT_VALUE);
-        LocalBroadcastManager.getInstance(context).registerReceiver(
-                notificationInfoReceiver, intentFilter);
-        isNotificationReceiverRegistered = true;
-    }
-
-    private void unRegisterNotificationInfoReceiver() {
-        if (isNotificationReceiverRegistered) {
-            LocalBroadcastManager.getInstance(context).unregisterReceiver(
-                    notificationInfoReceiver);
-            isNotificationReceiverRegistered = false;
         }
     }
 

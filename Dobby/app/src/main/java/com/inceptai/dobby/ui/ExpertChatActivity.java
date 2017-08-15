@@ -97,7 +97,7 @@ public class ExpertChatActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void showWifiRepairResult(boolean success, WifiInfo wifiInfo, String repairSummary) {
+    public void showWifiRepairCard(boolean success, WifiInfo wifiInfo, String repairSummary) {
         //No-op
     }
 

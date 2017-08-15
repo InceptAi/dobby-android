@@ -24,15 +24,15 @@ public class DisplayNotification implements Runnable {
     private PendingIntent pendingIntent;
     private NotificationManager notificationManager;
 
-    public DisplayNotification(Context context, String title, String body, int notificationId,
+    public DisplayNotification(Context context, NotificationManager notificationManager,
+                               String title, String body, int notificationId,
                                PendingIntent pendingIntent) {
         this.context = context;
         this.title = title;
         this.body = body;
         this.notificationId = notificationId;
         this.pendingIntent = pendingIntent;
-        notificationManager = (NotificationManager)
-                context.getSystemService(Context.NOTIFICATION_SERVICE);
+        this.notificationManager = notificationManager;
     }
 
     @Override
@@ -68,5 +68,6 @@ public class DisplayNotification implements Runnable {
         notificationManager.notify(notificationId, notification);
         //return notification;
     }
+
 }
 

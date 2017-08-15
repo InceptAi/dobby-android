@@ -899,6 +899,26 @@ public class DataInterpreter {
         return  httpGrade;
     }
 
+    public static WifiGrade interpret(int primaryApSignal,
+                                      String primaryApSSID,
+                                      int primaryApLinkSpeed,
+                                      int primaryApChannel) {
+        WifiGrade wifiGrade = new WifiGrade();
+        wifiGrade.linkSpeed = primaryApLinkSpeed;
+        wifiGrade.primaryApSsid = primaryApSSID;
+        wifiGrade.primaryApChannel = primaryApChannel;
+        wifiGrade.primaryApSignal = primaryApSignal;
+        wifiGrade.primaryApSignalMetric = getGradeHigherIsBetter(primaryApSignal,
+                WIFI_RSSI_STEPS_DBM, primaryApSignal < 0, false);
+        wifiGrade.primaryApLinkSpeedMetric = getGradeHigherIsBetter(primaryApLinkSpeed,
+                LINK_SPEED_STEPS_MBPS, primaryApLinkSpeed > 0, false);
+        wifiGrade.primaryApBSSID = primaryApSSID;
+        //Needs a network call -- put it in python script
+        //wifiGrade.getPrimaryApMake = Utils.getWifiManufacturer(wifiGrade.primaryApBSSID);
+        return wifiGrade;
+    }
+
+
     public static WifiGrade interpret(WifiState wifiState,
                                       List<ScanResult> scanResultList,
                                       List<WifiConfiguration> wifiConfigurationList,
