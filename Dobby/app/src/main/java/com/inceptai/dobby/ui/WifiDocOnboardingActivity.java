@@ -57,8 +57,10 @@ public class WifiDocOnboardingActivity extends AppCompatActivity {
         ((DobbyApplication) getApplication()).getProdComponent().inject(this);
         super.onCreate(savedInstanceState);
         if (isOnboardingDone()) {
+            dobbyAnalytics.setReturningUser();
             finishAndStartWifiDoc();
         }
+        dobbyAnalytics.setFirstRunAfterInstall();
         setContentView(R.layout.activity_wifi_doc_onboarding);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);

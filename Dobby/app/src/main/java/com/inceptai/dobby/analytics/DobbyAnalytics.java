@@ -7,9 +7,7 @@ package com.inceptai.dobby.analytics;
 import android.os.Bundle;
 
 import com.google.firebase.analytics.FirebaseAnalytics;
-import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.ai.DataInterpreter;
-import com.inceptai.dobby.utils.Utils;
 
 import java.util.ArrayList;
 
@@ -21,6 +19,9 @@ import javax.inject.Singleton;
  */
 @Singleton
 public class DobbyAnalytics extends ExpertChatAnalytics {
+    private static final String FIRST_RUN_AFTER_INSTALL = "first_run_after_install";
+    private static final String RETURNING_USER = "returning_user";
+
     private static final String RUN_TESTS_ITEM = "run_tests";
     private static final String BRIEF_SUGGESTIONS_ITEM = "brief_suggestions";
 
@@ -125,8 +126,8 @@ public class DobbyAnalytics extends ExpertChatAnalytics {
     private static final String ACTION_TYPE_UNSTRUCTURED_FEEDBACK_AFTER_LONG_SUGGESTION = "unstructured_feedback_long_sugg";
 
     private static final String ACTION_TYPE_ASK_FOR_FEEDBACK_AFTER_SHORT_SUGGESTION = "ask_feedback_long_sugg";
-    private static final String ACTION_TYPE_POSITIVE_FEEDBACK_AFTER_SHORT_SUGGESTION = "positive_feedback_long_sugg";
-    private static final String ACTION_TYPE_NEGATIVE_FEEDBACK_AFTER_SHORT_SUGGESTION = "negative_feedback_long_sugg";
+    private static final String ACTION_TYPE_POSITIVE_FEEDBACK_AFTER_SHORT_SUGGESTION = "positive_feedback_short_sugg";
+    private static final String ACTION_TYPE_NEGATIVE_FEEDBACK_AFTER_SHORT_SUGGESTION = "negative_feedback_short_sugg";
     private static final String ACTION_TYPE_NO_FEEDBACK_AFTER_SHORT_SUGGESTION = "no_feedback_long_sugg";
     private static final String ACTION_TYPE_UNSTRUCTURED_FEEDBACK_AFTER_SHORT_SUGGESTION = "unstructured_feedback_long_sugg";
 
@@ -177,14 +178,21 @@ public class DobbyAnalytics extends ExpertChatAnalytics {
     private DobbyAnalyticsBackend dobbyAnalyticsBackend;
 
     @Inject
-    DobbyAnalytics(DobbyApplication dobbyApplication, DobbyAnalyticsBackend dobbyAnalyticsBackend) {
+    DobbyAnalytics(DobbyAnalyticsBackend dobbyAnalyticsBackend) {
         super(dobbyAnalyticsBackend);
         this.dobbyAnalyticsBackend = dobbyAnalyticsBackend;
-        if (dobbyApplication.isRunningOnEmulator()) {
-            dobbyAnalyticsBackend.setUserProperty("isRunningOnEmulator", Utils.TRUE_STRING);
-        } else {
-            dobbyAnalyticsBackend.setUserProperty("isRunningOnEmulator", Utils.FALSE_STRING);
-        }
+    }
+
+    public void setFirstRunAfterInstall() {
+        Bundle bundle = new Bundle();
+        dobbyAnalyticsBackend.logEvent(FIRST_RUN_AFTER_INSTALL, bundle);
+        dobbyAnalyticsBackend.setIsFreshInstall(true);
+    }
+
+    public void setReturningUser() {
+        Bundle bundle = new Bundle();
+        dobbyAnalyticsBackend.logEvent(RETURNING_USER, bundle);
+        dobbyAnalyticsBackend.setIsFreshInstall(false);
     }
 
     public void wifiDocFragmentEntered() {
@@ -206,6 +214,7 @@ public class DobbyAnalytics extends ExpertChatAnalytics {
         bundle.putString(PARAM_SUGGESTION_TEXT, suggestionText);
         bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, AUTO_CONTENT);
         dobbyAnalyticsBackend.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
+        dobbyAnalyticsBackend.setUserSawShortSuggestions(true);
     }
 
     public void moreSuggestionsShown(String title, ArrayList<String> longSuggestionList) {
@@ -214,6 +223,7 @@ public class DobbyAnalytics extends ExpertChatAnalytics {
         bundle.putStringArrayList(PARAM_SUGGESTION_TEXT, longSuggestionList);
         bundle.putString(FirebaseAnalytics.Param.CONTENT_TYPE, MORE_SUGGESTION_CLICKED);
         dobbyAnalyticsBackend.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
+        dobbyAnalyticsBackend.setUserSawDetailedSuggestions(true);
     }
 
     public void aboutShown() {
@@ -364,6 +374,7 @@ public class DobbyAnalytics extends ExpertChatAnalytics {
         Bundle bundle = new Bundle();
         bundle.putString(PARAM_SUGGESTION_TEXT, suggestionText);
         dobbyAnalyticsBackend.logEvent(ACTION_TYPE_SHOW_SHORT_SUGGESTION_TAKEN, bundle);
+        dobbyAnalyticsBackend.setUserSawShortSuggestions(true);
     }
 
     public void wifiExpertDefaultFallbackAction() {
@@ -375,6 +386,7 @@ public class DobbyAnalytics extends ExpertChatAnalytics {
         Bundle bundle = new Bundle();
         bundle.putString(PARAM_SUGGESTION_TEXT, suggestionText);
         dobbyAnalyticsBackend.logEvent(ACTION_TYPE_SHOWING_LONG_SUGGESTION_TAKEN, bundle);
+        dobbyAnalyticsBackend.setUserSawDetailedSuggestions(true);
     }
 
     public void wifiExpertShowWifiAnalysis() {
@@ -421,11 +433,13 @@ public class DobbyAnalytics extends ExpertChatAnalytics {
     public void wifiExpertPositiveFeedbackAfterLongSuggestion() {
         Bundle bundle = new Bundle();
         dobbyAnalyticsBackend.logEvent(ACTION_TYPE_POSITIVE_FEEDBACK_AFTER_LONG_SUGGESTION, bundle);
+        dobbyAnalyticsBackend.setUserSaidAppWasHelpful(true);
     }
 
     public void wifiExpertNegativeFeedbackAfterLongSuggestion() {
         Bundle bundle = new Bundle();
         dobbyAnalyticsBackend.logEvent(ACTION_TYPE_NEGATIVE_FEEDBACK_AFTER_LONG_SUGGESTION, bundle);
+        dobbyAnalyticsBackend.setUserSaidAppWasHelpful(false);
     }
 
     public void wifiExpertNoFeedbackAfterLongSuggestion() {
@@ -448,11 +462,13 @@ public class DobbyAnalytics extends ExpertChatAnalytics {
     public void wifiExpertPositiveFeedbackAfterShortSuggestion() {
         Bundle bundle = new Bundle();
         dobbyAnalyticsBackend.logEvent(ACTION_TYPE_POSITIVE_FEEDBACK_AFTER_SHORT_SUGGESTION, bundle);
+        dobbyAnalyticsBackend.setUserSaidAppWasHelpful(true);
     }
 
     public void wifiExpertNegativeFeedbackAfterShortSuggestion() {
         Bundle bundle = new Bundle();
         dobbyAnalyticsBackend.logEvent(ACTION_TYPE_NEGATIVE_FEEDBACK_AFTER_SHORT_SUGGESTION, bundle);
+        dobbyAnalyticsBackend.setUserSaidAppWasHelpful(false);
     }
 
     public void wifiExpertNoFeedbackAfterShortSuggestion() {
@@ -475,11 +491,13 @@ public class DobbyAnalytics extends ExpertChatAnalytics {
     public void wifiExpertPositiveFeedbackAfterWifiCheck() {
         Bundle bundle = new Bundle();
         dobbyAnalyticsBackend.logEvent(ACTION_TYPE_POSITIVE_FEEDBACK_AFTER_WIFI_CHECK, bundle);
+        dobbyAnalyticsBackend.setUserSaidAppWasHelpful(true);
     }
 
     public void wifiExpertNegativeFeedbackAfterWifiCheck() {
         Bundle bundle = new Bundle();
         dobbyAnalyticsBackend.logEvent(ACTION_TYPE_NEGATIVE_FEEDBACK_AFTER_WIFI_CHECK, bundle);
+        dobbyAnalyticsBackend.setUserSaidAppWasHelpful(false);
     }
 
     public void wifiExpertNoFeedbackAfterWifiCheck() {
@@ -558,11 +576,13 @@ public class DobbyAnalytics extends ExpertChatAnalytics {
     public void wifiTesterSimpleFeedbackPositive() {
         Bundle bundle = new Bundle();
         dobbyAnalyticsBackend.logEvent(WIFI_TESTER_SIMPLE_FEEDBACK_POSITIVE, bundle);
+        dobbyAnalyticsBackend.setUserSaidAppWasHelpful(true);
     }
 
     public void setWifiTesterSimpleFeedbackNegative() {
         Bundle bundle = new Bundle();
         dobbyAnalyticsBackend.logEvent(WIFI_TESTER_SIMPLE_FEEDBACK_NEGATIVE, bundle);
+        dobbyAnalyticsBackend.setUserSaidAppWasHelpful(false);
     }
 
     //Expert says events
@@ -609,6 +629,7 @@ public class DobbyAnalytics extends ExpertChatAnalytics {
     public void setWifiRepairSuccessful() {
         Bundle bundle = new Bundle();
         dobbyAnalyticsBackend.logEvent(WIFI_REPAIR_SUCCESSFUL, bundle);
+        dobbyAnalyticsBackend.setIsRepairSuccessfulForThisUser(true);
     }
 
     public void setWifiRepairCancelled() {
@@ -697,11 +718,13 @@ public class DobbyAnalytics extends ExpertChatAnalytics {
     public void setWifiServiceStarted() {
         Bundle bundle = new Bundle();
         dobbyAnalyticsBackend.logEvent(WIFI_SERVICE_STARTED, bundle);
+        dobbyAnalyticsBackend.setIsWifiMonitoringServiceOn(true);
     }
 
     public void setWifiServiceStopped() {
         Bundle bundle = new Bundle();
         dobbyAnalyticsBackend.logEvent(WIFI_SERVICE_STOPPED, bundle);
+        dobbyAnalyticsBackend.setIsWifiMonitoringServiceOn(false);
     }
 
     public void setWifiServiceNotificationShown() {
@@ -713,7 +736,5 @@ public class DobbyAnalytics extends ExpertChatAnalytics {
         Bundle bundle = new Bundle();
         dobbyAnalyticsBackend.logEvent(WIFI_SERVICE_ON_BOARDING_SHOWN, bundle);
     }
-
-
 
 }
