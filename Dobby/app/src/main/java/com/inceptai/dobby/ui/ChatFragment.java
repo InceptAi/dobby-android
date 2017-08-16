@@ -10,6 +10,7 @@ import android.os.Message;
 import android.speech.tts.TextToSpeech;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.TypedValue;
@@ -46,7 +47,6 @@ import com.inceptai.dobby.utils.Utils;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -631,12 +631,15 @@ public class ChatFragment extends Fragment implements Handler.Callback, NewBandw
     private void showDetailedSuggestionsAlert(SuggestionCreator.Suggestion suggestion) {
         if (suggestion == null) {
             DobbyLog.v("Attempting to show more suggestions when currentSuggestions are null.");
+            return;
         }
         WifiDocDialogFragment fragment = WifiDocDialogFragment.forSuggestion(suggestion.getTitle(),
                 suggestion.getLongSuggestionList());
-        fragment.show(getActivity().getSupportFragmentManager(), "Suggestions");
-        dobbyAnalytics.moreSuggestionsShown(suggestion.getTitle(),
-                new ArrayList<String>(suggestion.getShortSuggestionList()));
+        //fragment.show(getActivity().getSupportFragmentManager(), "Suggestions");
+        //fragment.show(getActivity().getSupportFragmentManager(), "Repair");
+        FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
+        ft.add(fragment, "Suggestions");
+        ft.commitAllowingStateLoss();
     }
 
     private void makeUiChanges(View rootView) {

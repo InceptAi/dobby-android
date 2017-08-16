@@ -53,7 +53,7 @@ android {
         }
         dobby {
             applicationId "com.inceptai.wifiexpert"
-            versionCode 47
+            versionCode 49
             versionName "4.0.0-wifiexpert-repair"
         }
     }
