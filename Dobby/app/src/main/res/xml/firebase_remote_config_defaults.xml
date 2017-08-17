@@ -17,5 +17,9 @@
         <key>neo_server_address</key>
         <value>ws://dobby1743.duckdns.org:8080/</value>
     </entry>
+    <entry>
+        <key>min_app_opens_for_rating</key>
+        <value>3</value>
+    </entry>
 </defaultsMap>
     <!-- END xml_defaults -->

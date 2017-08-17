@@ -21,7 +21,8 @@ public class RemoteConfig {
     private static final String SHOW_INFO_IN_RELEASE = "show_info_in_rb";
     private static final String NEO_SERVER = "neo_server_address";
     private static final String RATINGS_FLAG = "enable_ratings_ask";
-
+    private static final String MIN_APP_OPENS_FOR_RATINGS_FLAG = "min_app_opens_for_rating";
+    private static final long CACHE_EXPIRATION_SEC = 3600; //1 hour
     private FirebaseRemoteConfig firebaseRemoteConfig;
 
     @Inject
@@ -38,9 +39,15 @@ public class RemoteConfig {
      * Asynchronous operation for fetching the config values from the server.
      */
     public ListenableFuture<RemoteConfig> fetchAsync() {
+        long cacheExpirationSec = CACHE_EXPIRATION_SEC;
+        // If your app is using developer mode, cacheExpiration is set to 0, so each fetch will
+        // retrieve values from the service.
+        if (firebaseRemoteConfig.getInfo().getConfigSettings().isDeveloperModeEnabled()) {
+            cacheExpirationSec = 0;
+        }
         final SettableFuture<RemoteConfig> future = SettableFuture.create();
         // 12 hours default cache expiration.
-        firebaseRemoteConfig.fetch()
+        firebaseRemoteConfig.fetch(cacheExpirationSec)
                 .addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
@@ -68,8 +75,10 @@ public class RemoteConfig {
     }
 
     public boolean getRatingsFlag() {
-        //String valueReturned = firebaseRemoteConfig.getString(RATINGS_FLAG);
-        //return valueReturned.equals(Utils.TRUE_STRING);
         return firebaseRemoteConfig.getBoolean(RATINGS_FLAG);
+    }
+
+    public long getMinAppOpensForAskingRatingsFlag() {
+        return firebaseRemoteConfig.getLong(MIN_APP_OPENS_FOR_RATINGS_FLAG);
     }
 }

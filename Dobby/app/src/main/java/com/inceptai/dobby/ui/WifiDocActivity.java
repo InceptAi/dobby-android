@@ -107,7 +107,7 @@ public class WifiDocActivity extends AppCompatActivity implements
                 dobbyApplication.getPhoneInfo(),
                 threadpool.getExecutor(),
                 this /* callback */);
-        ratingsManager = new RatingsManager(this, remoteConfig, threadpool.getExecutor());
+        ratingsManager = new RatingsManager(this, remoteConfig);
     }
 
     public void setupMainFragment() {

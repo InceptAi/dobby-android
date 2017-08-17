@@ -96,7 +96,7 @@ public class UserInteractionManager implements
         dobbyEventBus.registerListener(this);
         this.historyAvailable = false;
         neoServiceClient = new NeoServiceClient(remoteConfig, dobbyThreadpool, dobbyApplication, this);
-        ratingsManager = new RatingsManager(context, remoteConfig, dobbyThreadpool.getExecutor());
+        ratingsManager = new RatingsManager(context, remoteConfig);
         wifiMonitoringServiceClient = new WifiMonitoringServiceClient(context.getApplicationContext(),
                 dobbyApplication.getUserUuid(), dobbyApplication.getPhoneInfo(),
                 dobbyThreadpool.getExecutor(), this);
