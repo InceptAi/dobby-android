@@ -39,6 +39,7 @@ import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_ASK_FOR_FEEDBA
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_ASK_FOR_LONG_SUGGESTION;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_ASK_FOR_RESUMING_EXPERT_CHAT;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_ASK_FOR_WIFI_REPAIR;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_ASK_USER_FOR_RATING_THE_APP;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_BANDWIDTH_TEST;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_CANCEL_BANDWIDTH_TEST;
@@ -57,6 +58,9 @@ import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_RUN_TESTS_FOR_
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_SET_CHAT_TO_BOT_MODE;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_SHOW_LONG_SUGGESTION;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_SHOW_SHORT_SUGGESTION;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_USER_SAYS_LATER_TO_RATING_THE_APP;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_USER_SAYS_NO_TO_RATING_THE_APP;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_USER_SAYS_YES_TO_RATING_THE_APP;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_USER_SAYS_YES_TO_REPAIR_RECOMMENDATION;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_TURN_OFF_WIFI_SERVICE;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_TURN_ON_WIFI_SERVICE;
@@ -137,6 +141,10 @@ public class DobbyAi implements
         void cancelWifiRepair();
         void startWifiMonitoringService();
         void stopWifiMonitoringService();
+        void onUserSaysYesToAppRating();
+        void onUserSaysNoToAppRating();
+        void onUserSaysLaterToAppRating();
+        void userSaysAppIsHelpful();
     }
 
     @Inject
@@ -194,6 +202,10 @@ public class DobbyAi implements
 
     public void startMic() {
 
+    }
+
+    public void askUserForRatingTheApp() {
+        sendEvent(ApiAiClient.APIAI_ASK_FOR_RATING_EVENT);
     }
 
     public void initChatToBotState() {
@@ -347,6 +359,9 @@ public class DobbyAi implements
                 } else {
                     dobbyAnalytics.wifiExpertPositiveFeedbackAfterWifiCheck();
                 }
+                if (responseCallback != null) {
+                    responseCallback.userSaysAppIsHelpful();
+                }
                 break;
             case ACTION_TYPE_NEGATIVE_FEEDBACK:
                 if (longSuggestionShown) {
@@ -442,6 +457,27 @@ public class DobbyAi implements
                 break;
             case ACTION_TYPE_USER_SAYS_YES_TO_REPAIR_RECOMMENDATION:
                 sendEvent(ApiAiClient.APIAI_START_WIFI_REPAIR_EVENT);
+                break;
+            case ACTION_TYPE_ASK_USER_FOR_RATING_THE_APP:
+                dobbyAnalytics.setAskUserForAppRating();
+                break;
+            case ACTION_TYPE_USER_SAYS_YES_TO_RATING_THE_APP:
+                dobbyAnalytics.setUserSaysYesToRating();
+                if (responseCallback != null) {
+                    responseCallback.onUserSaysYesToAppRating();
+                }
+                break;
+            case ACTION_TYPE_USER_SAYS_NO_TO_RATING_THE_APP:
+                dobbyAnalytics.setUserSaysNoToRating();
+                if (responseCallback != null) {
+                    responseCallback.onUserSaysNoToAppRating();
+                }
+                break;
+            case ACTION_TYPE_USER_SAYS_LATER_TO_RATING_THE_APP:
+                dobbyAnalytics.setUserSaysLaterToRating();
+                if (responseCallback != null) {
+                    responseCallback.onUserSaysLaterToAppRating();
+                }
                 break;
             default:
                 DobbyLog.i("Unknown FutureAction");
@@ -573,6 +609,11 @@ public class DobbyAi implements
     private List<Integer> getPotentialUserResponses(@Action.ActionType int lastActionShownToUser) {
         List<Integer> responseList = new ArrayList<>();
         switch (lastActionShownToUser) {
+            case ACTION_TYPE_ASK_USER_FOR_RATING_THE_APP:
+                responseList.add(UserResponse.ResponseType.YES);
+                responseList.add(UserResponse.ResponseType.NO);
+                responseList.add(UserResponse.ResponseType.LATER);
+                break;
             case ACTION_TYPE_ASK_FOR_LONG_SUGGESTION:
             case ACTION_TYPE_ASK_FOR_WIFI_REPAIR:
                 responseList.add(UserResponse.ResponseType.YES);

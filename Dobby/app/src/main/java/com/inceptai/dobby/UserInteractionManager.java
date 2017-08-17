@@ -12,6 +12,7 @@ import com.inceptai.dobby.analytics.DobbyAnalytics;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.expert.ExpertChat;
 import com.inceptai.dobby.expert.ExpertChatService;
+import com.inceptai.dobby.feedback.RatingsManager;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.NeoServiceClient;
@@ -78,6 +79,7 @@ public class UserInteractionManager implements
     private WifiMonitoringServiceClient wifiMonitoringServiceClient;
     private boolean isUserInChat;
     private boolean triggerAccessibilityDialogOnResume;
+    private RatingsManager ratingsManager;
 
     public UserInteractionManager(Context context, InteractionCallback interactionCallback, boolean showContactHumanAction) {
         ((DobbyApplication) context.getApplicationContext()).getProdComponent().inject(this);
@@ -94,6 +96,7 @@ public class UserInteractionManager implements
         dobbyEventBus.registerListener(this);
         this.historyAvailable = false;
         neoServiceClient = new NeoServiceClient(remoteConfig, dobbyThreadpool, dobbyApplication, this);
+        ratingsManager = new RatingsManager(context, remoteConfig, dobbyThreadpool.getExecutor());
         wifiMonitoringServiceClient = new WifiMonitoringServiceClient(context,
                 dobbyApplication.getUserUuid(), dobbyApplication.getPhoneInfo(),
                 dobbyThreadpool.getExecutor(), this);
@@ -274,6 +277,26 @@ public class UserInteractionManager implements
 
     //Dobby Ai callbacks
 
+
+    @Override
+    public void userSaysAppIsHelpful() {
+        maybeAskForRating();
+    }
+
+    @Override
+    public void onUserSaysYesToAppRating() {
+        ratingsManager.launchAppStorePageForRatingTheApp();
+    }
+
+    @Override
+    public void onUserSaysNoToAppRating() {
+        ratingsManager.saveRatingPreference(RatingsManager.NO_PREF);
+    }
+
+    @Override
+    public void onUserSaysLaterToAppRating() {
+        ratingsManager.saveRatingPreference(RatingsManager.LATER_PREF);
+    }
 
     @Override
     public void startWifiRepair() {
@@ -462,7 +485,10 @@ public class UserInteractionManager implements
         }
         expertChatService.pushBotChatMessage(repairTitle);
         expertChatService.pushBotChatMessage(repairSummary);
-
+        // Ask for rating here
+        if (success) {
+            maybeAskForRating();
+        }
     }
 
     public boolean isFirstChatAfterInstall() {
@@ -697,6 +723,12 @@ public class UserInteractionManager implements
     private void sendServiceStoppedDueToErrorsMessage() {
         expertChatService.pushMetaChatMessage(ExpertChat.MSG_TYPE_META_NEO_SERVICE_STOPPED_BY_EXPERT);
 
+    }
+
+    private void maybeAskForRating() {
+        if (ratingsManager.shouldBeAllowedToAskForRating()) {
+            dobbyAi.askUserForRatingTheApp();
+        }
     }
 
 }

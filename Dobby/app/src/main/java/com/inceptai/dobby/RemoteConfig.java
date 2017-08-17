@@ -7,6 +7,8 @@ import com.google.android.gms.tasks.Task;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
+import com.inceptai.dobby.utils.DobbyLog;
+import com.inceptai.dobby.utils.Utils;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -16,8 +18,9 @@ import javax.inject.Singleton;
  */
 @Singleton
 public class RemoteConfig {
-    public static final String SHOW_INFO_IN_RELEASE = "show_info_in_rb";
-    public static final String NEO_SERVER = "neo_server_address";
+    private static final String SHOW_INFO_IN_RELEASE = "show_info_in_rb";
+    private static final String NEO_SERVER = "neo_server_address";
+    private static final String RATINGS_FLAG = "enable_ratings_ask";
 
     private FirebaseRemoteConfig firebaseRemoteConfig;
 
@@ -43,6 +46,7 @@ public class RemoteConfig {
                             firebaseRemoteConfig.activateFetched();
                         } else {
                             // Fetch failed.
+                            DobbyLog.e("Fetch of remote config failed");
                         }
                         // succeeded.
                         future.set(RemoteConfig.this);
@@ -59,4 +63,9 @@ public class RemoteConfig {
         return firebaseRemoteConfig.getString(NEO_SERVER);
     }
 
+    public boolean getRatingsFlag() {
+        String valueReturned = firebaseRemoteConfig.getString(RATINGS_FLAG);
+        return valueReturned.equals(Utils.TRUE_STRING);
+        //return firebaseRemoteConfig.getBoolean(RATINGS_FLAG);
+    }
 }

@@ -50,6 +50,7 @@ public class WifiDocDialogFragment extends DialogFragment {
     public static final int DIALOG_AUTOMATIC_REPAIR_ONBOARDING = 1008;
     public static final int DIALOG_SHOW_LOCATION_AND_OVERDRAW_PERMISSION_REQUEST = 1009;
     public static final int DIALOG_SHOW_ACCESSIBILITY_PERMISSION_REQUEST = 1010;
+    public static final int DIALOG_SHOW_REPAIR_SUMMARY_WITH_RATING_ASK = 1011;
 
 
     public static final String DIALOG_PAYLOAD = "payload";
@@ -63,6 +64,7 @@ public class WifiDocDialogFragment extends DialogFragment {
     public static final String VERSION_TEXT = "App Version: ";
     public static final String DIALOG_REPAIR_TILTE = "repairTitle";
     public static final String DIALOG_REPAIR_SUMMARY = "repairSummary";
+    public static final String DIALOG_REPAIR_ASK_FOR_RATING = "askForRating";
 
 
 
@@ -123,6 +125,8 @@ public class WifiDocDialogFragment extends DialogFragment {
                 return createAccessibilityPermissionRequestDialog(bundle);
             case DIALOG_SHOW_REPAIR_SUMMARY:
                 return createRepairSummaryDialog(bundle);
+            case DIALOG_SHOW_REPAIR_SUMMARY_WITH_RATING_ASK:
+                return createRepairSummaryDialogWithRatingsAsk(bundle);
             case DIALOG_AUTOMATIC_REPAIR_ONBOARDING:
                 return createServiceOnboardingDialog(bundle);
         }
@@ -145,6 +149,20 @@ public class WifiDocDialogFragment extends DialogFragment {
         bundle.putInt(DIALOG_TYPE, DIALOG_SHOW_REPAIR_SUMMARY);
         bundle.putString(DIALOG_REPAIR_TILTE, title);
         bundle.putString(DIALOG_REPAIR_SUMMARY, summary);
+        fragment.setArguments(bundle);
+        return fragment;
+    }
+
+    public static WifiDocDialogFragment forRepairSummaryWithRatingAsk(WifiDocMainFragment mainFragment,
+                                                                      boolean askForRating,
+                                                                      String title, String summary) {
+        WifiDocDialogFragment fragment = new WifiDocDialogFragment();
+        fragment.setWifiDocMainFragment(mainFragment);
+        Bundle bundle = new Bundle();
+        bundle.putInt(DIALOG_TYPE, DIALOG_SHOW_REPAIR_SUMMARY_WITH_RATING_ASK);
+        bundle.putString(DIALOG_REPAIR_TILTE, title);
+        bundle.putString(DIALOG_REPAIR_SUMMARY, summary);
+        bundle.putBoolean(DIALOG_REPAIR_ASK_FOR_RATING, askForRating);
         fragment.setArguments(bundle);
         return fragment;
     }
@@ -264,6 +282,44 @@ public class WifiDocDialogFragment extends DialogFragment {
         dismissButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                dismiss();
+            }
+        });
+        builder.setView(rootView);
+        return builder.create();
+    }
+
+    private Dialog createRepairSummaryDialogWithRatingsAsk(Bundle bundle) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        LayoutInflater inflater = getActivity().getLayoutInflater();
+        rootView = inflater.inflate(R.layout.repair_summary_dialog_fragment, null);
+        String summary = bundle.getString(DIALOG_REPAIR_SUMMARY);
+        String title = bundle.getString(DIALOG_REPAIR_TILTE);
+        final Boolean shouldAskForRatings = bundle.getBoolean(DIALOG_REPAIR_ASK_FOR_RATING);
+        TextView repairTitleTv = (TextView) rootView.findViewById(R.id.repair_title_tv);
+        TextView repairSummaryTv = (TextView) rootView.findViewById(R.id.repair_summary_tv);
+        repairTitleTv.setText(title);
+        repairSummaryTv.setText(summary);
+        Button dismissButton = (Button) rootView.findViewById(R.id.repair_summary_dismiss_button);
+        Button ratingsButton = (Button) rootView.findViewById(R.id.repair_summary_ask_for_rating);
+        if (shouldAskForRatings) {
+            ratingsButton.setVisibility(View.VISIBLE);
+            ratingsButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (BuildConfig.FLAVOR.equals(WIFIDOC_FLAVOR) && wifiDocMainFragment != null) {
+                            wifiDocMainFragment.takeUserToAppStoreForRating();
+                    }
+                    dismiss();
+                }
+            });
+        }
+        dismissButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (shouldAskForRatings && BuildConfig.FLAVOR.equals(WIFIDOC_FLAVOR) && wifiDocMainFragment != null) {
+                    wifiDocMainFragment.userSaysLaterForRating();
+                }
                 dismiss();
             }
         });

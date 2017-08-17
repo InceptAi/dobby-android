@@ -173,7 +173,11 @@ public class DobbyAnalytics extends ExpertChatAnalytics {
     private static final String WIFI_SERVICE_SECURITY_EXCEPTION = "wifi_service_security_exception";
     private static final String WIFI_SERVICE_CONNECTED = "wifi_service_connected";
 
-
+    //Rating stuff
+    private static final String ASK_USER_FOR_APP_RATING = "ask_for_rating";
+    private static final String USER_SAYS_YES_TO_RATING = "yes_to_rating";
+    private static final String USER_SAYS_NO_TO_RATING = "no_to_rating";
+    private static final String USER_SAYS_LATER_TO_RATING = "later_to_rating";
 
     private DobbyAnalyticsBackend dobbyAnalyticsBackend;
 
@@ -735,6 +739,26 @@ public class DobbyAnalytics extends ExpertChatAnalytics {
     public void setWifiServiceOnBoardingShown() {
         Bundle bundle = new Bundle();
         dobbyAnalyticsBackend.logEvent(WIFI_SERVICE_ON_BOARDING_SHOWN, bundle);
+    }
+
+    public void setAskUserForAppRating() {
+        Bundle bundle = new Bundle();
+        dobbyAnalyticsBackend.logEvent(ASK_USER_FOR_APP_RATING, bundle);
+    }
+
+    public void setUserSaysYesToRating() {
+        Bundle bundle = new Bundle();
+        dobbyAnalyticsBackend.logEvent(USER_SAYS_YES_TO_RATING, bundle);
+    }
+
+    public void setUserSaysNoToRating() {
+        Bundle bundle = new Bundle();
+        dobbyAnalyticsBackend.logEvent(USER_SAYS_NO_TO_RATING, bundle);
+    }
+
+    public void setUserSaysLaterToRating() {
+        Bundle bundle = new Bundle();
+        dobbyAnalyticsBackend.logEvent(USER_SAYS_LATER_TO_RATING, bundle);
     }
 
 }

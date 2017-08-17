@@ -44,6 +44,16 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_gravity="center_horizontal"
+        android:visibility="gone"
+        android:text="Rate Us Now"
+        style="@style/MyButton.Flat"
+        android:paddingTop="8dp"
+        android:id="@+id/repair_summary_ask_for_rating"
+        android:layout_height="wrap_content" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_gravity="center_horizontal"
         android:text="DISMISS"
         style="@style/MyButton.Flat"
         android:paddingTop="8dp"
