@@ -7,8 +7,8 @@ import com.google.android.gms.tasks.Task;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
+import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
 import com.inceptai.dobby.utils.DobbyLog;
-import com.inceptai.dobby.utils.Utils;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -27,6 +27,10 @@ public class RemoteConfig {
     @Inject
     public RemoteConfig() {
         firebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
+        FirebaseRemoteConfigSettings configSettings = new FirebaseRemoteConfigSettings.Builder()
+                .setDeveloperModeEnabled(BuildConfig.DEBUG)
+                .build();
+        firebaseRemoteConfig.setConfigSettings(configSettings);
         firebaseRemoteConfig.setDefaults(R.xml.firebase_remote_config_defaults);
     }
 
@@ -64,8 +68,8 @@ public class RemoteConfig {
     }
 
     public boolean getRatingsFlag() {
-        String valueReturned = firebaseRemoteConfig.getString(RATINGS_FLAG);
-        return valueReturned.equals(Utils.TRUE_STRING);
-        //return firebaseRemoteConfig.getBoolean(RATINGS_FLAG);
+        //String valueReturned = firebaseRemoteConfig.getString(RATINGS_FLAG);
+        //return valueReturned.equals(Utils.TRUE_STRING);
+        return firebaseRemoteConfig.getBoolean(RATINGS_FLAG);
     }
 }

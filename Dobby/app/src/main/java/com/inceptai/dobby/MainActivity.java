@@ -136,6 +136,8 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
         setupChatFragment();
         registerNeoCustomIntentReceiver();
+        //Testing
+        //startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=com.inceptai.wifiexpert")));
     }
 
 

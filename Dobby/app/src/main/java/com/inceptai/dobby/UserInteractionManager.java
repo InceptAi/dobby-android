@@ -97,7 +97,7 @@ public class UserInteractionManager implements
         this.historyAvailable = false;
         neoServiceClient = new NeoServiceClient(remoteConfig, dobbyThreadpool, dobbyApplication, this);
         ratingsManager = new RatingsManager(context, remoteConfig, dobbyThreadpool.getExecutor());
-        wifiMonitoringServiceClient = new WifiMonitoringServiceClient(context,
+        wifiMonitoringServiceClient = new WifiMonitoringServiceClient(context.getApplicationContext(),
                 dobbyApplication.getUserUuid(), dobbyApplication.getPhoneInfo(),
                 dobbyThreadpool.getExecutor(), this);
         isUserInChat = false;
@@ -140,6 +140,7 @@ public class UserInteractionManager implements
     //API calls
     public void onUserEnteredChat() {
         isUserInChat = true;
+        remoteConfig.fetchAsync();
         fetchChatMessages();
         expertChatService.checkIn();
         expertChatService.registerToEventBusListener();

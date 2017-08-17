@@ -41,8 +41,7 @@ public class ApiAiClient implements AIListener {
     static final String APIAI_WELCOME_AND_RESUME_EXPERT_EVENT = "ask_user_for_resuming_expert_chat_event";
     static final String APIAI_SHOW_REPAIR_RECOMMENDATION_EVENT = "show_repair_recommendation_event";
     static final String APIAI_START_WIFI_REPAIR_EVENT = "start_wifi_repair_event";
-    static final String APIAI_ASK_FOR_RATING_EVENT = "ask_user_for_rating_the_app";
-
+    static final String APIAI_ASK_FOR_RATING_EVENT = "ask_user_for_rating_the_app_event";
 
     //API AI actions
     private static final String APIAI_ACTION_DIAGNOSE_SLOW_INTERNET = "diagnose-slow-internet-action";
@@ -68,10 +67,10 @@ public class ApiAiClient implements AIListener {
     private static final String APIAI_ACTION_TURN_ON_WIFI_SERVICE = "turn-wifi-service-on-action";
     private static final String APIAI_ACTION_TURN_OFF_WIFI_SERVICE = "turn-wifi-service-off-action";
     private static final String APIAI_ACTION_USER_SAYS_YES_TO_REPAIR_RECOMMENDATION = "user-says-yes-to-repair-recommendation-action";
-    private static final String APIAI_ACTION_ASK_USER_FOR_RATING_THE_APP = "ask-user-for-rating-the-app";
-    private static final String APIAI_ACTION_USER_SAYS_YES_TO_RATING_THE_APP = "user-says-yes-to-rating-the-app";
-    private static final String APIAI_ACTION_USER_SAYS_NO_TO_RATING_THE_APP = "user-says-no-to-rating-the-app";
-    private static final String APIAI_ACTION_USER_SAYS_LATER_TO_RATING_THE_APP = "user-says-later-to-rating-the-app";
+    private static final String APIAI_ACTION_ASK_USER_FOR_RATING_THE_APP = "ask-user-for-rating-the-app-action";
+    private static final String APIAI_ACTION_USER_SAYS_YES_TO_RATING_THE_APP = "user-says-yes-to-rating-the-app-action";
+    private static final String APIAI_ACTION_USER_SAYS_NO_TO_RATING_THE_APP = "user-says-no-to-rating-the-app-action";
+    private static final String APIAI_ACTION_USER_SAYS_LATER_TO_RATING_THE_APP = "user-says-later-to-rating-the-app-action";
 
 
     //private static final String CLIENT_ACCESS_TOKEN = "81dbd5289ee74637bf582fc3112b7dcb";
