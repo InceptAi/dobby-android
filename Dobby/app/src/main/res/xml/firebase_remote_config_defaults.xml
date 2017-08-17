@@ -2,8 +2,8 @@
 <!-- START xml_defaults -->
 <defaultsMap>
     <entry>
-        <key>loading_phrase</key>
-        <value>Fetching config…</value>
+        <key>enable_ratings_ask</key>
+        <value>false</value>
     </entry>
     <entry>
         <key>show_info_in_rb</key>
@@ -12,6 +12,14 @@
     <entry>
         <key>welcome_message</key>
         <value>Welcome to Wifi Tester !</value>
+    </entry>
+    <entry>
+        <key>neo_server_address</key>
+        <value>ws://dobby1743.duckdns.org:8080/</value>
+    </entry>
+    <entry>
+        <key>min_app_opens_for_rating</key>
+        <value>3</value>
     </entry>
 </defaultsMap>
     <!-- END xml_defaults -->

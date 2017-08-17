@@ -33,40 +33,44 @@ public class ApiAiClient implements AIListener {
     private static final String CANNED_RESPONSE = "We are working on it.";
 
     //API AI events
-    public static final String APIAI_WELCOME_EVENT = "welcome_dobby_event";
-    public static final String APIAI_SHORT_SUGGESTION_SHOWN_EVENT = "short_suggestion_shown_event";
-    public static final String APIAI_LONG_SUGGESTION_SHOWN_EVENT = "long_suggestion_shown_event";
-    public static final String APIAI_WIFI_ANALYSIS_SHOWN_EVENT = "wifi_analysis_shown_event";
-    public static final String APIAI_RUN_TESTS_FOR_EXPERT_EVENT = "run_tests_for_expert_event";
-    public static final String APIAI_WELCOME_AND_RESUME_EXPERT_EVENT = "ask_user_for_resuming_expert_chat_event";
-    public static final String APIAI_SHOW_REPAIR_RECOMMENDATION_EVENT = "show_repair_recommendation_event";
-    public static final String APIAI_START_WIFI_REPAIR_EVENT = "start_wifi_repair_event";
-
+    static final String APIAI_WELCOME_EVENT = "welcome_dobby_event";
+    static final String APIAI_SHORT_SUGGESTION_SHOWN_EVENT = "short_suggestion_shown_event";
+    static final String APIAI_LONG_SUGGESTION_SHOWN_EVENT = "long_suggestion_shown_event";
+    static final String APIAI_WIFI_ANALYSIS_SHOWN_EVENT = "wifi_analysis_shown_event";
+    static final String APIAI_RUN_TESTS_FOR_EXPERT_EVENT = "run_tests_for_expert_event";
+    static final String APIAI_WELCOME_AND_RESUME_EXPERT_EVENT = "ask_user_for_resuming_expert_chat_event";
+    static final String APIAI_SHOW_REPAIR_RECOMMENDATION_EVENT = "show_repair_recommendation_event";
+    static final String APIAI_START_WIFI_REPAIR_EVENT = "start_wifi_repair_event";
+    static final String APIAI_ASK_FOR_RATING_EVENT = "ask_user_for_rating_the_app_event";
 
     //API AI actions
-    public static final String APIAI_ACTION_DIAGNOSE_SLOW_INTERNET = "diagnose-slow-internet-action";
-    public static final String APIAI_PERFORM_BW_TEST_RETURN_RESULT = "perform-bw-test-return-result";
-    public static final String APIAI_ACTION_CANCEL = "cancel-bw-tests";
-    public static final String APIAI_ACTION_SHOW_LONG_SUGGESTION = "show-long-suggestion";
-    public static final String APIAI_ACTION_ASK_FOR_LONG_SUGGESTION = "ask-for-long-suggestion";
-    public static final String APIAI_ACTION_WIFI_CHECK = "run-wifi-check-action";
-    public static final String APIAI_ACTION_LIST_DOBBY_FUNCTIONS = "list-dobby-functions-action";
-    public static final String APIAI_ACTION_ASK_FOR_BW_TESTS = "ask-to-run-bw-tests";
-    public static final String APIAI_ACTION_ASK_FOR_FEEDBACK = "ask-for-feedback-action";
-    public static final String APIAI_ACTION_POSITIVE_FEEDBACK = "user-says-app-helpful";
-    public static final String APIAI_ACTION_NEGATIVE_FEEDBACK = "user-says-app-not-helpful";
-    public static final String APIAI_ACTION_NO_FEEDBACK = "user-says-no-to-giving-feedback";
-    public static final String APIAI_ACTION_UNSTRUCTURED_FEEDBACK = "user-feedback-unstructured";
-    public static final String APIAI_ACTION_CONTACT_HUMAN_EXPERT = "contact-human-expert-action";
-    public static final String APIAI_ACTION_RUN_TESTS_FOR_EXPERT = "run-tests-for-expert-action";
-    public static final String APIAI_ACTION_CANCEL_TESTS_FOR_EXPERT = "cancel-expert-tests";
-    public static final String APIAI_ACTION_SET_TO_BOT_MODE = "set-chat-to-bot-mode-action";
-    public static final String APIAI_ACTION_WELCOME_AND_ASK_USER_FOR_RESUMING_EXPERT_CHAT = "ask-user-for-resuming-expert-chat-action";
-    public static final String APIAI_ACTION_REPAIR_WIFI = "repair-wifi-action";
-    public static final String APIAI_ACTION_CANCEL_REPAIR_WIFI = "cancel-repair-wifi-action";
-    public static final String APIAI_ACTION_TURN_ON_WIFI_SERVICE = "turn-wifi-service-on-action";
-    public static final String APIAI_ACTION_TURN_OFF_WIFI_SERVICE = "turn-wifi-service-off-action";
-    public static final String APIAI_ACTION_USER_SAYS_YES_TO_REPAIR_RECOMMENDATION = "user-says-yes-to-repair-recommendation-action";
+    private static final String APIAI_ACTION_DIAGNOSE_SLOW_INTERNET = "diagnose-slow-internet-action";
+    private static final String APIAI_PERFORM_BW_TEST_RETURN_RESULT = "perform-bw-test-return-result";
+    private static final String APIAI_ACTION_CANCEL = "cancel-bw-tests";
+    private static final String APIAI_ACTION_SHOW_LONG_SUGGESTION = "show-long-suggestion";
+    private static final String APIAI_ACTION_ASK_FOR_LONG_SUGGESTION = "ask-for-long-suggestion";
+    private static final String APIAI_ACTION_WIFI_CHECK = "run-wifi-check-action";
+    private static final String APIAI_ACTION_LIST_DOBBY_FUNCTIONS = "list-dobby-functions-action";
+    private static final String APIAI_ACTION_ASK_FOR_BW_TESTS = "ask-to-run-bw-tests";
+    private static final String APIAI_ACTION_ASK_FOR_FEEDBACK = "ask-for-feedback-action";
+    private static final String APIAI_ACTION_POSITIVE_FEEDBACK = "user-says-app-helpful";
+    private static final String APIAI_ACTION_NEGATIVE_FEEDBACK = "user-says-app-not-helpful";
+    private static final String APIAI_ACTION_NO_FEEDBACK = "user-says-no-to-giving-feedback";
+    private static final String APIAI_ACTION_UNSTRUCTURED_FEEDBACK = "user-feedback-unstructured";
+    private static final String APIAI_ACTION_CONTACT_HUMAN_EXPERT = "contact-human-expert-action";
+    private static final String APIAI_ACTION_RUN_TESTS_FOR_EXPERT = "run-tests-for-expert-action";
+    private static final String APIAI_ACTION_CANCEL_TESTS_FOR_EXPERT = "cancel-expert-tests";
+    private static final String APIAI_ACTION_SET_TO_BOT_MODE = "set-chat-to-bot-mode-action";
+    private static final String APIAI_ACTION_WELCOME_AND_ASK_USER_FOR_RESUMING_EXPERT_CHAT = "ask-user-for-resuming-expert-chat-action";
+    private static final String APIAI_ACTION_REPAIR_WIFI = "repair-wifi-action";
+    private static final String APIAI_ACTION_CANCEL_REPAIR_WIFI = "cancel-repair-wifi-action";
+    private static final String APIAI_ACTION_TURN_ON_WIFI_SERVICE = "turn-wifi-service-on-action";
+    private static final String APIAI_ACTION_TURN_OFF_WIFI_SERVICE = "turn-wifi-service-off-action";
+    private static final String APIAI_ACTION_USER_SAYS_YES_TO_REPAIR_RECOMMENDATION = "user-says-yes-to-repair-recommendation-action";
+    private static final String APIAI_ACTION_ASK_USER_FOR_RATING_THE_APP = "ask-user-for-rating-the-app-action";
+    private static final String APIAI_ACTION_USER_SAYS_YES_TO_RATING_THE_APP = "user-says-yes-to-rating-the-app-action";
+    private static final String APIAI_ACTION_USER_SAYS_NO_TO_RATING_THE_APP = "user-says-no-to-rating-the-app-action";
+    private static final String APIAI_ACTION_USER_SAYS_LATER_TO_RATING_THE_APP = "user-says-later-to-rating-the-app-action";
 
 
     //private static final String CLIENT_ACCESS_TOKEN = "81dbd5289ee74637bf582fc3112b7dcb";
@@ -362,6 +366,18 @@ public class ApiAiClient implements AIListener {
                 break;
             case APIAI_ACTION_USER_SAYS_YES_TO_REPAIR_RECOMMENDATION:
                 actionInt = Action.ActionType.ACTION_TYPE_USER_SAYS_YES_TO_REPAIR_RECOMMENDATION;
+                break;
+            case APIAI_ACTION_ASK_USER_FOR_RATING_THE_APP:
+                actionInt = Action.ActionType.ACTION_TYPE_ASK_USER_FOR_RATING_THE_APP;
+                break;
+            case APIAI_ACTION_USER_SAYS_YES_TO_RATING_THE_APP:
+                actionInt = Action.ActionType.ACTION_TYPE_USER_SAYS_YES_TO_RATING_THE_APP;
+                break;
+            case APIAI_ACTION_USER_SAYS_NO_TO_RATING_THE_APP:
+                actionInt = Action.ActionType.ACTION_TYPE_USER_SAYS_NO_TO_RATING_THE_APP;
+                break;
+            case APIAI_ACTION_USER_SAYS_LATER_TO_RATING_THE_APP:
+                actionInt = Action.ActionType.ACTION_TYPE_USER_SAYS_LATER_TO_RATING_THE_APP;
                 break;
         }
         if (listener != null) {

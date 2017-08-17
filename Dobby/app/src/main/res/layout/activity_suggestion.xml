@@ -13,10 +13,12 @@
     <android.support.v7.widget.Toolbar
         android:id="@+id/suggestions_activity_toolbar"
         android:minHeight="?attr/actionBarSize"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         app:titleTextColor="@android:color/white"
-        android:background="?attr/colorPrimary">
+        android:background="?attr/colorPrimary"
+        tools:layout_editor_absoluteY="0dp"
+        tools:layout_editor_absoluteX="8dp">
     </android.support.v7.widget.Toolbar>
 
     <LinearLayout
@@ -70,7 +72,7 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginTop="30dp"
-        app:layout_constraintTop_toBottomOf="@id/top_bar"
+        app:layout_constraintTop_toBottomOf="@+id/top_bar"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         android:id="@+id/suggestions_scroll_view"

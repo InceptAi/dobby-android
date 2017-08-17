@@ -21,11 +21,7 @@ public class DobbyAnalyticsBackend extends AnalyticsBackend {
     DobbyAnalyticsBackend(DobbyApplication dobbyApplication) {
         firebaseAnalytics = FirebaseAnalytics.getInstance(dobbyApplication.getApplicationContext());
         if (firebaseAnalytics != null) {
-            if (dobbyApplication.isRunningOnEmulator()) {
-                firebaseAnalytics.setUserProperty("isRunningOnEmulator", Utils.TRUE_STRING);
-            } else {
-                firebaseAnalytics.setUserProperty("isRunningOnEmulator", Utils.FALSE_STRING);
-            }
+            setIsUserRunningOnEmulator(dobbyApplication.isRunningOnEmulator());
         }
     }
 
@@ -38,4 +34,50 @@ public class DobbyAnalyticsBackend extends AnalyticsBackend {
     public void setUserProperty(String propertyName, String propertyValue) {
         firebaseAnalytics.setUserProperty(propertyName, propertyValue);
     }
+
+    void setIsFreshInstall(boolean isFreshInstall) {
+        if (isFreshInstall) {
+            firebaseAnalytics.setUserProperty("firstLaunch", Utils.TRUE_STRING);
+        } else {
+            firebaseAnalytics.setUserProperty("firstLaunch", null);
+        }
+    }
+
+    void setIsWifiMonitoringServiceOn(boolean isServiceOn) {
+        if (isServiceOn) {
+            firebaseAnalytics.setUserProperty("serviceOn", Utils.TRUE_STRING);
+        } else {
+            firebaseAnalytics.setUserProperty("serviceOn", null);
+        }
+    }
+
+    void setIsRepairSuccessfulForThisUser(boolean isRepairSuccessfulForThisUser) {
+        String propertyValue = isRepairSuccessfulForThisUser ? Utils.TRUE_STRING : Utils.FALSE_STRING;
+        firebaseAnalytics.setUserProperty("repairSuccess", propertyValue);
+    }
+
+    void setUserSaidAppWasHelpful(boolean didUserSayAppWasHelpful) {
+        String propertyValue = didUserSayAppWasHelpful ? Utils.TRUE_STRING : Utils.FALSE_STRING;
+        firebaseAnalytics.setUserProperty("userSaidAppHelpful", propertyValue);
+    }
+
+    void setUserSawDetailedSuggestions(boolean didUserSeeDetailedSuggestions) {
+        String propertyValue = didUserSeeDetailedSuggestions ? Utils.TRUE_STRING : Utils.FALSE_STRING;
+        firebaseAnalytics.setUserProperty("sawDetailedSuggestions", propertyValue);
+    }
+
+    void setUserSawShortSuggestions(boolean didUserSeeShortSuggestions) {
+        String propertyValue = didUserSeeShortSuggestions ? Utils.TRUE_STRING : Utils.FALSE_STRING;
+        firebaseAnalytics.setUserProperty("sawShortSuggestion", propertyValue);
+    }
+
+
+    private void setIsUserRunningOnEmulator(boolean isUserRunningOnEmulator) {
+        if (isUserRunningOnEmulator) {
+            firebaseAnalytics.setUserProperty("isRunningOnEmulator", Utils.TRUE_STRING);
+        } else {
+            firebaseAnalytics.setUserProperty("isRunningOnEmulator", Utils.FALSE_STRING);
+        }
+    }
+
 }

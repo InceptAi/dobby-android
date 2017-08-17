@@ -16,6 +16,7 @@ import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.NetworkLayer;
 import com.inceptai.dobby.R;
+import com.inceptai.dobby.RemoteConfig;
 import com.inceptai.dobby.WifiMonitoringServiceClient;
 import com.inceptai.dobby.ai.Action;
 import com.inceptai.dobby.ai.DobbyAi;
@@ -23,6 +24,7 @@ import com.inceptai.dobby.ai.suggest.LocalSummary;
 import com.inceptai.dobby.database.RepairDatabaseWriter;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.fake.FakeDataIntentReceiver;
+import com.inceptai.dobby.feedback.RatingsManager;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 
@@ -55,10 +57,13 @@ public class WifiDocActivity extends AppCompatActivity implements
     DobbyEventBus eventBus;
     @Inject
     RepairDatabaseWriter repairDatabaseWriter;
+    @Inject
+    RemoteConfig remoteConfig;
 
     private FakeDataIntentReceiver fakeDataIntentReceiver;
     private Handler handler;
     private WifiMonitoringServiceClient wifiMonitoringServiceClient;
+    private RatingsManager ratingsManager;
     private boolean isLocationPermissionGranted;
 
     @Override
@@ -102,6 +107,7 @@ public class WifiDocActivity extends AppCompatActivity implements
                 dobbyApplication.getPhoneInfo(),
                 threadpool.getExecutor(),
                 this /* callback */);
+        ratingsManager = new RatingsManager(this, remoteConfig);
     }
 
     public void setupMainFragment() {
@@ -152,6 +158,16 @@ public class WifiDocActivity extends AppCompatActivity implements
 
     public void setLocationPermissionGranted(boolean locationPermissionGranted) {
         isLocationPermissionGranted = locationPermissionGranted;
+    }
+
+    @Override
+    public void onUserSaysLaterToGivingRating() {
+        ratingsManager.saveRatingPreference(RatingsManager.LATER_PREF);
+    }
+
+    @Override
+    public void onUserSaysYesToGivingRating() {
+        ratingsManager.launchAppStorePageForRatingTheApp();
     }
 
     @Override
@@ -310,9 +326,12 @@ public class WifiDocActivity extends AppCompatActivity implements
             textId = R.string.repair_wifi_failure;
         }
         if (mainFragment != null) {
-            mainFragment.handleRepairFinished(repairedWifiInfo, textId, repairSummary);
+            mainFragment.handleRepairFinished(repairedWifiInfo, textId, repairSummary, shouldAskForRating() && success);
         }
+    }
 
+    private boolean shouldAskForRating() {
+        return ratingsManager.shouldBeAllowedToAskForRating();
     }
 
     private WifiDocMainFragment getMainFragmentFromTag() {

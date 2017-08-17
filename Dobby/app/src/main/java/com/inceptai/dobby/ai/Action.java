@@ -48,7 +48,11 @@ public class Action {
             ActionType.ACTION_TYPE_TURN_OFF_WIFI_SERVICE,
             ActionType.ACTION_TYPE_TURN_ON_WIFI_SERVICE,
             ActionType.ACTION_TYPE_USER_SAYS_YES_TO_REPAIR_RECOMMENDATION,
-            ActionType.ACTION_TYPE_ASK_FOR_WIFI_REPAIR
+            ActionType.ACTION_TYPE_ASK_FOR_WIFI_REPAIR,
+            ActionType.ACTION_TYPE_ASK_USER_FOR_RATING_THE_APP,
+            ActionType.ACTION_TYPE_USER_SAYS_YES_TO_RATING_THE_APP,
+            ActionType.ACTION_TYPE_USER_SAYS_NO_TO_RATING_THE_APP,
+            ActionType.ACTION_TYPE_USER_SAYS_LATER_TO_RATING_THE_APP
     })
     @Retention(RetentionPolicy.SOURCE)
     public @interface ActionType {
@@ -84,6 +88,10 @@ public class Action {
         int ACTION_TYPE_TURN_OFF_WIFI_SERVICE = 29;
         int ACTION_TYPE_USER_SAYS_YES_TO_REPAIR_RECOMMENDATION = 30;
         int ACTION_TYPE_ASK_FOR_WIFI_REPAIR = 31;
+        int ACTION_TYPE_ASK_USER_FOR_RATING_THE_APP = 32;
+        int ACTION_TYPE_USER_SAYS_YES_TO_RATING_THE_APP = 33;
+        int ACTION_TYPE_USER_SAYS_NO_TO_RATING_THE_APP = 34;
+        int ACTION_TYPE_USER_SAYS_LATER_TO_RATING_THE_APP = 35;
     }
 
     /* User response to be shown, null for no response. */

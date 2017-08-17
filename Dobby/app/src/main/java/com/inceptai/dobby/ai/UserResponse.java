@@ -12,6 +12,7 @@ import java.util.List;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.ASK_ABOUT_DOBBY;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.CANCEL;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.CONTACT_HUMAN_EXPERT;
+import static com.inceptai.dobby.ai.UserResponse.ResponseType.LATER;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.LIST_ALL_FUNCTIONS;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.NO;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.NO_COMMENTS;
@@ -48,7 +49,8 @@ public class UserResponse {
             START_WIFI_REPAIR,
             TURN_ON_WIFI_MONITORING,
             TURN_OFF_WIFI_MONITORING,
-            REPAIRING
+            REPAIRING,
+            LATER
     })
 
 
@@ -70,6 +72,7 @@ public class UserResponse {
         int TURN_ON_WIFI_MONITORING = 13;
         int TURN_OFF_WIFI_MONITORING = 14;
         int REPAIRING = 15;
+        int LATER = 16;
     }
 
     /* User response to be shown, null for no response. */
@@ -132,6 +135,8 @@ public class UserResponse {
                 return "Repair wifi";
             case REPAIRING:
                 return "Repairing";
+            case LATER:
+                return "Later";
             case NO_RESPONSE:
             default:
                 return Utils.EMPTY_STRING;

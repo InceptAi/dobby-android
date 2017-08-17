@@ -12,6 +12,7 @@ import com.inceptai.dobby.analytics.DobbyAnalytics;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.expert.ExpertChat;
 import com.inceptai.dobby.expert.ExpertChatService;
+import com.inceptai.dobby.feedback.RatingsManager;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.NeoServiceClient;
@@ -44,6 +45,8 @@ public class UserInteractionManager implements
     private static final long DELAY_BEFORE_WELCOME_MESSAGE_MS = 500;
     private static final long ACCESSIBILITY_SETTING_CHECKER_TIMEOUT_MS = 10000;
     private static final long WIFI_REPAIR_TIMEOUT_MS = 30000;
+    private static final String PREF_CHAT_FIRST_TIME = "first_user_interaction";
+
 
     private long currentEtaSeconds;
     private InteractionCallback interactionCallback;
@@ -76,6 +79,7 @@ public class UserInteractionManager implements
     private WifiMonitoringServiceClient wifiMonitoringServiceClient;
     private boolean isUserInChat;
     private boolean triggerAccessibilityDialogOnResume;
+    private RatingsManager ratingsManager;
 
     public UserInteractionManager(Context context, InteractionCallback interactionCallback, boolean showContactHumanAction) {
         ((DobbyApplication) context.getApplicationContext()).getProdComponent().inject(this);
@@ -92,12 +96,19 @@ public class UserInteractionManager implements
         dobbyEventBus.registerListener(this);
         this.historyAvailable = false;
         neoServiceClient = new NeoServiceClient(remoteConfig, dobbyThreadpool, dobbyApplication, this);
-        wifiMonitoringServiceClient = new WifiMonitoringServiceClient(context,
+        ratingsManager = new RatingsManager(context, remoteConfig);
+        wifiMonitoringServiceClient = new WifiMonitoringServiceClient(context.getApplicationContext(),
                 dobbyApplication.getUserUuid(), dobbyApplication.getPhoneInfo(),
                 dobbyThreadpool.getExecutor(), this);
         isUserInChat = false;
         triggerAccessibilityDialogOnResume = false;
         locationPermissionGranted = true;
+        if (isFirstUserInteraction()) {
+            dobbyAnalytics.setFirstRunAfterInstall();
+            saveFirstUserInteraction();
+        } else {
+            dobbyAnalytics.setReturningUser();
+        }
     }
 
     public interface InteractionCallback {
@@ -129,6 +140,7 @@ public class UserInteractionManager implements
     //API calls
     public void onUserEnteredChat() {
         isUserInChat = true;
+        remoteConfig.fetchAsync();
         fetchChatMessages();
         expertChatService.checkIn();
         expertChatService.registerToEventBusListener();
@@ -193,45 +205,7 @@ public class UserInteractionManager implements
         onFirstTimeResumedChat(false, false, true);
     }
 
-    private void onFirstTimeResumedChat(final boolean resumeWithSuggestionIfAvailable,
-                                        final boolean resumeWithWifiCheck,
-                                        final boolean resumeWithWelcomeMessage) {
-        final boolean resumingInExpertMode = checkSharedPrefForExpertModeResume();
-        DobbyLog.v("MainActivity:onFirstTimeResumed");
-        final long delayForWelcomeMessage;
-        if (historyAvailable) {
-            delayForWelcomeMessage = 2 * DELAY_BEFORE_WELCOME_MESSAGE_MS;
-        } else {
-            delayForWelcomeMessage = DELAY_BEFORE_WELCOME_MESSAGE_MS;
-        }
-        if (dobbyAi != null) {
-            if (resumeWithSuggestionIfAvailable) {
-                scheduledExecutorService.schedule(new Runnable() {
-                    @Override
-                    public void run() {
-                        dobbyAi.startUserInteractionWithShortSuggestion(resumingInExpertMode);
-                    }
-                }, delayForWelcomeMessage, TimeUnit.MILLISECONDS);
-            } else if (resumeWithWifiCheck) {
-                scheduledExecutorService.schedule(new Runnable() {
-                    @Override
-                    public void run() {
-                        dobbyAi.startUserInteractionWithWifiCheck(resumingInExpertMode);
-                    }
-                }, delayForWelcomeMessage, TimeUnit.MILLISECONDS);
-            } else if (resumeWithWelcomeMessage) {
-                scheduledExecutorService.schedule(new Runnable() {
-                    @Override
-                    public void run() {
-                        dobbyAi.startUserInteractionWithWelcome(resumingInExpertMode);
-                    }
-                }, delayForWelcomeMessage, TimeUnit.MILLISECONDS);
-            }
-            if (resumingInExpertMode) {
-                dobbyAi.contactExpert();
-            }
-        }
-    }
+
 
     public boolean isLocationPermissionGranted() {
         return locationPermissionGranted;
@@ -304,6 +278,26 @@ public class UserInteractionManager implements
 
     //Dobby Ai callbacks
 
+
+    @Override
+    public void userSaysAppIsHelpful() {
+        maybeAskForRating();
+    }
+
+    @Override
+    public void onUserSaysYesToAppRating() {
+        ratingsManager.launchAppStorePageForRatingTheApp();
+    }
+
+    @Override
+    public void onUserSaysNoToAppRating() {
+        ratingsManager.saveRatingPreference(RatingsManager.NO_PREF);
+    }
+
+    @Override
+    public void onUserSaysLaterToAppRating() {
+        ratingsManager.saveRatingPreference(RatingsManager.LATER_PREF);
+    }
 
     @Override
     public void startWifiRepair() {
@@ -492,7 +486,10 @@ public class UserInteractionManager implements
         }
         expertChatService.pushBotChatMessage(repairTitle);
         expertChatService.pushBotChatMessage(repairSummary);
-
+        // Ask for rating here
+        if (success) {
+            maybeAskForRating();
+        }
     }
 
     public boolean isFirstChatAfterInstall() {
@@ -505,6 +502,60 @@ public class UserInteractionManager implements
 
 
     //Private methods
+    //Private stuff
+    private void saveFirstUserInteraction() {
+        Utils.saveSharedSetting(context,
+                PREF_CHAT_FIRST_TIME, Utils.FALSE_STRING);
+    }
+
+    private boolean isFirstUserInteraction() {
+        return Boolean.valueOf(Utils.readSharedSetting(context,
+                PREF_CHAT_FIRST_TIME, Utils.TRUE_STRING));
+    }
+
+    private void onFirstTimeResumedChat(final boolean resumeWithSuggestionIfAvailable,
+                                        final boolean resumeWithWifiCheck,
+                                        final boolean resumeWithWelcomeMessage) {
+        final boolean resumingInExpertMode = checkSharedPrefForExpertModeResume();
+        DobbyLog.v("MainActivity:onFirstTimeResumed");
+        final long delayForWelcomeMessage;
+        if (historyAvailable) {
+            delayForWelcomeMessage = 2 * DELAY_BEFORE_WELCOME_MESSAGE_MS;
+        } else {
+            delayForWelcomeMessage = DELAY_BEFORE_WELCOME_MESSAGE_MS;
+        }
+        if (dobbyAi != null) {
+            if (resumeWithSuggestionIfAvailable) {
+                scheduledExecutorService.schedule(new Runnable() {
+                    @Override
+                    public void run() {
+                        dobbyAi.startUserInteractionWithShortSuggestion(resumingInExpertMode);
+                    }
+                }, delayForWelcomeMessage, TimeUnit.MILLISECONDS);
+            } else if (resumeWithWifiCheck) {
+                scheduledExecutorService.schedule(new Runnable() {
+                    @Override
+                    public void run() {
+                        dobbyAi.startUserInteractionWithWifiCheck(resumingInExpertMode);
+                    }
+                }, delayForWelcomeMessage, TimeUnit.MILLISECONDS);
+            } else if (resumeWithWelcomeMessage) {
+                scheduledExecutorService.schedule(new Runnable() {
+                    @Override
+                    public void run() {
+                        dobbyAi.startUserInteractionWithWelcome(resumingInExpertMode);
+                    }
+                }, delayForWelcomeMessage, TimeUnit.MILLISECONDS);
+            }
+            if (resumingInExpertMode) {
+                dobbyAi.contactExpert();
+            }
+        }
+    }
+
+
+
+
     private String getEtaMessage() {
         String messagePrefix = context.getResources().getString(R.string.expected_response_time_for_expert);
         String message;
@@ -673,6 +724,12 @@ public class UserInteractionManager implements
     private void sendServiceStoppedDueToErrorsMessage() {
         expertChatService.pushMetaChatMessage(ExpertChat.MSG_TYPE_META_NEO_SERVICE_STOPPED_BY_EXPERT);
 
+    }
+
+    private void maybeAskForRating() {
+        if (ratingsManager.shouldBeAllowedToAskForRating()) {
+            dobbyAi.askUserForRatingTheApp();
+        }
     }
 
 }

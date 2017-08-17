@@ -227,7 +227,6 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         statusMessage = Utils.EMPTY_STRING;
         handlerBacklog = new LinkedList<>();
         pauseHandler = false;
-        remoteConfig.fetchAsync();
         heartBeatManager.setDailyHeartBeat();
     }
 
@@ -270,6 +269,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
     @Override
     public void onResume() {
         super.onResume();
+        remoteConfig.fetchAsync();
         if (mListener != null) {
             mListener.onFragmentReady();
         }
@@ -342,6 +342,8 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         void onWifiRepairCancelled();
         void onFragmentReady();
         void onFragmentGone();
+        void onUserSaysYesToGivingRating();
+        void onUserSaysLaterToGivingRating();
     }
 
 
@@ -359,6 +361,18 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
 
     public void requestLocationPermission() {
         requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_COARSE_LOCATION_REQUEST_CODE);
+    }
+
+    public void takeUserToAppStoreForRating() {
+        if (mListener != null) {
+            mListener.onUserSaysYesToGivingRating();
+        }
+    }
+
+    public void userSaysLaterForRating() {
+        if (mListener != null) {
+            mListener.onUserSaysLaterToGivingRating();
+        }
     }
 
     @Override
@@ -549,9 +563,10 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
                 restoreRepairButton(msg.arg1);
                 break;
             case MSG_SHOW_REPAIR_DIALOG:
-                ArrayList<String> repairStringList = ((ArrayList<String>)msg.obj);
-                if (repairStringList != null || repairStringList.size() == 2) {
-                    showRepairSummary(repairStringList.get(0), repairStringList.get(1));
+                RepairResultsToShow repairResultsToShow = (RepairResultsToShow)msg.obj;
+                if (repairResultsToShow != null) {
+                    //showRepairSummary(repairResultsToShow);
+                    showRepairSummaryWithRatingsAsk(repairResultsToShow);
                 }
                 break;
             default:
@@ -560,13 +575,14 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         return true;
     }
 
-    public void handleRepairFinished(WifiInfo wifiInfo, int repairStatusTextId, String repairSummary) {
+    public void handleRepairFinished(WifiInfo wifiInfo, int repairStatusTextId, String repairSummary, boolean askForRating) {
         repairing = false;
         String repairTitle = getResources().getString(repairStatusTextId);
+        RepairResultsToShow repairResultsToShow = new RepairResultsToShow(askForRating, repairTitle, repairSummary);
         ArrayList<String> combinedStrings = new ArrayList<>(Arrays.asList(repairTitle, repairSummary));
         Message.obtain(handler, MSG_REPAIR_INFO_AVAILABLE, wifiInfo).sendToTarget();
         Message.obtain(handler, MSG_UPDATE_REPAIR_STATUS, repairStatusTextId, 0).sendToTarget();
-        Message.obtain(handler, MSG_SHOW_REPAIR_DIALOG, combinedStrings).sendToTarget();
+        Message.obtain(handler, MSG_SHOW_REPAIR_DIALOG, repairResultsToShow).sendToTarget();
     }
 
     private void handleRepairCancelled() {
@@ -1245,8 +1261,9 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         dobbyAnalytics.contactExpertEvent();
     }
 
-    private void showRepairSummary(String title, String summary) {
-        WifiDocDialogFragment fragment = WifiDocDialogFragment.forRepairSummary(title, summary);
+    private void showRepairSummary(RepairResultsToShow repairResultsToShow) {
+        WifiDocDialogFragment fragment = WifiDocDialogFragment.forRepairSummary(
+                repairResultsToShow.getTitle(), repairResultsToShow.getSummary());
         //fragment.show(getActivity().getSupportFragmentManager(), "Repair");
         FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
         ft.add(fragment, "Repair");
@@ -1254,6 +1271,18 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         dobbyAnalytics.repairSummaryShown();
     }
 
+    private void showRepairSummaryWithRatingsAsk(RepairResultsToShow repairResultsToShow) {
+        WifiDocDialogFragment fragment = WifiDocDialogFragment.forRepairSummaryWithRatingAsk(
+                this,
+                repairResultsToShow.askForRating(),
+                repairResultsToShow.getTitle(),
+                repairResultsToShow.getSummary());
+        //fragment.show(getActivity().getSupportFragmentManager(), "Repair");
+        FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
+        ft.add(fragment, "Repair");
+        ft.commitAllowingStateLoss();
+        dobbyAnalytics.repairSummaryShown();
+    }
 
     private void showAboutAndPrivacyPolicy() {
         WifiDocDialogFragment fragment = WifiDocDialogFragment.forAboutAndPrivacyPolicy();
@@ -1367,4 +1396,26 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         Utils.saveSharedSetting(getActivity(), WifiDocActivity.PREF_FIRST_TOGGLE, Utils.FALSE_STRING);
     }
 
+    private class RepairResultsToShow {
+        private String title;
+        private String summary;
+        private boolean askForRating;
+        public RepairResultsToShow(boolean askForRating, String title, String summary) {
+            this.title = title;
+            this.summary = summary;
+            this.askForRating = askForRating;
+        }
+
+        public String getTitle() {
+            return title;
+        }
+
+        public String getSummary() {
+            return summary;
+        }
+
+        public boolean askForRating() {
+            return askForRating;
+        }
+    }
 }

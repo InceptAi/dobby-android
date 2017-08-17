@@ -1,0 +1,102 @@
+package com.inceptai.dobby.feedback;
+
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
+
+import com.inceptai.dobby.BuildConfig;
+import com.inceptai.dobby.RemoteConfig;
+import com.inceptai.dobby.utils.Utils;
+
+import java.util.Arrays;
+
+/**
+ * Created by vivek on 8/16/17.
+ */
+
+public class RatingsManager {
+    public static final String YES_PREF = "yes";
+    public static final String NO_PREF = "no";
+    public static final String LATER_PREF = "later";
+    private static final String UNSET_PREF = "unset";
+
+    private static final String RATING_PREFERENCE = "rating_pref";
+    private static final String LAST_ASKED_FOR_RATING = "rating_pref_ts";
+    private static final String NUM_APP_OPENS_PREFERENCE = "num_app_opens";
+
+    private static final String[] VALID_PREFS = new String[] {YES_PREF, NO_PREF, LATER_PREF};
+    private static final long MIN_TIME_BEFORE_ASKING_AGAIN_MS = 7 * 24 * 60 * 60 * 1000;
+
+    private Context context;
+    private RemoteConfig remoteConfig;
+
+    public RatingsManager(Context context, RemoteConfig remoteConfig) {
+        this.context = context;
+        this.remoteConfig = remoteConfig;
+        updateNumAppOpen();
+    }
+
+    public void launchAppStorePageForRatingTheApp() {
+        saveRatingPreference(RatingsManager.YES_PREF);
+        String uriToParse = "market://details?id=" + BuildConfig.APPLICATION_ID;
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uriToParse));
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(intent);
+    }
+
+    public boolean shouldBeAllowedToAskForRating() {
+        long lastPrefUpdatedAtMs = getLastTimeRatingPrefUpdated();
+        long minAppOpensForRating = remoteConfig.getMinAppOpensForAskingRatingsFlag();
+        long timeSinceLastPrefUpdateMs = System.currentTimeMillis() - lastPrefUpdatedAtMs;
+        if (!getRatingEnabledFlag() || hasUserSaidYesOrNoForRating()) {
+            return false;
+        } else if (getRatingPreference().equals(LATER_PREF) &&
+                lastPrefUpdatedAtMs > 0 &&
+                timeSinceLastPrefUpdateMs < MIN_TIME_BEFORE_ASKING_AGAIN_MS) {
+            return false;
+        } else if (getNumAppOpens() < minAppOpensForRating) {
+            return false;
+        }
+        return true;
+    }
+
+    public boolean saveRatingPreference(String preference) {
+        if (!Arrays.asList(VALID_PREFS).contains(preference)) {
+            return false;
+        }
+        Utils.saveSharedSetting(context, RATING_PREFERENCE, preference);
+        Utils.saveSharedSetting(context, LAST_ASKED_FOR_RATING, System.currentTimeMillis());
+        return true;
+    }
+
+    //Private stuff
+    private boolean hasUserSaidYesOrNoForRating() {
+        return getRatingPreference().equals(YES_PREF) || getRatingPreference().equals(NO_PREF);
+    }
+
+
+
+    private String getRatingPreference() {
+        return Utils.readSharedSetting(context, RATING_PREFERENCE, UNSET_PREF);
+    }
+
+    private long getLastTimeRatingPrefUpdated() {
+        return Utils.readSharedSetting(context, LAST_ASKED_FOR_RATING, 0);
+    }
+
+    private boolean getRatingEnabledFlag() {
+        boolean remoteConfigRatingsFlag = remoteConfig.getRatingsFlag();
+        return remoteConfigRatingsFlag;
+    }
+
+    public long getNumAppOpens() {
+        return Utils.readSharedSetting(context, NUM_APP_OPENS_PREFERENCE, 0);
+    }
+
+    private long updateNumAppOpen() {
+        long currentAppOpens = Utils.readSharedSetting(context, NUM_APP_OPENS_PREFERENCE, 0);
+        Utils.saveSharedSetting(context, NUM_APP_OPENS_PREFERENCE, ++currentAppOpens);
+        return currentAppOpens;
+    }
+
+}
