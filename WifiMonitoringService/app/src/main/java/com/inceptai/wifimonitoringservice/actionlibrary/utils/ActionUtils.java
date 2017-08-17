@@ -30,16 +30,23 @@ public class ActionUtils {
     public static WifiConfiguration findBestConfiguredNetworkFromScanResult(
             List<WifiConfiguration> wifiConfigurationList, List<ScanResult> scanResultList) {
         WifiConfiguration wifiConfiguration;
+        List<ScanResult> scanResultsCopy = new ArrayList<>();
+
         if (scanResultList == null || wifiConfigurationList == null) {
             return null;
         }
-        Collections.sort(scanResultList, new Comparator<ScanResult>() {
+
+        for (ScanResult scanResult: scanResultList) {
+            scanResultsCopy.add(scanResult);
+        }
+
+        Collections.sort(scanResultsCopy, new Comparator<ScanResult>() {
             @Override
             public int compare(ScanResult s1, ScanResult s2) {
                 return (s2.level - s1.level);
             }
         });
-        for (ScanResult scanResult: scanResultList) {
+        for (ScanResult scanResult: scanResultsCopy) {
             wifiConfiguration = findWifiConfigurationForGivenScanResult(wifiConfigurationList, scanResult);
             if (wifiConfiguration != null) {
                 return wifiConfiguration;
