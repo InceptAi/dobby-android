@@ -27,6 +27,8 @@ public class ParseServerInformation {
     //Default serverInformation if any
     private ServerInformation serverInformation;
     private Context context;
+    private int defaultXmlListId;
+
 
     /**
      * Callback interface for results. More methods to follow.
@@ -51,7 +53,7 @@ public class ParseServerInformation {
         this.serverListUrl2 = urlString2;
         this.resultsCallback = resultsCallback;
         this.context = context;
-        initializeServerInformation(defaultXmlListId);
+        this.defaultXmlListId = defaultXmlListId;
     }
 
     public ParseServerInformation(@Nullable ResultsCallback resultsCallback) {
@@ -67,7 +69,7 @@ public class ParseServerInformation {
         this.serverListUrl2 = defaultServerListUrl2;
         this.resultsCallback = resultsCallback;
         this.context = context;
-        initializeServerInformation(defaultXmlListId);
+        this.defaultXmlListId = defaultXmlListId;
     }
 
     private void initializeServerInformation(int xmlFileId) {
@@ -102,12 +104,15 @@ public class ParseServerInformation {
         return info;
     }
 
-    ServerInformation getServerInfo(boolean enableFetchIfNeeded) {
+    ServerInformation getServerInfo(boolean enableFetchIfNeeded, boolean prefetchRemoteConfig) {
         //No fetch, just return what we have
-        if (! enableFetchIfNeeded || serverInformation != null) {
-            return serverInformation;
+        if (serverInformation == null && defaultXmlListId > 0) {
+            initializeServerInformation(defaultXmlListId);
         }
-        return fetchServerInfo();
+        if (prefetchRemoteConfig || (serverInformation == null && enableFetchIfNeeded)) {
+            return fetchServerInfo();
+        }
+        return serverInformation;
     }
 
     public ServerInformation getServerInfoFromUrlString (String urlString) {

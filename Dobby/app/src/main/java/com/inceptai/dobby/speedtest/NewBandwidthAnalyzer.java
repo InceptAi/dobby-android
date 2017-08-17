@@ -190,7 +190,7 @@ public class NewBandwidthAnalyzer {
                 @Override
                 public void run() {
                     fetchSpeedTestConfigIfNeeded();
-                    fetchServerConfigAndDetermineBestServerIfNeeded();
+                    fetchServerConfigAndDetermineBestServerIfNeeded(true);
                 }
             });
         }
@@ -231,11 +231,11 @@ public class NewBandwidthAnalyzer {
         return getSpeedTestConfig();
     }
 
-    private ServerInformation.ServerDetails fetchServerConfigAndDetermineBestServerIfNeeded() {
+    private ServerInformation.ServerDetails fetchServerConfigAndDetermineBestServerIfNeeded(boolean prefetchRemoteConfig) {
         //Get best server information if stale
         if (bestServer == null || System.currentTimeMillis() - lastBestServerDeterminationTimestampMs > MAX_AGE_FOR_FRESHNESS_MS) {
             DobbyLog.v("NBA Server info not fresh, getting again");
-            ServerInformation serverInformation = parseServerInformation.getServerInfo(enableServerListFetch);
+            ServerInformation serverInformation = parseServerInformation.getServerInfo(enableServerListFetch, prefetchRemoteConfig);
             if (serverInformation == null) {
                 reportBandwidthError(BandwidthTestCodes.TestMode.SERVER_FETCH,
                         ErrorCodes.ERROR_FETCHING_SERVER_INFO,
@@ -467,7 +467,7 @@ public class NewBandwidthAnalyzer {
             return;
         }
         DobbyLog.i("NBA getting servers and determining best.");
-        if (fetchServerConfigAndDetermineBestServerIfNeeded() == null) {
+        if (fetchServerConfigAndDetermineBestServerIfNeeded(false) == null) { //Don't fetch config from server
             DobbyLog.e("Could not fetch server information for speed test. Aborting");
             cancelBandwidthTests();
             return;
