@@ -48,6 +48,7 @@ public class WifiMonitoringServiceClient {
     RepairDatabaseWriter repairDatabaseWriter;
     @Inject
     DobbyAnalytics dobbyAnalytics;
+    @Inject RemoteConfig remoteConfig;
 
     public interface WifiMonitoringCallback {
         void wifiMonitoringStarted();
@@ -167,7 +168,6 @@ public class WifiMonitoringServiceClient {
     }
 
     //Private stuff
-
     private void connect() {
         bindWithWifiService();
     }
@@ -176,7 +176,7 @@ public class WifiMonitoringServiceClient {
         Intent serviceStartIntent = new Intent(context, WifiMonitoringService.class);
         PendingIntent pendingIntentToLaunchOnNotificationClick = Utils.getPendingIntentForNotification(context, null);
         serviceStartIntent.putExtra(WifiMonitoringService.EXTRA_PENDING_INTENT_NAME, pendingIntentToLaunchOnNotificationClick);
-        if (Utils.checkIsWifiMonitoringEnabled(context)) {
+        if (Utils.checkIsWifiMonitoringEnabled(context, remoteConfig.getIsServiceEnabledByDefaultFlag())) {
             dobbyAnalytics.setWifiServiceStarted();
             //context.startService(new Intent(context, WifiMonitoringService.class));
             context.startService(serviceStartIntent);
@@ -355,7 +355,7 @@ public class WifiMonitoringServiceClient {
     }
 
     private void initiateStatusNotification() {
-        if (Utils.checkIsWifiMonitoringEnabled(context) && boundToWifiService && wifiMonitoringService != null) {
+        if (Utils.checkIsWifiMonitoringEnabled(context, remoteConfig.getIsServiceEnabledByDefaultFlag()) && boundToWifiService && wifiMonitoringService != null) {
             wifiMonitoringService.sendStatusUpdateNotification();
         } else {
             //Change text for repair button

@@ -21,5 +21,9 @@
         <key>min_app_opens_for_rating</key>
         <value>3</value>
     </entry>
+    <entry>
+        <key>enable_service_by_default</key>
+        <value>true</value>
+    </entry>
 </defaultsMap>
     <!-- END xml_defaults -->

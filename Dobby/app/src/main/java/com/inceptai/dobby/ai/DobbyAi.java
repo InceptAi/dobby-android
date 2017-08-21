@@ -102,7 +102,7 @@ public class DobbyAi implements
     private boolean chatInExpertMode = false;
     private boolean isExpertListening = false;
     private boolean showContactHumanButton = true;
-    private boolean wifiServiceEnabled = false;
+    private boolean wifiServiceEnabled = true;
 
 
     @Inject

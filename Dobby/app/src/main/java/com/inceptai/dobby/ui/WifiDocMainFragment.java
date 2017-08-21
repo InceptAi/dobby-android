@@ -771,7 +771,7 @@ public class WifiDocMainFragment extends Fragment implements View.OnClickListene
         serviceFl.setClickable(false);
         serviceSwitchTv = (TextView) rootView.findViewById(R.id.service_switch_tv);
         serviceSwitch = (Switch) rootView.findViewById(R.id.service_switch);
-        if (Utils.checkIsWifiMonitoringEnabled(getContext())) {
+        if (Utils.checkIsWifiMonitoringEnabled(getContext(), remoteConfig.getIsServiceEnabledByDefaultFlag())) {
             serviceSwitch.setChecked(true);
             serviceSwitchTv.setText(R.string.automatic_repair_on);
         } else {
