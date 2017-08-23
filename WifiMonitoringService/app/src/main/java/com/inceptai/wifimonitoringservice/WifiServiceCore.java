@@ -37,7 +37,7 @@ public class WifiServiceCore implements
         ScreenStateMonitor.ScreenStateCallback,
         PeriodicCheckMonitor.PeriodicCheckCallback,
         ActionLibrary.ActionCallback {
-    private final static int MAX_CONNECTIVITY_TEST_FAILURES = 2;
+    private final static int MAX_CONNECTIVITY_TEST_FAILURES = 3;
     private final static int WIFI_CHECK_INITIAL_CHECK_DELAY_ACTIVE_MS = 10 * 1000; // 5 sec
     private final static int WIFI_CHECK_INITIAL_CHECK_DELAY_INACTIVE_MS = 60 * 1000; // 60 sec
     private final static int WIFI_CHECK_PERIOD_SCREEN_ACTIVE_MS = 60 * 1000; //30 secs
@@ -483,7 +483,8 @@ public class WifiServiceCore implements
                 ServiceLog.v("WifiServiceCore: onConnectivityTestDone -- OFFLINE,  numChecks: " + numConsecutiveFailedConnectivityTests);
             }
         }
-        if (numConsecutiveFailedConnectivityTests >= MAX_CONNECTIVITY_TEST_FAILURES) {
+        int maxConnectivityTestsFailure = ConnectivityTester.isCaptive(lastConnectivityMode) ? MAX_CONNECTIVITY_TEST_FAILURES * 2 : MAX_CONNECTIVITY_TEST_FAILURES;
+        if (numConsecutiveFailedConnectivityTests >= maxConnectivityTestsFailure) {
             //trigger reconnect to best wifi
             ServiceLog.v("WifiServiceCore: onConnectivityTestDone numChecks > MAX checks: " +  numConsecutiveFailedConnectivityTests);
             listOfOfflineRouterIDs.add(wifiStateMonitor.primaryRouterID());
@@ -496,7 +497,7 @@ public class WifiServiceCore implements
             }
         } else if (numConsecutiveFailedConnectivityTests > 0) {
             //Reschedule connectivity test
-            if (!isActionPending() && ConnectivityTester.isOnline(wifiConnectivityMode)) {
+            if (!isActionPending() && !ConnectivityTester.isOnline(wifiConnectivityMode)) {
                 ServiceLog.v("Initiating connectivity test");
                 performConnectivityTest();
             }
