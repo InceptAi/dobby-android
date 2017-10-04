@@ -72,7 +72,7 @@ public class WifiServiceCore implements
     private int wifiConnectivityMode;
     private long actionPendingTimestampMs;
     private String lastNotificationTitle;
-    private String lastNotificationBody;
+    private String lastNotificationEvent;
     private NotificationManager notificationManager;
 
     //TODO: Move to repair if reset doesn't work for n number of times
@@ -97,7 +97,7 @@ public class WifiServiceCore implements
         lastWifiEventDescription = Utils.EMPTY_STRING;
         lastWifiEventTimestampMs = 0;
         actionPendingTimestampMs = 0;
-        lastNotificationBody = Utils.EMPTY_STRING;
+        lastNotificationEvent = Utils.EMPTY_STRING;
         lastNotificationTitle = Utils.EMPTY_STRING;
         wifiConnectivityMode = ConnectivityTester.WifiConnectivityMode.UNKNOWN;
         notificationsEnabled = true;
@@ -538,11 +538,14 @@ public class WifiServiceCore implements
         String title = Utils.EMPTY_STRING;
         String primaryRouterSSID = Utils.limitSSID(wifiStateMonitor.primaryRouterSSID());
         String primaryRouterSignalQuality = wifiStateMonitor.primaryRouterSignalQuality();
-        String body = Utils.EMPTY_STRING;
+        String eventDescription = Utils.EMPTY_STRING;
+        long eventTimestampMs = 0;
         if (lastActionTimestampMs > 0) {
-            body = lastActionTakenDescription + " at " + Utils.convertMillisecondsToTimeForNotification(lastActionTimestampMs);
+            eventDescription = lastActionTakenDescription;
+            eventTimestampMs = lastActionTimestampMs;
         } else if (lastWifiEventTimestampMs > 0 && !lastWifiEventDescription.equals(Utils.EMPTY_STRING)) {
-            body = lastWifiEventDescription + " at " + Utils.convertMillisecondsToTimeForNotification(lastWifiEventTimestampMs);
+            eventDescription = lastWifiEventDescription;
+            eventTimestampMs = lastWifiEventTimestampMs;
         }
         switch (modeToNotify) {
             case CONNECTED_AND_ONLINE:
@@ -565,18 +568,19 @@ public class WifiServiceCore implements
             default:
                 break;
         }
-        updateNotificationStateAndSend(title, body);
+        updateNotificationStateAndSend(title, eventDescription, eventTimestampMs);
     }
 
 
-    private void updateNotificationStateAndSend(String title, String body) {
-        if (lastNotificationTitle.equals(title) && lastNotificationBody.equals(body)) {
+    private void updateNotificationStateAndSend(String title, String eventDescription, long eventTimestampMs) {
+        if (lastNotificationTitle.equals(title) && lastNotificationEvent.equals(eventDescription)) {
             //No change in notification so don't send
             return;
         }
+        String body = eventDescription + " at " + Utils.convertMillisecondsToTimeForNotification(eventTimestampMs);
         boolean notificationSent = sendNotificationIfEnabled(new DisplayNotification(context, notificationManager, title, body, WifiMonitoringService.WIFI_STATUS_NOTIFICATION_ID, pendingIntentForLaunchingNotification));
         if (notificationSent) {
-            lastNotificationBody = body;
+            lastNotificationEvent = eventDescription;
             lastNotificationTitle = title;
         }
     }

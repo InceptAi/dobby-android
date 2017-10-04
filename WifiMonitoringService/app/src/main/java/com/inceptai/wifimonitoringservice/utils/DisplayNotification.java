@@ -8,7 +8,6 @@ import android.graphics.BitmapFactory;
 import android.support.v7.app.NotificationCompat;
 
 import com.inceptai.wifimonitoringservice.R;
-import com.inceptai.wifimonitoringservice.WifiMonitoringService;
 
 import static android.support.v4.app.NotificationCompat.VISIBILITY_PUBLIC;
 
@@ -62,9 +61,9 @@ public class DisplayNotification implements Runnable {
         //notificationBuilder.setLights(Color.WHITE, 3000, 3000);
         //notificationBuilder.setOngoing(true);
         Notification notification = notificationBuilder.build();
-        if (notificationId == WifiMonitoringService.WIFI_STATUS_NOTIFICATION_ID) {
-            notification.flags |= Notification.FLAG_NO_CLEAR | Notification.FLAG_ONGOING_EVENT;
-        }
+//        if (notificationId == WifiMonitoringService.WIFI_STATUS_NOTIFICATION_ID) {
+//            notification.flags |= Notification.FLAG_NO_CLEAR | Notification.FLAG_ONGOING_EVENT;
+//        }
         notificationManager.notify(notificationId, notification);
         //return notification;
     }
