@@ -128,6 +128,7 @@ public class DobbyAi implements ApiAiClient.ResultListener,
         void expertActionCompleted();
         void startNeoByExpert();
         void stopNeoByExpert();
+        void fetchUIActionsForQuery(String query);
     }
 
     @Inject
@@ -1088,6 +1089,12 @@ public class DobbyAi implements ApiAiClient.ResultListener,
 //        context.sendBroadcast(intent);
     }
 
+    private void fetchUIActions(String query) {
+        if (responseCallback != null) {
+            responseCallback.fetchUIActionsForQuery(query);
+        }
+    }
+
     private void parseExpertTextAndTakeActionIfNeeded(String expertMessage) {
         if (expertMessage.toLowerCase().contains("wifiscan")) {
             performAndRecordWifiAction();
@@ -1154,6 +1161,9 @@ public class DobbyAi implements ApiAiClient.ResultListener,
             endNeo();
         } else if (expertMessage.toLowerCase().contains("launchexpert")) {
             Utils.launchWifiExpertMainActivity(context.getApplicationContext());
+        } else if (expertMessage.toLowerCase().startsWith("#fetch_")) {
+            String query = expertMessage.toLowerCase().substring("#fetch_".length());
+            fetchUIActions(query);
         }
     }
 }

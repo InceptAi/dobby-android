@@ -18,6 +18,7 @@ import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.NeoServiceClient;
 import com.inceptai.dobby.utils.Utils;
 import com.inceptai.neoservice.NeoService;
+import com.inceptai.neoservice.uiactions.views.ActionDetails;
 
 import java.util.HashSet;
 import java.util.List;
@@ -402,6 +403,12 @@ public class UserInteractionManager implements
         expertChatService.sendActionCompletedMessage();
     }
 
+
+    @Override
+    public void fetchUIActionsForQuery(String query) {
+        neoServiceClient.fetchUIActions(query);
+    }
+
     public boolean isFirstChatAfterInstall() {
         return expertChatService.isFirstChatAfterInstall();
     }
@@ -545,6 +552,15 @@ public class UserInteractionManager implements
         Utils.launchWifiExpertMainActivity(context.getApplicationContext());
     }
 
+
+    @Override
+    public void onUIActionsAvailable(List<ActionDetails> actionDetailsList) {
+        if (actionDetailsList != null && ! actionDetailsList.isEmpty()) {
+            expertChatService.pushBotChatMessage(actionDetailsList.toString());
+        } else {
+            expertChatService.pushBotChatMessage("Received empty or nil actions");
+        }
+    }
 
     //private stuff
     private void askForAccessibilityPermission() {

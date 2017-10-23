@@ -60,6 +60,9 @@ public class NeoServiceClient {
         }
     }
 
+    public void fetchUIActions(String query) {
+        neoService.fetchUIActions(query);
+    }
 
     public void takeUserToAccessibilitySettings() {
         NeoService.showAccessibilitySettings(context);
