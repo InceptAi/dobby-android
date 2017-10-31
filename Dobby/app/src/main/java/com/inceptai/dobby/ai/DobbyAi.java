@@ -27,6 +27,7 @@ import com.inceptai.dobby.utils.Utils;
 import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -128,7 +129,7 @@ public class DobbyAi implements ApiAiClient.ResultListener,
         void expertActionCompleted();
         void startNeoByExpert();
         void stopNeoByExpert();
-        void fetchUIActionsForQuery(String query);
+        void fetchUIActionsForQuery(String query, String appName);
     }
 
     @Inject
@@ -1089,9 +1090,9 @@ public class DobbyAi implements ApiAiClient.ResultListener,
 //        context.sendBroadcast(intent);
     }
 
-    private void fetchUIActions(String query) {
+    private void fetchUIActions(String query, String appName) {
         if (responseCallback != null) {
-            responseCallback.fetchUIActionsForQuery(query);
+            responseCallback.fetchUIActionsForQuery(query, appName);
         }
     }
 
@@ -1161,9 +1162,16 @@ public class DobbyAi implements ApiAiClient.ResultListener,
             endNeo();
         } else if (expertMessage.toLowerCase().contains("launchexpert")) {
             Utils.launchWifiExpertMainActivity(context.getApplicationContext());
-        } else if (expertMessage.toLowerCase().startsWith("#fetch_")) {
-            String query = expertMessage.toLowerCase().substring("#fetch_".length());
-            fetchUIActions(query);
+        } else if (expertMessage.toLowerCase().startsWith("#neo")) {
+            String query = expertMessage.toLowerCase().substring("#neo".length()).trim();
+            //Get the first word -- which is the app name
+            String appName = Utils.EMPTY_STRING;
+            List<String> queryWords = Arrays.asList(query.split(" "));
+            if (!queryWords.isEmpty()) {
+                appName = queryWords.get(0);
+                query =  query.substring(appName.length());
+            }
+            fetchUIActions(query, appName);
         }
     }
 }

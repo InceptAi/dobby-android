@@ -405,8 +405,8 @@ public class UserInteractionManager implements
 
 
     @Override
-    public void fetchUIActionsForQuery(String query) {
-        neoServiceClient.fetchUIActions(query);
+    public void fetchUIActionsForQuery(String query, String appName) {
+        neoServiceClient.fetchUIActions(query, appName);
     }
 
     public boolean isFirstChatAfterInstall() {
