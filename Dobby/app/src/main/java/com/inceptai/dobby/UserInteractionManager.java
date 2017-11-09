@@ -17,8 +17,8 @@ import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.NeoServiceClient;
 import com.inceptai.dobby.utils.Utils;
+import com.inceptai.neopojos.ActionDetails;
 import com.inceptai.neoservice.NeoService;
-import com.inceptai.neoservice.uiactions.views.ActionDetails;
 
 import java.util.HashSet;
 import java.util.List;

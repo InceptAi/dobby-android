@@ -20,13 +20,15 @@ keystorePropertiesWifiExpert.load(new FileInputStream(keystorePropertiesFileWifi
 
 android {
     compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    buildToolsVersion "26.0.2"
+    flavorDimensions "dummy"
     defaultConfig {
         applicationId "com.inceptai.wifiexpert"
         minSdkVersion 16
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
+        vectorDrawables.useSupportLibrary = true
         // testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         testInstrumentationRunner "com.inceptai.dobby.MyAndroidJUnitRunner"
     }
@@ -52,7 +54,7 @@ android {
         }
         dobby {
             applicationId "com.inceptai.wifiexpert"
-            versionCode 65
+            versionCode 66
             versionName "3.0.0-wifiexpert-with-neo"
         }
     }
