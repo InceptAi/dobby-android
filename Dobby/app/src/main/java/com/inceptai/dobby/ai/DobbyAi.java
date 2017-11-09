@@ -1097,7 +1097,17 @@ public class DobbyAi implements ApiAiClient.ResultListener,
     }
 
     private void parseExpertTextAndTakeActionIfNeeded(String expertMessage) {
-        if (expertMessage.toLowerCase().contains("wifiscan")) {
+        if (expertMessage.toLowerCase().startsWith("#neo")) {
+            String query = expertMessage.toLowerCase().substring("#neo".length()).trim();
+            //Get the first word -- which is the app name
+            String appName = Utils.EMPTY_STRING;
+            List<String> queryWords = Arrays.asList(query.split(" "));
+            if (!queryWords.isEmpty()) {
+                appName = queryWords.get(0);
+                query =  query.substring(appName.length());
+            }
+            fetchUIActions(query, appName);
+        } else if (expertMessage.toLowerCase().contains("wifiscan")) {
             performAndRecordWifiAction();
         } else if (expertMessage.toLowerCase().contains("ping")) {
             performAndRecordPingAction();
@@ -1162,16 +1172,6 @@ public class DobbyAi implements ApiAiClient.ResultListener,
             endNeo();
         } else if (expertMessage.toLowerCase().contains("launchexpert")) {
             Utils.launchWifiExpertMainActivity(context.getApplicationContext());
-        } else if (expertMessage.toLowerCase().startsWith("#neo")) {
-            String query = expertMessage.toLowerCase().substring("#neo".length()).trim();
-            //Get the first word -- which is the app name
-            String appName = Utils.EMPTY_STRING;
-            List<String> queryWords = Arrays.asList(query.split(" "));
-            if (!queryWords.isEmpty()) {
-                appName = queryWords.get(0);
-                query =  query.substring(appName.length());
-            }
-            fetchUIActions(query, appName);
         }
     }
 }
