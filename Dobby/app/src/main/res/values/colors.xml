@@ -27,8 +27,7 @@
     <color name="lightGray">#e6e6e6</color>
     <color name="darkGray">#595959</color>
     <color name="lessDarkGray">#808080</color>
-    <!-- <color name="lessDarkGray2">#A0A0A0</color> -->
-    <color name="lessDarkGray2">#808080</color>
+    <color name="lessDarkGray2">#A0A0A0</color>
     <color name="indicator_unselected">#808080</color>
     <color name="half_opacity">#80000000</color>
     <color name="flat_pressed">#66999999</color>
