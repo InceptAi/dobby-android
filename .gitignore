@@ -60,3 +60,9 @@ ActionService/.idea/**
 
 # PDT-specific
 .buildpath
+
+#idea
+WifiExpertApp/.idea/compiler.xml
+WifiExpertApp/.idea/copyright/profiles_settings.xml
+WifiExpertApp/.idea/misc.xml
+
