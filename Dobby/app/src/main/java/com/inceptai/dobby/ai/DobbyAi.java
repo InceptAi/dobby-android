@@ -16,6 +16,7 @@ import com.inceptai.dobby.database.FailureDatabaseWriter;
 import com.inceptai.dobby.database.InferenceDatabaseWriter;
 import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
+import com.inceptai.dobby.expert.ExpertChat;
 import com.inceptai.dobby.model.PingStats;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.speedtest.BandwidthResult;
@@ -24,6 +25,7 @@ import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -58,15 +60,15 @@ import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_RUN_TESTS_FOR_
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_SET_CHAT_TO_BOT_MODE;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_SHOW_LONG_SUGGESTION;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_SHOW_SHORT_SUGGESTION;
-import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_USER_SAYS_LATER_TO_RATING_THE_APP;
-import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_USER_SAYS_NO_TO_RATING_THE_APP;
-import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_USER_SAYS_YES_TO_RATING_THE_APP;
-import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_USER_SAYS_YES_TO_REPAIR_RECOMMENDATION;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_TURN_OFF_WIFI_SERVICE;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_TURN_ON_WIFI_SERVICE;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_UNKNOWN;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_UNSTRUCTURED_FEEDBACK;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_USER_ASKS_FOR_HUMAN_EXPERT;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_USER_SAYS_LATER_TO_RATING_THE_APP;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_USER_SAYS_NO_TO_RATING_THE_APP;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_USER_SAYS_YES_TO_RATING_THE_APP;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_USER_SAYS_YES_TO_REPAIR_RECOMMENDATION;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_WELCOME;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_WIFI_CHECK;
 
@@ -145,6 +147,7 @@ public class DobbyAi implements
         void onUserSaysNoToAppRating();
         void onUserSaysLaterToAppRating();
         void userSaysAppIsHelpful();
+        void fetchUIActionsForQuery(String query, String appName);
     }
 
     @Inject
@@ -1109,4 +1112,85 @@ public class DobbyAi implements
         actionDatabaseWriter.writeActionToDatabase(actionRecord);
     }
 
+    private void startNeo() {
+        //Send neo start intent
+        if (responseCallback != null) {
+            responseCallback.startNeoByExpert();
+        }
+//        Intent intent = new Intent();
+//        intent.setAction("com.inceptai.neo.ACTION");
+//        context.sendBroadcast(intent);
+    }
+
+    private void endNeo() {
+        //End neo intent
+        if (responseCallback != null) {
+            responseCallback.stopNeoByExpert();
+        }
+//
+//        Intent intent = new Intent();
+//        intent.setAction("com.inceptai.neo.ACTION");
+//        context.sendBroadcast(intent);
+    }
+
+    private void fetchUIActions(String query, String appName) {
+        if (responseCallback != null) {
+            responseCallback.fetchUIActionsForQuery(query, appName);
+        }
+    }
+
+    public void parseMessageFromExpert(String expertMessage) {
+        if (expertMessage.startsWith(ExpertChat.SPECIAL_MESSAGE_PREFIX)) {
+            parseExpertTextAndTakeActionIfNeeded(expertMessage);
+        }
+    }
+
+    private void parseExpertTextAndTakeActionIfNeeded(String expertMessage) {
+        if (expertMessage.toLowerCase().startsWith("#neo")) {
+            String query = expertMessage.toLowerCase().substring("#neo".length()).trim();
+            //Get the first word -- which is the app name
+            String appName = Utils.EMPTY_STRING;
+            List<String> queryWords = Arrays.asList(query.split(" "));
+            if (!queryWords.isEmpty()) {
+                appName = queryWords.get(0);
+                query =  query.substring(appName.length());
+            }
+            fetchUIActions(query, appName);
+        } else if (expertMessage.toLowerCase().contains("wifiscan")) {
+            performAndRecordWifiAction();
+        } else if (expertMessage.toLowerCase().contains("ping")) {
+            performAndRecordPingAction();
+        } else if (expertMessage.toLowerCase().contains("feedback")) {
+            triggerFeedbackRequest();
+        } else if (expertMessage.toLowerCase().contains("bot")) {
+            triggerSwitchToBotMode();
+        } else if (expertMessage.toLowerCase().contains("human")) {
+            setChatInExpertMode();
+        } else if (expertMessage.toLowerCase().contains("left") ||
+                expertMessage.toLowerCase().contains("early") ||
+                expertMessage.toLowerCase().contains("dropped")) {
+            dobbyAnalytics.setExpertSaysUserDroppedOff();
+        } else if (expertMessage.toLowerCase().contains("good")) {
+            dobbyAnalytics.setExpertSaysGoodInferencing();
+        } else if (expertMessage.toLowerCase().contains("bad")) {
+            dobbyAnalytics.setExpertSaysBadInferencing();
+        }  else if (expertMessage.toLowerCase().contains("unresolved") ||
+                expertMessage.toLowerCase().contains("unsolved")) {
+            dobbyAnalytics.setExpertSaysIssueUnResolved();
+        } else if (expertMessage.toLowerCase().contains("solved") ||
+                expertMessage.toLowerCase().contains("resolved")) {
+            dobbyAnalytics.setExpertSaysIssueResolved();
+        } else if (expertMessage.toLowerCase().contains("more") ||
+                expertMessage.toLowerCase().contains("data")) {
+            dobbyAnalytics.setExpertSaysMoreDataNeeded();
+        } else if (expertMessage.toLowerCase().contains("better")) {
+            dobbyAnalytics.setExpertSaysInferencingCanBeBetter();
+        } else if (expertMessage.toLowerCase().contains("startneo")) {
+            startNeo();
+        } else if (expertMessage.toLowerCase().contains("endneo") || expertMessage.toLowerCase().contains("stopneo")) {
+            endNeo();
+        } else if (expertMessage.toLowerCase().contains("launchexpert")) {
+            Utils.launchWifiExpertMainActivity(context.getApplicationContext());
+        }
+    }
 }

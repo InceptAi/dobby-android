@@ -4,11 +4,13 @@ import android.app.AlarmManager;
 import android.content.Context;
 import android.net.wifi.WifiInfo;
 
+import com.google.common.eventbus.Subscribe;
 import com.inceptai.dobby.ai.DataInterpreter;
 import com.inceptai.dobby.ai.DobbyAi;
 import com.inceptai.dobby.ai.RtDataSource;
 import com.inceptai.dobby.ai.SuggestionCreator;
 import com.inceptai.dobby.analytics.DobbyAnalytics;
+import com.inceptai.dobby.eventbus.DobbyEvent;
 import com.inceptai.dobby.eventbus.DobbyEventBus;
 import com.inceptai.dobby.expert.ExpertChat;
 import com.inceptai.dobby.expert.ExpertChatService;
@@ -217,12 +219,20 @@ public class UserInteractionManager implements
     }
 
     //Expert chat service callback
-
+    @Override
+    public void fetchUIActionsForQuery(String query, String appName) {
+        neoServiceClient.fetchUIActions(query, appName);
+    }
 
     @Override
     public void onUIActionsAvailable(List<ActionDetails> actionDetailsList) {
-
+        if (actionDetailsList != null && ! actionDetailsList.isEmpty()) {
+            expertChatService.pushBotChatMessage(actionDetailsList.toString());
+        } else {
+            expertChatService.pushBotChatMessage("Received empty or nil actions");
+        }
     }
+
 
     @Override
     public void onMessageAvailable(ExpertChat expertChat) {
@@ -737,6 +747,20 @@ public class UserInteractionManager implements
     private void maybeAskForRating() {
         if (ratingsManager.shouldBeAllowedToAskForRating()) {
             dobbyAi.askUserForRatingTheApp();
+        }
+    }
+
+    //EventBus events
+    @Subscribe
+    public void listenToEventBus(final DobbyEvent event) {
+        if (event.getEventType() == DobbyEvent.EventType.EXPERT_ASKED_FOR_ACTION) {
+            //Switching thread so we don't block the event bus
+            scheduledExecutorService.schedule(new Runnable() {
+                @Override
+                public void run() {
+                    dobbyAi.parseMessageFromExpert((String) event.getPayload());
+                }
+            }, 0, TimeUnit.MILLISECONDS);
         }
     }
 

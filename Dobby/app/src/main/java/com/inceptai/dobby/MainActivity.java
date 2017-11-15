@@ -65,9 +65,9 @@ public class MainActivity extends AppCompatActivity
     private static final int SPEECH_RECOGNITION_REQUEST_CODE = 102;
     private static final long BOT_MESSAGE_DELAY_MS = 50;
 
-    private static final boolean SHOW_CONTACT_HUMAN_BUTTON = false;
+    private static final boolean SHOW_CONTACT_HUMAN_BUTTON = true;
     private static final boolean ENABLE_WIFI_MONITORING_SERVICE = false;
-    private static final boolean ENABLE_OVERLAY_PERMISSION = false;
+    private static final boolean ENABLE_OVERLAY_PERMISSION = true;
 
 
     private UserInteractionManager userInteractionManager;
