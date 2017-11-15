@@ -60,6 +60,7 @@ android {
     }
     buildTypes {
         release {
+            debuggable true
             productFlavors.wifidoc.signingConfig signingConfigs.wifidoc_config
             productFlavors.dobby.signingConfig signingConfigs.wifiexpert_config
             minifyEnabled false
