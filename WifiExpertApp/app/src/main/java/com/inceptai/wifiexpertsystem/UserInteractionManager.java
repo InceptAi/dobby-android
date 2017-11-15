@@ -4,6 +4,7 @@ import android.app.AlarmManager;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
+import com.inceptai.neopojos.ActionDetails;
 import com.inceptai.neoservice.NeoService;
 import com.inceptai.wifiexpertsystem.analytics.DobbyAnalytics;
 import com.inceptai.wifiexpertsystem.config.RemoteConfig;
@@ -100,6 +101,11 @@ public class UserInteractionManager implements
                 dobbyThreadPool.getScheduledExecutorService(),
                 this);
         registerCallback(interactionCallback);
+    }
+
+    @Override
+    public void onUIActionsAvailable(List<ActionDetails> actionDetailsList) {
+
     }
 
     /**
