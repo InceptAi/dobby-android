@@ -19,9 +19,11 @@ keystorePropertiesWifiExpert.load(new FileInputStream(keystorePropertiesFileWifi
 
 
 android {
+    flavorDimensions "dummy"
     compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    buildToolsVersion '26.0.2'
     defaultConfig {
+        vectorDrawables.useSupportLibrary = true
         applicationId "com.inceptai.wifiexpert"
         minSdkVersion 16
         targetSdkVersion 25
