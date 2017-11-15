@@ -17,6 +17,7 @@ import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.NeoServiceClient;
 import com.inceptai.dobby.utils.Utils;
+import com.inceptai.neopojos.ActionDetails;
 import com.inceptai.neoservice.NeoService;
 
 import java.util.HashSet;
@@ -216,6 +217,13 @@ public class UserInteractionManager implements
     }
 
     //Expert chat service callback
+
+
+    @Override
+    public void onUIActionsAvailable(List<ActionDetails> actionDetailsList) {
+
+    }
+
     @Override
     public void onMessageAvailable(ExpertChat expertChat) {
         if (!expertChat.getId().equals(Utils.EMPTY_STRING) && expertChatIdsDisplayed.contains(expertChat.getId())) {
