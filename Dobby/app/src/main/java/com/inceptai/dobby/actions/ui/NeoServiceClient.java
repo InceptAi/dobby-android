@@ -1,11 +1,14 @@
-package com.inceptai.dobby.utils;
+package com.inceptai.dobby.actions.ui;
 
 import android.content.Context;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 import com.inceptai.dobby.DobbyApplication;
 import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.RemoteConfig;
+import com.inceptai.dobby.utils.DobbyLog;
+import com.inceptai.dobby.utils.Utils;
 import com.inceptai.neoservice.NeoService;
 
 import java.util.concurrent.Executor;
@@ -17,6 +20,8 @@ public class NeoServiceClient {
     private static final String DEFAULT_NEO_SERVER_ADDRESS = "ws://dobby1743.duckdns.org:8080/";
     private static final String PREF_SERVER_ADDRESS = "neo_server_address";
     private static final int MAX_CHARACTERS_FOR_STATUS = 120;
+    private static final String SETTINGS_APP_NAME = "settings";
+
     private RemoteConfig remoteConfig;
     private Executor executor;
     private Context context;
@@ -60,8 +65,8 @@ public class NeoServiceClient {
         }
     }
 
-    public void fetchUIActions(String query, String appName) {
-        neoService.fetchUIActions(query, appName);
+    public SettableFuture fetchUIActions(String query, String appName) {
+        return neoService.fetchUIActions(query, appName);
     }
 
     public void takeUserToAccessibilitySettings() {
@@ -102,4 +107,5 @@ public class NeoServiceClient {
             }
         }, executor);
     }
+
 }

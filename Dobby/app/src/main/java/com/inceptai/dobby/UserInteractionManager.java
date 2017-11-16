@@ -5,6 +5,9 @@ import android.content.Context;
 import android.net.wifi.WifiInfo;
 
 import com.google.common.eventbus.Subscribe;
+import com.inceptai.dobby.actions.ActionTaker;
+import com.inceptai.dobby.actions.api.APIActionLibraryClient;
+import com.inceptai.dobby.actions.ui.NeoServiceClient;
 import com.inceptai.dobby.ai.DataInterpreter;
 import com.inceptai.dobby.ai.DobbyAi;
 import com.inceptai.dobby.ai.RtDataSource;
@@ -17,10 +20,10 @@ import com.inceptai.dobby.expert.ExpertChatService;
 import com.inceptai.dobby.feedback.RatingsManager;
 import com.inceptai.dobby.speedtest.BandwidthObserver;
 import com.inceptai.dobby.utils.DobbyLog;
-import com.inceptai.dobby.utils.NeoServiceClient;
 import com.inceptai.dobby.utils.Utils;
 import com.inceptai.neopojos.ActionDetails;
 import com.inceptai.neoservice.NeoService;
+import com.inceptai.neoservice.uiactions.UIActionResult;
 
 import java.util.HashSet;
 import java.util.List;
@@ -40,7 +43,8 @@ public class UserInteractionManager implements
         DobbyAi.ResponseCallback,
         ExpertChatService.ChatCallback,
         NeoService.Callback,
-        WifiMonitoringServiceClient.WifiMonitoringCallback {
+        WifiMonitoringServiceClient.WifiMonitoringCallback,
+        ActionTaker.ActionTakerCallback {
 
     private static final String PREF_CHAT_IN_EXPERT_MODE = "wifidoc_in_expert_mode";
     private static final String EXPERT_MODE_INITIATED_TIMESTAMP = "expert_mode_start_ts";
@@ -83,6 +87,9 @@ public class UserInteractionManager implements
     private boolean isUserInChat;
     private boolean triggerAccessibilityDialogOnResume;
     private RatingsManager ratingsManager;
+    private APIActionLibraryClient apiActionLibraryClient;
+    private ActionTaker actionTaker;
+
 
     public UserInteractionManager(Context context, InteractionCallback interactionCallback, boolean showContactHumanAction) {
         ((DobbyApplication) context.getApplicationContext()).getProdComponent().inject(this);
@@ -112,6 +119,11 @@ public class UserInteractionManager implements
         } else {
             dobbyAnalytics.setReturningUser();
         }
+        actionTaker = new ActionTaker(
+                context, dobbyThreadpool.getExecutorService(),
+                dobbyThreadpool.getListeningScheduledExecutorService(),
+                dobbyThreadpool.getScheduledExecutorService(),
+                neoServiceClient, this);
     }
 
     public interface InteractionCallback {
@@ -218,7 +230,26 @@ public class UserInteractionManager implements
         this.locationPermissionGranted = locationPermissionGranted;
     }
 
+
+    //Action Taker callbacks
+
+    @Override
+    public void actionStarted(String query, String appPackageName) {
+        DobbyLog.v("ESXXXX Action started: query: " + query + " app: " + appPackageName);
+    }
+
+    @Override
+    public void actionFinished(String query, String appPackageName, String status, boolean isSuccessful) {
+        DobbyLog.v("ESXXXX Action finished: query: " + query + " app: " + appPackageName + " status: " + status + " isSuccess: " + isSuccessful);
+    }
+
     //Expert chat service callback
+    @Override
+    public void takeExpertSystemAction(String query, String appName) {
+        final boolean TRY_API_ACTION_FIRST = true;
+        actionTaker.takeAction(query, appName, TRY_API_ACTION_FIRST);
+    }
+
     @Override
     public void fetchUIActionsForQuery(String query, String appName) {
         neoServiceClient.fetchUIActions(query, appName);
@@ -233,6 +264,15 @@ public class UserInteractionManager implements
         }
     }
 
+    @Override
+    public void onUIActionStarted(String query, String appName) {
+        DobbyLog.v("UIAction started for appName " + appName + " and query: " + query);
+    }
+
+    @Override
+    public void onUIActionFinished(String query, String appName, UIActionResult uiActionResult) {
+        DobbyLog.v("UIAction finished for appName " + appName + " and query: " + query + " status: " + uiActionResult.getStatus());
+    }
 
     @Override
     public void onMessageAvailable(ExpertChat expertChat) {

@@ -148,6 +148,7 @@ public class DobbyAi implements
         void onUserSaysLaterToAppRating();
         void userSaysAppIsHelpful();
         void fetchUIActionsForQuery(String query, String appName);
+        void takeExpertSystemAction(String query, String appName);
     }
 
     @Inject
@@ -1127,15 +1128,12 @@ public class DobbyAi implements
         if (responseCallback != null) {
             responseCallback.stopNeoByExpert();
         }
-//
-//        Intent intent = new Intent();
-//        intent.setAction("com.inceptai.neo.ACTION");
-//        context.sendBroadcast(intent);
     }
 
     private void fetchUIActions(String query, String appName) {
         if (responseCallback != null) {
-            responseCallback.fetchUIActionsForQuery(query, appName);
+            //responseCallback.fetchUIActionsForQuery(query, appName);
+            responseCallback.takeExpertSystemAction(query, appName);
         }
     }
 
