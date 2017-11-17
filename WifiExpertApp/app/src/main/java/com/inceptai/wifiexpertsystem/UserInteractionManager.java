@@ -6,6 +6,7 @@ import android.support.annotation.NonNull;
 
 import com.inceptai.neopojos.ActionDetails;
 import com.inceptai.neoservice.NeoService;
+import com.inceptai.neoservice.uiactions.UIActionResult;
 import com.inceptai.wifiexpertsystem.analytics.DobbyAnalytics;
 import com.inceptai.wifiexpertsystem.config.RemoteConfig;
 import com.inceptai.wifiexpertsystem.eventbus.DobbyEventBus;
@@ -213,6 +214,16 @@ public class UserInteractionManager implements
         final boolean resumingInExpertMode = checkSharedPrefForExpertModeResume();
         DobbyLog.v("UIM:onFirstTimeResumed");
         interactionCallback.showExpertResponse("Welcome !");
+    }
+
+    @Override
+    public void onUIActionStarted(String query, String appName) {
+
+    }
+
+    @Override
+    public void onUIActionFinished(String query, String appName, UIActionResult uiActionResult) {
+
     }
 
     @Override

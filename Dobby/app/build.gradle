@@ -61,6 +61,7 @@ android {
     }
     buildTypes {
         release {
+            debuggable true
             productFlavors.wifidoc.signingConfig signingConfigs.wifidoc_config
             productFlavors.dobby.signingConfig signingConfigs.wifiexpert_config
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
