@@ -20,7 +20,7 @@ public class NeoServiceClient {
     private static final String DEFAULT_NEO_SERVER_ADDRESS = "ws://dobby1743.duckdns.org:8080/";
     private static final String PREF_SERVER_ADDRESS = "neo_server_address";
     private static final int MAX_CHARACTERS_FOR_STATUS = 120;
-    private static final String SETTINGS_APP_NAME = "settings";
+    public static final String SETTINGS_APP_NAME = "settings";
 
     private RemoteConfig remoteConfig;
     private Executor executor;
@@ -39,8 +39,8 @@ public class NeoServiceClient {
         neoService = new NeoService(getServerAddress(), dobbyApplication.getUserUuid(), context, neoServiceCallback);
     }
 
-    public void startService() {
-        neoService.startService();
+    public void startService(boolean enableStreaming) {
+        neoService.startService(enableStreaming);
     }
 
     public void stopService() {
@@ -51,7 +51,7 @@ public class NeoServiceClient {
         if (neoService.isServiceRunning()) {
             stopService();
         } else {
-            startService();
+            startService(true);
         }
     }
 
@@ -65,8 +65,8 @@ public class NeoServiceClient {
         }
     }
 
-    public SettableFuture fetchUIActions(String query, String appName) {
-        return neoService.fetchUIActions(query, appName);
+    public SettableFuture fetchUIActions(String query, String appName, boolean forceAppRelaunch) {
+        return neoService.fetchUIActions(query, appName, forceAppRelaunch);
     }
 
     public void takeUserToAccessibilitySettings() {

@@ -71,6 +71,7 @@ import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_USER_SAYS_YES_
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_USER_SAYS_YES_TO_REPAIR_RECOMMENDATION;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_WELCOME;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_WIFI_CHECK;
+import static com.inceptai.neoservice.Utils.SETTINGS_APP_NAME;
 
 /**
  * This class is responsible for managing the user queries and showing the responses by working
@@ -85,6 +86,7 @@ public class DobbyAi implements
     private static final boolean CLEAR_STATS_EVERY_TIME_USER_ASKS_TO_RUN_TESTS = true;
     private static final long MAX_ETA_TO_MARK_EXPERT_AS_LISTENING_SECONDS = 180;
     private static final boolean USE_API_AI_FOR_WIFIDOC = true;
+    //public static final String NEO_HOT_WORD = "alexa";
 
 
     private Context context;
@@ -540,6 +542,11 @@ public class DobbyAi implements
             DobbyLog.v("DobbyAi: onUserMessageAvailable with text " + text);
             responseCallback.onUserMessageAvailable(text, isButtonActionText);
         }
+
+//        if (text.toLowerCase().startsWith(ExpertChat.SPECIAL_MESSAGE_PREFIX) || text.toLowerCase().startsWith(NEO_HOT_WORD)) {
+//            parseSpecialMessageAndTakeActionIfNeeded(text);
+//            return;
+//        }
 
         if (useApiAi) {
             if (!chatInExpertMode || isButtonActionText) {
@@ -1139,11 +1146,11 @@ public class DobbyAi implements
 
     public void parseMessageFromExpert(String expertMessage) {
         if (expertMessage.startsWith(ExpertChat.SPECIAL_MESSAGE_PREFIX)) {
-            parseExpertTextAndTakeActionIfNeeded(expertMessage);
+            parseSpecialMessageAndTakeActionIfNeeded(expertMessage);
         }
     }
 
-    private void parseExpertTextAndTakeActionIfNeeded(String expertMessage) {
+    private void parseSpecialMessageAndTakeActionIfNeeded(String expertMessage) {
         if (expertMessage.toLowerCase().startsWith("#neo")) {
             String query = expertMessage.toLowerCase().substring("#neo".length()).trim();
             //Get the first word -- which is the app name
@@ -1153,7 +1160,8 @@ public class DobbyAi implements
                 appName = queryWords.get(0);
                 query =  query.substring(appName.length());
             }
-            fetchUIActions(query, appName);
+            //Hack for just settings.
+            fetchUIActions(query, SETTINGS_APP_NAME);
         } else if (expertMessage.toLowerCase().contains("wifiscan")) {
             performAndRecordWifiAction();
         } else if (expertMessage.toLowerCase().contains("ping")) {

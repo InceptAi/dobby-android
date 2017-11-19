@@ -1065,6 +1065,12 @@ public class Utils {
         context.startActivity(i);
     }
 
+    public static void resumeWifiExpertMainActivity(Context context) {
+        Intent i = new Intent(context, MainActivity.class);
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(i);
+    }
+
     public static ActionRecord createActionRecord(String userId, String phoneInfo,
                                             @Nullable DataInterpreter.BandwidthGrade bandwidthGrade,
                                             @Nullable DataInterpreter.WifiGrade wifiGrade,
@@ -1117,5 +1123,9 @@ public class Utils {
         return actionRecord;
     }
 
+
+    public static boolean nullOrEmpty(String target) {
+        return target == null || target.isEmpty() || target.equals("null");
+    }
 
 }

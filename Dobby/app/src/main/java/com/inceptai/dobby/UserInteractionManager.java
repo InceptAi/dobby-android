@@ -24,6 +24,7 @@ import com.inceptai.dobby.utils.Utils;
 import com.inceptai.neopojos.ActionDetails;
 import com.inceptai.neoservice.NeoService;
 import com.inceptai.neoservice.uiactions.UIActionResult;
+import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
 
 import java.util.HashSet;
 import java.util.List;
@@ -50,7 +51,7 @@ public class UserInteractionManager implements
     private static final String EXPERT_MODE_INITIATED_TIMESTAMP = "expert_mode_start_ts";
     private static final long MAX_TIME_ELAPSED_FOR_RESUMING_EXPERT_MODE_MS = AlarmManager.INTERVAL_DAY;
     private static final long DELAY_BEFORE_WELCOME_MESSAGE_MS = 500;
-    private static final long ACCESSIBILITY_SETTING_CHECKER_TIMEOUT_MS = 10000;
+    private static final long ACCESSIBILITY_SETTING_CHECKER_TIMEOUT_MS = 30000;
     private static final long WIFI_REPAIR_TIMEOUT_MS = 30000;
     private static final String PREF_CHAT_FIRST_TIME = "first_user_interaction";
 
@@ -65,7 +66,10 @@ public class UserInteractionManager implements
     private boolean historyAvailable;
     private ScheduledFuture<?> accessibilityCheckFuture;
     private boolean locationPermissionGranted;
-    //private NotificationInfoReceiver notificationInfoReceiver;
+    private boolean accessibilityPermissionDenied;
+    private String pendingAction;
+    private String pendingActionPackageName;
+
 
     @Inject
     DobbyAi dobbyAi;
@@ -124,6 +128,9 @@ public class UserInteractionManager implements
                 dobbyThreadpool.getListeningScheduledExecutorService(),
                 dobbyThreadpool.getScheduledExecutorService(),
                 neoServiceClient, this);
+        accessibilityPermissionDenied = false;
+        pendingAction = Utils.EMPTY_STRING;
+        pendingActionPackageName = Utils.EMPTY_STRING;
     }
 
     public interface InteractionCallback {
@@ -230,6 +237,11 @@ public class UserInteractionManager implements
         this.locationPermissionGranted = locationPermissionGranted;
     }
 
+    public void startNeo(boolean enableStreaming) {
+        //Stop notifications in onServiceReady
+        neoServiceClient.startService(enableStreaming);
+    }
+
 
     //Action Taker callbacks
 
@@ -239,20 +251,39 @@ public class UserInteractionManager implements
     }
 
     @Override
-    public void actionFinished(String query, String appPackageName, String status, boolean isSuccessful) {
-        DobbyLog.v("ESXXXX Action finished: query: " + query + " app: " + appPackageName + " status: " + status + " isSuccess: " + isSuccessful);
+    public void actionFinished(String query, String appPackageName, String status, ActionResult apiActionResult, UIActionResult uiActionResult) {
+        DobbyLog.v("ESXXXX Action finished: query: " + query + " app: " + appPackageName + " status: " + status);
+        if (apiActionResult != null) {
+            //This was an api action, see the results here
+            DobbyLog.v("ESXXX API action result: " + ActionResult.isSuccessful(apiActionResult));
+        } else if (uiActionResult != null) {
+            DobbyLog.v("ESXXX API action result: " + UIActionResult.isSuccessful(uiActionResult));
+            if (UIActionResult.failedDueToAccessibilityIssue(uiActionResult)) {
+                //launch accessibility permission and try this command again
+                startNeo(true);
+//                if (!accessibilityPermissionDenied) {
+//                    pendingAction = query;
+//                    pendingActionPackageName = appPackageName;
+//                    startNeo(true);
+//                }
+            } else {
+                //bring the user back into the app after UIAction finishes.
+                //Utils.resumeWifiExpertMainActivity(context.getApplicationContext());
+            }
+        }
+
     }
 
     //Expert chat service callback
     @Override
     public void takeExpertSystemAction(String query, String appName) {
         final boolean TRY_API_ACTION_FIRST = true;
-        actionTaker.takeAction(query, appName, TRY_API_ACTION_FIRST);
+        actionTaker.takeAction(query, appName, TRY_API_ACTION_FIRST, false);
     }
 
     @Override
     public void fetchUIActionsForQuery(String query, String appName) {
-        neoServiceClient.fetchUIActions(query, appName);
+        neoServiceClient.fetchUIActions(query, appName, true);
     }
 
     @Override
@@ -385,7 +416,7 @@ public class UserInteractionManager implements
     @Override
     public void startNeoByExpert() {
         //Stop notifications in onServiceReady
-        neoServiceClient.startService();
+        neoServiceClient.startService(true);
     }
 
     @Override
@@ -707,6 +738,13 @@ public class UserInteractionManager implements
         }
         sendServiceReadyMetaMessage();
         expertChatService.disableNotifications();
+        accessibilityPermissionDenied = false;
+        if (!Utils.nullOrEmpty(pendingAction)) {
+            //retry pending action
+            takeExpertSystemAction(pendingAction, pendingActionPackageName);
+            pendingAction = Utils.EMPTY_STRING;
+            pendingActionPackageName = Utils.EMPTY_STRING;
+        }
     }
 
     public UserInteractionManager() {
@@ -743,12 +781,15 @@ public class UserInteractionManager implements
             @Override
             public void run() {
                 DobbyLog.e("User did not grant accessibility permission");
-                sendAccessibilityPermissionNotGrantedWithinTimeoutMessage();
+                processAccessibilityPermissionNotGrantedWithinTimeoutMessage();
             }
         }, ACCESSIBILITY_SETTING_CHECKER_TIMEOUT_MS, TimeUnit.MILLISECONDS);
     }
 
-    private void sendAccessibilityPermissionNotGrantedWithinTimeoutMessage() {
+    private void processAccessibilityPermissionNotGrantedWithinTimeoutMessage() {
+        //accessibilityPermissionDenied = true;
+//        pendingAction = Utils.EMPTY_STRING;
+//        pendingActionPackageName = Utils.EMPTY_STRING;
         expertChatService.pushMetaChatMessage(ExpertChat.MSG_TYPE_META_NEO_ACCESSIBILITY_PERMISSION_NOT_GRANTED_WITHIN_TIMEOUT);
     }
 

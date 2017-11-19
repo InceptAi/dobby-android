@@ -28,7 +28,7 @@ public class ActionTaker implements APIActionLibraryClient.ActionLibraryClientCa
 
     public interface ActionTakerCallback {
         void actionStarted(String query, String appName);
-        void actionFinished(String query, String appName, String status, boolean isSuccessful);
+        void actionFinished(String query, String appName, String status, ActionResult apiActionResult, UIActionResult uiActionResult);
     }
 
     public ActionTaker(Context context, ExecutorService executorService,
@@ -48,13 +48,14 @@ public class ActionTaker implements APIActionLibraryClient.ActionLibraryClientCa
 
 
     //Expert system service callbacks
-    public void takeAction(final String query, final String appName, boolean apiAction) {
+    public void takeAction(final String query, final String appName, boolean apiAction, final boolean forceAppRelaunch) {
         boolean actionInitiated = false;
         if (apiAction) {
             actionInitiated = apiActionLibraryClient.takeAPIAction(query);
         }
         if (!actionInitiated) {
-            final SettableFuture uiActionResultSettableFuture = neoServiceClient.fetchUIActions(query, Utils.nullOrEmpty(appName) ? Utils.SETTINGS_APP_NAME : appName);
+            //Check if accessibility permission is given
+            final SettableFuture uiActionResultSettableFuture = neoServiceClient.fetchUIActions(query, Utils.nullOrEmpty(appName) ? Utils.SETTINGS_APP_NAME : appName, forceAppRelaunch);
             if (actionTakerCallback != null) {
                 actionTakerCallback.actionStarted(query, appName);
             }
@@ -67,19 +68,27 @@ public class ActionTaker implements APIActionLibraryClient.ActionLibraryClientCa
                     } catch (InterruptedException|ExecutionException e) {
                         DobbyLog.v("Exception while waiting for UI Action Result");
                     }
+                    if (uiActionResult != null &&
+                            uiActionResult.getStatus() == UIActionResult.UIActionResultCodes.NO_ACTIONS_AVAILABLE &&
+                            !forceAppRelaunch) {
+                        takeAction(query, appName, false, true);
+                        return;
+                    }
                     if (actionTakerCallback != null) {
                         if (uiActionResult != null) {
                             actionTakerCallback.actionFinished(
                                     uiActionResult.getQuery(),
                                     uiActionResult.getPackageName(),
                                     uiActionResult.getStatusString(),
-                                    UIActionResult.isSuccessful(uiActionResult));
+                                    null,
+                                    uiActionResult);
                         } else {
                             actionTakerCallback.actionFinished(
                                     query,
                                     appName,
                                     "NULL RESULT",
-                                    false);
+                                    null,
+                                    null);
                         }
                     }
 
@@ -103,7 +112,8 @@ public class ActionTaker implements APIActionLibraryClient.ActionLibraryClientCa
                     action.getName(),
                     Utils.SETTINGS_APP_NAME,
                     statusString,
-                    ActionResult.isSuccessful(actionResult));
+                    actionResult,
+                    null);
         }
     }
 }

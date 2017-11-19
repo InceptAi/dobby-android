@@ -40,6 +40,7 @@ import com.inceptai.dobby.ui.WifiDocDialogFragment;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
 import com.inceptai.neoservice.NeoService;
+import com.inceptai.neoservice.NeoUiActionsService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -397,6 +398,7 @@ public class MainActivity extends AppCompatActivity
     private void showAccessibilityPermissionDialog() {
         WifiDocDialogFragment fragment = WifiDocDialogFragment.forDobbyAccessibilityPermission(this);
         fragment.show(this.getSupportFragmentManager(), "Accessibility Permission.");
+        //new AccessibilityPermissionChecker(dobbyThreadpool.getScheduledExecutorService()).startChecking();
     }
 
     public void takeUserToAccessibilitySetting() {
@@ -527,6 +529,7 @@ public class MainActivity extends AppCompatActivity
     public void onFirstTimeResumed() {
         DobbyLog.v("MainActivity:onFirstTimeResumed");
         userInteractionManager.resumeChatWithWifiCheck();
+        //userInteractionManager.startNeo(true);
     }
 
     @Override
@@ -650,6 +653,45 @@ public class MainActivity extends AppCompatActivity
                 public void run() {
                     numAttempts++;
                     if (!MainActivity.this.checkOverlayPermissionAndLaunchMainActivity() && numAttempts < MAX_ATTEMPTS) {
+                        postOverdrawCheck();
+                    }
+                }
+            }, CHECKING_INTERVAL_MS, TimeUnit.MILLISECONDS);
+        }
+    }
+
+    @TargetApi(M)
+    private boolean checkAccessibilityPermissionAndLaunchMainActivity() {
+        if (NeoUiActionsService.isAccessibilityPermissionGranted(MainActivity.this)) {
+            //You have the permission, re-launch MainActivity
+            Utils.launchWifiExpertMainActivity(this.getApplicationContext());
+            return true;
+        }
+        return false;
+    }
+
+    private class AccessibilityPermissionChecker {
+        private static final int CHECKING_INTERVAL_MS = 1000;
+        private static final int MAX_ATTEMPTS = 20;
+
+        private ScheduledExecutorService scheduledExecutorService;
+        private int numAttempts;
+
+        public AccessibilityPermissionChecker(ScheduledExecutorService scheduledExecutorService) {
+            this.scheduledExecutorService = scheduledExecutorService;
+            numAttempts = 0;
+        }
+
+        void startChecking() {
+            postOverdrawCheck();
+        }
+
+        private void postOverdrawCheck() {
+            scheduledExecutorService.schedule(new Runnable() {
+                @Override
+                public void run() {
+                    numAttempts++;
+                    if (!MainActivity.this.checkAccessibilityPermissionAndLaunchMainActivity() && numAttempts < MAX_ATTEMPTS) {
                         postOverdrawCheck();
                     }
                 }
