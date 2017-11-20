@@ -71,7 +71,6 @@ import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_USER_SAYS_YES_
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_USER_SAYS_YES_TO_REPAIR_RECOMMENDATION;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_WELCOME;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_WIFI_CHECK;
-import static com.inceptai.neoservice.Utils.SETTINGS_APP_NAME;
 
 /**
  * This class is responsible for managing the user queries and showing the responses by working
@@ -1160,8 +1159,7 @@ public class DobbyAi implements
                 appName = queryWords.get(0);
                 query =  query.substring(appName.length());
             }
-            //Hack for just settings.
-            fetchUIActions(query, SETTINGS_APP_NAME);
+            fetchUIActions(query, appName);
         } else if (expertMessage.toLowerCase().contains("wifiscan")) {
             performAndRecordWifiAction();
         } else if (expertMessage.toLowerCase().contains("ping")) {
