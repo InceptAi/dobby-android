@@ -3,6 +3,7 @@ package com.inceptai.wifiexpertsystem.expertSystem.messages;
 import android.support.annotation.IntDef;
 
 import com.inceptai.wifiexpertsystem.expertSystem.inferencing.DataInterpreter;
+import com.inceptai.wifiexpertsystem.utils.Utils;
 import com.inceptai.wifimonitoringservice.actionlibrary.ActionResult;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest.BandwidthResult;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.wifi.WifiNetworkOverview;
@@ -22,7 +23,7 @@ public class ExpertMessage {
     @IntDef({ExpertMessageType.FREE_FORM, ExpertMessageType.STRUCTURED_LIST,
             ExpertMessageType.ACTION_STARTED, ExpertMessageType.ACTION_FINISHED,
             ExpertMessageType.SHOW_WIFI_INFO, ExpertMessageType.SHOW_PING_INFO,
-            ExpertMessageType.SHOW_BANDWIDTH_INFO})
+            ExpertMessageType.SHOW_BANDWIDTH_INFO, ExpertMessageType.SHOW_ACTION_DETAIL_LIST})
     public @interface ExpertMessageType {
         int FREE_FORM = 0;
         int STRUCTURED_LIST = 1;
@@ -31,6 +32,7 @@ public class ExpertMessage {
         int SHOW_WIFI_INFO = 4;
         int SHOW_PING_INFO = 5;
         int SHOW_BANDWIDTH_INFO = 6;
+        int SHOW_ACTION_DETAIL_LIST = 7;
     }
 
     private String message;
@@ -41,6 +43,7 @@ public class ExpertMessage {
     private WifiNetworkOverview wifiNetworkOverview;
     private BandwidthResult bandwidthResult;
     @ExpertMessageType private int expertMessageType;
+
 
     private ExpertMessage(@ExpertMessageType int expertMessageType,
                           String message, Action action,
@@ -59,6 +62,7 @@ public class ExpertMessage {
         this.bandwidthResult = bandwidthResult;
     }
 
+
     /**
      * Factory constructor to create an instance
      */
@@ -68,6 +72,10 @@ public class ExpertMessage {
 
     public static ExpertMessage createMessageForActionEnded(Action action, ActionResult actionResult) {
         return new ExpertMessage(ExpertMessageType.ACTION_FINISHED, action.getName() + " Finished", action, actionResult, null, null, null, null);
+    }
+
+    public static ExpertMessage createMessageForUIActionEnded(String message) {
+        return new ExpertMessage(ExpertMessageType.ACTION_FINISHED, message, null, null, null, null, null, null);
     }
 
     public static ExpertMessage createMessageForActionEndedWithoutSuccess(Action action, ActionResult actionResult) {
@@ -89,6 +97,17 @@ public class ExpertMessage {
     public static ExpertMessage createShowNetworkOverview(Action action, WifiNetworkOverview wifiNetworkOverview) {
         return new ExpertMessage(ExpertMessageType.SHOW_WIFI_INFO, null, action, null,  null, null, wifiNetworkOverview, null);
     }
+
+    public static ExpertMessage createMessageForActionDetails(List<StructuredUserResponse> structuredUserResponses) {
+        String message = Utils.EMPTY_STRING;
+        if (structuredUserResponses != null && !structuredUserResponses.isEmpty()) {
+            message = "Select exactly which action you want to take:";
+        } else {
+            message = "Sorry, we have no actions matching to this query :( Try another query please !";
+        }
+        return new ExpertMessage(ExpertMessageType.STRUCTURED_LIST, message, null, null,  structuredUserResponses, null, null, null);
+    }
+
 
     public String getMessage() {
         return message;

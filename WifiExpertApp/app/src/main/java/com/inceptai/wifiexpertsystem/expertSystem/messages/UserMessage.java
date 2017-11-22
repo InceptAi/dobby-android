@@ -47,4 +47,8 @@ public class UserMessage {
     public StructuredUserResponse getStructuredUserResponse() {
         return structuredUserResponse;
     }
+
+    public boolean isStructuredResponse() {
+        return messageType == UserMessageType.STRUCTURED;
+    }
 }

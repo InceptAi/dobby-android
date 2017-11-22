@@ -30,6 +30,7 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.inceptai.neoservice.NeoService;
+import com.inceptai.neoservice.NeoUiActionsService;
 import com.inceptai.wifiexpertsystem.analytics.DobbyAnalytics;
 import com.inceptai.wifiexpertsystem.expert.ExpertChatService;
 import com.inceptai.wifiexpertsystem.expertSystem.inferencing.DataInterpreter;
@@ -326,8 +327,8 @@ public class DobbyActivity extends AppCompatActivity
 
     //From chatFragment onInteractionListener
     @Override
-    public void onUserQuery(String text, boolean isButtonActionText) {
-        userInteractionManager.onUserQuery(text, isButtonActionText);
+    public void onUserQuery(String text, boolean isStructuredResponse, int responseId) {
+        userInteractionManager.onUserQuery(text, isStructuredResponse, responseId);
     }
 
 
@@ -393,6 +394,7 @@ public class DobbyActivity extends AppCompatActivity
     private void showAccessibilityPermissionDialog() {
         WifiExpertDialogFragment fragment = WifiExpertDialogFragment.forAccessibilityPermission(this);
         fragment.show(this.getSupportFragmentManager(), "Accessibility Permission.");
+        new AccessibilityPermissionChecker(dobbyThreadPool.getScheduledExecutorService()).startChecking();
     }
 
     public void takeUserToAccessibilitySetting() {
@@ -420,7 +422,7 @@ public class DobbyActivity extends AppCompatActivity
                 if (chatFragment != null) {
                     chatFragment.addSpokenText(inSpeech);
                 }
-                onUserQuery(inSpeech, false);
+                onUserQuery(inSpeech, false, 0);
             }
         } else {
             super.onActivityResult(requestCode, resultCode, data);
@@ -652,6 +654,46 @@ public class DobbyActivity extends AppCompatActivity
                 public void run() {
                     numAttempts++;
                     if (!DobbyActivity.this.checkOverlayPermissionAndLaunchMainActivity() && numAttempts < MAX_ATTEMPTS) {
+                        postOverdrawCheck();
+                    }
+                }
+            }, CHECKING_INTERVAL_MS, TimeUnit.MILLISECONDS);
+        }
+    }
+
+    @TargetApi(M)
+    private boolean checkAccessibilityPermissionAndLaunchMainActivity() {
+        if (NeoUiActionsService.isAccessibilityPermissionGranted(DobbyActivity.this)) {
+            //You have the permission, re-launch MainActivity
+            userInteractionManager.onAccessibilityPermissionGranted(false);
+            Utils.launchWifiExpertMainActivity(this.getApplicationContext());
+            return true;
+        }
+        return false;
+    }
+
+    private class AccessibilityPermissionChecker {
+        private static final int CHECKING_INTERVAL_MS = 1000;
+        private static final int MAX_ATTEMPTS = 20;
+
+        private ScheduledExecutorService scheduledExecutorService;
+        private int numAttempts;
+
+        public AccessibilityPermissionChecker(ScheduledExecutorService scheduledExecutorService) {
+            this.scheduledExecutorService = scheduledExecutorService;
+            numAttempts = 0;
+        }
+
+        void startChecking() {
+            postOverdrawCheck();
+        }
+
+        private void postOverdrawCheck() {
+            scheduledExecutorService.schedule(new Runnable() {
+                @Override
+                public void run() {
+                    numAttempts++;
+                    if (!DobbyActivity.this.checkAccessibilityPermissionAndLaunchMainActivity() && numAttempts < MAX_ATTEMPTS) {
                         postOverdrawCheck();
                     }
                 }

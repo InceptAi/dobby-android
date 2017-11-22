@@ -398,7 +398,6 @@ public class MainActivity extends AppCompatActivity
     private void showAccessibilityPermissionDialog() {
         WifiDocDialogFragment fragment = WifiDocDialogFragment.forDobbyAccessibilityPermission(this);
         fragment.show(this.getSupportFragmentManager(), "Accessibility Permission.");
-        //new AccessibilityPermissionChecker(dobbyThreadpool.getScheduledExecutorService()).startChecking();
     }
 
     public void takeUserToAccessibilitySetting() {

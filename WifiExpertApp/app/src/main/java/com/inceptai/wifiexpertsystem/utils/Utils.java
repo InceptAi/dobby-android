@@ -61,7 +61,7 @@ public class Utils {
     public static final String TRUE_STRING = "true";
     public static final String FALSE_STRING = "false";
     public static final String ZERO_POINT_ZERO = "0.0";
-    public static final String WIFIEXPERT_FLAVOR = "wifiexpertsystem";
+    public static final String WIFIEXPERT_FLAVOR = "expertSystem";
     public static final String PREFERENCES_FILE = BuildConfig.FLAVOR + "_" + BuildConfig.BUILD_TYPE + "_settings";
     public static final String USER_UUID = "userUuid";
 
@@ -1052,5 +1052,9 @@ public class Utils {
         BigDecimal bd = new BigDecimal(value);
         bd = bd.setScale(places, RoundingMode.HALF_UP);
         return bd.doubleValue();
+    }
+
+    public static int getRandomIntWithUpperBound(int upperBound) {
+        return random.nextInt(upperBound);
     }
 }

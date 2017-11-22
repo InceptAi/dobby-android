@@ -12,7 +12,7 @@ import java.util.List;
 import static com.inceptai.wifiexpertsystem.expertSystem.messages.StructuredUserResponse.ResponseType.ASK_ABOUT_DOBBY;
 import static com.inceptai.wifiexpertsystem.expertSystem.messages.StructuredUserResponse.ResponseType.CANCEL;
 import static com.inceptai.wifiexpertsystem.expertSystem.messages.StructuredUserResponse.ResponseType.CONTACT_HUMAN_EXPERT;
-import static com.inceptai.wifiexpertsystem.expertSystem.messages.StructuredUserResponse.ResponseType.INVALID;
+import static com.inceptai.wifiexpertsystem.expertSystem.messages.StructuredUserResponse.ResponseType.UNKNOWN;
 import static com.inceptai.wifiexpertsystem.expertSystem.messages.StructuredUserResponse.ResponseType.LIST_ALL_FUNCTIONS;
 import static com.inceptai.wifiexpertsystem.expertSystem.messages.StructuredUserResponse.ResponseType.NO;
 import static com.inceptai.wifiexpertsystem.expertSystem.messages.StructuredUserResponse.ResponseType.NO_COMMENTS;
@@ -56,7 +56,8 @@ public class StructuredUserResponse {
             ResponseType.SHOW_LAST_SUGGESTION_DETAILS,
             ResponseType.NO_COMMENTS,
             ResponseType.CONTACT_HUMAN_EXPERT,
-            INVALID
+            ResponseType.UI_ACTION_RESPONSE,
+            ResponseType.UNKNOWN
     })
 
 
@@ -74,7 +75,8 @@ public class StructuredUserResponse {
         int SHOW_LAST_SUGGESTION_DETAILS = 9;
         int NO_COMMENTS = 10;
         int CONTACT_HUMAN_EXPERT = 11;
-        int INVALID = 12;
+        int UI_ACTION_RESPONSE = 12;
+        int UNKNOWN = 13;
     }
 
     /* User response to be shown, null for no response. */
@@ -82,6 +84,24 @@ public class StructuredUserResponse {
 
     @ResponseType
     private int responseType;
+
+    private int responseId;
+
+    public void setResponseString(String responseString) {
+        this.responseString = responseString;
+    }
+
+    public void setResponseType(int responseType) {
+        this.responseType = responseType;
+    }
+
+    public int getResponseId() {
+        return responseId;
+    }
+
+    public void setResponseId(int responseId) {
+        this.responseId = responseId;
+    }
 
     public String getResponseString() {
         return responseString;
@@ -101,6 +121,13 @@ public class StructuredUserResponse {
         this.responseString = message;
         this.responseType = getResponseTypeFromString(message);
     }
+
+    public StructuredUserResponse(String message, int responseId) {
+        this.responseString = message;
+        this.responseType = ResponseType.UI_ACTION_RESPONSE;
+        this.responseId = responseId;
+    }
+
 
     public static List<String > convertResponseTypesToString(List<Integer> inputResponseList) {
         List<String> stringList = new ArrayList<>();
@@ -168,8 +195,12 @@ public class StructuredUserResponse {
             case NO_RESPONSE_STRING:
                 return NO_RESPONSE;
             default:
-                return INVALID;
+                return UNKNOWN;
         }
+    }
+
+    public boolean isUIActionStructuredResponse() {
+        return responseType == ResponseType.UI_ACTION_RESPONSE;
     }
 
 

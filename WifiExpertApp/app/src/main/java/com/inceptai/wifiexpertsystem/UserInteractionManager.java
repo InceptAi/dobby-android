@@ -7,6 +7,7 @@ import android.support.annotation.NonNull;
 import com.inceptai.neopojos.ActionDetails;
 import com.inceptai.neoservice.NeoService;
 import com.inceptai.neoservice.uiactions.UIActionResult;
+import com.inceptai.wifiexpertsystem.actions.ui.NeoServiceClient;
 import com.inceptai.wifiexpertsystem.analytics.DobbyAnalytics;
 import com.inceptai.wifiexpertsystem.config.RemoteConfig;
 import com.inceptai.wifiexpertsystem.eventbus.DobbyEventBus;
@@ -19,7 +20,6 @@ import com.inceptai.wifiexpertsystem.expertSystem.messages.ExpertMessage;
 import com.inceptai.wifiexpertsystem.expertSystem.messages.StructuredUserResponse;
 import com.inceptai.wifiexpertsystem.expertSystem.messages.UserMessage;
 import com.inceptai.wifiexpertsystem.utils.DobbyLog;
-import com.inceptai.wifiexpertsystem.utils.NeoServiceClient;
 import com.inceptai.wifiexpertsystem.utils.Utils;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.speedtest.BandwidthResult;
 import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.wifi.WifiNetworkOverview;
@@ -51,7 +51,7 @@ public class UserInteractionManager implements
     private static final String EXPERT_MODE_INITIATED_TIMESTAMP = "expert_mode_start_ts";
     private static final long MAX_TIME_ELAPSED_FOR_RESUMING_EXPERT_MODE_MS = AlarmManager.INTERVAL_DAY;
     private static final long DELAY_BEFORE_WELCOME_MESSAGE_MS = 500;
-    private static final long ACCESSIBILITY_SETTING_CHECKER_TIMEOUT_MS = 10000;
+    private static final long ACCESSIBILITY_SETTING_CHECKER_TIMEOUT_MS = 30000;
 
     private long currentEtaSeconds;
     private InteractionCallback interactionCallback;
@@ -63,6 +63,7 @@ public class UserInteractionManager implements
     private boolean historyAvailable;
     private ScheduledFuture<?> accessibilityCheckFuture;
     private ExpertSystemClient expertSystemClient;
+    private NeoServiceClient neoServiceClient;
 
     @Inject
     ExpertChatService expertChatService;
@@ -77,7 +78,6 @@ public class UserInteractionManager implements
     @Inject
     RemoteConfig remoteConfig;
 
-    private NeoServiceClient neoServiceClient;
     private boolean isUserInChat;
     private boolean triggerAccessibilityDialogOnResume;
 
@@ -100,13 +100,19 @@ public class UserInteractionManager implements
                 dobbyThreadPool.getExecutorService(),
                 dobbyThreadPool.getListeningScheduledExecutorService(),
                 dobbyThreadPool.getScheduledExecutorService(),
+                neoServiceClient,
                 this);
         registerCallback(interactionCallback);
+
     }
 
     @Override
     public void onUIActionsAvailable(List<ActionDetails> actionDetailsList) {
-
+        if (actionDetailsList != null && ! actionDetailsList.isEmpty()) {
+            expertChatService.pushBotChatMessage(actionDetailsList.toString());
+        } else {
+            expertChatService.pushBotChatMessage("Received empty or nil actions");
+        }
     }
 
     /**
@@ -185,15 +191,15 @@ public class UserInteractionManager implements
         }
     }
 
-    public void onUserQuery(String text, boolean isButtonActionText) {
+    public void onUserQuery(String text, boolean isStructuredResponse, int responseId) {
         UserMessage userMessage = null;
-        if (isButtonActionText) {
-            userMessage = new UserMessage(new StructuredUserResponse(text));
+        if (isStructuredResponse) {
+            userMessage = new UserMessage(new StructuredUserResponse(text, responseId));
         } else {
             userMessage = new UserMessage(text);
         }
         expertSystemClient.onUserMessage(userMessage);
-        expertChatService.pushUserChatMessage(text, isButtonActionText);
+        expertChatService.pushUserChatMessage(text, isStructuredResponse);
     }
 
     public void resumeChatWithShortSuggestion() {
@@ -216,19 +222,28 @@ public class UserInteractionManager implements
         interactionCallback.showExpertResponse("Welcome !");
     }
 
+    public void onAccessibilityPermissionGranted(boolean enableOverlay) {
+        if (neoServiceClient != null) {
+            //To make sure we can get to streaming if onServiceConnected not called --
+            // onServiceConnected is not called always
+            neoServiceClient.startService(enableOverlay);
+        }
+        onServiceReady();
+    }
+
     @Override
     public void onUIActionStarted(String query, String appName) {
-
+        DobbyLog.v("UIAction started for appName " + appName + " and query: " + query);
     }
 
     @Override
     public void onUIActionFinished(String query, String appName, UIActionResult uiActionResult) {
-
+        DobbyLog.v("UIAction finished for appName " + appName + " and query: " + query + " status: " + uiActionResult.getStatus());
     }
 
     @Override
     public void onExpertMessage(final ExpertMessage expertMessage) {
-        //Push the message to firebase
+        //Push the message to fire base
         if (expertMessage.getMessage() != null) {
             expertChatService.pushExpertChatMessage(expertMessage.getMessage());
         }
@@ -264,6 +279,12 @@ public class UserInteractionManager implements
                 if (wifiNetworkOverview != null) {
                     interactionCallback.showNetworkInfoViewCard(wifiNetworkOverview);
                 }
+                break;
+            case ExpertMessage.ExpertMessageType.SHOW_ACTION_DETAIL_LIST:
+//                WifiNetworkOverview wifiNetworkOverview = expertMessage.getWifiNetworkOverview();
+//                if (wifiNetworkOverview != null) {
+//                    interactionCallback.showNetworkInfoViewCard(wifiNetworkOverview);
+//                }
                 break;
             default:
                 break;
@@ -330,134 +351,6 @@ public class UserInteractionManager implements
     }
 
 
-    //Dobby Ai callbacks
-    /*
-    @Override
-    public void startNeoByExpert() {
-        //Stop notifications in onServiceReady
-        neoServiceClient.startService();
-    }
-
-    @Override
-    public void stopNeoByExpert() {
-        expertChatService.enableNotifications(); //Enable notifications here.
-        neoServiceClient.stopService();
-    }
-
-    @Override
-    public void showBotResponseToUser(String text) {
-        expertChatService.pushBotChatMessage(text);
-    }
-
-    @Override
-    public void showRtGraph(RtDataSource<Float, Integer> rtDataSource) {
-        //No-op
-    }
-
-    @Override
-    public void observeBandwidth(BandwidthObserver observer) {
-        if (interactionCallback != null) {
-            interactionCallback.observeBandwidth(observer);
-        }
-    }
-
-    @Override
-    public void cancelTests() {
-        if (interactionCallback != null) {
-            interactionCallback.cancelTestsResponse();
-        }
-    }
-
-    @Override
-    public void showUserActionOptions(List<Integer> userResponseTypes) {
-        if (interactionCallback != null) {
-            interactionCallback.showUserActionOptions(userResponseTypes);
-        }
-    }
-
-    @Override
-    public void showBandwidthViewCard(DataInterpreter.BandwidthGrade bandwidthGrade) {
-        if (interactionCallback != null) {
-            interactionCallback.showBandwidthViewCard(bandwidthGrade);
-        }
-    }
-
-    @Override
-    public void showNetworkInfoViewCard(DataInterpreter.WifiGrade wifiGrade, String isp, String ip) {
-        if (interactionCallback != null) {
-            interactionCallback.showNetworkInfoViewCard(wifiGrade, isp, ip);
-        }
-        expertChatService.pushBotChatMessage(wifiGrade.userReadableInterpretation());
-    }
-
-    @Override
-    public void showDetailedSuggestions(SuggestionCreator.Suggestion suggestion) {
-        if (interactionCallback != null) {
-            interactionCallback.showDetailedSuggestions(suggestion);
-        }
-    }
-
-    @Override
-    public void contactExpertAndGetETA() {
-        //Showing ETA to user
-        if (currentEtaSeconds > 0) {
-            interactionCallback.showStatusUpdate(context.getString(R.string.contacting_and_getting_eta));
-            interactionCallback.showStatusUpdate(getEtaMessage());
-        } else {
-            showStatus(context.getString(R.string.continue_expert_chat));
-        }
-        sendInitialMessageToExpert();
-        updateExpertIndicator();
-    }
-
-    @Override
-    public void onUserMessageAvailable(String text, boolean isButtonText) {
-        DobbyLog.v("Pushing out user message " + text);
-        expertChatService.pushUserChatMessage(text, isButtonText);
-    }
-
-    @Override
-    public void showStatus(String text) {
-        if (interactionCallback != null) {
-            interactionCallback.showStatusUpdate(text);
-        }
-    }
-
-    @Override
-    public void switchedToExpertMode() {
-        saveSwitchedToExpertMode();
-        updateExpertIndicator();
-    }
-
-    @Override
-    public void switchedToBotMode() {
-        saveSwitchedToBotMode();
-        updateExpertIndicator();
-    }
-
-    @Override
-    public void switchedToExpertIsListeningMode() {
-        updateExpertIndicator();
-    }
-
-    @Override
-    public void userAskedForExpert() {
-        updateExpertIndicator();
-    }
-
-
-    @Override
-    public void expertActionStarted() {
-        expertChatService.sendActionStartedMessage();
-    }
-
-    @Override
-    public void expertActionCompleted() {
-        expertChatService.sendActionCompletedMessage();
-    }
-
-    */
-
     public boolean isFirstChatAfterInstall() {
         return expertChatService.isFirstChatAfterInstall();
     }
@@ -483,24 +376,6 @@ public class UserInteractionManager implements
         //Contacting expert
         expertChatService.triggerContactWithHumanExpert("Expert help needed here");
     }
-
-//    private void updateExpertIndicator() {
-//        if (interactionCallback != null) {
-//            if (dobbyAi.getIsExpertListening()) {
-//                interactionCallback.updateExpertIndicator(context.getString(R.string.you_are_now_talking_to_human_expert));
-//            } else if (dobbyAi.getIsChatInExpertMode()){
-//                if (currentEtaSeconds > 0) {
-//                    interactionCallback.updateExpertIndicator(getEtaMessage());
-//                } else {
-//                    interactionCallback.updateExpertIndicator(context.getString(R.string.contacting_human_expert));
-//                }
-//            } else if (dobbyAi.getUserAskedForExpertMode() && !dobbyAi.getIsChatInExpertMode()){
-//                interactionCallback.updateExpertIndicator(context.getString(R.string.pre_human_contact_tests));
-//            } else {
-//                interactionCallback.hideExpertIndicator();
-//            }
-//        }
-//    }
 
 
     private void saveSwitchedToBotMode() {
@@ -539,6 +414,7 @@ public class UserInteractionManager implements
             expertChatService.fetchChatMessages();
         }
     }
+
 
     //Neo callbacks
     @Override

@@ -1,12 +1,17 @@
-package com.inceptai.wifiexpertsystem.utils;
+package com.inceptai.wifiexpertsystem.actions.ui;
 
 import android.content.Context;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
+import com.inceptai.neopojos.ActionDetails;
 import com.inceptai.neoservice.NeoService;
+import com.inceptai.neoservice.uiactions.UIActionResult;
 import com.inceptai.wifiexpertsystem.DobbyApplication;
 import com.inceptai.wifiexpertsystem.DobbyThreadPool;
 import com.inceptai.wifiexpertsystem.config.RemoteConfig;
+import com.inceptai.wifiexpertsystem.utils.DobbyLog;
+import com.inceptai.wifiexpertsystem.utils.Utils;
 
 import java.util.concurrent.Executor;
 
@@ -17,6 +22,8 @@ public class NeoServiceClient {
     private static final String DEFAULT_NEO_SERVER_ADDRESS = "ws://dobby1743.duckdns.org:8080/";
     private static final String PREF_SERVER_ADDRESS = "neo_server_address";
     private static final int MAX_CHARACTERS_FOR_STATUS = 120;
+    public static final String SETTINGS_APP_NAME = "settings";
+
     private RemoteConfig remoteConfig;
     private Executor executor;
     private Context context;
@@ -24,18 +31,18 @@ public class NeoServiceClient {
     private NeoService.Callback neoServiceCallback;
 
     public NeoServiceClient(RemoteConfig remoteConfig,
-                            DobbyThreadPool dobbyThreadPool,
+                            DobbyThreadPool dobbyThreadpool,
                             DobbyApplication dobbyApplication,
                             NeoService.Callback neoServiceCallback) {
         this.remoteConfig = remoteConfig;
-        executor = dobbyThreadPool.getExecutor();
+        executor = dobbyThreadpool.getExecutor();
         context = dobbyApplication.getApplicationContext();
         DobbyLog.v("UIM: Starting neoService with server: " + remoteConfig.getNeoServer() + " and UUID " + dobbyApplication.getUserUuid());
         neoService = new NeoService(getServerAddress(), dobbyApplication.getUserUuid(), context, neoServiceCallback);
     }
 
-    public void startService() {
-        neoService.startService();
+    public void startService(boolean enableOverlay) {
+        neoService.startService(enableOverlay);
     }
 
     public void stopService() {
@@ -46,7 +53,7 @@ public class NeoServiceClient {
         if (neoService.isServiceRunning()) {
             stopService();
         } else {
-            startService();
+            startService(true);
         }
     }
 
@@ -60,6 +67,17 @@ public class NeoServiceClient {
         }
     }
 
+    public SettableFuture fetchAndPerformTopUIActions(String query, String appName, boolean forceAppRelaunch) {
+        return neoService.fetchAndPerformTopUIAction(query, appName, forceAppRelaunch);
+    }
+
+    public SettableFuture<UIActionResult> fetchUIActionsForSettings(String query) {
+        return neoService.fetchUIActionForSettings(query);
+    }
+
+    public SettableFuture performUIActionForSettings(ActionDetails actionDetails) {
+        return neoService.performUIActionForSettings(actionDetails);
+    }
 
     public void takeUserToAccessibilitySettings() {
         NeoService.showAccessibilitySettings(context);
@@ -99,4 +117,5 @@ public class NeoServiceClient {
             }
         }, executor);
     }
+
 }

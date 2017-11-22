@@ -16,7 +16,7 @@
         android:allowBackup="true"
         android:fullBackupContent="true"
         android:icon="@mipmap/wifi_expert_launcher"
-        android:label="@string/wifi_expert_name"
+        android:label="@string/neo_app_name"
         android:roundIcon="@mipmap/wifi_expert_launcher"
         android:supportsRtl="true"
         android:theme="@style/AppTheme.NoActionBar">

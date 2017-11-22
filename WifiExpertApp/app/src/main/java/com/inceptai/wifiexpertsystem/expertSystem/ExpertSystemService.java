@@ -24,12 +24,13 @@ import java.util.concurrent.ExecutorService;
  * Created by vivek on 8/5/17.
  */
 
-public class ExpertSystemService  {
+public class ExpertSystemService {
     private ExpertSystemCallback callback;
     private ExecutorService executorService;
 
+
     public interface ExpertSystemCallback {
-        void onActionRequested(ActionRequest actionRequest);
+        void onActionRequested(String actionQuery);
         void onExpertMessage(ExpertMessage expertMessage);
     }
 
@@ -38,13 +39,15 @@ public class ExpertSystemService  {
                         @NonNull ExpertSystemCallback callback) {
         this.callback = callback;
         this.executorService = executorService;
+
     }
 
     //Public methods
     void onUserMessage(UserMessage userMessage) {
         //process user message
-        ActionRequest actionRequest = parseMessageAndTakeActions(userMessage.getMessage());
-        callback.onActionRequested(actionRequest);
+        callback.onActionRequested(userMessage.getMessage());
+//        ActionRequest actionRequest = parseMessageAndTakeActions(userMessage.getMessage());
+//        callback.onActionRequested(actionRequest);
     }
 
     public void actionStarted(Action action) {
@@ -118,6 +121,50 @@ public class ExpertSystemService  {
     }
 
     private ActionRequest parseMessageAndTakeActions(String message) {
+        ActionRequest actionRequest = null;
+        if (message.toLowerCase().contains("wifiscan") || message.toLowerCase().contains("wifinearby")) {
+            actionRequest = ActionRequest.getNearbyWifiNetworksRequest(0);
+        } else if (message.toLowerCase().contains("wifioff")) {
+            actionRequest = ActionRequest.turnWifiOffRequest(0);
+        } else if (message.toLowerCase().contains("wifion")) {
+            actionRequest = ActionRequest.turnWifiOnRequest(0);
+        } else if (message.toLowerCase().contains("wifitoggle")) {
+            actionRequest = ActionRequest.toggleWifiRequest(0);
+        } else if (message.toLowerCase().contains("wifidisconnect")) {
+            actionRequest = ActionRequest.disconnectWithCurrentWifiNetworkRequest(0);
+        } else if (message.toLowerCase().contains("wifireset")) {
+            actionRequest = ActionRequest.resetConnectionWithCurrentWifiRequest(0);
+        } else if (message.toLowerCase().contains("wificonfigured") &&
+                !message.toLowerCase().contains("best")) {
+            actionRequest = ActionRequest.getBestConfiguredNetworksRequest(0);
+        } else if (message.toLowerCase().contains("wificonfigured") &&
+                message.toLowerCase().contains("best")) {
+            actionRequest = ActionRequest.getBestConfiguredNetworkRequest(0);
+        } else if (message.toLowerCase().contains("check5ghz")) {
+            actionRequest = ActionRequest.check5GHzRequest(0);
+        } else if (message.toLowerCase().contains("wificonnect")) {
+            actionRequest = ActionRequest.resetConnectionWithCurrentWifiRequest(0);
+        } else if (message.toLowerCase().contains("wifidhcp")) {
+            actionRequest = ActionRequest.getDhcpInfoRequest(0);
+        } else if (message.toLowerCase().contains("wifiinfo")) {
+            actionRequest = ActionRequest.getWifiInfoRequest(0);
+        } else if (message.toLowerCase().contains("wifirepair")) {
+            actionRequest = ActionRequest.iterateAndRepairWifiNetworkRequest(0);
+        } else if (message.toLowerCase().contains("connectiontest")) {
+            actionRequest = ActionRequest.performConnectivityTestRequest(0);
+        }  else if (message.toLowerCase().contains("bwtest") && !message.toLowerCase().contains("cancel")) {
+            actionRequest = ActionRequest.performBandwidthTestRequest(ActionLibraryCodes.BandwidthTestMode.DOWNLOAD_AND_UPLOAD, 40000);
+        } else if (message.toLowerCase().contains("cancel")) {
+            actionRequest = ActionRequest.cancelBandwidthTestsRequest(1000);
+        } else if (message.toLowerCase().contains("pingtest")) {
+            actionRequest = ActionRequest.performPingForDhcpInfoRequest(0);
+        } else if (message.toLowerCase().contains("overall")) {
+            actionRequest = ActionRequest.getOverallInfoRequest(0);
+        }
+        return actionRequest;
+    }
+
+    private ActionRequest parseMessageAndTakeUIActions(String message) {
         ActionRequest actionRequest = null;
         if (message.toLowerCase().contains("wifiscan") || message.toLowerCase().contains("wifinearby")) {
             actionRequest = ActionRequest.getNearbyWifiNetworksRequest(0);

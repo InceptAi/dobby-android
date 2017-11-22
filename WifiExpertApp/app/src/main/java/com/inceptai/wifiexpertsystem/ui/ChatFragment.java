@@ -154,7 +154,7 @@ public class ChatFragment extends Fragment implements Handler.Callback {
          * Called when user enters a text.
          * @param text
          */
-        void onUserQuery(String text, boolean isButtonActionText);
+        void onUserQuery(String text, boolean isStructuredResponse, int responseId);
         void onMicPressed();
         void onRecyclerViewReady();
         void onFragmentGone();
@@ -222,12 +222,12 @@ public class ChatFragment extends Fragment implements Handler.Callback {
                 }
                 if (actionId == EditorInfo.IME_NULL && event.getAction() == KeyEvent.ACTION_DOWN) {
                     DobbyLog.i("ENTER 1");
-                    processTextQuery(text, false);
+                    processTextQuery(text);
                 } else if (actionId == EditorInfo.IME_ACTION_DONE ||
                         actionId == EditorInfo.IME_ACTION_GO ||
                         actionId == EditorInfo.IME_ACTION_NEXT) {
                     DobbyLog.i("ENTER 2");
-                    processTextQuery(text, false);
+                    processTextQuery(text);
                 }
                 queryEditText.getText().clear();
                 return false;
@@ -742,35 +742,43 @@ public class ChatFragment extends Fragment implements Handler.Callback {
             button.setMinWidth(0);
             button.setClickable(true);
             button.setAllCaps(false);
+            //Make the actions prominent
+            button.setBackgroundResource(R.drawable.rounded_shape_action_button_contact_expert);
+            button.setTextColor(Color.DKGRAY); // light gray
 
-            if (structuredUserResponse.getResponseType() == StructuredUserResponse.ResponseType.CONTACT_HUMAN_EXPERT) {
-                button.setBackgroundResource(R.drawable.rounded_shape_action_button_contact_expert);
-                button.setTextColor(Color.DKGRAY); // light gray
-            } else {
-                button.setBackgroundResource(R.drawable.rounded_shape_action_button);
-                button.setTextColor(Color.LTGRAY); // light gray
-            }
+//            if (structuredUserResponse.getResponseType() == StructuredUserResponse.ResponseType.CONTACT_HUMAN_EXPERT) {
+//                button.setBackgroundResource(R.drawable.rounded_shape_action_button_contact_expert);
+//                button.setTextColor(Color.DKGRAY); // light gray
+//            } else {
+//                button.setBackgroundResource(R.drawable.rounded_shape_action_button);
+//                button.setTextColor(Color.LTGRAY); // light gray
+//            }
 
 
             button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     logUserResponseButtonClickedEvent(structuredUserResponse.getResponseType());
-                    processTextQuery(buttonText, true);
+                    processTextQuery(buttonText, true, structuredUserResponse.getResponseId());
                 }
             });
             actionMenu.addView(button);
         }
     }
 
-    private void processTextQuery(String text, boolean isButtonActionText) {
+
+    private void processTextQuery(String text) {
+        processTextQuery(text, false, 0);
+    }
+
+    private void processTextQuery(String text, boolean isStructuredResponse, int responseId) {
         //Ignore empty strings
         if (text.equals(Utils.EMPTY_STRING)) {
             return;
         }
         useVoiceOutput = false;
         if (mListener != null) {
-            mListener.onUserQuery(text, isButtonActionText);
+            mListener.onUserQuery(text, isStructuredResponse, responseId);
         }
     }
 

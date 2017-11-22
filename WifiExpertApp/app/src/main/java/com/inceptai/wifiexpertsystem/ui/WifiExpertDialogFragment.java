@@ -216,7 +216,7 @@ public class WifiExpertDialogFragment extends DialogFragment {
 
 
     private Dialog createAccessibilityPermissionRequestDialog(Bundle bundle) {
-        Preconditions.checkArgument(BuildConfig.FLAVOR.equals(WIFIEXPERT_FLAVOR));
+        Preconditions.checkArgument(BuildConfig.FLAVOR.equalsIgnoreCase(WIFIEXPERT_FLAVOR));
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = getActivity().getLayoutInflater();
         rootView = inflater.inflate(R.layout.accessibility_permission_dialog_fragment, null);

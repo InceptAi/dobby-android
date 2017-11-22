@@ -153,7 +153,7 @@ public class UserInteractionManagerCallbackThreadSwitcher implements UserInterac
     @Override
     public void requestAccessibilityPermission() {
         //Don't wrap this one
-        requestAccessibilityPermission();
+        resultsCallback.requestAccessibilityPermission();
     }
 
     @Override
