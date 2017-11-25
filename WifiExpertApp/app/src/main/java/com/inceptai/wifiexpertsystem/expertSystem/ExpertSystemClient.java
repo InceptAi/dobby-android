@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by vivek on 8/4/17.
@@ -29,6 +30,7 @@ public class ExpertSystemClient implements
         ActionTaker.ActionTakerCallback {
 
 
+    private static final long DELAY_BEFORE_SCREEN_TRANSITION_MS = 500;
     private static final String[] SUCCESS_MESSAGE_LIST = {
             "Done! What else can I help with ?",
             "Hooray, done with this one",
@@ -38,6 +40,7 @@ public class ExpertSystemClient implements
             "Done with this one :)"
     };
 
+
     private ExpertSystemService expertSystemService;
     private String userId;
     private Context context;
@@ -46,6 +49,7 @@ public class ExpertSystemClient implements
     private ActionTaker actionTaker;
     private NeoServiceClient neoServiceClient;
     private HashMap<Integer, ActionDetails> actionDetailsHashMap;
+    private ScheduledExecutorService scheduledExecutorService;
 
     public interface ExpertSystemClientCallback {
         void onExpertMessage(ExpertMessage expertMessage);
@@ -61,6 +65,7 @@ public class ExpertSystemClient implements
         this.expertSystemClientCallback = expertSystemClientCallback;
         this.executorService = executorService;
         this.neoServiceClient = neoServiceClient;
+        this.scheduledExecutorService = scheduledExecutorService;
         actionTaker = new ActionTaker(
                 context, executorService,
                 listeningScheduledExecutorService,
@@ -68,6 +73,8 @@ public class ExpertSystemClient implements
                 neoServiceClient, this);
         expertSystemService = new ExpertSystemService(userId, context, executorService, this);
         actionDetailsHashMap = new HashMap<>();
+        //Generate initial command list and send to chat fragment
+
     }
 
 
@@ -124,10 +131,21 @@ public class ExpertSystemClient implements
             DobbyLog.v("ESXXX API action result: " + UIActionResult.isSuccessful(uiActionResult));
             if (UIActionResult.failedDueToAccessibilityIssue(uiActionResult)) {
                 //launch accessibility permission and try this command again
-                startNeoServiceWithStreaming(false);
+                scheduledExecutorService.schedule(new Runnable() {
+                    @Override
+                    public void run() {
+                        startNeoServiceWithStreaming(false);
+                    }
+                }, DELAY_BEFORE_SCREEN_TRANSITION_MS, TimeUnit.MILLISECONDS);
             } else {
                 //bring the user back into the app after UIAction finishes.
-                Utils.launchWifiExpertMainActivity(context.getApplicationContext());
+                //put a delay here so user can see the action finishing
+                scheduledExecutorService.schedule(new Runnable() {
+                    @Override
+                    public void run() {
+                        Utils.launchWifiExpertMainActivity(context.getApplicationContext());
+                    }
+                }, DELAY_BEFORE_SCREEN_TRANSITION_MS, TimeUnit.MILLISECONDS);
                 //Utils.resumeWifiExpertMainActivity(context.getApplicationContext());
             }
         }
@@ -199,4 +217,6 @@ public class ExpertSystemClient implements
         }
         return structuredUserResponses;
     }
+
+
 }

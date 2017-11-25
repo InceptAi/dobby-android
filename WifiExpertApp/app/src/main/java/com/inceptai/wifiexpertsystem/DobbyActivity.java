@@ -74,7 +74,7 @@ public class DobbyActivity extends AppCompatActivity
 
     private static final boolean SHOW_CONTACT_HUMAN_BUTTON = true;
     private static final boolean ENABLE_WIFI_MONITORING_SERVICE = false;
-
+    private static final boolean ENABLE_OVERLAY_PERMISSION = true;
 
     private UserInteractionManager userInteractionManager;
     @Inject
@@ -88,6 +88,7 @@ public class DobbyActivity extends AppCompatActivity
     private NeoCustomIntentReceiver neoCustomIntentReceiver;
     private boolean askedForOverlayPermission;
     private boolean needOverlayPermission;
+    private boolean askedForAccessibilityPermission;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -119,7 +120,7 @@ public class DobbyActivity extends AppCompatActivity
             DobbyLog.v("Finishing since this is not root task");
             return;
         }
-
+        askedForAccessibilityPermission = false;
         needOverlayPermission = false;
         userInteractionManager = new UserInteractionManager(getApplicationContext(), this, SHOW_CONTACT_HUMAN_BUTTON);
         heartBeatManager.setDailyHeartBeat();
@@ -327,8 +328,8 @@ public class DobbyActivity extends AppCompatActivity
 
     //From chatFragment onInteractionListener
     @Override
-    public void onUserQuery(String text, boolean isStructuredResponse, int responseId) {
-        userInteractionManager.onUserQuery(text, isStructuredResponse, responseId);
+    public void onUserQuery(String text, boolean isStructuredResponse, @StructuredUserResponse.ResponseType int responseType, int responseId) {
+        userInteractionManager.onUserQuery(text, isStructuredResponse, responseType, responseId);
     }
 
 
@@ -422,7 +423,7 @@ public class DobbyActivity extends AppCompatActivity
                 if (chatFragment != null) {
                     chatFragment.addSpokenText(inSpeech);
                 }
-                onUserQuery(inSpeech, false, 0);
+                onUserQuery(inSpeech, false, StructuredUserResponse.ResponseType.UNKNOWN, 0);
             }
         } else {
             super.onActivityResult(requestCode, resultCode, data);
@@ -507,8 +508,13 @@ public class DobbyActivity extends AppCompatActivity
     public void onRecyclerViewReady() {
         //Get the welcome message
         DobbyLog.v("DobbyActivity:onRecyclerViewReady");
+        if (!NeoUiActionsService.isAccessibilityPermissionGranted(DobbyActivity.this) &&
+                !askedForAccessibilityPermission) {
+            askedForAccessibilityPermission = true;
+            showAccessibilityPermissionDialog();
+        }
         //showLocationPermissionRequest();
-        showLocationAndOverdrawPermissionRequest();
+        //showLocationAndOverdrawPermissionRequest();
     }
 
     @Override

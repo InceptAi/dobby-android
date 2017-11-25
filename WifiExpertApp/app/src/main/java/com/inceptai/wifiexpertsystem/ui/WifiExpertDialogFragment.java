@@ -214,7 +214,6 @@ public class WifiExpertDialogFragment extends DialogFragment {
     }
 
 
-
     private Dialog createAccessibilityPermissionRequestDialog(Bundle bundle) {
         Preconditions.checkArgument(BuildConfig.FLAVOR.equalsIgnoreCase(WIFIEXPERT_FLAVOR));
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());

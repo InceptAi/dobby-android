@@ -122,6 +122,12 @@ public class StructuredUserResponse {
         this.responseType = getResponseTypeFromString(message);
     }
 
+    public StructuredUserResponse(String message, @ResponseType int responseType, int responseId) {
+        this.responseString = message;
+        this.responseType = responseType;
+        this.responseId = responseId;
+    }
+
     public StructuredUserResponse(String message, int responseId) {
         this.responseString = message;
         this.responseType = ResponseType.UI_ACTION_RESPONSE;

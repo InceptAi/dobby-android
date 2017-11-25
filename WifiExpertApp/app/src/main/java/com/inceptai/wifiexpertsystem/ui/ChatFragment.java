@@ -44,6 +44,7 @@ import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLibraryCodes
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -154,7 +155,7 @@ public class ChatFragment extends Fragment implements Handler.Callback {
          * Called when user enters a text.
          * @param text
          */
-        void onUserQuery(String text, boolean isStructuredResponse, int responseId);
+        void onUserQuery(String text, boolean isStructuredResponse, @StructuredUserResponse.ResponseType int responseType, int responseId);
         void onMicPressed();
         void onRecyclerViewReady();
         void onFragmentGone();
@@ -721,10 +722,33 @@ public class ChatFragment extends Fragment implements Handler.Callback {
         }
     }
 
+    private String insertNewLineInLongString(String longString, int minCharactersBetweenBreak) {
+        List<String> longStringWords = Arrays.asList(longString.split(" "));
+        List<String> listToReturn = new ArrayList<>();
+        int totalCharacters = 0;
+        for (String word: longStringWords) {
+            totalCharacters = totalCharacters + word.length();
+            listToReturn.add(word);
+            if (totalCharacters > minCharactersBetweenBreak) {
+                listToReturn.add("\n");
+                totalCharacters = 0;
+            }
+        }
+        StringBuilder newLineStringBuilder = new StringBuilder();
+        for (String word: listToReturn) {
+            newLineStringBuilder.append(word);
+            newLineStringBuilder.append(" ");
+        }
+        return newLineStringBuilder.toString();
+    }
+
+
     private void showUserActionButtons(List<StructuredUserResponse> structuredUserResponses) {
+        final int MIN_CHARACTERS_BEFORE_NEWLINE = 20;
         actionMenu.removeAllViewsInLayout();
         for (final StructuredUserResponse structuredUserResponse: structuredUserResponses) {
-            final String buttonText = structuredUserResponse.getResponseString();
+            final String buttonText = insertNewLineInLongString(structuredUserResponse.getResponseString(), MIN_CHARACTERS_BEFORE_NEWLINE);
+            //Put a new line after every 4 words
             //Returning if context is null
             if (buttonText == null || buttonText.equals(Utils.EMPTY_STRING) || getContext() == null) {
                 continue;
@@ -759,7 +783,7 @@ public class ChatFragment extends Fragment implements Handler.Callback {
                 @Override
                 public void onClick(View v) {
                     logUserResponseButtonClickedEvent(structuredUserResponse.getResponseType());
-                    processTextQuery(buttonText, true, structuredUserResponse.getResponseId());
+                    processTextQuery(structuredUserResponse.getResponseString(), true, structuredUserResponse.getResponseType(), structuredUserResponse.getResponseId());
                 }
             });
             actionMenu.addView(button);
@@ -768,17 +792,17 @@ public class ChatFragment extends Fragment implements Handler.Callback {
 
 
     private void processTextQuery(String text) {
-        processTextQuery(text, false, 0);
+        processTextQuery(text, false, StructuredUserResponse.ResponseType.UNKNOWN, 0);
     }
 
-    private void processTextQuery(String text, boolean isStructuredResponse, int responseId) {
+    private void processTextQuery(String text, boolean isStructuredResponse, @StructuredUserResponse.ResponseType int responseType, int responseId) {
         //Ignore empty strings
         if (text.equals(Utils.EMPTY_STRING)) {
             return;
         }
         useVoiceOutput = false;
         if (mListener != null) {
-            mListener.onUserQuery(text, isStructuredResponse, responseId);
+            mListener.onUserQuery(text, isStructuredResponse, responseType, responseId);
         }
     }
 

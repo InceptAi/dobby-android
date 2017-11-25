@@ -6,7 +6,7 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
     <string name="action_settings">Settings</string>
-    <string name="chat_hint">Type a query about your network ...</string>
+    <string name="chat_hint">Type what action you want to take ...</string>
     <string name="dobby_name">Dobby</string>
     <string name="dobby_email">Contact: dobby@obiai.tech</string>
     <string name="user_chat_text">Your message here.</string>

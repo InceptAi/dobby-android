@@ -26,6 +26,7 @@ import com.inceptai.wifimonitoringservice.actionlibrary.NetworkLayer.wifi.WifiNe
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.Action;
 import com.inceptai.wifimonitoringservice.actionlibrary.actions.ObservableAction;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -52,6 +53,12 @@ public class UserInteractionManager implements
     private static final long MAX_TIME_ELAPSED_FOR_RESUMING_EXPERT_MODE_MS = AlarmManager.INTERVAL_DAY;
     private static final long DELAY_BEFORE_WELCOME_MESSAGE_MS = 500;
     private static final long ACCESSIBILITY_SETTING_CHECKER_TIMEOUT_MS = 30000;
+
+    public static final String[] INITIAL_COMMAND_LIST = {
+            "Bluetooth on",
+            "Battery saver on",
+            "Turn off cellular data"
+    };
 
     private long currentEtaSeconds;
     private InteractionCallback interactionCallback;
@@ -191,10 +198,10 @@ public class UserInteractionManager implements
         }
     }
 
-    public void onUserQuery(String text, boolean isStructuredResponse, int responseId) {
+    public void onUserQuery(String text, boolean isStructuredResponse, @StructuredUserResponse.ResponseType int responseType, int responseId) {
         UserMessage userMessage = null;
-        if (isStructuredResponse) {
-            userMessage = new UserMessage(new StructuredUserResponse(text, responseId));
+        if (isStructuredResponse && responseType != StructuredUserResponse.ResponseType.UNKNOWN) {
+            userMessage = new UserMessage(new StructuredUserResponse(text, responseType, responseId));
         } else {
             userMessage = new UserMessage(text);
         }
@@ -219,7 +226,11 @@ public class UserInteractionManager implements
                                         final boolean resumeWithWelcomeMessage) {
         final boolean resumingInExpertMode = checkSharedPrefForExpertModeResume();
         DobbyLog.v("UIM:onFirstTimeResumed");
-        interactionCallback.showExpertResponse("Welcome !");
+        interactionCallback.showExpertResponse("Hi, this is Neo. I can help you with managing your settings. You can type stuff like:");
+        interactionCallback.showExpertResponse("Turn on bluetooth");
+        interactionCallback.showExpertResponse("Turn on battery saver");
+        interactionCallback.showExpertResponse("Turn off cellular data");
+        interactionCallback.showUserActionOptions(generateInitialStructuredResponse());
     }
 
     public void onAccessibilityPermissionGranted(boolean enableOverlay) {
@@ -511,4 +522,12 @@ public class UserInteractionManager implements
 
     }
 
+    private List<StructuredUserResponse> generateInitialStructuredResponse() {
+        List<StructuredUserResponse> structuredUserResponses = new ArrayList<>();
+        for (String command: INITIAL_COMMAND_LIST) {
+            StructuredUserResponse structuredUserResponse = new StructuredUserResponse(command, StructuredUserResponse.ResponseType.UNKNOWN, 0);
+            structuredUserResponses.add(structuredUserResponse);
+        }
+        return structuredUserResponses;
+    }
 }
