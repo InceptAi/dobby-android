@@ -14,7 +14,7 @@
 
         <ImageView
             android:layout_width="wrap_content"
-            android:src="@mipmap/wifi_expert_launcher"
+            android:src="@mipmap/ic_launcher"
             android:layout_gravity="left"
             android:layout_height="wrap_content" />
 

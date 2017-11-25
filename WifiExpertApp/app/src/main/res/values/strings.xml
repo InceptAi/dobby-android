@@ -138,7 +138,7 @@
     <string name="onboarding_service_desc2">You can also disable Automatic Repair and just manually repair your WiFi. No more WiFi frustrations !</string>
     <string name="location_approval_text">Location permission allows us to collect Wifi Scan data to understand the issues.</string>
     <string name="overdraw_approval_text">Overlay permission allows us to inform you when we are actively working on fixing issues.</string>
-    <string name="accessibility_permission_approval_title">Approval for Accessibility permission</string>
-    <string name="accessibility_permission_approval_text">Accessibility permission will allow the expert to take actions on your device to fix the issues. </string>
+    <string name="accessibility_permission_approval_title">Neo needs Accessibility Permission to take actions.</string>
+    <string name="accessibility_permission_approval_text">This permission will allow Neo to take complex actions on your device with a simple chat command.</string>
     <string name="neo_app_name">Neo</string>
 </resources>
