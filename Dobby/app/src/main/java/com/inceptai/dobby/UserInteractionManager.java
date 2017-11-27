@@ -245,6 +245,12 @@ public class UserInteractionManager implements
 
     //Action Taker callbacks
 
+
+    @Override
+    public void actionsAvailable(List<ActionDetails> actionDetailsList, int statusCode) {
+
+    }
+
     @Override
     public void actionStarted(String query, String appPackageName) {
         DobbyLog.v("ESXXXX Action started: query: " + query + " app: " + appPackageName);
@@ -283,7 +289,7 @@ public class UserInteractionManager implements
 
     @Override
     public void fetchUIActionsForQuery(String query, String appName) {
-        neoServiceClient.fetchUIActions(query, appName, true);
+        neoServiceClient.fetchAndPerformTopUIActions(query, appName, true);
     }
 
     @Override
@@ -366,8 +372,6 @@ public class UserInteractionManager implements
 
 
     //Dobby Ai callbacks
-
-
     @Override
     public void userSaysAppIsHelpful() {
         maybeAskForRating();
@@ -411,6 +415,11 @@ public class UserInteractionManager implements
     public void stopWifiMonitoringService() {
         wifiMonitoringServiceClient.disableWifiService();
 
+    }
+
+    @Override
+    public void startNeoByUser() {
+        neoServiceClient.startService(false);
     }
 
     @Override
@@ -738,13 +747,14 @@ public class UserInteractionManager implements
         }
         sendServiceReadyMetaMessage();
         expertChatService.disableNotifications();
+        dobbyAi.onAccessibilityServiceReady();
         accessibilityPermissionDenied = false;
-        if (!Utils.nullOrEmpty(pendingAction)) {
-            //retry pending action
-            takeExpertSystemAction(pendingAction, pendingActionPackageName);
-            pendingAction = Utils.EMPTY_STRING;
-            pendingActionPackageName = Utils.EMPTY_STRING;
-        }
+//        if (!Utils.nullOrEmpty(pendingAction)) {
+//            //retry pending action
+//            takeExpertSystemAction(pendingAction, pendingActionPackageName);
+//            pendingAction = Utils.EMPTY_STRING;
+//            pendingActionPackageName = Utils.EMPTY_STRING;
+//        }
     }
 
     public UserInteractionManager() {

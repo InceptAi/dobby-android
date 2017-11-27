@@ -13,7 +13,29 @@ import com.inceptai.wifimonitoringservice.actionlibrary.utils.ActionLibraryCodes
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 
-import static com.inceptai.dobby.actions.ActionStrings.*;
+import static com.inceptai.dobby.actions.ActionStrings.ALWAYS_KEEP_WIFI_ON_DURING_SLEEP;
+import static com.inceptai.dobby.actions.ActionStrings.CANCEL_BW_TEST;
+import static com.inceptai.dobby.actions.ActionStrings.CHECK_IF_5GHZ_SUPPORTED;
+import static com.inceptai.dobby.actions.ActionStrings.DISCONNECT_CURRENT_WIFI;
+import static com.inceptai.dobby.actions.ActionStrings.GET_DHCP_INFO;
+import static com.inceptai.dobby.actions.ActionStrings.GET_WIFI_INFO;
+import static com.inceptai.dobby.actions.ActionStrings.ITERATE_AND_REPAIR_WIFI_NETWORK;
+import static com.inceptai.dobby.actions.ActionStrings.KEEP_WIFI_ON_DURING_SLEEP_WHEN_PLUGGED_IN;
+import static com.inceptai.dobby.actions.ActionStrings.NEVER_KEEP_WIFI_ON_DURING_SLEEP;
+import static com.inceptai.dobby.actions.ActionStrings.PERFORM_BW_TEST;
+import static com.inceptai.dobby.actions.ActionStrings.PERFORM_CONNECTIVITY_TEST;
+import static com.inceptai.dobby.actions.ActionStrings.PERFORM_PING_TEST;
+import static com.inceptai.dobby.actions.ActionStrings.RESET_NETWORK_SETTINGS;
+import static com.inceptai.dobby.actions.ActionStrings.RESET_WIFI_CONNECTION;
+import static com.inceptai.dobby.actions.ActionStrings.SCAN_WIFI_NETWORK;
+import static com.inceptai.dobby.actions.ActionStrings.SWITCH_TO_2GHZ_BAND;
+import static com.inceptai.dobby.actions.ActionStrings.SWITCH_TO_5GHZ_BAND;
+import static com.inceptai.dobby.actions.ActionStrings.SWITCH_TO_AUTOMATIC_BAND_SELECTION;
+import static com.inceptai.dobby.actions.ActionStrings.TOGGLE_WIFI;
+import static com.inceptai.dobby.actions.ActionStrings.TURN_BLUETOOTH_OFF;
+import static com.inceptai.dobby.actions.ActionStrings.TURN_BLUETOOTH_ON;
+import static com.inceptai.dobby.actions.ActionStrings.TURN_WIFI_OFF;
+import static com.inceptai.dobby.actions.ActionStrings.TURN_WIFI_ON;
 
 /**
  * Created by vivek on 11/15/17.

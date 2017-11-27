@@ -12,12 +12,14 @@ import java.util.List;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.ASK_ABOUT_DOBBY;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.CANCEL;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.CONTACT_HUMAN_EXPERT;
+import static com.inceptai.dobby.ai.UserResponse.ResponseType.KEEP_WIFI_ALWAYS_ON_DURING_SLEEP;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.LATER;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.LIST_ALL_FUNCTIONS;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.NO;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.NO_COMMENTS;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.NO_RESPONSE;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.REPAIRING;
+import static com.inceptai.dobby.ai.UserResponse.ResponseType.RESET_NETWORK_SETTINGS;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.START_WIFI_REPAIR;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS;
 import static com.inceptai.dobby.ai.UserResponse.ResponseType.RUN_BW_TESTS;
@@ -50,7 +52,9 @@ public class UserResponse {
             TURN_ON_WIFI_MONITORING,
             TURN_OFF_WIFI_MONITORING,
             REPAIRING,
-            LATER
+            LATER,
+            RESET_NETWORK_SETTINGS,
+            KEEP_WIFI_ALWAYS_ON_DURING_SLEEP
     })
 
 
@@ -73,6 +77,8 @@ public class UserResponse {
         int TURN_OFF_WIFI_MONITORING = 14;
         int REPAIRING = 15;
         int LATER = 16;
+        int RESET_NETWORK_SETTINGS = 17;
+        int KEEP_WIFI_ALWAYS_ON_DURING_SLEEP = 18;
     }
 
     /* User response to be shown, null for no response. */
@@ -137,6 +143,10 @@ public class UserResponse {
                 return "Repairing";
             case LATER:
                 return "Later";
+            case KEEP_WIFI_ALWAYS_ON_DURING_SLEEP:
+                return "Prevent WiFi disconnections";
+            case RESET_NETWORK_SETTINGS:
+                return "Reset Network Settings";
             case NO_RESPONSE:
             default:
                 return Utils.EMPTY_STRING;

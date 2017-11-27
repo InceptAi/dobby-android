@@ -23,6 +23,7 @@ import com.inceptai.dobby.speedtest.BandwidthResult;
 import com.inceptai.dobby.speedtest.BandwidthTestCodes;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
+import com.inceptai.neoservice.NeoUiActionsService;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,11 +37,14 @@ import javax.inject.Singleton;
 import ai.api.model.Result;
 
 import static com.inceptai.dobby.DobbyApplication.TAG;
+import static com.inceptai.dobby.actions.ui.NeoServiceClient.SETTINGS_APP_NAME;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_ASK_FOR_BW_TESTS;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_ASK_FOR_FEEDBACK;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_ASK_FOR_LONG_SUGGESTION;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_ASK_FOR_RESETTING_WIFI_NETWORK_SETTINGS;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_ASK_FOR_RESUMING_EXPERT_CHAT;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_ASK_FOR_WIFI_REPAIR;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_ASK_USER_FOR_ACCESSIBILITY_PERMISSION;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_ASK_USER_FOR_RATING_THE_APP;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_BANDWIDTH_PING_WIFI_TESTS;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_BANDWIDTH_TEST;
@@ -50,12 +54,14 @@ import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_CANCEL_TESTS_F
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_CONTACT_HUMAN_EXPERT;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_DEFAULT_FALLBACK;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_DIAGNOSE_SLOW_INTERNET;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_KEEP_WIFI_ON_DURING_SLEEP;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_LIST_DOBBY_FUNCTIONS;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_NEGATIVE_FEEDBACK;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_NONE;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_NO_FEEDBACK;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_POSITIVE_FEEDBACK;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_REPAIR_WIFI;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_RESET_NETWORK_SETTINGS;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_RUN_TESTS_FOR_EXPERT;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_SET_CHAT_TO_BOT_MODE;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_SHOW_LONG_SUGGESTION;
@@ -66,9 +72,12 @@ import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_UNKNOWN;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_UNSTRUCTURED_FEEDBACK;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_USER_ASKS_FOR_HUMAN_EXPERT;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_USER_SAYS_LATER_TO_RATING_THE_APP;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_USER_SAYS_NO_TO_ACCESSIBILITY_PERMISSION;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_USER_SAYS_NO_TO_RATING_THE_APP;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_USER_SAYS_YES_TO_ACCESSIBILITY_PERMISSION;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_USER_SAYS_YES_TO_RATING_THE_APP;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_USER_SAYS_YES_TO_REPAIR_RECOMMENDATION;
+import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_USER_SAYS_YES_TO_RESETTING_NETWORK_SETTING;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_WELCOME;
 import static com.inceptai.dobby.ai.Action.ActionType.ACTION_TYPE_WIFI_CHECK;
 
@@ -106,6 +115,7 @@ public class DobbyAi implements
     private boolean isExpertListening = false;
     private boolean showContactHumanButton = true;
     private boolean wifiServiceEnabled = true;
+    private @Action.ActionType int accessibilityPermissionTrigger;
 
 
     @Inject
@@ -138,6 +148,7 @@ public class DobbyAi implements
         void userAskedForExpert();
         void expertActionStarted();
         void expertActionCompleted();
+        void startNeoByUser();
         void startNeoByExpert();
         void stopNeoByExpert();
         void startWifiRepair();
@@ -167,7 +178,16 @@ public class DobbyAi implements
         }
         repeatBwWifiPingAction = new AtomicBoolean(false);
         lastAction = ACTION_TYPE_UNKNOWN;
+        accessibilityPermissionTrigger = ACTION_TYPE_UNKNOWN;
         initChatToBotState();
+    }
+
+    public int getAccessibilityPermissionTrigger() {
+        return accessibilityPermissionTrigger;
+    }
+
+    public void setAccessibilityPermissionTrigger(int accessibilityPermissionTrigger) {
+        this.accessibilityPermissionTrigger = accessibilityPermissionTrigger;
     }
 
     @Action.ActionType
@@ -205,8 +225,21 @@ public class DobbyAi implements
         }
     }
 
+    public void onAccessibilityServiceReady() {
+        //We got accessibility permission -- launch the pending action if any
+        if (accessibilityPermissionTrigger != ACTION_TYPE_UNKNOWN) {
+            Action actionTrigger = new Action(Utils.EMPTY_STRING, getAccessibilityPermissionTrigger());
+            setAccessibilityPermissionTrigger(ACTION_TYPE_UNKNOWN);
+            takeAction(actionTrigger);
+        }
+    }
+
     public void startMic() {
 
+    }
+
+    public void askForAccessibilityPermissionInChat() {
+        sendEvent(ApiAiClient.APIAI_ASK_FOR_ACCESSIBILITY_PERMISSION_EVENT);
     }
 
     public void askUserForRatingTheApp() {
@@ -482,6 +515,47 @@ public class DobbyAi implements
                     responseCallback.onUserSaysLaterToAppRating();
                 }
                 break;
+            case ACTION_TYPE_ASK_FOR_RESETTING_WIFI_NETWORK_SETTINGS:
+                break;
+            case ACTION_TYPE_USER_SAYS_YES_TO_RESETTING_NETWORK_SETTING:
+                if(!NeoUiActionsService.isAccessibilityPermissionGranted(context)) {
+                    //Ask for accessibility permission if we don't have the permission
+                    setAccessibilityPermissionTrigger(ACTION_TYPE_RESET_NETWORK_SETTINGS);
+                    sendEvent(ApiAiClient.APIAI_ASK_FOR_ACCESSIBILITY_PERMISSION_EVENT);
+                } else {
+                    //We have the permission, just execute the action
+                    Action resetNetworkSettingAction = new Action(Utils.EMPTY_STRING, ACTION_TYPE_RESET_NETWORK_SETTINGS);
+                    takeAction(resetNetworkSettingAction);
+                }
+                break;
+            case ACTION_TYPE_RESET_NETWORK_SETTINGS:
+                if (responseCallback != null) {
+                    responseCallback.takeExpertSystemAction("Reset network settings", SETTINGS_APP_NAME);
+                }
+                break;
+            case ACTION_TYPE_KEEP_WIFI_ON_DURING_SLEEP:
+                if(!NeoUiActionsService.isAccessibilityPermissionGranted(context)) {
+                    //Ask for accessibility permission if we don't have the permission
+                    setAccessibilityPermissionTrigger(ACTION_TYPE_KEEP_WIFI_ON_DURING_SLEEP);
+                    sendEvent(ApiAiClient.APIAI_ASK_FOR_ACCESSIBILITY_PERMISSION_EVENT);
+                } else {
+                    //We have the permission, just execute the action
+                    if (responseCallback != null) {
+                        responseCallback.takeExpertSystemAction("Keep wifi always on during sleep", SETTINGS_APP_NAME);
+                    }
+                }
+                break;
+            case ACTION_TYPE_ASK_USER_FOR_ACCESSIBILITY_PERMISSION:
+                break;
+            case ACTION_TYPE_USER_SAYS_YES_TO_ACCESSIBILITY_PERMISSION:
+                //Launch the last action which triggered the ask for permission
+                //Show accessibility permission dialog
+                if (responseCallback != null) {
+                    responseCallback.startNeoByExpert();
+                }
+                break;
+            case ACTION_TYPE_USER_SAYS_NO_TO_ACCESSIBILITY_PERMISSION:
+                break;
             default:
                 DobbyLog.i("Unknown FutureAction");
                 break;
@@ -674,6 +748,14 @@ public class DobbyAi implements
                 responseList.add(UserResponse.ResponseType.START_WIFI_REPAIR);
                 responseList.add(monitoringControlToShow());
                 break;
+            case ACTION_TYPE_ASK_FOR_RESETTING_WIFI_NETWORK_SETTINGS:
+                responseList.add(UserResponse.ResponseType.YES);
+                responseList.add(UserResponse.ResponseType.NO);
+                break;
+            case ACTION_TYPE_ASK_USER_FOR_ACCESSIBILITY_PERMISSION:
+                responseList.add(UserResponse.ResponseType.YES);
+                responseList.add(UserResponse.ResponseType.NO);
+                break;
             case ACTION_TYPE_WELCOME:
             case ACTION_TYPE_NONE:
             case ACTION_TYPE_UNKNOWN:
@@ -682,10 +764,11 @@ public class DobbyAi implements
             case ACTION_TYPE_CANCEL_BANDWIDTH_TEST:
             case ACTION_TYPE_SET_CHAT_TO_BOT_MODE:
             default:
-                //responseList.add(UserResponse.ResponseType.RUN_ALL_DIAGNOSTICS);
                 responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
-                responseList.add(UserResponse.ResponseType.RUN_WIFI_TESTS);
                 responseList.add(UserResponse.ResponseType.START_WIFI_REPAIR);
+                responseList.add(UserResponse.ResponseType.KEEP_WIFI_ALWAYS_ON_DURING_SLEEP);
+                responseList.add(UserResponse.ResponseType.RESET_NETWORK_SETTINGS);
+                responseList.add(UserResponse.ResponseType.RUN_WIFI_TESTS);
                 responseList.add(monitoringControlToShow());
                 break;
         }
@@ -723,6 +806,8 @@ public class DobbyAi implements
         if (responseList.isEmpty()) {
             responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
             responseList.add(UserResponse.ResponseType.START_WIFI_REPAIR);
+            responseList.add(UserResponse.ResponseType.KEEP_WIFI_ALWAYS_ON_DURING_SLEEP);
+            responseList.add(UserResponse.ResponseType.RESET_NETWORK_SETTINGS);
             responseList.add(monitoringControlToShow());
         }
 

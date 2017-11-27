@@ -9,7 +9,9 @@ import com.inceptai.dobby.DobbyThreadpool;
 import com.inceptai.dobby.RemoteConfig;
 import com.inceptai.dobby.utils.DobbyLog;
 import com.inceptai.dobby.utils.Utils;
+import com.inceptai.neopojos.ActionDetails;
 import com.inceptai.neoservice.NeoService;
+import com.inceptai.neoservice.uiactions.UIActionResult;
 
 import java.util.concurrent.Executor;
 
@@ -39,8 +41,8 @@ public class NeoServiceClient {
         neoService = new NeoService(getServerAddress(), dobbyApplication.getUserUuid(), context, neoServiceCallback);
     }
 
-    public void startService(boolean enableStreaming) {
-        neoService.startService(enableStreaming);
+    public void startService(boolean enableOverlay) {
+        neoService.startService(enableOverlay);
     }
 
     public void stopService() {
@@ -65,8 +67,16 @@ public class NeoServiceClient {
         }
     }
 
-    public SettableFuture fetchUIActions(String query, String appName, boolean forceAppRelaunch) {
-        return neoService.fetchUIActions(query, appName, forceAppRelaunch);
+    public SettableFuture fetchAndPerformTopUIActions(String query, String appName, boolean forceAppRelaunch) {
+        return neoService.fetchAndPerformTopUIAction(query, appName, forceAppRelaunch);
+    }
+
+    public SettableFuture<UIActionResult> fetchUIActionsForSettings(String query) {
+        return neoService.fetchUIActionForSettings(query);
+    }
+
+    public SettableFuture performUIActionForSettings(ActionDetails actionDetails) {
+        return neoService.performUIActionForSettings(actionDetails);
     }
 
     public void takeUserToAccessibilitySettings() {

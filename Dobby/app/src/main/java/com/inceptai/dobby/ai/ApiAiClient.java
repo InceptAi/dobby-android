@@ -42,6 +42,8 @@ public class ApiAiClient implements AIListener {
     static final String APIAI_SHOW_REPAIR_RECOMMENDATION_EVENT = "show_repair_recommendation_event";
     static final String APIAI_START_WIFI_REPAIR_EVENT = "start_wifi_repair_event";
     static final String APIAI_ASK_FOR_RATING_EVENT = "ask_user_for_rating_the_app_event";
+    static final String APIAI_ASK_FOR_ACCESSIBILITY_PERMISSION_EVENT = "ask_for_accessibility_permission_event";
+    static final String APIAI_ASK_FOR_RESET_NETWORK_SETTINGS_CONFIRMATION_EVENT = "confirm_reset_network_settings_event";
 
     //API AI actions
     private static final String APIAI_ACTION_DIAGNOSE_SLOW_INTERNET = "diagnose-slow-internet-action";
@@ -71,7 +73,12 @@ public class ApiAiClient implements AIListener {
     private static final String APIAI_ACTION_USER_SAYS_YES_TO_RATING_THE_APP = "user-says-yes-to-rating-the-app-action";
     private static final String APIAI_ACTION_USER_SAYS_NO_TO_RATING_THE_APP = "user-says-no-to-rating-the-app-action";
     private static final String APIAI_ACTION_USER_SAYS_LATER_TO_RATING_THE_APP = "user-says-later-to-rating-the-app-action";
-
+    private static final String APIAI_ACTION_USER_SAYS_YES_FOR_RESET_NETWORK_SETTINGS = "reset-network-settings-yes-action";
+    private static final String APIAI_ACTION_CONFIRM_WITH_USER_FOR_RESET_NETWORK_SETTINGS = "ask-for-reset-network-settings-action";
+    private static final String APIAI_ACTION_KEEP_WIFI_ON_DURING_SLEEP = "keep-wifi-on-during-sleep-action";
+    private static final String APIAI_ACTION_USER_SAYS_YES_FOR_ACCESSIBILITY_PERMISSION = "user-says-yes-for-accessibility-permission-action";
+    private static final String APIAI_ACTION_USER_SAYS_NO_FOR_ACCESSIBILITY_PERMISSION = "user-says-no-for-accessibility-permission-action";
+    private static final String APIAI_ACTION_ASK_USER_FOR_ACCESSIBILITY_PERMISSION = "ask-user-for-accessibility-permission-action";
 
     //private static final String CLIENT_ACCESS_TOKEN = "81dbd5289ee74637bf582fc3112b7dcb";
     private AIConfiguration aiConfiguration;
@@ -275,6 +282,13 @@ public class ApiAiClient implements AIListener {
             } else if (event.equals(APIAI_ACTION_REPAIR_WIFI)) {
                 actionToReturn = new Action("Sure, I will try to initiate WiFi repair for you. " +
                         "It can take between 20-30 sec ...", Action.ActionType.ACTION_TYPE_REPAIR_WIFI);
+            } else if (event.equals(APIAI_ACTION_USER_SAYS_YES_FOR_RESET_NETWORK_SETTINGS)) {
+                actionToReturn = new Action("Sure, I can reset your network settings. " +
+                        "It will clear out your saved networks and you will have to enter the password " +
+                        "manually for any networks you join", Action.ActionType.ACTION_TYPE_RESET_NETWORK_SETTINGS);
+            } else if (event.equals(APIAI_ACTION_KEEP_WIFI_ON_DURING_SLEEP)) {
+                actionToReturn = new Action("Sure, I can change the setting for " +
+                        "keeping WiFi always on during sleep", Action.ActionType.ACTION_TYPE_KEEP_WIFI_ON_DURING_SLEEP);
             }
         }
         DobbyLog.v("Sending action to listeners" + actionToReturn.getAction() + " with user response: " + actionToReturn.getUserResponse());
@@ -378,6 +392,24 @@ public class ApiAiClient implements AIListener {
                 break;
             case APIAI_ACTION_USER_SAYS_LATER_TO_RATING_THE_APP:
                 actionInt = Action.ActionType.ACTION_TYPE_USER_SAYS_LATER_TO_RATING_THE_APP;
+                break;
+            case APIAI_ACTION_CONFIRM_WITH_USER_FOR_RESET_NETWORK_SETTINGS:
+                actionInt = Action.ActionType.ACTION_TYPE_ASK_FOR_RESETTING_WIFI_NETWORK_SETTINGS;
+                break;
+            case APIAI_ACTION_USER_SAYS_YES_FOR_RESET_NETWORK_SETTINGS:
+                actionInt = Action.ActionType.ACTION_TYPE_USER_SAYS_YES_TO_RESETTING_NETWORK_SETTING;
+                break;
+            case APIAI_ACTION_ASK_USER_FOR_ACCESSIBILITY_PERMISSION:
+                actionInt = Action.ActionType.ACTION_TYPE_ASK_USER_FOR_ACCESSIBILITY_PERMISSION;
+                break;
+            case APIAI_ACTION_USER_SAYS_YES_FOR_ACCESSIBILITY_PERMISSION:
+                actionInt = Action.ActionType.ACTION_TYPE_USER_SAYS_YES_TO_ACCESSIBILITY_PERMISSION;
+                break;
+            case APIAI_ACTION_USER_SAYS_NO_FOR_ACCESSIBILITY_PERMISSION:
+                actionInt = Action.ActionType.ACTION_TYPE_USER_SAYS_NO_TO_ACCESSIBILITY_PERMISSION;
+                break;
+            case APIAI_ACTION_KEEP_WIFI_ON_DURING_SLEEP:
+                actionInt = Action.ActionType.ACTION_TYPE_KEEP_WIFI_ON_DURING_SLEEP;
                 break;
         }
         if (listener != null) {
