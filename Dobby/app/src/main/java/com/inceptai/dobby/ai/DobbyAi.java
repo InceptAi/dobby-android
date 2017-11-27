@@ -227,10 +227,21 @@ public class DobbyAi implements
 
     public void onAccessibilityServiceReady() {
         //We got accessibility permission -- launch the pending action if any
+        dobbyAnalytics.setUserGivesAccessibilityPermission();
         if (accessibilityPermissionTrigger != ACTION_TYPE_UNKNOWN) {
             Action actionTrigger = new Action(Utils.EMPTY_STRING, getAccessibilityPermissionTrigger());
             setAccessibilityPermissionTrigger(ACTION_TYPE_UNKNOWN);
             takeAction(actionTrigger);
+        }
+    }
+
+    public String getSuccessStringForLastAction() {
+        if (lastAction == Action.ActionType.ACTION_TYPE_RESET_NETWORK_SETTINGS) {
+            return "Hooray, reset your network settings. You will need to re-connect with your WiFi and enter the password again. !";
+        } else if (lastAction == ACTION_TYPE_KEEP_WIFI_ON_DURING_SLEEP) {
+            return "Hooray, changed WiFi setting so it will minimize disconnections !";
+        } else {
+            return "Hooray, configured the setting as desired.";
         }
     }
 
@@ -516,8 +527,10 @@ public class DobbyAi implements
                 }
                 break;
             case ACTION_TYPE_ASK_FOR_RESETTING_WIFI_NETWORK_SETTINGS:
+                dobbyAnalytics.setResetNetworkSettingsClicked();
                 break;
             case ACTION_TYPE_USER_SAYS_YES_TO_RESETTING_NETWORK_SETTING:
+                dobbyAnalytics.setResetNetworkSettingsConfirmed();
                 if(!NeoUiActionsService.isAccessibilityPermissionGranted(context)) {
                     //Ask for accessibility permission if we don't have the permission
                     setAccessibilityPermissionTrigger(ACTION_TYPE_RESET_NETWORK_SETTINGS);
@@ -534,6 +547,7 @@ public class DobbyAi implements
                 }
                 break;
             case ACTION_TYPE_KEEP_WIFI_ON_DURING_SLEEP:
+                dobbyAnalytics.setPreventWifiDisconnectionsClicked();
                 if(!NeoUiActionsService.isAccessibilityPermissionGranted(context)) {
                     //Ask for accessibility permission if we don't have the permission
                     setAccessibilityPermissionTrigger(ACTION_TYPE_KEEP_WIFI_ON_DURING_SLEEP);
@@ -546,15 +560,18 @@ public class DobbyAi implements
                 }
                 break;
             case ACTION_TYPE_ASK_USER_FOR_ACCESSIBILITY_PERMISSION:
+                dobbyAnalytics.setAskUserForAccessibilityPermission();
                 break;
             case ACTION_TYPE_USER_SAYS_YES_TO_ACCESSIBILITY_PERMISSION:
                 //Launch the last action which triggered the ask for permission
                 //Show accessibility permission dialog
+                dobbyAnalytics.setUserSaysYesToAccessibilityPermissionAsk();
                 if (responseCallback != null) {
                     responseCallback.startNeoByExpert();
                 }
                 break;
             case ACTION_TYPE_USER_SAYS_NO_TO_ACCESSIBILITY_PERMISSION:
+                dobbyAnalytics.setUserSaysNoToAccessibilityPermissionAsk();
                 break;
             default:
                 DobbyLog.i("Unknown FutureAction");

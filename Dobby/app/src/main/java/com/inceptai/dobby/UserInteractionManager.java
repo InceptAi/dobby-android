@@ -54,6 +54,7 @@ public class UserInteractionManager implements
     private static final long ACCESSIBILITY_SETTING_CHECKER_TIMEOUT_MS = 30000;
     private static final long WIFI_REPAIR_TIMEOUT_MS = 30000;
     private static final String PREF_CHAT_FIRST_TIME = "first_user_interaction";
+    private static final long DELAY_BEFORE_SCREEN_TRANSITION_MS = 500;
 
 
     private long currentEtaSeconds;
@@ -256,29 +257,32 @@ public class UserInteractionManager implements
         DobbyLog.v("ESXXXX Action started: query: " + query + " app: " + appPackageName);
     }
 
+
     @Override
-    public void actionFinished(String query, String appPackageName, String status, ActionResult apiActionResult, UIActionResult uiActionResult) {
-        DobbyLog.v("ESXXXX Action finished: query: " + query + " app: " + appPackageName + " status: " + status);
+    public void actionFinished(String query, String appName, String status, ActionResult apiActionResult, UIActionResult uiActionResult) {
+        DobbyLog.v("ESXXXX Action finished: query: " + query + " app: " + appName + " status: " + status);
         if (apiActionResult != null) {
             //This was an api action, see the results here
             DobbyLog.v("ESXXX API action result: " + ActionResult.isSuccessful(apiActionResult));
         } else if (uiActionResult != null) {
             DobbyLog.v("ESXXX API action result: " + UIActionResult.isSuccessful(uiActionResult));
-            if (UIActionResult.failedDueToAccessibilityIssue(uiActionResult)) {
-                //launch accessibility permission and try this command again
-                startNeo(true);
-//                if (!accessibilityPermissionDenied) {
-//                    pendingAction = query;
-//                    pendingActionPackageName = appPackageName;
-//                    startNeo(true);
-//                }
+            if (UIActionResult.isSuccessful(uiActionResult)) {
+                String successMessage = dobbyAi.getSuccessStringForLastAction();
+                if (!Utils.nullOrEmpty(successMessage)) {
+                    expertChatService.pushBotChatMessage(successMessage);
+                }
             } else {
-                //bring the user back into the app after UIAction finishes.
-                //Utils.resumeWifiExpertMainActivity(context.getApplicationContext());
+                expertChatService.pushBotChatMessage(UIActionResult.getUserReadableMessage(uiActionResult));
             }
+            scheduledExecutorService.schedule(new Runnable() {
+                @Override
+                public void run() {
+                    Utils.launchWifiExpertMainActivity(context.getApplicationContext());
+                }
+            }, DELAY_BEFORE_SCREEN_TRANSITION_MS, TimeUnit.MILLISECONDS);
         }
-
     }
+
 
     //Expert chat service callback
     @Override
@@ -294,11 +298,11 @@ public class UserInteractionManager implements
 
     @Override
     public void onUIActionsAvailable(List<ActionDetails> actionDetailsList) {
-        if (actionDetailsList != null && ! actionDetailsList.isEmpty()) {
-            expertChatService.pushBotChatMessage(actionDetailsList.toString());
-        } else {
-            expertChatService.pushBotChatMessage("Received empty or nil actions");
-        }
+//        if (actionDetailsList != null && ! actionDetailsList.isEmpty()) {
+//            expertChatService.pushBotChatMessage(actionDetailsList.toString());
+//        } else {
+//            expertChatService.pushBotChatMessage("Received empty or nil actions");
+//        }
     }
 
     @Override

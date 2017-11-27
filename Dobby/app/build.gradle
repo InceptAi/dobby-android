@@ -55,13 +55,12 @@ android {
         }
         dobby {
             applicationId "com.inceptai.wifiexpert"
-            versionCode 52
-            versionName "4.0.2-wifiexpert-repair"
+            versionCode 55
+            versionName "5.0.0-wifiexpert-repair"
         }
     }
     buildTypes {
         release {
-            debuggable true
             productFlavors.wifidoc.signingConfig signingConfigs.wifidoc_config
             productFlavors.dobby.signingConfig signingConfigs.wifiexpert_config
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'

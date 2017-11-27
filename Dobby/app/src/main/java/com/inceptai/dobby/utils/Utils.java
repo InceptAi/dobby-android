@@ -1059,10 +1059,20 @@ public class Utils {
         return sb.toString();
     }
 
+//    public static void launchWifiExpertMainActivity(Context context) {
+//        Intent i = new Intent(context, MainActivity.class);
+//        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+//        //i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//        context.startActivity(i);
+//    }
+
     public static void launchWifiExpertMainActivity(Context context) {
-        Intent i = new Intent(context, MainActivity.class);
-        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        context.startActivity(i);
+        Intent intent = new Intent(context, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); // You need this if starting
+        //  the activity from a service
+        intent.setAction(Intent.ACTION_MAIN);
+        intent.addCategory(Intent.CATEGORY_LAUNCHER);
+        context.startActivity(intent);
     }
 
     public static void resumeWifiExpertMainActivity(Context context) {

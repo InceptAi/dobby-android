@@ -118,6 +118,7 @@ public class DobbyAnalytics extends ExpertChatAnalytics {
     private static final String ACTION_TYPE_WIFI_CARD_SHOWN = "action_wifi_card_shown";
     private static final String ACTION_TYPE_BANDWIDTH_CARD_SHOWN = "action_bw_card_shown";
 
+
     //Feedback events
     private static final String ACTION_TYPE_ASK_FOR_FEEDBACK_AFTER_LONG_SUGGESTION = "ask_feedback_long_sugg";
     private static final String ACTION_TYPE_POSITIVE_FEEDBACK_AFTER_LONG_SUGGESTION = "positive_feedback_long_sugg";
@@ -178,6 +179,18 @@ public class DobbyAnalytics extends ExpertChatAnalytics {
     private static final String USER_SAYS_YES_TO_RATING = "yes_to_rating";
     private static final String USER_SAYS_NO_TO_RATING = "no_to_rating";
     private static final String USER_SAYS_LATER_TO_RATING = "later_to_rating";
+
+    //Accessibility related
+    private static final String ACCESSIBILITY_PERMISSION_ASKED = "ask_for_accessibility";
+    private static final String ACCESSIBILITY_DIALOG_SHOWN = "show_accessibility_dialog";
+    private static final String USER_SAYS_YES_TO_ACCESSIBILITY_PERMISSION_ASK = "yes_to_accessibility_ask";
+    private static final String USER_SAYS_NO_TO_ACCESSIBILITY_PERMISSION_ASK = "no_to_accessibility_ask";
+    private static final String USER_GIVES_ACCESSIBILITY_PERMISSION = "gives_accessibility";
+
+    //UIActions
+    private static final String PREVENT_WIFI_DISCONNECTIONS_CLICKED = "prevent_wifi_disconnects_click";
+    private static final String RESET_NETWORK_SETTINGS_CLICKED = "reset_nw_setting_clicked";
+    private static final String RESET_NETWORK_SETTINGS_CONFIRMED = "reset_nw_setting_confirmed";
 
     private DobbyAnalyticsBackend dobbyAnalyticsBackend;
 
@@ -761,4 +774,44 @@ public class DobbyAnalytics extends ExpertChatAnalytics {
         dobbyAnalyticsBackend.logEvent(USER_SAYS_LATER_TO_RATING, bundle);
     }
 
+    public void setAskUserForAccessibilityPermission() {
+        Bundle bundle = new Bundle();
+        dobbyAnalyticsBackend.logEvent(ACCESSIBILITY_PERMISSION_ASKED, bundle);
+    }
+
+    public void setUserSaysYesToAccessibilityPermissionAsk() {
+        Bundle bundle = new Bundle();
+        dobbyAnalyticsBackend.logEvent(USER_SAYS_YES_TO_ACCESSIBILITY_PERMISSION_ASK, bundle);
+    }
+
+    public void setUserSaysNoToAccessibilityPermissionAsk() {
+        Bundle bundle = new Bundle();
+        dobbyAnalyticsBackend.logEvent(USER_SAYS_NO_TO_ACCESSIBILITY_PERMISSION_ASK, bundle);
+    }
+
+    public void showAccessibilityDialogToUser() {
+        Bundle bundle = new Bundle();
+        dobbyAnalyticsBackend.logEvent(ACCESSIBILITY_DIALOG_SHOWN, bundle);
+    }
+
+    public void setUserGivesAccessibilityPermission() {
+        Bundle bundle = new Bundle();
+        dobbyAnalyticsBackend.logEvent(USER_GIVES_ACCESSIBILITY_PERMISSION, bundle);
+    }
+
+
+    public void setPreventWifiDisconnectionsClicked() {
+        Bundle bundle = new Bundle();
+        dobbyAnalyticsBackend.logEvent(PREVENT_WIFI_DISCONNECTIONS_CLICKED, bundle);
+    }
+
+    public void setResetNetworkSettingsClicked() {
+        Bundle bundle = new Bundle();
+        dobbyAnalyticsBackend.logEvent(RESET_NETWORK_SETTINGS_CLICKED, bundle);
+    }
+
+    public void setResetNetworkSettingsConfirmed() {
+        Bundle bundle = new Bundle();
+        dobbyAnalyticsBackend.logEvent(RESET_NETWORK_SETTINGS_CONFIRMED, bundle);
+    }
 }
