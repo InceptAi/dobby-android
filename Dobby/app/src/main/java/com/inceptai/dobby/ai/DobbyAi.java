@@ -784,7 +784,7 @@ public class DobbyAi implements
                 responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
                 responseList.add(UserResponse.ResponseType.START_WIFI_REPAIR);
                 responseList.add(UserResponse.ResponseType.KEEP_WIFI_ALWAYS_ON_DURING_SLEEP);
-                responseList.add(UserResponse.ResponseType.RESET_NETWORK_SETTINGS);
+                //responseList.add(UserResponse.ResponseType.RESET_NETWORK_SETTINGS);
                 responseList.add(UserResponse.ResponseType.RUN_WIFI_TESTS);
                 responseList.add(monitoringControlToShow());
                 break;
@@ -824,7 +824,7 @@ public class DobbyAi implements
             responseList.add(UserResponse.ResponseType.RUN_BW_TESTS);
             responseList.add(UserResponse.ResponseType.START_WIFI_REPAIR);
             responseList.add(UserResponse.ResponseType.KEEP_WIFI_ALWAYS_ON_DURING_SLEEP);
-            responseList.add(UserResponse.ResponseType.RESET_NETWORK_SETTINGS);
+            //responseList.add(UserResponse.ResponseType.RESET_NETWORK_SETTINGS);
             responseList.add(monitoringControlToShow());
         }
 
