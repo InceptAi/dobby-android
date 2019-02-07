@@ -3,14 +3,9 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/WifiExpertApp.iml" filepath="$PROJECT_DIR$/WifiExpertApp.iml" />
-      <module fileurl="file://$PROJECT_DIR$/WifiExpertApp.iml" filepath="$PROJECT_DIR$/WifiExpertApp.iml" />
-      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/../WifiMonitoringService/jspeedtest/jspeedtest.iml" filepath="$PROJECT_DIR$/../WifiMonitoringService/jspeedtest/jspeedtest.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../WifiMonitoringService/jspeedtest/jspeedtest.iml" filepath="$PROJECT_DIR$/../WifiMonitoringService/jspeedtest/jspeedtest.iml" />
       <module fileurl="file://$PROJECT_DIR$/../../neo/android/neo-service/app/neo-service.iml" filepath="$PROJECT_DIR$/../../neo/android/neo-service/app/neo-service.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../../neo/android/neo-service/app/neo-service.iml" filepath="$PROJECT_DIR$/../../neo/android/neo-service/app/neo-service.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../WifiMonitoringService/app/wifimonitoring-service.iml" filepath="$PROJECT_DIR$/../WifiMonitoringService/app/wifimonitoring-service.iml" />
       <module fileurl="file://$PROJECT_DIR$/../WifiMonitoringService/app/wifimonitoring-service.iml" filepath="$PROJECT_DIR$/../WifiMonitoringService/app/wifimonitoring-service.iml" />
     </modules>
   </component>
